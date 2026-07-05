@@ -27,7 +27,7 @@ const italic = IBM_Plex_Serif({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: { default: 'randy ren · catalog', template: '%s · randy ren' },
+  title: { default: 'Randy Ren — Museum Shell', template: '%s · Randy Ren' },
   description: "a museum expressed as a curator's terminal. six plates.",
   openGraph: {
     title: 'randy ren · catalog',

@@ -9,7 +9,22 @@ export function PlateViewer({ slug, onClose }: { slug: Slug; onClose: () => void
   const p = PROJECTS[slug];
 
   const handleKey = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') onClose();
+    if (e.key === 'Escape') {
+      onClose();
+      return;
+    }
+    if (e.key === 'Backspace') {
+      const active = document.activeElement as HTMLElement | null;
+      const tag = active?.tagName;
+      const isEditable =
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        (active?.isContentEditable ?? false);
+      if (!isEditable) {
+        e.preventDefault();
+        onClose();
+      }
+    }
   }, [onClose]);
 
   useEffect(() => {
@@ -30,12 +45,13 @@ export function PlateViewer({ slug, onClose }: { slug: Slug; onClose: () => void
         aria-label={`${p.slug} plate`}
         onClick={(e) => e.stopPropagation()}
       >
-        <button className={styles.close} onClick={onClose} type="button" aria-label="Close plate">close</button>
+        <button className={styles.close} onClick={onClose} type="button" aria-label="Close plate (Esc)">×</button>
         <article className={styles.article}>
           <Suspense fallback={<div className={styles.loading}>loading…</div>}>
             <Plate />
           </Suspense>
         </article>
+        <div className={styles.footer}>PRESS ESC OR × TO RETURN TO THE SHELL</div>
       </div>
     </div>
   );

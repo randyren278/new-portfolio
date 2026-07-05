@@ -1,10 +1,12 @@
 :root {
   --cream: #F1E8D4;
-  --ink: #111111;
+  --ink: #111;
   --prussian: #1F3A5F;
+  --umber: #7A4A1F;
   --umber-strong: #5A3818;
   --umber-muted: #7A4A1F;
-  --vermillion: #A8100A;
+  --vermillion: #a8100a;
+  --dim-red: #7a2d16;
 
   --font-serif: var(--font-serif-google), Georgia, serif;
   --font-mono: var(--font-mono-google), ui-monospace, SFMono-Regular, monospace;

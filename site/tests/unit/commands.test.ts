@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { execute } from '@/terminal/engine/commands';
 import type { Slug } from '@/content/projects';
 
-const ctx = (cwd: string, visible: null | Slug = null) =>
-  ({ cwd, visibleSlugs: new Set<Slug>(visible ? [visible] : []) });
+const ctx = (cwd: string, visible: null | Slug = null, history: string[] = []) =>
+  ({ cwd, visibleSlugs: new Set<Slug>(visible ? [visible] : []), history });
 
 describe('execute', () => {
   it('pwd echoes the current directory as ~ form', () => {
@@ -11,16 +11,19 @@ describe('execute', () => {
     expect(r).toEqual({ kind: 'text', lines: ['~'] });
   });
 
-  it('ls at ~ lists work about contact', () => {
+  it('ls at ~ lists work about contact now colophon guestbook archive', () => {
     const r = execute('ls', ctx('/randy'));
-    expect(r).toEqual({ kind: 'text', lines: ['work  about  contact'] });
+    expect(r).toEqual({
+      kind: 'text',
+      lines: ['work  about  contact  now  colophon  guestbook  archive']
+    });
   });
 
   it('ls at ~/work lists ORDER', () => {
     const r = execute('ls', ctx('/randy/work'));
     expect(r).toEqual({
       kind: 'text',
-      lines: ['oryzo  halcyon  paperlane  atlas  koinu  linen']
+      lines: ['oryzo  halcyon  aperture  fieldnote  signal-garden  loom']
     });
   });
 
@@ -49,9 +52,9 @@ describe('execute', () => {
     expect(r).toEqual({ kind: 'openPlate', slug: 'oryzo' });
   });
 
-  it('open about is always inline', () => {
+  it('open about renders the about card', () => {
     const r = execute('open about', ctx('/randy'));
-    expect(r).toEqual({ kind: 'text', lines: expect.any(Array) });
+    expect(r).toEqual({ kind: 'openAbout' });
   });
 
   it('unknown command returns error', () => {

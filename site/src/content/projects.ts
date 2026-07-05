@@ -1,77 +1,99 @@
-export const ORDER = ['oryzo', 'halcyon', 'paperlane', 'atlas', 'koinu', 'linen'] as const;
+export const ORDER = ['oryzo', 'halcyon', 'aperture', 'fieldnote', 'signal-garden', 'loom'] as const;
 export type Slug = (typeof ORDER)[number];
 
 export type ProjectMeta = {
   slug: Slug;
   kicker: string;
   title: string;
-  year: string;
-  role: string;
-  stack: string;
+  artist: string;
+  year: number;
+  medium: string;
+  dim: string;
+  collection: string;
   blurb: string;
   hint: string;
 };
 
+const WALL_LABEL_KICKER = '§ Wall label';
+const ARTIST = 'Randy Ren';
+const COLLECTION = 'Collection of the artist';
+
+function hintFor(slug: Slug): string {
+  return `Type <span class="lk">open ${slug}</span> to see the plate.`;
+}
+
 export const PROJECTS: Record<Slug, ProjectMeta> = {
   oryzo: {
     slug: 'oryzo',
-    kicker: 'plate 01 · oryzo',
-    title: 'a paced rice cooker for one.',
-    year: '2025',
-    role: 'design + firmware',
-    stack: 'esp32, react native, custom pcb',
-    blurb: 'a small appliance that measures rice by weight, not cups. the interface is a single dial and a hairline gauge.',
-    hint: 'open oryzo for the long plate.'
+    kicker: WALL_LABEL_KICKER,
+    title: 'ORYZO',
+    artist: ARTIST,
+    year: 2025,
+    medium: 'voice orchestration, latency, code',
+    dim: '300ms, dimensions variable',
+    collection: COLLECTION,
+    blurb: 'Voice orchestration layer for autonomous agents. Turned 300ms of latency into a feature.',
+    hint: hintFor('oryzo')
   },
   halcyon: {
     slug: 'halcyon',
-    kicker: 'plate 02 · halcyon',
-    title: 'a quiet client for a loud protocol.',
-    year: '2024',
-    role: 'design + engineering',
-    stack: 'swiftui, matrix protocol',
-    blurb: 'a matrix client shaped like a notebook. rooms are tabs, messages are marginalia.',
-    hint: 'open halcyon for the long plate.'
+    kicker: WALL_LABEL_KICKER,
+    title: 'HALCYON',
+    artist: ARTIST,
+    year: 2025,
+    medium: 'multiplayer, canvas, webgl',
+    dim: '500,000 cursors',
+    collection: COLLECTION,
+    blurb: 'Realtime collaborative canvas for design teams. Half a million multiplayer cursors and counting.',
+    hint: hintFor('halcyon')
   },
-  paperlane: {
-    slug: 'paperlane',
-    kicker: 'plate 03 · paperlane',
-    title: 'a newsletter that respects the reader.',
-    year: '2024',
-    role: 'product + typography',
-    stack: 'nextjs, postgres, resend',
-    blurb: 'a newsletter platform with typography as the first-class primitive. no dashboards, no funnels.',
-    hint: 'open paperlane for the long plate.'
+  aperture: {
+    slug: 'aperture',
+    kicker: WALL_LABEL_KICKER,
+    title: 'APERTURE',
+    artist: ARTIST,
+    year: 2024,
+    medium: 'mobile os, camera, concept',
+    dim: '1 device, 100 apps',
+    collection: COLLECTION,
+    blurb: 'Camera-first mobile OS. The lens is the app launcher.',
+    hint: hintFor('aperture')
   },
-  atlas: {
-    slug: 'atlas',
-    kicker: 'plate 04 · atlas',
-    title: 'a cartography tool for hand-drawn maps.',
-    year: '2023',
-    role: 'creative technology',
-    stack: 'canvas, wasm, rust',
-    blurb: 'a browser tool that turns pen strokes into contour lines. built for one specific cartographer.',
-    hint: 'open atlas for the long plate.'
+  fieldnote: {
+    slug: 'fieldnote',
+    kicker: WALL_LABEL_KICKER,
+    title: 'FIELDNOTE',
+    artist: ARTIST,
+    year: 2024,
+    medium: 'cli, journaling, ai',
+    dim: 'one shell, infinite pages',
+    collection: COLLECTION,
+    blurb: 'Terminal-native journaling agent. Writes with you, not for you.',
+    hint: hintFor('fieldnote')
   },
-  koinu: {
-    slug: 'koinu',
-    kicker: 'plate 05 · koinu',
-    title: 'a walk tracker with a memory.',
-    year: '2023',
-    role: 'design + ios',
-    stack: 'swiftui, core location',
-    blurb: 'a walk tracker that remembers routes as small drawings, not heatmaps. named after a friend’s dog.',
-    hint: 'open koinu for the long plate.'
+  'signal-garden': {
+    slug: 'signal-garden',
+    kicker: WALL_LABEL_KICKER,
+    title: 'SIGNAL GARDEN',
+    artist: ARTIST,
+    year: 2024,
+    medium: 'hardware, e-ink, ambient',
+    dim: '6 dashboards, 4 offices',
+    collection: COLLECTION,
+    blurb: 'Ambient e-ink dashboards for distributed teams. Status without Slack.',
+    hint: hintFor('signal-garden')
   },
-  linen: {
-    slug: 'linen',
-    kicker: 'plate 06 · linen',
-    title: 'a wardrobe planner that reads the sky.',
-    year: '2022',
-    role: 'design + ios',
-    stack: 'swift, weatherkit',
-    blurb: 'a small ios app that lays out an outfit based on tomorrow’s forecast, then forgets it once you dress.',
-    hint: 'open linen for the long plate.'
+  loom: {
+    slug: 'loom',
+    kicker: WALL_LABEL_KICKER,
+    title: 'LOOM',
+    artist: ARTIST,
+    year: 2023,
+    medium: 'web3, audio, mesh',
+    dim: 'no servers, all rooms',
+    collection: COLLECTION,
+    blurb: 'Peer-to-peer music mesh. No servers, no ads, just rooms.',
+    hint: hintFor('loom')
   }
 };
 

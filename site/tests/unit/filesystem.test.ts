@@ -28,11 +28,19 @@ describe('resolvePath', () => {
 
 describe('listDir', () => {
   it('lists the six project slugs under ~/work in fixed order', () => {
-    expect(listDir('/randy/work')).toEqual(['oryzo', 'halcyon', 'paperlane', 'atlas', 'koinu', 'linen']);
+    expect(listDir('/randy/work')).toEqual(['oryzo', 'halcyon', 'aperture', 'fieldnote', 'signal-garden', 'loom']);
   });
 
-  it('lists work, about, contact under ~', () => {
-    expect(listDir('/randy')).toEqual(['work', 'about', 'contact']);
+  it('lists work, about, contact, now, colophon, guestbook, archive under ~', () => {
+    expect(listDir('/randy')).toEqual([
+      'work',
+      'about',
+      'contact',
+      'now',
+      'colophon',
+      'guestbook',
+      'archive'
+    ]);
   });
 
   it('returns null for a file', () => {

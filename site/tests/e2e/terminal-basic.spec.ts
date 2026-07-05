@@ -8,10 +8,10 @@ test('ls, cd, help commands echo to the transcript', async ({ page }) => {
   await input.click();
   await input.fill('ls');
   await input.press('Enter');
-  await expect(page.getByText('work  about  contact')).toBeVisible();
+  await expect(page.getByText('work  about  contact  now  colophon  guestbook  archive')).toBeVisible();
   await input.fill('cd work');
   await input.press('Enter');
   await input.fill('ls');
   await input.press('Enter');
-  await expect(page.getByText('oryzo  halcyon  paperlane  atlas  koinu  linen')).toBeVisible();
+  await expect(page.getByText('oryzo  halcyon  aperture  fieldnote  signal-garden  loom')).toBeVisible();
 });

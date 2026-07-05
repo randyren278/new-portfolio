@@ -18,9 +18,11 @@ export function InlineLabel({ slug, instant = false, onVisibilityChange }: Props
   const svgRef = useRef<SVGSVGElement>(null);
   const kickerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
+  const artistRef = useRef<HTMLDivElement>(null);
   const yearRef = useRef<HTMLDivElement>(null);
-  const roleRef = useRef<HTMLDivElement>(null);
-  const stackRef = useRef<HTMLDivElement>(null);
+  const mediumRef = useRef<HTMLDivElement>(null);
+  const dimRef = useRef<HTMLDivElement>(null);
+  const collectionRef = useRef<HTMLDivElement>(null);
   const blurbRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
 
@@ -43,11 +45,15 @@ export function InlineLabel({ slug, instant = false, onVisibilityChange }: Props
         onContent: async () => {
           if (kickerRef.current) await typeInto(kickerRef.current, p.kicker, { msPerChar: CADENCES.kicker, signal: ac.signal }).done;
           if (titleRef.current) await typeInto(titleRef.current, p.title, { msPerChar: CADENCES.title, signal: ac.signal }).done;
-          if (yearRef.current) await typeInto(yearRef.current, `year   ${p.year}`, { msPerChar: CADENCES.metaDt, signal: ac.signal }).done;
-          if (roleRef.current) await typeInto(roleRef.current, `role   ${p.role}`, { msPerChar: CADENCES.metaDt, signal: ac.signal }).done;
-          if (stackRef.current) await typeInto(stackRef.current, `stack  ${p.stack}`, { msPerChar: CADENCES.metaDt, signal: ac.signal }).done;
+          if (artistRef.current) await typeInto(artistRef.current, `Artist       ${p.artist}`, { msPerChar: CADENCES.metaDt, signal: ac.signal }).done;
+          if (yearRef.current) await typeInto(yearRef.current, `Year         ${p.year}`, { msPerChar: CADENCES.metaDt, signal: ac.signal }).done;
+          if (mediumRef.current) await typeInto(mediumRef.current, `Medium       ${p.medium}`, { msPerChar: CADENCES.metaDt, signal: ac.signal }).done;
+          if (dimRef.current) await typeInto(dimRef.current, `Dimensions   ${p.dim}`, { msPerChar: CADENCES.metaDt, signal: ac.signal }).done;
+          if (collectionRef.current) await typeInto(collectionRef.current, `Collection   ${p.collection}`, { msPerChar: CADENCES.metaDt, signal: ac.signal }).done;
           if (blurbRef.current) await typeInto(blurbRef.current, p.blurb, { msPerChar: CADENCES.blurb, signal: ac.signal }).done;
-          if (hintRef.current) await typeInto(hintRef.current, p.hint, { msPerChar: CADENCES.hint, signal: ac.signal }).done;
+          if (hintRef.current) {
+            hintRef.current.innerHTML = p.hint;
+          }
         },
         signal: ac.signal
       });
@@ -68,19 +74,23 @@ export function InlineLabel({ slug, instant = false, onVisibilityChange }: Props
           <>
             <div className={styles.kicker}>{p.kicker}</div>
             <div className={styles.title}>{p.title}</div>
-            <div className={styles.meta}>{`year   ${p.year}`}</div>
-            <div className={styles.meta}>{`role   ${p.role}`}</div>
-            <div className={styles.meta}>{`stack  ${p.stack}`}</div>
+            <div className={styles.meta}>{`Artist       ${p.artist}`}</div>
+            <div className={styles.meta}>{`Year         ${p.year}`}</div>
+            <div className={styles.meta}>{`Medium       ${p.medium}`}</div>
+            <div className={styles.meta}>{`Dimensions   ${p.dim}`}</div>
+            <div className={styles.meta}>{`Collection   ${p.collection}`}</div>
             <div className={styles.blurb}>{p.blurb}</div>
-            <div className={styles.hint}>{p.hint}</div>
+            <div className={styles.hint} dangerouslySetInnerHTML={{ __html: p.hint }} />
           </>
         ) : (
           <>
             <div ref={kickerRef} className={styles.kicker} />
             <div ref={titleRef} className={styles.title} />
+            <div ref={artistRef} className={styles.meta} />
             <div ref={yearRef} className={styles.meta} />
-            <div ref={roleRef} className={styles.meta} />
-            <div ref={stackRef} className={styles.meta} />
+            <div ref={mediumRef} className={styles.meta} />
+            <div ref={dimRef} className={styles.meta} />
+            <div ref={collectionRef} className={styles.meta} />
             <div ref={blurbRef} className={styles.blurb} />
             <div ref={hintRef} className={styles.hint} />
           </>

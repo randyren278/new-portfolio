@@ -5,6 +5,8 @@ export type FsNode = {
   children?: Record<string, FsNode>;
   slug?: Slug;
   label?: string;
+  content?: string;
+  marginalia?: string;
 };
 
 function buildProjectDir(slug: Slug): FsNode {
@@ -15,6 +17,27 @@ function buildProjectDir(slug: Slug): FsNode {
     }
   };
 }
+
+const NOW_TEXT =
+`july 2026 — writing a small book on agent interfaces.
+taking one new client engagement in september.
+currently: less meetings, more sketchbooks.`;
+
+const COLOPHON_TEXT =
+`fonts     IBM Plex Mono, IBM Plex Serif (italic)
+palette   cream, ink, prussian, warm umber
+stack     raw HTML, raw CSS, raw JS. no libraries.
+built     by hand, in San Francisco, 2026.
+thanks    to the curators who reviewed this room.`;
+
+const GUESTBOOK_TEXT =
+`— j.a.  "the pen slowing before lifting. yes."
+— m.k.  "made me open a terminal for the first time in years."
+— r.s.  "hollow caret on blur. thank you."
+— c.p.  "please open the archive."
+(sign the book by emailing hey@randy.sh — this is append-only.)`;
+
+const ARCHIVE_MARGINALIA = '# nothing catalogued here yet. return in the winter.';
 
 const workChildren: Record<string, FsNode> = {};
 for (const slug of ORDER) workChildren[slug] = buildProjectDir(slug);
@@ -27,7 +50,11 @@ export const FS: FsNode = {
       children: {
         work: { kind: 'dir', children: workChildren },
         about: { kind: 'file', label: 'about.txt' },
-        contact: { kind: 'file', label: 'contact.txt' }
+        contact: { kind: 'file', label: 'contact.txt' },
+        now: { kind: 'file', label: 'now.txt', content: NOW_TEXT },
+        colophon: { kind: 'file', label: 'colophon.txt', content: COLOPHON_TEXT },
+        guestbook: { kind: 'file', label: 'guestbook.txt', content: GUESTBOOK_TEXT },
+        archive: { kind: 'dir', children: {}, marginalia: ARCHIVE_MARGINALIA }
       }
     }
   }

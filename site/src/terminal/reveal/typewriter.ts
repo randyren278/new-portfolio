@@ -7,15 +7,14 @@ export type TypewriterOpts = {
   signal?: AbortSignal;
 };
 
-function seededJitter(seed: number, max: number): number {
-  // deterministic in [-max, +max]
-  const s = Math.sin(seed * 12.9898) * 43758.5453;
-  const frac = s - Math.floor(s);
-  return (frac * 2 - 1) * max;
+function seededJitter(i: number, max: number): number {
+  // deterministic LCG in [-max, +max), matching the prototype
+  const seed = ((i * 9301 + 49297) % 233280) / 233280;
+  return (seed - 0.5) * 2 * max;
 }
 
 export function typeInto(el: HTMLElement, text: string, opts: TypewriterOpts = {}): TypewriterHandle {
-  const { msPerChar = 20, jitterMs = 4, holdOn = /[.,;:]/, holdMs = 80, signal } = opts;
+  const { msPerChar = 20, jitterMs = 4, holdOn = /[.,;:!?]/, holdMs = 80, signal } = opts;
   let cancelled = false;
   let skipped = false;
   let i = 0;
@@ -36,10 +35,12 @@ export function typeInto(el: HTMLElement, text: string, opts: TypewriterOpts = {
       if (i >= text.length) return resolve();
       const ch = text.charAt(i);
       el.textContent += ch;
-      i += 1;
       const isHold = holdOn.test(ch);
-      const base = isHold ? holdMs : msPerChar;
+      let base = isHold ? holdMs : msPerChar;
       const jit = seededJitter(i, jitterMs);
+      if (ch === '—') base += 60;
+      if (ch === '\n') base += 80;
+      i += 1;
       timer = setTimeout(step, Math.max(0, base + jit));
     }
     stepRef = step;
