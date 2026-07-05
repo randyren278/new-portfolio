@@ -1,6 +1,6 @@
 'use client';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PROJECTS, type Slug } from '@/content/projects';
+import { type Slug } from '@/content/projects';
 import { execute, type CommandResult } from './engine/commands';
 import { complete } from './engine/completion';
 import { createHistory } from './engine/history';
@@ -73,8 +73,8 @@ export function Terminal() {
   };
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [lines]);
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: reduced ? 'instant' : 'smooth' });
+  }, [lines, reduced]);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
