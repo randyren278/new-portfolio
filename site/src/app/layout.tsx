@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { Instrument_Serif, IBM_Plex_Mono, IBM_Plex_Serif } from 'next/font/google';
 import { getSiteUrl } from '@/lib/env';
+import { AnalyticsProbe } from '@/lib/analytics';
 import './globals.css';
 
 const serif = Instrument_Serif({
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${serif.variable} ${mono.variable} ${italic.variable}`}>
-      <body>{children}</body>
+      <body>{children}<AnalyticsProbe /></body>
     </html>
   );
 }
