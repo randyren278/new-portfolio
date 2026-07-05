@@ -36,9 +36,10 @@ export function InlineLabel({ slug, instant = false, onVisibilityChange }: Props
 
   useEffect(() => {
     if (instant || !svgRef.current) return;
+    const svg = svgRef.current;
     const ac = new AbortController();
     (async () => {
-      await traceCorners(svgRef.current!, {
+      await traceCorners(svg, {
         onContent: async () => {
           if (kickerRef.current) await typeInto(kickerRef.current, p.kicker, { msPerChar: CADENCES.kicker, signal: ac.signal }).done;
           if (titleRef.current) await typeInto(titleRef.current, p.title, { msPerChar: CADENCES.title, signal: ac.signal }).done;

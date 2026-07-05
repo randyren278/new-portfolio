@@ -2,6 +2,7 @@
   position: fixed; inset: 0; z-index: 100;
   background: var(--cream);
   display: grid; place-items: center;
+  /* keep in sync with LOADER.dissolve in cadences.ts */
   transition: opacity 720ms ease-out;
 }
 .wrap.fade { opacity: 0; pointer-events: none; }

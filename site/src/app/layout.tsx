@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Instrument_Serif, IBM_Plex_Mono, IBM_Plex_Serif } from 'next/font/google';
 import { getSiteUrl } from '@/lib/env';
 import { AnalyticsProbe } from '@/lib/analytics';
@@ -40,6 +40,10 @@ export const metadata: Metadata = {
   },
   twitter: { card: 'summary_large_image', title: 'randy ren · catalog', images: ['/og-default.png'] },
   icons: { icon: '/favicon.svg' }
+};
+
+export const viewport: Viewport = {
+  themeColor: '#F1E8D4',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
