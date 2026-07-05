@@ -1,0 +1,15 @@
+:root {
+  --cream: #F1E8D4;
+  --ink: #111111;
+  --prussian: #1F3A5F;
+  --umber-strong: #5A3818;
+  --umber-muted: #7A4A1F;
+  --vermillion: #A8100A;
+
+  --font-serif: var(--font-serif-google), Georgia, serif;
+  --font-mono: var(--font-mono-google), ui-monospace, SFMono-Regular, monospace;
+  --font-italic: var(--font-italic-google), Georgia, serif;
+
+  --focus-ring: 2px solid var(--prussian);
+  --focus-offset: 2px;
+}

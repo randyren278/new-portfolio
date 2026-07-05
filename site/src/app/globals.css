@@ -1,3 +1,26 @@
-:root { color-scheme: light; }
+@import './tokens.css';
+
+*, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body { font-family: system-ui, sans-serif; background: #F1E8D4; color: #111; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.55;
+  min-height: 100dvh;
+}
+
+:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+a { color: var(--prussian); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
