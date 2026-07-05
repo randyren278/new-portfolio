@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>randy.sh / prototypes / v0.4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  :root {
+    --bg: #000;
+    --panel: #050505;
+    --line: #1a1a1a;
+    --ink: #eaeaea;
+    --dim: #6a6a6a;
+    --dimmer: #444;
+  }
+  html { background: var(--bg); }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  .grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.03;
+    z-index: 1;
+    mix-blend-mode: screen;
+  }
+
+  main {
+    position: relative;
+    z-index: 2;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+  }
+
+  header.top {
+    margin-bottom: 56px;
+  }
+  .kicker {
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+    margin: 0 0 24px 0;
+    text-transform: none;
+  }
+  .display {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 2.5vw;
+    line-height: 1.15;
+    color: var(--ink);
+    margin: 0 0 24px 0;
+    letter-spacing: -0.01em;
+    max-width: 1100px;
+  }
+  @media (max-width: 900px) { .display { font-size: 24px; } }
+  .lede {
+    font-size: 14px;
+    color: var(--dim);
+    line-height: 1.6;
+    max-width: 780px;
+    margin: 0;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin: 48px 0 40px;
+  }
+  @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    position: relative;
+    background: var(--panel);
+    padding: 24px;
+    text-decoration: none;
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    min-height: 240px;
+    border: 1px solid transparent;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  }
+  .card:hover { background: #070707; }
+  .card .open { transition: transform 160ms ease, color 160ms ease; }
+  .card:hover .open { transform: translateX(4px); color: var(--ink); }
+
+  .chip {
+    display: inline-block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 4px 8px;
+    border: 1px solid var(--dimmer);
+    color: var(--dim);
+    align-self: flex-start;
+    margin-bottom: 20px;
+  }
+  .slug {
+    font-size: 11px;
+    color: var(--dim);
+    margin: 0 0 8px 0;
+    letter-spacing: 0.02em;
+  }
+  .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 1.6vw;
+    line-height: 1.2;
+    margin: 0 0 12px 0;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  @media (max-width: 900px) { .name { font-size: 20px; } }
+  .desc {
+    font-size: 13px;
+    color: var(--dim);
+    line-height: 1.5;
+    margin: 0;
+    max-width: 32ch;
+  }
+  .open {
+    position: absolute;
+    right: 24px;
+    bottom: 20px;
+    font-size: 12px;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+  }
+
+  .card:hover {
+    border-color: var(--accent, var(--dim));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent, #ffffff) 12%, transparent);
+  }
+  .card:hover .chip { border-color: var(--accent, var(--dimmer)); color: var(--ink); }
+
+  .council {
+    max-width: 900px;
+    margin: 40px auto 32px;
+    border: 1px solid var(--line);
+    padding: 20px;
+    background: var(--panel);
+  }
+  .council h2 {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--dim);
+    margin: 0 0 14px 0;
+    font-weight: 400;
+  }
+  .council p {
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  footer.bot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+  footer.bot span { display: inline-block; }
+  @media (max-width: 600px) {
+    footer.bot { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<svg class="grain" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-hidden="true">
+  <filter id="n">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+    <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
+  </filter>
+  <rect width="100%" height="100%" filter="url(#n)"/>
+</svg>
+
+<main>
+  <header class="top">
+    <p class="kicker">randy.sh / prototypes / v0.4 &mdash; 9 directions &middot; council-refined</p>
+    <h1 class="display">six new directions from the council. three kept for reference.</h1>
+    <p class="lede">removed: the unmotivated ones and the ones you stopped mentioning. what remains has a point of view. every motion below is motivated.</p>
+  </header>
+
+  <section class="grid" aria-label="prototype directions">
+
+    <a class="card" href="./sounding/index.html" style="--accent:#1F3A5F">
+      <span class="chip">QUIETEST</span>
+      <p class="slug">sounding</p>
+      <h3 class="name">Sounding</h3>
+      <p class="desc">A static bathymetric chart of the work. One cursor, held.</p>
+      <span class="open">OPEN &rarr;</span>
+    </a>
+
+    <a class="card" href="./catalog/index.html" style="--accent:#1F3A5F">
+      <span class="chip">REFINED</span>
+      <p class="slug">catalog</p>
+      <h3 class="name">Catalog</h3>
+      <p class="desc">A museum written in the syntax of a curator&rsquo;s terminal.</p>
+      <span class="open">OPEN &rarr;</span>
+    </a>
+
+    <a class="card" href="./plate/index.html" style="--accent:#1F3A5F">
+      <span class="chip">REFINED</span>
+      <p class="slug">plate</p>
+      <h3 class="name">Plate</h3>
+      <p class="desc">A hairline survey plate you navigate with a surveyor&rsquo;s console.</p>
+      <span class="open">OPEN &rarr;</span>
+    </a>
+
+    <a class="card" href="./render/index.html" style="--accent:#1F3A5F">
+      <span class="chip">REFINED</span>
+      <p class="slug">render</p>
+      <h3 class="name">Render</h3>
+      <p class="desc">The boot is the portfolio being set on the press in front of you.</p>
+      <span class="open">OPEN &rarr;</span>
+    </a>
+
+    <a class="card" href="./pressroom/index.html" style="--accent:#1F3A5F">
+      <span class="chip">WILDCARD</span>
+      <p class="slug">pressroom</p>
+      <h3 class="name">Pressroom</h3>
+      <p class="desc">A press setting a terminal-syntax catalog in front of you.</p>
+      <span class="open">OPEN &rarr;</span>
+    </a>
+
+    <a class="card" href="./tides/index.html" style="--accent:#1F3A5F">
+      <span class="chip">BOLDEST</span>
+      <p class="slug">tides</p>
+      <h3 class="name">Tides</h3>
+      <p class="desc">Terrain that respects itself. Water that moves like water.</p>
+      <span class="open">OPEN &rarr;</span>
+    </a>
+
+    <a class="card" href="./hybrid/index.html" style="--accent:#4d7cff">
+      <span class="chip">REFERENCE</span>
+      <p class="slug">hybrid</p>
+      <h3 class="name">Boot &rarr; Studio</h3>
+      <p class="desc">randy.sh boot dissolves into a studio site. terminal drawer via backtick.</p>
+      <span class="open">OPEN &rarr;</span>
+    </a>
+
+    <a class="card" href="./museum/index.html" style="--accent:#b48a2c">
+      <span class="chip">REFERENCE</span>
+      <p class="slug">museum</p>
+      <h3 class="name">Museum</h3>
+      <p class="desc">a walk-through exhibition. projects as rooms with wall labels.</p>
+      <span class="open">OPEN &rarr;</span>
+    </a>
+
+    <a class="card" href="./atlas/index.html" style="--accent:#2c5aa0">
+      <span class="chip">REFERENCE</span>
+      <p class="slug">atlas</p>
+      <h3 class="name">Atlas (static)</h3>
+      <p class="desc">static topographical map. pins with hairline leaders.</p>
+      <span class="open">OPEN &rarr;</span>
+    </a>
+
+  </section>
+
+  <section class="council" aria-label="council summary">
+    <h2>COUNCIL SUMMARY</h2>
+    <p>Three councils converged strongly on the same skeleton: RENDER, PLATE, and TIDES are the load-bearing candidates because each answers Randy&rsquo;s &ldquo;why would this exist&rdquo; test with a real-world referent (print production, cartographic navigation, fluid dynamics). CATALOG survives as the sharpest single-POV variation and the only one where the visitor has a real verb from second one. PRESS is killed &mdash; Fraunces on cream paper is now the signal of a portfolio Randy is explicitly not &mdash; and GLYPH is killed for scaling up the one good beat (the R-particle load-in) until repetition murders it. Two wildcards replace them: SOUNDING (TIDES stripped to its single strongest gesture &mdash; the tide-gauge cursor &mdash; which becomes the quietest direction in the set) and PRESSROOM (a hybrid of RENDER and CATALOG where the boot IS a printing press setting a terminal-syntax catalog). Palette is locked across all six: ink-black on warm cream, one considered ink-blue (Prussian / Payne&rsquo;s grey-blue, ~#1F3A5F), no green anywhere. Two typefaces per direction, no Fraunces. Every motion must survive the question &ldquo;what is this simulating?&rdquo; &mdash; if the answer is &ldquo;nothing, it&rsquo;s just nice,&rdquo; it gets cut. The boot ceremony, wherever it appears, is cookie-gated to run once per session and skippable by any keypress. Second-visit behavior is treated as a design surface, not an afterthought: mastery is the reward.</p>
+  </section>
+
+  <footer class="bot">
+    <span>randy ren &middot; sf &middot; 2026 &middot; v0.4</span>
+    <span>iterate &rarr; pick one &rarr; we go deep</span>
+  </footer>
+</main>
+
+</body>
+</html>

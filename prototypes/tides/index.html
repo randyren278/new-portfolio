@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Randy Ren — Tides · Selected Works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E8D4;
+    --ink:#111;
+    --prussian:#1F3A5F;
+    --deep:#152A44;
+    --umber:#7A4A1F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--paper);color:var(--ink);font-family:'IBM Plex Serif',serif;cursor:none}
+  a{color:inherit;text-decoration:none}
+  #stage{position:fixed;inset:0}
+  #fluidCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;image-rendering:pixelated}
+  #map{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  #map .interactive{pointer-events:auto}
+  .diurnal{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.55;transition:none}
+  .noise{position:absolute;inset:0;pointer-events:none;opacity:.06;mix-blend-mode:multiply;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/></svg>")}
+
+  /* Cartouches */
+  .cartouche{position:absolute;border:1px solid var(--ink);background:rgba(241,232,212,.86);padding:14px 16px;pointer-events:auto}
+  .cartouche .rule{height:1px;background:var(--ink);opacity:.4;margin:8px 0}
+  .cartouche .kicker{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;opacity:.75}
+  .cartouche .name{font-family:'IBM Plex Serif',serif;font-style:italic;font-size:20px;line-height:1.1}
+  .cartouche .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;opacity:.85}
+  .cartouche p{font-family:'IBM Plex Serif',serif;font-style:italic;font-size:14px;line-height:1.55}
+
+  #cartouche-title{top:26px;left:26px;width:340px}
+  #cartouche-about{top:26px;right:26px;width:320px}
+  #cartouche-clock{top:26px;left:50%;transform:translateX(-50%);width:220px;padding:8px 12px;text-align:center}
+  #cartouche-clock .time{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.14em}
+  #cartouche-clock .sun{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;opacity:.7;margin-top:2px}
+
+  #cartouche-contact{bottom:26px;right:26px;width:280px}
+  #cartouche-contact .row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;margin-top:4px}
+  #cartouche-contact a.mail{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--prussian);letter-spacing:.05em}
+  #cartouche-contact .handles{font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;margin-top:6px;letter-spacing:.04em;opacity:.9}
+
+  /* Compass + scale */
+  .compass{position:absolute;bottom:26px;right:330px;width:120px;height:120px;pointer-events:none}
+  .scalebar{position:absolute;bottom:38px;left:50%;transform:translateX(-50%);pointer-events:none;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--ink);text-align:center;opacity:.85}
+  .scalebar svg{display:block;margin:0 auto 4px}
+
+  /* Pins */
+  .pin{position:absolute;width:22px;height:22px;transform:translate(-50%,-50%);cursor:none;outline:none}
+  .pin svg{display:block;overflow:visible}
+  .pin:focus svg .core,.pin:hover svg .core{fill:var(--ink)}
+  .pin-label{position:absolute;transform:translate(-50%,10px);font-family:'IBM Plex Serif',serif;font-style:italic;font-size:11px;color:var(--ink);white-space:nowrap;pointer-events:none;letter-spacing:.02em;opacity:.85}
+
+  /* Cursor readout */
+  #cursor{position:fixed;left:0;top:0;pointer-events:none;z-index:60;transform:translate3d(0,0,0)}
+  #cursor .cross{position:absolute;left:-6px;top:-6px}
+  #cursor .readout{position:absolute;left:14px;top:6px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.4;letter-spacing:.05em;color:var(--ink);background:rgba(241,232,212,.9);border:1px solid var(--ink);padding:5px 8px;min-width:220px;white-space:nowrap}
+  #cursor .readout .r1{font-family:'IBM Plex Serif',serif;font-style:italic;font-size:12.5px;letter-spacing:.01em;margin-bottom:2px;color:var(--prussian)}
+  #cursor .readout .r3{font-family:'IBM Plex Serif',serif;font-style:italic;font-size:11px;color:var(--ink);opacity:.85;max-width:260px;white-space:normal;margin-top:3px;line-height:1.3}
+
+  /* Wall label panel */
+  #panel{position:fixed;top:0;right:0;bottom:0;width:420px;background:var(--paper);border-left:1px solid var(--ink);transform:translateX(102%);transition:transform 480ms cubic-bezier(.2,.9,.2,1.04);z-index:80;padding:34px 32px;display:flex;flex-direction:column;gap:16px;pointer-events:auto}
+  #panel.open{transform:translateX(0)}
+  #panel .close{position:absolute;top:14px;right:16px;font-family:'IBM Plex Mono',monospace;font-size:16px;background:none;border:none;color:var(--ink);cursor:none}
+  #panel .kicker{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;opacity:.7}
+  #panel h2{font-family:'IBM Plex Serif',serif;font-style:italic;font-weight:500;font-size:34px;line-height:1.05;color:var(--ink)}
+  #panel .plate{border:1px solid var(--ink);height:230px;position:relative;background:#EADFC7;overflow:hidden}
+  #panel .plate svg{position:absolute;inset:0;width:100%;height:100%}
+  #panel p.body{font-family:'IBM Plex Serif',serif;font-style:italic;font-size:15px;line-height:1.55}
+  #panel .meta{margin-top:auto;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;border-top:1px solid var(--ink);padding-top:10px}
+  #backdrop{position:fixed;inset:0;background:rgba(21,42,68,0.0);z-index:70;pointer-events:none;transition:background 400ms}
+  #backdrop.on{background:rgba(21,42,68,.15);pointer-events:auto}
+
+  /* Loader */
+  #loader{position:fixed;inset:0;z-index:90;background:var(--paper);pointer-events:none;transition:opacity 500ms}
+  #loader.done{opacity:0}
+  #loader .hint{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.22em;opacity:.55}
+
+  /* prefers reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    .diurnal{display:none}
+    #fluidCanvas{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="fluidCanvas"></canvas>
+
+  <svg id="map" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <clipPath id="waterClip">
+        <!-- water = viewport minus landmass; we build it below as a big rect minus landmass path via evenodd -->
+      </clipPath>
+      <pattern id="paperGrain" width="4" height="4" patternUnits="userSpaceOnUse">
+        <rect width="4" height="4" fill="#F1E8D4"/>
+      </pattern>
+    </defs>
+
+    <!-- 1. paper backdrop everywhere -->
+    <rect x="0" y="0" width="1600" height="1000" fill="var(--paper)"/>
+
+    <!-- 2. water polygon = whole viewport (fluid canvas + svg water shows over this) -->
+    <rect id="waterBase" x="0" y="0" width="1600" height="1000" fill="#1F3A5F"/>
+
+    <!-- 3. deep-water bands (subtle, drawn under fluid via SVG opacity) -->
+    <g id="depthBands" opacity=".35" fill="none" stroke="#152A44" stroke-width="0.6">
+      <path d="M -50 640 Q 400 560 900 640 T 1700 620"/>
+      <path d="M -50 720 Q 500 660 1000 720 T 1700 700"/>
+      <path d="M -50 820 Q 600 760 1100 820 T 1700 800"/>
+      <path d="M -50 900 Q 700 860 1200 900 T 1700 880"/>
+    </g>
+
+    <!-- 4. contour lines over water (bathymetric — hairline) -->
+    <g id="bathy" fill="none" stroke="#0d1f34" stroke-width="0.5" opacity=".45">
+      <path d="M -40 500 C 200 470 480 520 720 500 S 1200 470 1660 510"/>
+      <path d="M -40 560 C 240 540 500 580 760 560 S 1240 540 1660 570"/>
+      <path d="M -40 620 C 260 610 520 640 780 620 S 1260 620 1660 630"/>
+      <path d="M -40 700 C 260 700 520 720 780 700 S 1260 720 1660 700"/>
+      <path d="M -40 780 C 260 790 520 800 780 780 S 1260 800 1660 780"/>
+      <path d="M -40 860 C 260 870 520 880 780 860 S 1260 880 1660 860"/>
+      <path d="M -40 940 C 260 940 520 960 780 940 S 1260 960 1660 940"/>
+    </g>
+
+    <!-- 5. LANDMASS group (paper cream) — drawn ABOVE fluid canvas via z-order.
+         The SVG is the topmost pointer-events:none layer, so land visually occludes fluid. -->
+    <g id="landmass">
+      <!-- main peninsula (SF-ish silhouette, stylized) -->
+      <path class="land" d="
+        M 120 90
+        C 200 60 300 80 360 130
+        C 420 180 460 160 520 200
+        C 590 240 620 320 600 400
+        C 590 450 620 490 660 510
+        C 700 530 720 570 700 610
+        C 680 640 640 660 600 660
+        C 560 660 520 680 500 720
+        C 480 760 440 780 380 770
+        C 320 760 280 720 260 670
+        C 240 620 200 600 160 590
+        C 110 578 80 540 90 490
+        C 100 440 80 400 60 370
+        C 40 340 40 280 70 240
+        C 100 200 90 140 120 90 Z
+      " fill="#F1E8D4" stroke="#111" stroke-width="1.05"/>
+      <!-- small headland (right) -->
+      <path class="land" d="
+        M 1180 130
+        C 1260 110 1340 130 1400 180
+        C 1470 240 1520 300 1500 380
+        C 1490 430 1450 460 1420 480
+        C 1390 500 1360 530 1360 570
+        C 1360 610 1320 630 1280 620
+        C 1240 610 1210 580 1200 540
+        C 1190 500 1160 490 1130 480
+        C 1080 465 1050 430 1060 380
+        C 1070 330 1100 300 1130 260
+        C 1160 220 1140 160 1180 130 Z
+      " fill="#F1E8D4" stroke="#111" stroke-width="1.05"/>
+      <!-- islet A -->
+      <path class="land" d="
+        M 780 380
+        C 820 360 870 380 880 420
+        C 890 460 850 490 810 480
+        C 770 470 750 430 780 380 Z
+      " fill="#F1E8D4" stroke="#111" stroke-width="1.05"/>
+      <!-- islet B -->
+      <path class="land" d="
+        M 940 720
+        C 980 700 1030 720 1035 760
+        C 1040 800 1000 820 970 810
+        C 940 800 915 760 940 720 Z
+      " fill="#F1E8D4" stroke="#111" stroke-width="1.05"/>
+      <!-- islet C small -->
+      <path class="land" d="M 300 850 C 320 840 350 850 355 870 C 360 890 335 900 315 895 C 295 890 285 870 300 850 Z" fill="#F1E8D4" stroke="#111" stroke-width="1.05"/>
+
+      <!-- contours ON LAND (topographic hairlines) -->
+      <g fill="none" stroke="#111" stroke-width="0.55" opacity=".55">
+        <path d="M 180 200 C 240 180 320 200 380 240 C 440 280 480 300 500 340"/>
+        <path d="M 200 260 C 260 240 340 260 400 300 C 440 330 470 350 490 380"/>
+        <path d="M 220 320 C 280 300 360 320 420 360 C 450 380 470 400 480 420"/>
+        <path d="M 240 380 C 300 360 380 380 440 420"/>
+        <path d="M 160 460 C 220 440 300 460 360 500"/>
+        <path d="M 180 520 C 240 500 320 520 380 560"/>
+        <path d="M 220 580 C 280 560 340 580 400 620"/>
+        <path d="M 300 640 C 360 620 420 640 480 680"/>
+        <path d="M 1200 200 C 1260 180 1320 200 1360 240"/>
+        <path d="M 1220 260 C 1280 240 1340 260 1380 300"/>
+        <path d="M 1240 320 C 1300 300 1360 320 1400 360"/>
+        <path d="M 1260 380 C 1320 360 1380 380 1420 420"/>
+        <path d="M 1220 460 C 1280 440 1340 460 1380 490"/>
+        <path d="M 1240 520 C 1300 500 1360 520 1390 550"/>
+        <path d="M 800 400 C 830 395 860 410 870 430"/>
+        <path d="M 810 430 C 830 425 855 435 865 450"/>
+        <path d="M 950 740 C 980 735 1010 745 1020 760"/>
+        <path d="M 960 770 C 985 765 1005 775 1015 785"/>
+      </g>
+
+      <!-- place-names on land, umber serif italic -->
+      <g id="placeNames" font-family="IBM Plex Serif" font-style="italic" fill="#7A4A1F" font-size="13" opacity=".95">
+        <text x="260" y="360">Punta Serena</text>
+        <text x="320" y="500">Marisco</text>
+        <text x="170" y="240">Cabo Vela</text>
+        <text x="440" y="640">Bahía Quieta</text>
+        <text x="1220" y="340">Puerto Umbra</text>
+        <text x="1290" y="500">Farallón</text>
+        <text x="800" y="470" font-size="11">Isla Prisma</text>
+        <text x="945" y="810" font-size="11">Isla Corriente</text>
+        <text x="900" y="200" font-size="11" fill="#111" opacity=".55">Mar de Halcyon</text>
+        <text x="850" y="900" font-size="11" fill="#111" opacity=".55">Estrecho Loom</text>
+      </g>
+    </g>
+
+    <!-- 6. hairline graticule (over water & land subtle) -->
+    <g id="graticule" fill="none" stroke="#111" stroke-width="0.35" opacity=".18">
+      <path d="M 0 200 L 1600 200"/>
+      <path d="M 0 400 L 1600 400"/>
+      <path d="M 0 600 L 1600 600"/>
+      <path d="M 0 800 L 1600 800"/>
+      <path d="M 200 0 L 200 1000"/>
+      <path d="M 500 0 L 500 1000"/>
+      <path d="M 800 0 L 800 1000"/>
+      <path d="M 1100 0 L 1100 1000"/>
+      <path d="M 1400 0 L 1400 1000"/>
+    </g>
+  </svg>
+
+  <div class="diurnal" id="diurnal"></div>
+  <div class="noise"></div>
+
+  <!-- pins (HTML, absolutely positioned in stage coords via % relative to viewport) -->
+  <div id="pins"></div>
+
+  <!-- Cartouches -->
+  <div class="cartouche" id="cartouche-title" data-label="TITLE">
+    <div class="name">Randy Ren</div>
+    <div class="meta">SAN FRANCISCO — 2026</div>
+    <div class="rule"></div>
+    <div class="kicker">Tides · Selected Works</div>
+    <div class="kicker" id="fluidNote" style="margin-top:6px;opacity:.55"></div>
+  </div>
+
+  <div class="cartouche" id="cartouche-clock" data-label="LOCAL TIME">
+    <div class="time" id="clock">--:--:-- PT</div>
+    <div class="sun" id="sun">SUN AT —°</div>
+  </div>
+
+  <div class="cartouche" id="cartouche-about" data-label="ABOUT">
+    <div class="kicker">On Randy</div>
+    <div class="rule"></div>
+    <p>Randy is a designer-engineer working at the seam between AI systems and human interfaces. Previously shipped consumer products used by millions; now focused on making agents feel like real collaborators — the kind you'd want in the room, not the kind that eats your afternoon. Believes the best interfaces disappear until you need them, then arrive already knowing why. Currently open to select client work and staff+ roles starting fall 2026.</p>
+  </div>
+
+  <div class="cartouche" id="cartouche-contact" data-label="CONTACT">
+    <div class="kicker">Correspondence</div>
+    <div class="rule"></div>
+    <a class="mail" href="mailto:hey@randy.sh">hey@randy.sh</a>
+    <div class="row"><span>SAN FRANCISCO</span><span>PT / GMT-7</span></div>
+    <div class="handles">
+      TWITTER — @randyren<br>
+      GITHUB — randyren<br>
+      LINKEDIN — /in/randyren
+    </div>
+  </div>
+
+  <!-- Compass + scalebar -->
+  <svg class="compass" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="52" fill="none" stroke="#111" stroke-width="0.8"/>
+    <circle cx="60" cy="60" r="42" fill="none" stroke="#111" stroke-width="0.4"/>
+    <line x1="60" y1="10" x2="60" y2="110" stroke="#111" stroke-width="0.4"/>
+    <line x1="10" y1="60" x2="110" y2="60" stroke="#111" stroke-width="0.4"/>
+    <polygon points="60,14 55,60 60,56 65,60" fill="#7A4A1F"/>
+    <polygon points="60,106 55,60 60,64 65,60" fill="#111" opacity=".85"/>
+    <text x="60" y="8" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#111">N</text>
+    <text x="60" y="118" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#111">S</text>
+    <text x="4" y="63" font-family="IBM Plex Mono" font-size="8" fill="#111">W</text>
+    <text x="112" y="63" font-family="IBM Plex Mono" font-size="8" fill="#111">E</text>
+  </svg>
+
+  <div class="scalebar">
+    <svg width="180" height="10" viewBox="0 0 180 10">
+      <rect x="0" y="2" width="90" height="6" fill="#111"/>
+      <rect x="90" y="2" width="90" height="6" fill="none" stroke="#111" stroke-width="0.6"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#111" stroke-width="0.6"/>
+      <line x1="90" y1="0" x2="90" y2="10" stroke="#111" stroke-width="0.6"/>
+      <line x1="180" y1="0" x2="180" y2="10" stroke="#111" stroke-width="0.6"/>
+    </svg>
+    0 — 5 — 10 NAUTICAL MILES
+  </div>
+</div>
+
+<!-- Cursor readout -->
+<div id="cursor" aria-hidden="true">
+  <svg class="cross" width="12" height="12" viewBox="0 0 12 12">
+    <line x1="6" y1="0" x2="6" y2="12" stroke="#111" stroke-width="0.8"/>
+    <line x1="0" y1="6" x2="12" y2="6" stroke="#111" stroke-width="0.8"/>
+  </svg>
+  <div class="readout" id="readout">
+    <div class="r1" id="r1">Pacific approaches</div>
+    <div class="r2" id="r2">LAT 37.7749  LON -122.4194</div>
+    <div class="r2" id="r2b">DEPTH — · BEARING —</div>
+    <div class="r3" id="r3"></div>
+  </div>
+</div>
+
+<!-- Backdrop + wall-label panel -->
+<div id="backdrop"></div>
+<aside id="panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle">
+  <button class="close" id="panelClose" aria-label="Close">×</button>
+  <div class="kicker" id="panelKicker">Project · 2025</div>
+  <h2 id="panelTitle">—</h2>
+  <div class="plate" id="panelPlate"></div>
+  <p class="body" id="panelBody">—</p>
+  <div class="meta" id="panelMeta">—</div>
+</aside>
+
+<!-- Loader overlay -->
+<div id="loader"><div class="hint">Drawing coastline · press any key to skip</div></div>
+
+<script>
+/* ============================================================
+   TIDES · physics done right
+   ============================================================ */
+
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- state ---------- */
+const state = {
+  vw:0, vh:0,
+  mouse:{x:0,y:0, px:0, py:0, vx:0, vy:0, moved:false},
+  overWater:false,
+  overPin:null,
+  overCartouche:null,
+  fluidEnabled:true,
+  gridN:128,
+  sunAngle:0,
+};
+
+/* ---------- projects ---------- */
+const projects = [
+  { id:'oryzo', name:'Oryzo', year:'2025', disciplines:'AI · Interface · Web',
+    desc:'Voice orchestration layer for autonomous agents. Turned 300ms of latency into a feature.',
+    long:'Oryzo is a voice orchestration layer that sits between speech and a fleet of autonomous agents. Instead of hiding latency, it treats the wait as conversational space — micro-acknowledgments, tone-matched pauses, and mid-thought interrupts. Ships as an SDK and a hosted router; the same primitives power both a phone-call agent and a browser copilot.',
+    x:34, y:22 },
+  { id:'halcyon', name:'Halcyon', year:'2025', disciplines:'Product · WebGL · Design',
+    desc:'Realtime collaborative canvas for design teams. Half a million multiplayer cursors and counting.',
+    long:'Halcyon is a realtime canvas built for the sort of design teams that hate design tools. WebGL under the hood, a CRDT for text and shape state, and a cursor protocol that gossips at 90 Hz. The product decision that mattered: presence is a first-class primitive, not a badge on a toolbar.',
+    x:58, y:36 },
+  { id:'aperture', name:'Aperture', year:'2024', disciplines:'Mobile · System · Concept',
+    desc:'Camera-first mobile OS. The lens is the app launcher.',
+    long:'Aperture reimagines the phone home screen as a viewfinder. Point at a menu — order. Point at a receipt — track. Point at a room — control. Apps become verbs attached to what the camera sees. Built as a research prototype on Android; the surprise was how quickly muscle memory shifted from icon-tapping to aiming.',
+    x:78, y:58 },
+  { id:'fieldnote', name:'Fieldnote', year:'2024', disciplines:'CLI · AI · Tool',
+    desc:'Terminal-native journaling agent. Writes with you, not for you.',
+    long:'Fieldnote is a journaling agent that lives in the terminal. It asks one question a day, remembers your voice, and never autocompletes over your own sentences. The design constraint was moral: an LLM in your journal must not become a ghostwriter. It surfaces patterns, threads themes, and quietly disappears when you want to think alone.',
+    x:14, y:64 },
+  { id:'signal', name:'Signal Garden', year:'2024', disciplines:'Hardware · Interface',
+    desc:'Ambient e-ink dashboards for distributed teams. Status without Slack.',
+    long:'Signal Garden is a fleet of small e-ink panels — desk-sized, wall-sized — that show a team what is happening without demanding attention. Deploy status, on-call, one graph of the number that matters this week. The design brief was to make a dashboard you could put in a living room without wincing.',
+    x:46, y:76 },
+  { id:'loom', name:'Loom', year:'2023', disciplines:'Web3 · Audio · Experiment',
+    desc:'Peer-to-peer music mesh. No servers, no ads, just rooms.',
+    long:'Loom is a peer-to-peer listening room protocol. Two people, twenty, or two hundred — audio streams gossip across the mesh, latency-compensated so everyone lands on the same downbeat. An experiment more than a product; a reminder that shared listening does not need a platform to survive.',
+    x:60, y:82 },
+];
+
+/* pin positions map to SVG viewBox 1600x1000 percent-of-viewport for HTML overlay */
+
+/* ---------- fluid sim (WebGL2) ---------- */
+let gl=null, fluid=null;
+const fluidCanvas = document.getElementById('fluidCanvas');
+
+function initFluid(){
+  if(REDUCED){ state.fluidEnabled=false; return false; }
+  gl = fluidCanvas.getContext('webgl2', {alpha:true, premultipliedAlpha:false, antialias:false});
+  if(!gl){ state.fluidEnabled=false; document.getElementById('fluidNote').textContent = 'FLUID DISABLED — REDUCED MOTION'; return false; }
+  const ext = gl.getExtension('EXT_color_buffer_float');
+  if(!ext){ state.fluidEnabled=false; document.getElementById('fluidNote').textContent = 'FLUID DISABLED — REDUCED MOTION'; return false; }
+  try{ fluid = buildFluid(state.gridN); }catch(e){ console.warn(e); state.fluidEnabled=false; return false; }
+  return true;
+}
+
+function makeShader(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    console.error(gl.getShaderInfoLog(s), src); throw new Error('shader');
+  }
+  return s;
+}
+function makeProgram(vs, fs){
+  const p = gl.createProgram();
+  gl.attachShader(p, makeShader(gl.VERTEX_SHADER, vs));
+  gl.attachShader(p, makeShader(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p, gl.LINK_STATUS)){ console.error(gl.getProgramInfoLog(p)); throw new Error('program'); }
+  return p;
+}
+
+const VS_QUAD = `#version 300 es
+in vec2 aPos;
+out vec2 vUv;
+void main(){ vUv = aPos*0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+const FS_ADVECT = `#version 300 es
+precision highp float;
+uniform sampler2D uVelocity;
+uniform sampler2D uSource;
+uniform float uDt;
+uniform float uDiss;
+uniform vec2 uTexel;
+in vec2 vUv;
+out vec4 outColor;
+void main(){
+  vec2 v = texture(uVelocity, vUv).xy;
+  vec2 coord = vUv - uDt * v * uTexel;
+  outColor = uDiss * texture(uSource, coord);
+}`;
+
+const FS_DIVERGENCE = `#version 300 es
+precision highp float;
+uniform sampler2D uVelocity;
+uniform vec2 uTexel;
+in vec2 vUv;
+out vec4 outColor;
+void main(){
+  float l = texture(uVelocity, vUv - vec2(uTexel.x,0)).x;
+  float r = texture(uVelocity, vUv + vec2(uTexel.x,0)).x;
+  float b = texture(uVelocity, vUv - vec2(0,uTexel.y)).y;
+  float t = texture(uVelocity, vUv + vec2(0,uTexel.y)).y;
+  float div = 0.5 * (r - l + t - b);
+  outColor = vec4(div, 0.0, 0.0, 1.0);
+}`;
+
+const FS_JACOBI = `#version 300 es
+precision highp float;
+uniform sampler2D uPressure;
+uniform sampler2D uDivergence;
+uniform vec2 uTexel;
+in vec2 vUv;
+out vec4 outColor;
+void main(){
+  float l = texture(uPressure, vUv - vec2(uTexel.x,0)).x;
+  float r = texture(uPressure, vUv + vec2(uTexel.x,0)).x;
+  float b = texture(uPressure, vUv - vec2(0,uTexel.y)).x;
+  float t = texture(uPressure, vUv + vec2(0,uTexel.y)).x;
+  float d = texture(uDivergence, vUv).x;
+  float p = (l + r + b + t - d) * 0.25;
+  outColor = vec4(p, 0.0, 0.0, 1.0);
+}`;
+
+const FS_GRADSUB = `#version 300 es
+precision highp float;
+uniform sampler2D uPressure;
+uniform sampler2D uVelocity;
+uniform vec2 uTexel;
+in vec2 vUv;
+out vec4 outColor;
+void main(){
+  float l = texture(uPressure, vUv - vec2(uTexel.x,0)).x;
+  float r = texture(uPressure, vUv + vec2(uTexel.x,0)).x;
+  float b = texture(uPressure, vUv - vec2(0,uTexel.y)).x;
+  float t = texture(uPressure, vUv + vec2(0,uTexel.y)).x;
+  vec2 v = texture(uVelocity, vUv).xy;
+  v -= vec2(r - l, t - b) * 0.5;
+  outColor = vec4(v, 0.0, 1.0);
+}`;
+
+const FS_FORCE = `#version 300 es
+precision highp float;
+uniform sampler2D uVelocity;
+uniform vec2 uPoint;   // in uv
+uniform vec2 uForce;   // in uv/sec
+uniform float uRadius;
+in vec2 vUv;
+out vec4 outColor;
+void main(){
+  vec2 v = texture(uVelocity, vUv).xy;
+  vec2 d = vUv - uPoint;
+  float f = exp(-dot(d,d)/uRadius);
+  v += uForce * f;
+  outColor = vec4(v, 0.0, 1.0);
+}`;
+
+const FS_DYE_FORCE = `#version 300 es
+precision highp float;
+uniform sampler2D uDye;
+uniform vec2 uPoint;
+uniform float uRadius;
+uniform float uAmount;
+in vec2 vUv;
+out vec4 outColor;
+void main(){
+  vec4 d = texture(uDye, vUv);
+  vec2 diff = vUv - uPoint;
+  float f = exp(-dot(diff,diff)/uRadius) * uAmount;
+  d.rgb += vec3(f);
+  outColor = d;
+}`;
+
+const FS_DISPLAY = `#version 300 es
+precision highp float;
+uniform sampler2D uDye;
+uniform sampler2D uVelocity;
+uniform float uTime;
+uniform vec2 uResolution;
+in vec2 vUv;
+out vec4 outColor;
+
+// procedural depth heightfield (deeper = darker), plus a stable swell
+float depthField(vec2 p){
+  float s = sin(p.x*3.0 + uTime*0.15) * 0.5 + 0.5;
+  float t = sin(p.y*2.2 - uTime*0.11) * 0.5 + 0.5;
+  return mix(s, t, 0.5);
+}
+
+void main(){
+  vec2 v = texture(uVelocity, vUv).xy;
+  float d = texture(uDye, vUv).r;
+  vec2 uv2 = vUv + v * 0.02;
+  float df = depthField(uv2*3.0);
+
+  // base prussian
+  vec3 base = vec3(0.122, 0.227, 0.373);   // #1F3A5F
+  vec3 deep = vec3(0.082, 0.164, 0.267);   // #152A44
+
+  // deeper toward center columns (fake bathymetry)
+  float coastAmt = smoothstep(0.0, 0.35, min(vUv.x, 1.0-vUv.x));
+  vec3 water = mix(base, deep, coastAmt * 0.55);
+
+  // shimmer from fluid: brighten a hair where dye is
+  float shimmer = clamp(d * 1.8, 0.0, 1.0);
+  water += vec3(0.05, 0.07, 0.09) * shimmer;
+
+  // very subtle swell modulation
+  water += (df - 0.5) * vec3(0.02, 0.03, 0.05);
+
+  // gentle vignette toward paper cream at edges (helps blend with SVG)
+  outColor = vec4(water, 1.0);
+}`;
+
+function createFBO(w, h, internal, format, type, filter){
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, internal, w, h, 0, format, type, null);
+  const fbo = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  return { fbo, tex, w, h };
+}
+function createDouble(w,h,internal,format,type,filter){
+  let a = createFBO(w,h,internal,format,type,filter);
+  let b = createFBO(w,h,internal,format,type,filter);
+  return {
+    get read(){return a}, get write(){return b},
+    swap(){ const t=a; a=b; b=t; }
+  };
+}
+
+function buildFluid(N){
+  const F = {N};
+  // quad
+  const quad = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  F.quad = quad;
+
+  F.progAdvect = makeProgram(VS_QUAD, FS_ADVECT);
+  F.progDiv    = makeProgram(VS_QUAD, FS_DIVERGENCE);
+  F.progJac    = makeProgram(VS_QUAD, FS_JACOBI);
+  F.progGrad   = makeProgram(VS_QUAD, FS_GRADSUB);
+  F.progForce  = makeProgram(VS_QUAD, FS_FORCE);
+  F.progDyeF   = makeProgram(VS_QUAD, FS_DYE_FORCE);
+  F.progDisp   = makeProgram(VS_QUAD, FS_DISPLAY);
+
+  const internalRG = gl.RG16F, formatRG = gl.RG, typeF = gl.HALF_FLOAT;
+  const internalR = gl.R16F, formatR = gl.RED;
+  F.velocity = createDouble(N,N, internalRG, formatRG, typeF, gl.LINEAR);
+  F.dye      = createDouble(N,N, gl.RGBA16F, gl.RGBA, typeF, gl.LINEAR);
+  F.pressure = createDouble(N,N, internalR, formatR, typeF, gl.NEAREST);
+  F.divergence = createFBO(N,N, internalR, formatR, typeF, gl.NEAREST);
+  F.texel = [1/N, 1/N];
+  return F;
+}
+
+function bindQuad(prog){
+  gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, fluid.quad);
+  const loc = gl.getAttribLocation(prog, 'aPos');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+}
+function drawQuad(){ gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); }
+
+function stepFluid(dt){
+  const N = fluid.N;
+  gl.viewport(0,0,N,N);
+  gl.disable(gl.BLEND);
+
+  // 1. advect velocity
+  bindQuad(fluid.progAdvect);
+  gl.uniform1i(gl.getUniformLocation(fluid.progAdvect,'uVelocity'), 0);
+  gl.uniform1i(gl.getUniformLocation(fluid.progAdvect,'uSource'), 1);
+  gl.uniform1f(gl.getUniformLocation(fluid.progAdvect,'uDt'), dt * N);
+  gl.uniform1f(gl.getUniformLocation(fluid.progAdvect,'uDiss'), 0.995);
+  gl.uniform2f(gl.getUniformLocation(fluid.progAdvect,'uTexel'), fluid.texel[0], fluid.texel[1]);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fluid.velocity.read.tex);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, fluid.velocity.read.tex);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fluid.velocity.write.fbo);
+  drawQuad(); fluid.velocity.swap();
+
+  // 2. advect dye
+  bindQuad(fluid.progAdvect);
+  gl.uniform1i(gl.getUniformLocation(fluid.progAdvect,'uVelocity'), 0);
+  gl.uniform1i(gl.getUniformLocation(fluid.progAdvect,'uSource'), 1);
+  gl.uniform1f(gl.getUniformLocation(fluid.progAdvect,'uDt'), dt * N);
+  gl.uniform1f(gl.getUniformLocation(fluid.progAdvect,'uDiss'), 0.985);
+  gl.uniform2f(gl.getUniformLocation(fluid.progAdvect,'uTexel'), fluid.texel[0], fluid.texel[1]);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fluid.velocity.read.tex);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, fluid.dye.read.tex);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fluid.dye.write.fbo);
+  drawQuad(); fluid.dye.swap();
+
+  // 3. divergence
+  bindQuad(fluid.progDiv);
+  gl.uniform1i(gl.getUniformLocation(fluid.progDiv,'uVelocity'), 0);
+  gl.uniform2f(gl.getUniformLocation(fluid.progDiv,'uTexel'), fluid.texel[0], fluid.texel[1]);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fluid.velocity.read.tex);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fluid.divergence.fbo);
+  drawQuad();
+
+  // 4. clear pressure to zero (draw with a black overlay via glClear)
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fluid.pressure.read.fbo);
+  gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT);
+
+  // 5. jacobi iterations
+  for(let i=0;i<20;i++){
+    bindQuad(fluid.progJac);
+    gl.uniform1i(gl.getUniformLocation(fluid.progJac,'uPressure'), 0);
+    gl.uniform1i(gl.getUniformLocation(fluid.progJac,'uDivergence'), 1);
+    gl.uniform2f(gl.getUniformLocation(fluid.progJac,'uTexel'), fluid.texel[0], fluid.texel[1]);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fluid.pressure.read.tex);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, fluid.divergence.tex);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fluid.pressure.write.fbo);
+    drawQuad(); fluid.pressure.swap();
+  }
+
+  // 6. subtract gradient
+  bindQuad(fluid.progGrad);
+  gl.uniform1i(gl.getUniformLocation(fluid.progGrad,'uPressure'), 0);
+  gl.uniform1i(gl.getUniformLocation(fluid.progGrad,'uVelocity'), 1);
+  gl.uniform2f(gl.getUniformLocation(fluid.progGrad,'uTexel'), fluid.texel[0], fluid.texel[1]);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fluid.pressure.read.tex);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, fluid.velocity.read.tex);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fluid.velocity.write.fbo);
+  drawQuad(); fluid.velocity.swap();
+}
+
+function injectForce(uvX, uvY, fx, fy, amount){
+  const N = fluid.N;
+  gl.viewport(0,0,N,N); gl.disable(gl.BLEND);
+  // velocity
+  bindQuad(fluid.progForce);
+  gl.uniform1i(gl.getUniformLocation(fluid.progForce,'uVelocity'), 0);
+  gl.uniform2f(gl.getUniformLocation(fluid.progForce,'uPoint'), uvX, uvY);
+  gl.uniform2f(gl.getUniformLocation(fluid.progForce,'uForce'), fx, fy);
+  gl.uniform1f(gl.getUniformLocation(fluid.progForce,'uRadius'), 0.0018);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fluid.velocity.read.tex);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fluid.velocity.write.fbo);
+  drawQuad(); fluid.velocity.swap();
+  // dye
+  bindQuad(fluid.progDyeF);
+  gl.uniform1i(gl.getUniformLocation(fluid.progDyeF,'uDye'), 0);
+  gl.uniform2f(gl.getUniformLocation(fluid.progDyeF,'uPoint'), uvX, uvY);
+  gl.uniform1f(gl.getUniformLocation(fluid.progDyeF,'uRadius'), 0.002);
+  gl.uniform1f(gl.getUniformLocation(fluid.progDyeF,'uAmount'), amount);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fluid.dye.read.tex);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fluid.dye.write.fbo);
+  drawQuad(); fluid.dye.swap();
+}
+
+function displayFluid(t){
+  gl.viewport(0,0,fluidCanvas.width, fluidCanvas.height);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.clearColor(0.122, 0.227, 0.373, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+  bindQuad(fluid.progDisp);
+  gl.uniform1i(gl.getUniformLocation(fluid.progDisp,'uDye'), 0);
+  gl.uniform1i(gl.getUniformLocation(fluid.progDisp,'uVelocity'), 1);
+  gl.uniform1f(gl.getUniformLocation(fluid.progDisp,'uTime'), t);
+  gl.uniform2f(gl.getUniformLocation(fluid.progDisp,'uResolution'), fluidCanvas.width, fluidCanvas.height);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fluid.dye.read.tex);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, fluid.velocity.read.tex);
+  drawQuad();
+}
+
+/* ---------- water/land hit-test using SVG ---------- */
+const landPaths = () => Array.from(document.querySelectorAll('#landmass path.land'));
+function pointOverLand(clientX, clientY){
+  // convert screen coords to SVG coords
+  const svg = document.getElementById('map');
+  const pt = svg.createSVGPoint();
+  pt.x = clientX; pt.y = clientY;
+  const ctm = svg.getScreenCTM().inverse();
+  const p = pt.matrixTransform(ctm);
+  for(const path of landPaths()){
+    if(path.isPointInFill && path.isPointInFill(p)) return true;
+  }
+  return false;
+}
+
+/* ---------- pins ---------- */
+function buildPins(){
+  const holder = document.getElementById('pins');
+  projects.forEach((pj, i) => {
+    const el = document.createElement('div');
+    el.className = 'pin interactive';
+    el.tabIndex = 0;
+    el.style.left = pj.x + '%';
+    el.style.top  = pj.y + '%';
+    el.setAttribute('data-id', pj.id);
+    el.setAttribute('aria-label', `${pj.name}, ${pj.year}`);
+    el.innerHTML = `
+      <svg width="22" height="22" viewBox="-11 -11 22 22">
+        <polygon class="core" points="0,-7 7,0 0,7 -7,0" fill="#F1E8D4" stroke="#111" stroke-width="1"/>
+        <circle cx="0" cy="0" r="1.4" fill="#111"/>
+      </svg>
+      <div class="pin-label">${String(i+1).padStart(2,'0')} · ${pj.name}</div>
+    `;
+    el.addEventListener('mouseenter', ()=> state.overPin = pj);
+    el.addEventListener('mouseleave', ()=> state.overPin = null);
+    el.addEventListener('focus', ()=> state.overPin = pj);
+    el.addEventListener('blur',  ()=> state.overPin = null);
+    el.addEventListener('click', ()=> openPanel(pj));
+    el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openPanel(pj); }});
+    holder.appendChild(el);
+  });
+}
+
+/* ---------- wall label panel ---------- */
+function openPanel(pj){
+  document.getElementById('panelTitle').textContent = pj.name;
+  document.getElementById('panelKicker').textContent = `Project · ${pj.year}`;
+  document.getElementById('panelBody').textContent = pj.long;
+  document.getElementById('panelMeta').textContent = `${pj.year} · ${pj.disciplines}`;
+  document.getElementById('panelPlate').innerHTML = platePlateFor(pj);
+  document.getElementById('panel').classList.add('open');
+  document.getElementById('backdrop').classList.add('on');
+}
+function closePanel(){
+  document.getElementById('panel').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('on');
+}
+function platePlateFor(pj){
+  // procedural hairline composition per project
+  const seed = pj.id.charCodeAt(0);
+  const lines = [];
+  for(let i=0;i<14;i++){
+    const y = 20 + i*14 + ((seed*7)%6);
+    const x1 = 10 + ((i*seed*3)%40);
+    const x2 = 380 - ((i*seed*5)%80);
+    lines.push(`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#111" stroke-width="0.5" opacity="${0.25 + (i%5)*0.09}"/>`);
+  }
+  return `<svg viewBox="0 0 400 230" preserveAspectRatio="none">
+    <rect x="0" y="0" width="400" height="230" fill="#EADFC7"/>
+    ${lines.join('')}
+    <polygon points="200,60 260,150 140,150" fill="none" stroke="#1F3A5F" stroke-width="1"/>
+    <circle cx="200" cy="130" r="42" fill="none" stroke="#7A4A1F" stroke-width="0.8"/>
+    <text x="20" y="215" font-family="IBM Plex Mono" font-size="10" fill="#111" opacity=".7">PLATE ${pj.id.toUpperCase()} · ${pj.year}</text>
+  </svg>`;
+}
+
+/* ---------- cursor readout ---------- */
+const readout = { r1: document.getElementById('r1'), r2: document.getElementById('r2'), r2b: document.getElementById('r2b'), r3: document.getElementById('r3') };
+
+function screenToLatLon(x,y){
+  // fake SF-ish extent
+  const lat = 37.90 - (y / state.vh) * 0.35;
+  const lon = -122.55 + (x / state.vw) * 0.42;
+  return {lat, lon};
+}
+function bearingFrom(x,y){
+  const cx = state.vw/2, cy = state.vh/2;
+  const dx = x - cx, dy = -(y - cy);
+  let ang = Math.atan2(dx, dy) * 180 / Math.PI;
+  if(ang < 0) ang += 360;
+  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  return { deg: ang.toFixed(0), dir: dirs[Math.round(ang/22.5)%16] };
+}
+function nearestPlaceName(x,y){
+  // pick a place-name from SVG by nearest text element in viewBox space
+  const svg = document.getElementById('map');
+  const pt = svg.createSVGPoint(); pt.x=x; pt.y=y;
+  const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+  const texts = Array.from(document.querySelectorAll('#placeNames text'));
+  let best=null, bestD=1e9;
+  for(const t of texts){
+    const tx = parseFloat(t.getAttribute('x')), ty = parseFloat(t.getAttribute('y'));
+    const d = (tx-p.x)*(tx-p.x)+(ty-p.y)*(ty-p.y);
+    if(d < bestD){ bestD=d; best=t.textContent; }
+  }
+  return best || '—';
+}
+
+function updateReadout(){
+  const {x,y} = state.mouse;
+  const {lat, lon} = screenToLatLon(x,y);
+  const b = bearingFrom(x,y);
+
+  if(state.overPin){
+    const pj = state.overPin;
+    readout.r1.textContent = pj.name;
+    readout.r2.textContent = `LAT ${lat.toFixed(4)}  LON ${lon.toFixed(4)}`;
+    readout.r2b.textContent = `DEPTH ${pj.year} · BEARING — ${pj.disciplines}`;
+    readout.r3.textContent = pj.desc;
+    readout.r3.style.display='block';
+    return;
+  }
+  if(state.overCartouche){
+    readout.r1.textContent = 'Cartouche';
+    readout.r2.textContent = `LAT ${lat.toFixed(4)}  LON ${lon.toFixed(4)}`;
+    readout.r2b.textContent = `LABEL — ${state.overCartouche}`;
+    readout.r3.textContent = '';
+    readout.r3.style.display='none';
+    return;
+  }
+
+  if(state.overWater){
+    // fathoms: fake, based on distance from land + a noise
+    const cx = state.vw/2, cy = state.vh*0.55;
+    const dx = (x-cx)/state.vw, dy=(y-cy)/state.vh;
+    const depth = Math.abs(Math.round(40 + 120*Math.sqrt(dx*dx+dy*dy) + Math.sin(x*0.01+y*0.013)*8));
+    readout.r1.textContent = 'Open water';
+    readout.r2.textContent = `LAT ${lat.toFixed(4)}  LON ${lon.toFixed(4)}`;
+    readout.r2b.textContent = `DEPTH −${depth} fm · BEARING ${b.deg}° ${b.dir}`;
+    readout.r3.textContent = '';
+    readout.r3.style.display='none';
+  } else {
+    // land: elevation, nearest place-name
+    const elev = Math.max(1, Math.round(20 + 80*Math.abs(Math.sin(x*0.006+y*0.008)) + (state.vh-y)*0.02));
+    const place = nearestPlaceName(x,y);
+    readout.r1.textContent = place;
+    readout.r2.textContent = `LAT ${lat.toFixed(4)}  LON ${lon.toFixed(4)}`;
+    readout.r2b.textContent = `DEPTH +${elev} m · BEARING ${place}`;
+    readout.r3.textContent = '';
+    readout.r3.style.display='none';
+  }
+}
+
+/* ---------- clock + sun ---------- */
+function updateClock(){
+  const d = new Date();
+  // treat "local" as SF time using the user's clock — approximation
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  const ss = String(d.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${hh}:${mm}:${ss} PT`;
+  // sun angle: 0° at 06:00, 180° at 18:00, negative at night
+  const hours = d.getHours() + d.getMinutes()/60 + d.getSeconds()/3600;
+  const angle = ((hours - 6) / 12) * 180;
+  state.sunAngle = angle;
+  document.getElementById('sun').textContent = `SUN AT ${angle.toFixed(0)}°`;
+}
+function updateDiurnal(){
+  // radial gradient overlay warm from sun direction, cool opposite
+  const a = state.sunAngle;
+  // convert angle to position on viewport: 0° left, 180° right
+  const t = Math.max(0, Math.min(1, a/180));
+  const isNight = a < 0 || a > 180;
+  const cx = (t*100).toFixed(1);
+  const warm = isNight ? 'rgba(31,58,95,0.35)' : 'rgba(240,190,120,0.45)';
+  const cool = 'rgba(21,42,68,0.30)';
+  document.getElementById('diurnal').style.background =
+    `radial-gradient(circle at ${cx}% 20%, ${warm} 0%, rgba(0,0,0,0) 55%),
+     radial-gradient(circle at ${(100-cx).toFixed(1)}% 90%, ${cool} 0%, rgba(0,0,0,0) 60%)`;
+}
+
+/* ---------- resize ---------- */
+function resize(){
+  state.vw = window.innerWidth; state.vh = window.innerHeight;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  fluidCanvas.width  = Math.floor(state.vw * dpr);
+  fluidCanvas.height = Math.floor(state.vh * dpr);
+}
+
+/* ---------- main loop ---------- */
+let lastT = 0, probeFrames = 0, probeAcc = 0;
+function frame(t){
+  const dt = Math.min(0.033, (t - lastT) / 1000 || 0.016);
+  lastT = t;
+  const timeS = t/1000;
+
+  if(state.fluidEnabled && fluid){
+    // inject force scaled by cursor velocity, only when over water
+    if(state.overWater && state.mouse.moved){
+      const uvx = state.mouse.x / state.vw;
+      const uvy = 1 - state.mouse.y / state.vh; // GL y flipped
+      const fx = state.mouse.vx * 0.6;
+      const fy = -state.mouse.vy * 0.6;
+      const mag = Math.min(1.2, Math.hypot(fx,fy));
+      injectForce(uvx, uvy, fx*0.03, fy*0.03, 0.12 + mag*0.1);
+    }
+    stepFluid(dt);
+    displayFluid(timeS);
+
+    // probe first ~30 frames, downscale if slow
+    if(probeFrames < 30){
+      probeFrames++; probeAcc += dt;
+      if(probeFrames===30){
+        const avg = probeAcc/30;
+        if(avg > 0.018){
+          const next = fluid.N === 128 ? 96 : fluid.N === 96 ? 64 : 0;
+          if(next){ fluid = buildFluid(next); state.gridN = next; }
+          else { state.fluidEnabled=false; document.getElementById('fluidNote').textContent='FLUID DISABLED — PERFORMANCE'; }
+        }
+      }
+    }
+  }
+
+  // velocity decay for cursor
+  state.mouse.vx *= 0.86; state.mouse.vy *= 0.86;
+  if(Math.abs(state.mouse.vx)<0.02 && Math.abs(state.mouse.vy)<0.02) state.mouse.moved = false;
+
+  updateReadout();
+  updateDiurnal();
+
+  requestAnimationFrame(frame);
+}
+
+/* ---------- input ---------- */
+function onMove(e){
+  const x = e.clientX, y = e.clientY;
+  const cursorEl = document.getElementById('cursor');
+  cursorEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  // flip readout if near right/bottom
+  const ro = document.getElementById('readout');
+  if(x > state.vw - 280) ro.style.left = '-240px'; else ro.style.left = '14px';
+  if(y > state.vh - 90) ro.style.top = '-70px'; else ro.style.top = '6px';
+
+  state.mouse.vx = (x - state.mouse.px);
+  state.mouse.vy = (y - state.mouse.py);
+  state.mouse.px = state.mouse.x; state.mouse.py = state.mouse.y;
+  state.mouse.x = x; state.mouse.y = y;
+  state.mouse.moved = Math.abs(state.mouse.vx)+Math.abs(state.mouse.vy) > 0.1;
+
+  state.overWater = !pointOverLand(x, y);
+  // cartouche hit-test
+  const cart = e.target.closest && e.target.closest('.cartouche');
+  state.overCartouche = cart ? cart.getAttribute('data-label') : null;
+}
+
+/* ---------- loader ---------- */
+function playLoader(){
+  const loader = document.getElementById('loader');
+  const done = ()=>{ loader.classList.add('done'); setTimeout(()=>loader.remove(), 550); document.cookie = 'tides_visited=1; max-age=86400; path=/'; };
+
+  if(REDUCED || document.cookie.indexOf('tides_visited=1') > -1){ done(); return; }
+
+  // 1. coastline stroke-in
+  const lands = document.querySelectorAll('#landmass path.land');
+  lands.forEach((p,i)=>{
+    try{
+      const L = p.getTotalLength();
+      p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+      p.style.transition = `stroke-dashoffset 1000ms ease ${i*90}ms, fill 400ms ease ${1000+i*90}ms`;
+      p.style.fill = 'transparent';
+      requestAnimationFrame(()=>{ p.style.strokeDashoffset = 0; setTimeout(()=>{ p.style.fill = '#F1E8D4'; }, 900+i*90); });
+    }catch(e){}
+  });
+  // 2. contours
+  const contours = document.querySelectorAll('#bathy path, #landmass g path');
+  contours.forEach((p,i)=>{
+    p.style.opacity = 0;
+    setTimeout(()=> p.style.transition = 'opacity 600ms ease', 1000+i*8);
+    setTimeout(()=> p.style.opacity = '', 1050 + i*8);
+  });
+  // 3. water fade + fluid seed
+  fluidCanvas.style.opacity = 0;
+  fluidCanvas.style.transition = 'opacity 700ms ease';
+  setTimeout(()=>{ fluidCanvas.style.opacity = 1; if(state.fluidEnabled && fluid){ injectForce(0.5,0.5, 0.0, 0.0, 0.9); }}, 1400);
+
+  // 4. place-names
+  const names = document.querySelectorAll('#placeNames text');
+  names.forEach((n,i)=>{ n.style.opacity = 0; n.style.transition = 'opacity 300ms ease'; setTimeout(()=> n.style.opacity = '', 2100 + i*20); });
+
+  // 5. clear loader
+  setTimeout(done, 2500);
+
+  // skippable
+  const skip = ()=>{ done(); lands.forEach(p=>{ p.style.transition=''; p.style.strokeDashoffset=0; p.style.fill='#F1E8D4'; }); contours.forEach(p=>{ p.style.opacity=''; }); names.forEach(n=>{ n.style.opacity=''; }); fluidCanvas.style.opacity=1; window.removeEventListener('keydown', skip); };
+  window.addEventListener('keydown', skip, { once:true });
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  resize();
+  initFluid();
+  buildPins();
+  updateClock(); setInterval(updateClock, 1000);
+  updateDiurnal();
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') closePanel();
+  });
+  document.getElementById('panelClose').addEventListener('click', closePanel);
+  document.getElementById('backdrop').addEventListener('click', closePanel);
+
+  // cartouche hover labels
+  document.querySelectorAll('.cartouche').forEach(c=>{
+    c.addEventListener('mouseenter', ()=> state.overCartouche = c.getAttribute('data-label'));
+    c.addEventListener('mouseleave', ()=> state.overCartouche = null);
+  });
+
+  playLoader();
+  requestAnimationFrame(frame);
+}
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Randy Ren — Sounding · Selected Works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #F4ECDC;
+    --paper-soft: #F4ECDCF5;
+    --ink: #111111;
+    --prussian: #1F3A5F;
+    --copper: #8A5A2B;
+    --hair: 1px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    height: 100%;
+    overflow: hidden;
+    cursor: none;
+  }
+  body { position: relative; }
+
+  .plate {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    transition: opacity 200ms linear;
+    z-index: 1;
+  }
+  .plate.dimmed { opacity: 0.6; }
+  svg.chart {
+    display: block;
+    width: 100%;
+    height: 100%;
+    user-select: none;
+  }
+
+  /* --- typography inside SVG uses inline attributes; CSS handles HTML overlays --- */
+
+  /* wall label — ABOUT */
+  .wall-label {
+    position: fixed;
+    top: 120px;
+    left: 80px;
+    width: 360px;
+    padding: 22px 24px 20px;
+    background: rgba(244, 236, 220, 0.96);
+    border: var(--hair) solid var(--ink);
+    z-index: 3;
+    pointer-events: auto;
+  }
+  .wall-label h2 {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: 16px;
+    letter-spacing: 0.18em;
+    margin: 0 0 14px 0;
+    text-transform: uppercase;
+  }
+  .wall-label p {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin: 0 0 18px 0;
+    color: var(--ink);
+    max-width: 40ch;
+  }
+  .wall-label .footer {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+    color: var(--prussian);
+    text-transform: uppercase;
+  }
+
+  /* correspondence cartouche */
+  .corresp {
+    position: fixed;
+    bottom: 80px;
+    right: 80px;
+    width: 300px;
+    padding: 16px 18px 16px;
+    background: rgba(244, 236, 220, 0.96);
+    border: var(--hair) solid var(--ink);
+    z-index: 3;
+  }
+  .corresp .head {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.28em;
+    color: var(--ink);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .corresp .row {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .corresp .row a {
+    color: var(--prussian);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(31, 58, 95, 0.35);
+  }
+  .corresp .row a:hover { border-bottom-color: var(--prussian); }
+  .corresp .row.sub {
+    color: var(--prussian);
+    opacity: 0.9;
+  }
+
+  /* case-study panel */
+  .panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 400px;
+    background: var(--paper);
+    border-left: var(--hair) solid var(--ink);
+    transform: translateX(100%);
+    transition: transform 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    z-index: 5;
+    padding: 36px 34px 30px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .panel.open { transform: translateX(0); }
+  .panel .close {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    line-height: 1;
+    background: none;
+    border: none;
+    color: var(--ink);
+    cursor: none;
+    padding: 4px 8px;
+  }
+  .panel h3 {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 34px;
+    line-height: 1.05;
+    margin: 24px 0 14px 0;
+    color: var(--ink);
+  }
+  .panel .meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--prussian);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .panel .body {
+    font-family: 'Instrument Serif', serif;
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin-bottom: 22px;
+  }
+  .panel .figure {
+    margin-top: auto;
+    border: var(--hair) solid var(--ink);
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    color: var(--prussian);
+    text-transform: uppercase;
+  }
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    z-index: 4;
+    display: none;
+  }
+  .backdrop.on { display: block; }
+
+  /* tide-gauge cursor */
+  .cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 999;
+    transform: translate3d(-100px, -100px, 0);
+    will-change: transform;
+  }
+  .cursor .cross {
+    position: absolute;
+    left: -6px;
+    top: -6px;
+    width: 12px;
+    height: 12px;
+  }
+  .cursor .cross::before,
+  .cursor .cross::after {
+    content: '';
+    position: absolute;
+    background: var(--ink);
+  }
+  .cursor .cross::before {
+    left: 5.5px;
+    top: 0;
+    width: 1px;
+    height: 12px;
+  }
+  .cursor .cross::after {
+    top: 5.5px;
+    left: 0;
+    height: 1px;
+    width: 12px;
+  }
+  .cursor .readout {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    line-height: 1.45;
+    color: var(--prussian);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .cursor .readout .l1,
+  .cursor .readout .l2 {
+    transition: opacity 120ms linear;
+    opacity: 1;
+    display: block;
+  }
+  .cursor .readout .l2.name {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink);
+    letter-spacing: 0;
+  }
+  .cursor .readout .fade { opacity: 0; }
+
+  /* pins */
+  .pin-hit {
+    fill: transparent;
+    cursor: none;
+  }
+  .pin-hit:focus { outline: none; }
+  .pin-hit:focus + .pin-diamond {
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel { transition: none; }
+    .plate { transition: none; }
+    .cursor .readout .l1,
+    .cursor .readout .l2 { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== CHART PLATE ===================== -->
+<div class="plate" id="plate">
+  <svg class="chart" id="chart" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-label="Bathymetric chart of selected works">
+    <defs>
+      <filter id="grain" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" />
+        <feColorMatrix values="0 0 0 0 0.06
+                               0 0 0 0 0.06
+                               0 0 0 0 0.06
+                               0 0 0 0.06 0" />
+      </filter>
+      <clipPath id="plate-clip">
+        <rect x="0" y="0" width="1600" height="1000" />
+      </clipPath>
+    </defs>
+
+    <!-- paper backdrop (already CSS body, but repeat for print) -->
+    <rect x="0" y="0" width="1600" height="1000" fill="#F4ECDC" />
+
+    <!-- ============ COASTLINES (hairline black) ============ -->
+    <g stroke="#111" fill="none" stroke-width="1" vector-effect="non-scaling-stroke">
+      <!-- Left coast: mainland running down-left side -->
+      <path d="M 0,120
+               C 60,140 140,180 180,240
+               S 220,360 190,430
+               C 170,490 210,540 240,600
+               S 200,720 170,780
+               C 150,820 90,880 0,900" />
+      <!-- Land fill hint via extremely subtle stipple: keep only outline, no fill -->
+
+      <!-- Upper-right islet -->
+      <path d="M 1280,140
+               C 1330,120 1400,130 1440,170
+               S 1470,240 1440,270
+               C 1410,300 1350,290 1310,260
+               S 1250,180 1280,140 Z" />
+
+      <!-- Lower-right small islet -->
+      <path d="M 1470,780
+               C 1500,770 1540,780 1550,810
+               S 1530,860 1490,850
+               C 1460,840 1445,800 1470,780 Z" />
+    </g>
+
+    <!-- Sparse coastal shading (mono dot pattern along coast — hairline dashes only) -->
+    <g stroke="#111" stroke-width="0.6" fill="none" vector-effect="non-scaling-stroke" opacity="0.7">
+      <path d="M 0,130 C 60,150 140,190 180,250" stroke-dasharray="1,4" />
+      <path d="M 190,435 C 175,495 215,545 240,605" stroke-dasharray="1,4" />
+      <path d="M 240,605 C 200,720 170,780 150,820" stroke-dasharray="1,4" />
+      <path d="M 1290,150 C 1340,132 1400,142 1435,180" stroke-dasharray="1,4" />
+    </g>
+
+    <!-- ============ DEPTH CONTOURS (Prussian, hairline, 40% alpha) ============ -->
+    <g stroke="#1F3A5F" stroke-opacity="0.4" fill="none" stroke-width="1" vector-effect="non-scaling-stroke">
+      <!-- 10 fm — nearest to coast -->
+      <path d="M 60,120
+               C 130,160 210,220 240,300
+               S 260,430 240,510
+               C 220,590 260,660 280,740
+               S 240,880 180,930" />
+      <path d="M 1275,170
+               C 1330,150 1395,165 1425,200
+               S 1445,265 1410,285
+               C 1370,300 1320,285 1295,255
+               S 1250,200 1275,170 Z" />
+
+      <!-- 20 fm -->
+      <path d="M 160,140
+               C 240,190 330,260 370,340
+               S 380,470 350,555
+               C 330,630 370,700 390,780
+               S 340,910 260,960" />
+      <path d="M 1260,200
+               C 1325,170 1415,190 1450,230
+               S 1470,300 1430,325
+               C 1385,345 1315,325 1285,290
+               S 1230,225 1260,200 Z" />
+
+      <!-- 40 fm -->
+      <path d="M 260,120
+               C 380,180 480,270 520,370
+               S 530,510 490,600
+               C 460,680 490,760 500,840
+               S 440,950 380,980" />
+      <path d="M 1235,240
+               C 1310,205 1440,225 1475,275
+               S 1495,340 1450,365
+               C 1400,390 1300,365 1265,320
+               S 1210,270 1235,240 Z" />
+
+      <!-- 80 fm -->
+      <path d="M 420,140
+               C 550,220 650,320 680,430
+               S 680,570 630,660
+               C 590,730 610,810 610,880
+               S 560,990 500,1010" />
+
+      <!-- 160 fm — deepest, offshore -->
+      <path d="M 640,180
+               C 780,280 860,400 870,510
+               S 830,660 780,750
+               C 740,820 760,900 740,970" />
+    </g>
+
+    <!-- ============ ISOBATH LABELS ============ -->
+    <g font-family="'IBM Plex Mono', monospace" font-size="9" fill="#1F3A5F">
+      <!-- 10 fm break -->
+      <rect x="252" y="503" width="34" height="12" fill="#F4ECDC" />
+      <text x="255" y="513">10 fm</text>
+
+      <rect x="1418" y="278" width="34" height="12" fill="#F4ECDC" />
+      <text x="1421" y="288">10 fm</text>
+
+      <!-- 20 fm break -->
+      <rect x="380" y="470" width="34" height="12" fill="#F4ECDC" />
+      <text x="383" y="480">20 fm</text>
+
+      <!-- 40 fm break -->
+      <rect x="510" y="500" width="34" height="12" fill="#F4ECDC" />
+      <text x="513" y="510">40 fm</text>
+
+      <!-- 80 fm break -->
+      <rect x="670" y="560" width="34" height="12" fill="#F4ECDC" />
+      <text x="673" y="570">80 fm</text>
+
+      <!-- 160 fm break -->
+      <rect x="820" y="610" width="42" height="12" fill="#F4ECDC" />
+      <text x="823" y="620">160 fm</text>
+    </g>
+
+    <!-- ============ SOUNDING NUMBERS (~50 numbers) ============ -->
+    <g font-family="'IBM Plex Mono', monospace" font-size="10" fill="#1F3A5F">
+      <!-- shallow band, near left coast (12–35 fm) -->
+      <text x="220" y="200">14</text>
+      <text x="260" y="260">18</text>
+      <text x="300" y="330">22</text>
+      <text x="200" y="380">12</text>
+      <text x="270" y="410">17</text>
+      <text x="330" y="450">24</text>
+      <text x="220" y="520">15</text>
+      <text x="290" y="580">21</text>
+      <text x="350" y="640">28</text>
+      <text x="240" y="680">19</text>
+      <text x="200" y="760">13</text>
+      <text x="280" y="820">22</text>
+      <text x="340" y="880">31</text>
+
+      <!-- mid band (35–90 fm) -->
+      <text x="400" y="240">34</text>
+      <text x="470" y="300">41</text>
+      <text x="530" y="360">48</text>
+      <text x="440" y="420">37</text>
+      <text x="500" y="480">44</text>
+      <text x="560" y="540">52</text>
+      <text x="460" y="600">39</text>
+      <text x="530" y="670">57</text>
+      <text x="600" y="720">63</text>
+      <text x="460" y="770">42</text>
+      <text x="530" y="820">51</text>
+      <text x="410" y="900">36</text>
+      <text x="590" y="900">61</text>
+
+      <!-- deep band (90–200 fm) -->
+      <text x="640" y="270">89</text>
+      <text x="720" y="330">112</text>
+      <text x="800" y="380">128</text>
+      <text x="880" y="430">147</text>
+      <text x="700" y="450">104</text>
+      <text x="780" y="510">131</text>
+      <text x="860" y="560">158</text>
+      <text x="940" y="500">168</text>
+      <text x="1020" y="440">172</text>
+      <text x="720" y="580">118</text>
+      <text x="800" y="640">142</text>
+      <text x="880" y="700">164</text>
+      <text x="740" y="720">122</text>
+      <text x="820" y="780">148</text>
+      <text x="900" y="830">176</text>
+      <text x="700" y="860">126</text>
+
+      <!-- offshore deepest (200–320 fm) -->
+      <text x="960" y="360">184</text>
+      <text x="1040" y="310">192</text>
+      <text x="1120" y="260">204</text>
+      <text x="1080" y="380">218</text>
+      <text x="1160" y="340">232</text>
+      <text x="1200" y="420">241</text>
+      <text x="1000" y="600">223</text>
+      <text x="1080" y="540">238</text>
+      <text x="1140" y="600">256</text>
+      <text x="1000" y="700">247</text>
+      <text x="1080" y="660">262</text>
+      <text x="1160" y="720">278</text>
+      <text x="1000" y="810">271</text>
+      <text x="1080" y="860">289</text>
+      <text x="1180" y="820">304</text>
+      <text x="1260" y="760">318</text>
+      <text x="1300" y="640">301</text>
+      <text x="1260" y="510">284</text>
+      <text x="1330" y="470">296</text>
+      <text x="1220" y="360">228</text>
+    </g>
+
+    <!-- ============ PROJECT PINS (six, scattered) ============
+         Each pin group: a transparent hit-rect (focusable) + a copper diamond + a mono call-out.
+    -->
+    <g id="pins">
+
+      <!-- 01 Oryzo -->
+      <g class="pin" data-pin="oryzo" transform="translate(360,290)">
+        <rect class="pin-hit" x="-14" y="-14" width="28" height="28" tabindex="0"
+              role="button" aria-label="Oryzo project pin"
+              data-name="Oryzo" data-year="2025" data-tags="AI · Interface · Web"
+              data-desc="Voice orchestration layer for autonomous agents. Turned 300ms of latency into a feature."
+              data-lat="37°44′N" data-lon="122°28′W"
+              data-longbody="Oryzo made a virtue of the space between question and answer. It routes a conversation through a mesh of specialized agents, then paces their arrival so the user hears the room think. What began as a latency problem became a rhythm — a pause that reads as consideration, not lag. Ships with a permissioning layer that treats agent memory the way a good editor treats notes: writable, but never in secret."
+              />
+        <polygon class="pin-diamond" points="0,-6 6,0 0,6 -6,0" fill="#8A5A2B" stroke="#8A5A2B" stroke-width="1" vector-effect="non-scaling-stroke" />
+        <text x="10" y="4" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#1F3A5F">Oryzo · 37°44′N 122°28′W</text>
+      </g>
+
+      <!-- 02 Halcyon -->
+      <g class="pin" data-pin="halcyon" transform="translate(720,420)">
+        <rect class="pin-hit" x="-14" y="-14" width="28" height="28" tabindex="0"
+              role="button" aria-label="Halcyon project pin"
+              data-name="Halcyon" data-year="2025" data-tags="Product · WebGL · Design"
+              data-desc="Realtime collaborative canvas for design teams. Half a million multiplayer cursors and counting."
+              data-lat="37°28′N" data-lon="122°09′W"
+              data-longbody="Halcyon is a canvas that stays flat under load. The rendering path was rebuilt from first principles so that presence — cursors, selections, live edits — never blocks the frame. Half a million cursors have moved through it. What people usually notice first is the sound of a designer's mouse settling into place: nothing snags."
+              />
+        <polygon class="pin-diamond" points="0,-6 6,0 0,6 -6,0" fill="#8A5A2B" stroke="#8A5A2B" stroke-width="1" vector-effect="non-scaling-stroke" />
+        <text x="10" y="4" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#1F3A5F">Halcyon · 37°28′N 122°09′W</text>
+      </g>
+
+      <!-- 03 Aperture -->
+      <g class="pin" data-pin="aperture" transform="translate(1040,220)">
+        <rect class="pin-hit" x="-14" y="-14" width="28" height="28" tabindex="0"
+              role="button" aria-label="Aperture project pin"
+              data-name="Aperture" data-year="2024" data-tags="Mobile · System · Concept"
+              data-desc="Camera-first mobile OS. The lens is the app launcher."
+              data-lat="37°58′N" data-lon="121°42′W"
+              data-longbody="Aperture proposed a phone whose home screen is what it sees. Point the lens at a receipt and it lifts the total. Point it at a person and it surfaces the thread you have with them. The launcher becomes an act of attention rather than an act of selection. A concept, still — but the demo runs, and it runs on the metal."
+              />
+        <polygon class="pin-diamond" points="0,-6 6,0 0,6 -6,0" fill="#8A5A2B" stroke="#8A5A2B" stroke-width="1" vector-effect="non-scaling-stroke" />
+        <text x="10" y="4" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#1F3A5F">Aperture · 37°58′N 121°42′W</text>
+      </g>
+
+      <!-- 04 Fieldnote -->
+      <g class="pin" data-pin="fieldnote" transform="translate(560,720)">
+        <rect class="pin-hit" x="-14" y="-14" width="28" height="28" tabindex="0"
+              role="button" aria-label="Fieldnote project pin"
+              data-name="Fieldnote" data-year="2024" data-tags="CLI · AI · Tool"
+              data-desc="Terminal-native journaling agent. Writes with you, not for you."
+              data-lat="37°21′N" data-lon="122°55′W"
+              data-longbody="Fieldnote lives in the terminal because that is where writing already happens for the people it serves. It does not draft your entry. It asks a question, holds the cursor, and — only when invited — offers a sentence you can accept, reject, or ignore. The point is not the output. The point is that the day did not go unwitnessed."
+              />
+        <polygon class="pin-diamond" points="0,-6 6,0 0,6 -6,0" fill="#8A5A2B" stroke="#8A5A2B" stroke-width="1" vector-effect="non-scaling-stroke" />
+        <text x="10" y="4" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#1F3A5F">Fieldnote · 37°21′N 122°55′W</text>
+      </g>
+
+      <!-- 05 Signal Garden -->
+      <g class="pin" data-pin="signal" transform="translate(1180,600)">
+        <rect class="pin-hit" x="-14" y="-14" width="28" height="28" tabindex="0"
+              role="button" aria-label="Signal Garden project pin"
+              data-name="Signal Garden" data-year="2024" data-tags="Hardware · Interface"
+              data-desc="Ambient e-ink dashboards for distributed teams. Status without Slack."
+              data-lat="37°12′N" data-lon="121°28′W"
+              data-longbody="Signal Garden is a set of low-power e-ink panels that hang like paintings and update like breathing — once every few minutes, if that. A team's on-call, deploy state, and quiet-hour signals move at the pace of a room, not a feed. When you glance up you know. When you don't glance up, nothing has been demanded of you."
+              />
+        <polygon class="pin-diamond" points="0,-6 6,0 0,6 -6,0" fill="#8A5A2B" stroke="#8A5A2B" stroke-width="1" vector-effect="non-scaling-stroke" />
+        <text x="10" y="4" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#1F3A5F">Signal Garden · 37°12′N 121°28′W</text>
+      </g>
+
+      <!-- 06 Loom -->
+      <g class="pin" data-pin="loom" transform="translate(880,860)">
+        <rect class="pin-hit" x="-14" y="-14" width="28" height="28" tabindex="0"
+              role="button" aria-label="Loom project pin"
+              data-name="Loom" data-year="2023" data-tags="Web3 · Audio · Experiment"
+              data-desc="Peer-to-peer music mesh. No servers, no ads, just rooms."
+              data-lat="36°47′N" data-lon="122°02′W"
+              data-longbody="Loom is a small experiment in shared listening. Peers form a mesh; the room is the address; the queue is whoever is here now. No accounts, no algorithm, no history unless someone in the room writes it down. It stops being useful the moment you leave — which turns out to be the entire point."
+              />
+        <polygon class="pin-diamond" points="0,-6 6,0 0,6 -6,0" fill="#8A5A2B" stroke="#8A5A2B" stroke-width="1" vector-effect="non-scaling-stroke" />
+        <text x="10" y="4" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#1F3A5F">Loom · 36°47′N 122°02′W</text>
+      </g>
+
+    </g>
+
+    <!-- ============ COMPASS ROSE (lower-right, ~120px) ============ -->
+    <g transform="translate(1440,860)" stroke="#111" fill="none" stroke-width="1" vector-effect="non-scaling-stroke">
+      <!-- outer circle -->
+      <circle cx="0" cy="0" r="60" />
+      <!-- inner circle -->
+      <circle cx="0" cy="0" r="42" stroke-opacity="0.6" />
+      <!-- tiny center -->
+      <circle cx="0" cy="0" r="2" fill="#111" />
+      <!-- 8-point star, cardinal points long, ordinal short -->
+      <!-- N -->
+      <polygon points="0,-60 4,0 -4,0" fill="#111" fill-opacity="0.05" />
+      <line x1="0" y1="-60" x2="0" y2="0" />
+      <line x1="4" y1="0" x2="0" y2="-60" />
+      <line x1="-4" y1="0" x2="0" y2="-60" />
+      <!-- S -->
+      <line x1="0" y1="60" x2="0" y2="0" />
+      <line x1="4" y1="0" x2="0" y2="60" />
+      <line x1="-4" y1="0" x2="0" y2="60" />
+      <!-- E -->
+      <line x1="60" y1="0" x2="0" y2="0" />
+      <line x1="0" y1="-4" x2="60" y2="0" />
+      <line x1="0" y1="4" x2="60" y2="0" />
+      <!-- W -->
+      <line x1="-60" y1="0" x2="0" y2="0" />
+      <line x1="0" y1="-4" x2="-60" y2="0" />
+      <line x1="0" y1="4" x2="-60" y2="0" />
+      <!-- ordinal short: NE, SE, SW, NW -->
+      <line x1="0" y1="0" x2="30" y2="-30" />
+      <line x1="0" y1="0" x2="30" y2="30" />
+      <line x1="0" y1="0" x2="-30" y2="30" />
+      <line x1="0" y1="0" x2="-30" y2="-30" />
+      <!-- N label -->
+      <text x="0" y="-70" text-anchor="middle" font-family="'Instrument Serif', serif" font-style="italic" font-size="14" fill="#111" stroke="none">N</text>
+      <!-- degree ticks -->
+      <g stroke="#111" stroke-opacity="0.5">
+        <line x1="0" y1="-60" x2="0" y2="-56" />
+        <line x1="60" y1="0" x2="56" y2="0" />
+        <line x1="0" y1="60" x2="0" y2="56" />
+        <line x1="-60" y1="0" x2="-56" y2="0" />
+      </g>
+    </g>
+
+    <!-- ============ TITLE CARTOUCHE (lower-left, ~320×110) ============ -->
+    <g transform="translate(80,860)">
+      <rect x="0" y="0" width="320" height="110" fill="#F4ECDC" stroke="#111" stroke-width="1" vector-effect="non-scaling-stroke" />
+      <text x="20" y="42" font-family="'Instrument Serif', serif" font-style="italic" font-size="22" fill="#111">RANDY REN</text>
+      <text x="20" y="68" font-family="'IBM Plex Mono', monospace" font-size="11" fill="#111" letter-spacing="1">SAN FRANCISCO — 2026</text>
+      <text x="20" y="90" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#1F3A5F" letter-spacing="2">SOUNDING · SELECTED WORKS</text>
+    </g>
+
+    <!-- ============ SCALE BAR (small, top-right) ============ -->
+    <g transform="translate(1360,60)" font-family="'IBM Plex Mono', monospace" font-size="9" fill="#111">
+      <line x1="0" y1="0" x2="180" y2="0" stroke="#111" stroke-width="1" vector-effect="non-scaling-stroke" />
+      <line x1="0" y1="-4" x2="0" y2="4" stroke="#111" stroke-width="1" />
+      <line x1="45" y1="-3" x2="45" y2="3" stroke="#111" stroke-width="1" />
+      <line x1="90" y1="-3" x2="90" y2="3" stroke="#111" stroke-width="1" />
+      <line x1="135" y1="-3" x2="135" y2="3" stroke="#111" stroke-width="1" />
+      <line x1="180" y1="-4" x2="180" y2="4" stroke="#111" stroke-width="1" />
+      <text x="0" y="18">0</text>
+      <text x="83" y="18">2</text>
+      <text x="167" y="18">4 NM</text>
+    </g>
+
+    <!-- ============ REGISTRATION MARKS (subtle corners) ============ -->
+    <g stroke="#111" stroke-width="1" fill="none" opacity="0.55" vector-effect="non-scaling-stroke">
+      <path d="M 40,20 L 40,32 M 34,26 L 46,26" />
+      <path d="M 1560,20 L 1560,32 M 1554,26 L 1566,26" />
+      <path d="M 40,980 L 40,968 M 34,974 L 46,974" />
+      <path d="M 1560,980 L 1560,968 M 1554,974 L 1566,974" />
+    </g>
+
+    <!-- ============ paper grain overlay ============ -->
+    <rect x="0" y="0" width="1600" height="1000" filter="url(#grain)" opacity="0.06" pointer-events="none" />
+  </svg>
+</div>
+
+<!-- ===================== ABOUT WALL LABEL ===================== -->
+<aside class="wall-label" id="about" aria-label="About Randy Ren">
+  <h2>RANDY REN</h2>
+  <p>Randy is a designer-engineer working at the seam between AI systems and human interfaces. Previously shipped consumer products used by millions; now focused on making agents feel like real collaborators — the kind you'd want in the room, not the kind that eats your afternoon. Believes the best interfaces disappear until you need them, then arrive already knowing why. Currently open to select client work and staff+ roles starting fall 2026.</p>
+  <div class="footer">OPEN FALL 2026</div>
+</aside>
+
+<!-- ===================== CORRESPONDENCE ===================== -->
+<aside class="corresp" id="contact" aria-label="Correspondence">
+  <div class="head">CORRESPONDENCE</div>
+  <div class="row"><a href="mailto:hey@randy.sh">hey@randy.sh</a></div>
+  <div class="row sub">SAN FRANCISCO — PT / GMT-7</div>
+  <div class="row">○ <a href="https://twitter.com/randyren" target="_blank" rel="noopener">@randyren</a>&nbsp;&nbsp;◇ <a href="https://github.com/randyren" target="_blank" rel="noopener">github/randyren</a></div>
+</aside>
+
+<!-- ===================== CASE-STUDY PANEL ===================== -->
+<div class="backdrop" id="backdrop"></div>
+<aside class="panel" id="panel" aria-hidden="true" aria-labelledby="panel-title">
+  <button class="close" id="panelClose" aria-label="Close case study">×</button>
+  <div class="meta" id="panel-meta">— · —</div>
+  <h3 id="panel-title">—</h3>
+  <div class="body" id="panel-body">—</div>
+  <div class="figure">FIGURE</div>
+</aside>
+
+<!-- ===================== TIDE-GAUGE CURSOR ===================== -->
+<div class="cursor" id="cursor" aria-hidden="true">
+  <div class="cross"></div>
+  <div class="readout">
+    <span class="l1" id="line1">LAT 37.7749  LON −122.4194</span>
+    <span class="l2" id="line2">DEPTH —  ·  BEARING —</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ============== TIDE-GAUGE CURSOR ==============
+  var cursor = document.getElementById('cursor');
+  var line1 = document.getElementById('line1');
+  var line2 = document.getElementById('line2');
+  var mouseX = -100, mouseY = -100;
+  var needsFrame = false;
+  var lastL1 = '', lastL2 = '', l2ClassName = '';
+
+  // View geometry — chart viewBox is 1600x1000, spanning some pseudo lat/lon:
+  //   x=0    -> LON -122.60
+  //   x=1600 -> LON -122.20
+  //   y=0    -> LAT  37.90
+  //   y=1000 -> LAT  37.20
+  var LON0 = -122.60, LON1 = -122.20;
+  var LAT0 =  37.90, LAT1 =  37.20;
+
+  function fmtLat(lat) {
+    var s = lat.toFixed(4);
+    return 'LAT ' + s;
+  }
+  function fmtLon(lon) {
+    // display with proper minus glyph
+    var s = lon.toFixed(4);
+    if (s.charAt(0) === '-') s = '−' + s.slice(1);
+    return 'LON ' + s;
+  }
+
+  function xyToLatLon(x, y) {
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    // convert client x,y to chart viewBox coords by matching preserveAspectRatio "xMidYMid slice"
+    var vbAR = 1600 / 1000;
+    var winAR = vw / vh;
+    var scale, offX = 0, offY = 0, dispW, dispH;
+    if (winAR > vbAR) {
+      // window wider — chart fills width, cropped top/bottom
+      scale = vw / 1600;
+      dispW = vw;
+      dispH = 1000 * scale;
+      offY = (vh - dispH) / 2;
+    } else {
+      // window narrower — chart fills height, cropped sides
+      scale = vh / 1000;
+      dispH = vh;
+      dispW = 1600 * scale;
+      offX = (vw - dispW) / 2;
+    }
+    var vbx = (x - offX) / scale;
+    var vby = (y - offY) / scale;
+    if (vbx < 0) vbx = 0; if (vbx > 1600) vbx = 1600;
+    if (vby < 0) vby = 0; if (vby > 1000) vby = 1000;
+    var lon = LON0 + (LON1 - LON0) * (vbx / 1600);
+    var lat = LAT0 + (LAT1 - LAT0) * (vby / 1000);
+    return { lat: lat, lon: lon, vbx: vbx, vby: vby };
+  }
+
+  // Set text with 120ms crossfade only if the content changed
+  function setLine(el, content, cls) {
+    var newCls = cls || '';
+    if (el.textContent === content && el.dataset.mode === newCls) return;
+    el.classList.add('fade');
+    setTimeout(function () {
+      el.textContent = content;
+      el.className = 'l2';
+      if (el.id === 'line1') el.className = 'l1';
+      if (newCls) el.classList.add(newCls);
+      el.dataset.mode = newCls;
+      // trigger reflow
+      void el.offsetWidth;
+      el.classList.remove('fade');
+    }, 120);
+  }
+
+  // Context tracking: what is under the cursor?
+  var currentContext = { type: 'water', payload: null };
+
+  function updateReadout() {
+    var ctx = currentContext;
+    if (ctx.type === 'water') {
+      var g = xyToLatLon(mouseX, mouseY);
+      setLine(line1, fmtLat(g.lat) + '  ' + fmtLon(g.lon), '');
+      setLine(line2, 'DEPTH —  ·  BEARING —', '');
+    } else if (ctx.type === 'pin') {
+      var p = ctx.payload;
+      setLine(line1, 'DEPTH ' + p.year + ' fm  ·  BEARING ' + p.tags.toUpperCase(), '');
+      setLine(line2, p.name, 'name');
+    } else if (ctx.type === 'about') {
+      setLine(line1, 'LABEL — ABOUT', '');
+      setLine(line2, 'RANDY REN', 'name');
+    } else if (ctx.type === 'contact') {
+      setLine(line1, 'LABEL — CONTACT', '');
+      setLine(line2, 'CORRESPONDENCE', 'name');
+    } else if (ctx.type === 'panel') {
+      setLine(line1, 'LABEL — ' + (ctx.payload || '—').toUpperCase(), '');
+      setLine(line2, ctx.payload || '—', 'name');
+    }
+  }
+
+  function frameLoop() {
+    needsFrame = false;
+    cursor.style.transform = 'translate3d(' + mouseX + 'px, ' + mouseY + 'px, 0)';
+    updateReadout();
+  }
+
+  window.addEventListener('mousemove', function (e) {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    if (!needsFrame) {
+      needsFrame = true;
+      requestAnimationFrame(frameLoop);
+    }
+  }, { passive: true });
+
+  window.addEventListener('mouseleave', function () {
+    mouseX = -100; mouseY = -100;
+    if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+  });
+
+  // ============== CONTEXT: PINS ==============
+  var pins = document.querySelectorAll('.pin-hit');
+  pins.forEach(function (hit) {
+    var data = {
+      name: hit.getAttribute('data-name'),
+      year: hit.getAttribute('data-year'),
+      tags: hit.getAttribute('data-tags'),
+      desc: hit.getAttribute('data-desc'),
+      longbody: hit.getAttribute('data-longbody'),
+      lat: hit.getAttribute('data-lat'),
+      lon: hit.getAttribute('data-lon')
+    };
+    hit.addEventListener('mouseenter', function () {
+      currentContext = { type: 'pin', payload: data };
+      if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+    });
+    hit.addEventListener('mouseleave', function () {
+      currentContext = { type: 'water', payload: null };
+      if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+    });
+    hit.addEventListener('focus', function () {
+      currentContext = { type: 'pin', payload: data };
+      if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+    });
+    hit.addEventListener('blur', function () {
+      currentContext = { type: 'water', payload: null };
+      if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+    });
+    hit.addEventListener('click', function () { openPanel(data); });
+    hit.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openPanel(data);
+      }
+    });
+  });
+
+  // ============== CONTEXT: ABOUT / CONTACT / PANEL ==============
+  var about = document.getElementById('about');
+  var contact = document.getElementById('contact');
+  var panel = document.getElementById('panel');
+
+  about.addEventListener('mouseenter', function () {
+    currentContext = { type: 'about', payload: null };
+    if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+  });
+  about.addEventListener('mouseleave', function () {
+    currentContext = { type: 'water', payload: null };
+    if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+  });
+  contact.addEventListener('mouseenter', function () {
+    currentContext = { type: 'contact', payload: null };
+    if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+  });
+  contact.addEventListener('mouseleave', function () {
+    currentContext = { type: 'water', payload: null };
+    if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+  });
+
+  var openedPanelName = null;
+  panel.addEventListener('mouseenter', function () {
+    currentContext = { type: 'panel', payload: openedPanelName || '—' };
+    if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+  });
+  panel.addEventListener('mouseleave', function () {
+    currentContext = { type: 'water', payload: null };
+    if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+  });
+
+  // ============== CASE-STUDY PANEL ==============
+  var plate = document.getElementById('plate');
+  var backdrop = document.getElementById('backdrop');
+  var panelClose = document.getElementById('panelClose');
+  var panelTitle = document.getElementById('panel-title');
+  var panelMeta = document.getElementById('panel-meta');
+  var panelBody = document.getElementById('panel-body');
+
+  function openPanel(data) {
+    openedPanelName = data.name;
+    panelTitle.textContent = data.name;
+    panelMeta.textContent = data.year + ' · ' + data.tags + ' · ' + data.lat + ' ' + data.lon;
+    panelBody.textContent = data.longbody || data.desc;
+    panel.classList.add('open');
+    plate.classList.add('dimmed');
+    backdrop.classList.add('on');
+    panel.setAttribute('aria-hidden', 'false');
+    // move focus to close for accessibility
+    setTimeout(function () { panelClose.focus(); }, 60);
+  }
+
+  function closePanel() {
+    panel.classList.remove('open');
+    plate.classList.remove('dimmed');
+    backdrop.classList.remove('on');
+    panel.setAttribute('aria-hidden', 'true');
+    openedPanelName = null;
+    currentContext = { type: 'water', payload: null };
+    if (!needsFrame) { needsFrame = true; requestAnimationFrame(frameLoop); }
+  }
+
+  panelClose.addEventListener('click', closePanel);
+  backdrop.addEventListener('click', closePanel);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closePanel();
+  });
+
+  // ============== INITIAL READOUT ==============
+  line1.dataset.mode = '';
+  line2.dataset.mode = '';
+  // Initial center position readout will be replaced on first mousemove
+  frameLoop();
+})();
+</script>
+
+</body>
+</html>

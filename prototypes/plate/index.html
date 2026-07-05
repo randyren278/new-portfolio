@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Randy Ren · Plate i · Survey 001</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Serif:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  /* PLATE i — hairline survey plate + surveyor's console.
+     Warm cream paper, one prussian ink, one warm umber. No green. */
+  :root {
+    --paper: #F1E8D4;
+    --ink: #111111;
+    --ink-soft: #1a1a1a;
+    --prussian: #1F3A5F;
+    --umber: #7A4A1F;
+    --red-dim: #8a2f2a;
+    --hair: 0.75px;
+    --drawer-h: 72px;
+    --panel-w: 400px;
+    --spring: cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: var(--paper); color: var(--ink);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 400;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    overflow: hidden; height: 100vh; width: 100vw;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background:
+      radial-gradient(1200px 900px at 20% 30%, rgba(122,74,31,0.035), transparent 60%),
+      radial-gradient(1000px 700px at 80% 80%, rgba(31,58,95,0.03), transparent 60%);
+  }
+  #plate-stage { cursor: none; }
+
+  /* --- NAVIGATOR DRAWER --- */
+  #drawer {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--drawer-h);
+    background: var(--paper); border-bottom: var(--hair) solid var(--ink);
+    z-index: 40; display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: stretch; padding: 0 22px; gap: 24px;
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  #drawer .slot { display: flex; align-items: center; height: 100%; }
+  #drawer .left { justify-content: flex-start; gap: 20px; }
+  #drawer .left .tick {
+    display: inline-block; width: 14px; height: 14px;
+    border: var(--hair) solid var(--ink); transform: rotate(45deg);
+    margin-right: 8px; vertical-align: middle;
+  }
+  #drawer .center {
+    justify-content: center; color: var(--ink-soft); opacity: 0.6;
+    font-size: 10px; letter-spacing: 0.28em;
+  }
+  #drawer .right { justify-content: flex-end; gap: 12px; }
+  #log {
+    max-width: 46vw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    color: var(--ink-soft); opacity: 0.72; font-size: 10.5px;
+    letter-spacing: 0.06em; text-transform: none;
+  }
+  #log .log-line { display: inline-block; margin-right: 18px; }
+  #log .log-line.err { color: var(--red-dim); }
+  #log .log-line .who { color: var(--prussian); }
+  #prompt-wrap {
+    display: inline-flex; align-items: center; height: 32px; padding: 0 10px;
+    border: var(--hair) solid var(--ink); background: var(--paper); min-width: 260px;
+  }
+  #prompt-wrap .chev { color: var(--prussian); margin-right: 8px; font-weight: 500; }
+  #prompt {
+    background: transparent; border: 0; outline: 0; color: var(--prussian);
+    font: inherit; font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; letter-spacing: 0.05em; text-transform: none;
+    width: 220px; caret-color: var(--prussian);
+  }
+  #prompt::placeholder { color: rgba(31,58,95,0.35); }
+  .caret {
+    display: inline-block; width: 1px; height: 12px; background: var(--prussian);
+    margin-left: 2px; vertical-align: -2px;
+    animation: caret-blink 1.05s steps(1) infinite;
+  }
+  @keyframes caret-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+  /* --- PLATE STAGE --- */
+  #plate-stage {
+    position: fixed; top: var(--drawer-h); left: 0; right: 0; bottom: 0;
+    overflow: hidden; z-index: 2;
+  }
+  #plate-camera {
+    position: absolute; inset: 0; transform-origin: 50% 50%;
+    transition: transform 500ms var(--spring); will-change: transform;
+  }
+  svg.plate { display: block; width: 100%; height: 100%; }
+  .plate .hair { fill: none; stroke: var(--ink); stroke-width: 0.75; vector-effect: non-scaling-stroke; }
+  .plate .hair-soft { fill: none; stroke: var(--ink); stroke-width: 0.75; stroke-opacity: 0.35; vector-effect: non-scaling-stroke; }
+  .plate .hair-umber { fill: none; stroke: var(--umber); stroke-width: 0.75; stroke-opacity: 0.6; vector-effect: non-scaling-stroke; }
+  .plate text.placename {
+    fill: var(--umber); font-family: 'IBM Plex Serif', serif;
+    font-style: italic; font-weight: 300;
+  }
+  .plate text.region {
+    fill: var(--umber); font-family: 'IBM Plex Serif', serif;
+    font-style: italic; font-weight: 400; letter-spacing: 0.32em;
+  }
+
+  /* --- pins --- */
+  .pin { cursor: none; }
+  .pin .diamond {
+    fill: var(--paper); stroke: var(--ink); stroke-width: 0.75;
+    vector-effect: non-scaling-stroke;
+    transition: fill 220ms var(--spring), stroke 220ms var(--spring);
+    transform-box: fill-box; transform-origin: center;
+  }
+  .pin .callout, .pin .slug {
+    font-family: 'IBM Plex Mono', monospace; fill: var(--prussian);
+    font-size: 9px; letter-spacing: 0.06em; opacity: 0.85;
+  }
+  .pin .slug {
+    font-family: 'IBM Plex Serif', serif; font-style: italic;
+    fill: var(--ink); font-size: 11px; letter-spacing: 0; opacity: 0.9;
+  }
+  .pin:hover .diamond, .pin:focus .diamond, .pin.active .diamond {
+    fill: var(--prussian); stroke: var(--prussian);
+  }
+  .pin:focus { outline: none; }
+  .pin:focus .diamond { stroke: var(--prussian); stroke-width: 1.1; }
+  .pin .ring {
+    fill: none; stroke: var(--prussian); stroke-width: 0.75;
+    vector-effect: non-scaling-stroke; opacity: 0;
+    transition: opacity 220ms var(--spring);
+  }
+  .pin:hover .ring, .pin:focus .ring, .pin.active .ring { opacity: 0.9; }
+
+  /* --- COMPASS ROSE --- */
+  #compass {
+    position: fixed; right: 28px; bottom: 28px; width: 108px; height: 108px;
+    z-index: 20; pointer-events: none; opacity: 0.9;
+  }
+  #compass svg { width: 100%; height: 100%; display: block; }
+  #compass .rose-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: var(--ink);
+    letter-spacing: 0.14em;
+  }
+
+  /* --- CARTOUCHE / LEGEND --- */
+  #cartouche {
+    position: fixed; left: 28px; bottom: 28px; z-index: 20; background: var(--paper);
+    border: var(--hair) solid var(--ink); padding: 14px 18px;
+    min-width: 300px; max-width: 300px; max-height: 96px; overflow: hidden;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    letter-spacing: 0.06em; color: var(--ink);
+    transition: max-width 500ms var(--spring), min-width 500ms var(--spring),
+                max-height 500ms var(--spring), padding 500ms var(--spring);
+  }
+  #cartouche.expanded {
+    max-width: 460px; min-width: 460px; max-height: 460px; padding: 20px 22px 22px;
+  }
+  #cartouche .cart-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    text-transform: uppercase; letter-spacing: 0.16em; opacity: 0.65;
+    margin-bottom: 10px; font-size: 9px;
+  }
+  #cartouche .cart-head .stroke { flex: 1; height: 1px; background: var(--ink); opacity: 0.7; }
+  #cartouche .scale-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  #cartouche .scale-bar { display: inline-flex; align-items: center; gap: 4px; }
+  #cartouche .legend-row {
+    display: flex; gap: 18px; color: var(--ink-soft); opacity: 0.78; font-size: 9.5px;
+  }
+  #cartouche .legend-row .item { display: inline-flex; align-items: center; gap: 6px; }
+  #cartouche .legend-row .diamond-mark {
+    display: inline-block; width: 8px; height: 8px;
+    border: var(--hair) solid var(--ink); transform: rotate(45deg);
+  }
+  #cartouche .legend-row .line-mark { display: inline-block; width: 22px; height: 1px; background: var(--ink); }
+  #cartouche .legend-row .ring-mark {
+    display: inline-block; width: 8px; height: 8px;
+    border: var(--hair) solid var(--ink); border-radius: 50%;
+  }
+  #about-body {
+    opacity: 0; pointer-events: none; margin-top: 16px;
+    padding-top: 14px; border-top: var(--hair) solid var(--ink);
+    transition: opacity 380ms var(--spring) 120ms;
+  }
+  #cartouche.expanded #about-body { opacity: 1; pointer-events: auto; }
+  #about-body .about-title {
+    font-family: 'IBM Plex Serif', serif; font-style: italic; font-size: 15px;
+    color: var(--ink); margin-bottom: 10px; text-transform: none; letter-spacing: 0;
+  }
+  #about-body .about-copy {
+    font-family: 'IBM Plex Serif', serif; font-weight: 300; font-size: 13.5px;
+    line-height: 1.55; color: var(--ink); max-width: 40ch;
+    letter-spacing: 0; text-transform: none;
+  }
+  #about-body .about-copy em { font-style: italic; color: var(--umber); }
+  #about-body .about-foot {
+    margin-top: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px;
+    color: var(--prussian); letter-spacing: 0.22em; text-transform: uppercase;
+  }
+
+  /* --- CURSOR CROSSHAIR --- */
+  #cursor {
+    position: fixed; left: 0; top: 0; pointer-events: none; z-index: 30;
+    transform: translate(-9999px, -9999px);
+  }
+  #cursor svg {
+    position: absolute; left: -14px; top: -14px; width: 28px; height: 28px;
+    overflow: visible; display: block;
+  }
+  #cursor svg line { stroke: var(--ink); stroke-width: 0.75; vector-effect: non-scaling-stroke; }
+  #cursor .readout {
+    position: absolute; left: 16px; top: 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink);
+    letter-spacing: 0.06em; white-space: nowrap; background: var(--paper);
+    padding: 3px 6px; border: var(--hair) solid var(--ink);
+  }
+  #cursor .readout .co { color: var(--prussian); font-weight: 500; margin-right: 6px; }
+  #cursor .readout .name {
+    color: var(--umber); font-family: 'IBM Plex Serif', serif;
+    font-style: italic; font-size: 11px;
+  }
+  body.hide-cursor #cursor { display: none; }
+
+  /* --- WALL-LABEL PANEL --- */
+  #panel {
+    position: fixed; top: var(--drawer-h); right: 0; bottom: 0; width: var(--panel-w);
+    background: var(--paper); border-left: var(--hair) solid var(--ink);
+    transform: translateX(100%); transition: transform 400ms var(--spring);
+    z-index: 35; display: flex; flex-direction: column;
+    padding: 28px 30px 30px; overflow-y: auto;
+  }
+  #panel.open { transform: translateX(0); }
+  #panel .figure {
+    width: 100%; height: 210px; border: var(--hair) solid var(--ink);
+    margin-bottom: 22px; position: relative; overflow: hidden;
+  }
+  #panel .figure svg { width: 100%; height: 100%; display: block; }
+  #panel .meta {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-soft);
+    letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.7;
+    margin-bottom: 12px; display: flex; justify-content: space-between; gap: 12px;
+  }
+  #panel h1.pt {
+    font-family: 'IBM Plex Serif', serif; font-style: italic; font-weight: 400;
+    font-size: 26px; color: var(--ink); margin: 0 0 10px; line-height: 1.1;
+    letter-spacing: 0;
+  }
+  #panel .disc {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--prussian);
+    letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 22px;
+  }
+  #panel .body {
+    font-family: 'IBM Plex Serif', serif; font-weight: 300; font-size: 14px;
+    line-height: 1.6; color: var(--ink); max-width: 40ch;
+  }
+  #panel .body p { margin: 0 0 14px; }
+  #panel .body p:last-child { margin-bottom: 0; }
+  #panel .foot {
+    margin-top: auto; padding-top: 24px; display: flex; justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-soft);
+    letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.65;
+  }
+  #panel-close {
+    position: absolute; top: 14px; right: 16px; width: 24px; height: 24px;
+    background: transparent; border: var(--hair) solid var(--ink); color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  #panel-close:hover { background: var(--ink); color: var(--paper); }
+
+  /* --- LOADER --- */
+  .plate .draw { stroke-dasharray: var(--dl, 900); stroke-dashoffset: var(--dl, 900); }
+  .plate.boot .draw { animation: draw-in 1.2s var(--spring) forwards; }
+  .plate.boot .draw.contour { animation-duration: 0.9s; animation-delay: 1.05s; }
+  .plate.boot .draw.coast-2 { animation-delay: 0.15s; }
+  .plate.boot .draw.coast-3 { animation-delay: 0.30s; }
+  .plate.boot .draw.coast-4 { animation-delay: 0.45s; }
+  .plate.boot .draw.coast-5 { animation-delay: 0.60s; }
+  .plate.boot .draw.contour.c2 { animation-delay: 1.20s; }
+  .plate.boot .draw.contour.c3 { animation-delay: 1.35s; }
+  .plate.boot .draw.contour.c4 { animation-delay: 1.50s; }
+  @keyframes draw-in { to { stroke-dashoffset: 0; } }
+  .plate .fade-in { opacity: 0; }
+  .plate.boot .fade-in { animation: fade-in 0.4s var(--spring) forwards; animation-delay: 2.1s; }
+  .plate.boot .fade-in.f2 { animation-delay: 2.25s; }
+  .plate.boot .fade-in.f3 { animation-delay: 2.4s; }
+  @keyframes fade-in { to { opacity: 1; } }
+  .plate .pin-in { opacity: 0; transform: translateY(-6px); transform-box: fill-box; }
+  .plate.boot .pin-in { animation: pin-drop 0.5s var(--spring) forwards; }
+  .plate.boot .pin-in.p1 { animation-delay: 2.7s; }
+  .plate.boot .pin-in.p2 { animation-delay: 2.82s; }
+  .plate.boot .pin-in.p3 { animation-delay: 2.94s; }
+  .plate.boot .pin-in.p4 { animation-delay: 3.06s; }
+  .plate.boot .pin-in.p5 { animation-delay: 3.18s; }
+  .plate.boot .pin-in.p6 { animation-delay: 3.30s; }
+  @keyframes pin-drop { to { opacity: 1; transform: translateY(0); } }
+  .plate.static .draw { animation: none; stroke-dashoffset: 0; }
+  .plate.static .fade-in { animation: none; opacity: 1; }
+  .plate.static .pin-in { animation: none; opacity: 1; transform: translateY(0); }
+
+  /* --- corner registration marks --- */
+  .reg-mark {
+    position: fixed; width: 14px; height: 14px; z-index: 15;
+    pointer-events: none; opacity: 0.55;
+  }
+  .reg-mark svg { width: 100%; height: 100%; display: block; }
+  .reg-mark svg line { stroke: var(--ink); stroke-width: 0.75; vector-effect: non-scaling-stroke; }
+  .reg-mark.tl { top: calc(var(--drawer-h) + 14px); left: 14px; }
+  .reg-mark.tr { top: calc(var(--drawer-h) + 14px); right: 14px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plate .draw { animation: none !important; stroke-dashoffset: 0 !important; }
+    .plate .fade-in { animation: none !important; opacity: 1 !important; }
+    .plate .pin-in { animation: none !important; opacity: 1 !important; transform: none !important; }
+    #plate-camera, #panel, #cartouche { transition: none !important; }
+    .caret { animation: none; opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAVIGATOR DRAWER ============ -->
+<header id="drawer" role="banner" aria-label="Surveyor's navigator">
+  <div class="slot left">
+    <span><span class="tick" aria-hidden="true"></span>SURVEY 001 · PLATE i · R.REN — 2026</span>
+    <span id="log" aria-live="polite" aria-atomic="false"></span>
+  </div>
+  <div class="slot center" aria-hidden="true">HAIRLINE · 0.75 · NON-SCALING</div>
+  <div class="slot right">
+    <label id="prompt-wrap" for="prompt">
+      <span class="chev">&gt;</span>
+      <input id="prompt" name="prompt" autocomplete="off" spellcheck="false"
+             aria-label="Surveyor command line"
+             placeholder="try: open oryzo · legend · bearing">
+      <span class="caret" aria-hidden="true"></span>
+    </label>
+  </div>
+</header>
+
+<div class="reg-mark tl" aria-hidden="true"><svg viewBox="0 0 14 14"><line x1="0" y1="7" x2="14" y2="7"/><line x1="7" y1="0" x2="7" y2="14"/></svg></div>
+<div class="reg-mark tr" aria-hidden="true"><svg viewBox="0 0 14 14"><line x1="0" y1="7" x2="14" y2="7"/><line x1="7" y1="0" x2="7" y2="14"/></svg></div>
+
+<!-- ============ PLATE STAGE ============ -->
+<main id="plate-stage" aria-label="Hairline survey plate of Randy Ren's practice">
+  <div id="plate-camera">
+    <svg class="plate" id="plate" viewBox="0 0 2000 1200" preserveAspectRatio="xMidYMid meet">
+
+      <!-- graticule + neatline (built by JS) -->
+      <g id="graticule" aria-hidden="true"></g>
+      <g id="neatline" class="hair" aria-hidden="true"></g>
+
+      <!-- neatline mono coords -->
+      <g aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:9px;fill:#111;opacity:.55;letter-spacing:.06em;">
+        <text x="300"  y="22" text-anchor="middle">-122.60</text>
+        <text x="600"  y="22" text-anchor="middle">-122.30</text>
+        <text x="900"  y="22" text-anchor="middle">-122.00</text>
+        <text x="1200" y="22" text-anchor="middle">-121.70</text>
+        <text x="1500" y="22" text-anchor="middle">-121.40</text>
+        <text x="1800" y="22" text-anchor="middle">-121.10</text>
+        <text x="20"   y="302" text-anchor="end">38.30</text>
+        <text x="20"   y="602" text-anchor="end">37.40</text>
+        <text x="20"   y="902" text-anchor="end">36.50</text>
+      </g>
+
+      <!-- REGION 1 — MARE INTERFACIA (sea, left third) -->
+      <g id="region-mare">
+        <path class="hair draw coast-1" style="--dl:2400" d="M 42 90 C 180 140, 300 90, 380 160 S 520 260, 590 320 C 640 360, 660 420, 620 480 S 500 560, 470 640 C 450 720, 520 780, 560 850 S 620 990, 560 1050 C 500 1110, 380 1120, 300 1080 S 140 1000, 42 950"/>
+        <path class="hair-soft draw coast-2" style="--dl:2000" d="M 80 200 C 220 240, 300 220, 360 280 S 480 380, 540 460 C 570 520, 560 590, 500 640 S 400 720, 400 820 C 400 900, 470 950, 500 1010"/>
+        <path class="hair draw coast-3" style="--dl:900" d="M 240 480 C 300 470, 340 500, 380 540 S 400 620, 340 640 S 240 620, 220 570 Z"/>
+        <path class="hair draw coast-4" style="--dl:400" d="M 500 320 C 530 320, 550 340, 540 370 S 500 380, 490 360 Z"/>
+        <path class="hair-soft draw contour c2" style="--dl:1600" d="M 120 340 C 220 380, 320 400, 400 460 C 460 500, 470 560, 420 610 C 360 660, 300 700, 280 780 C 260 860, 300 920, 340 970"/>
+        <path class="hair-soft draw contour c3" style="--dl:1400" d="M 160 420 C 240 460, 320 480, 380 520 C 420 560, 420 610, 380 650 C 340 690, 300 720, 290 780 C 280 850, 320 900, 350 950"/>
+        <path class="hair-soft draw contour c4" style="--dl:1200" d="M 200 500 C 260 530, 320 550, 360 580 C 380 610, 380 640, 350 670 C 320 700, 300 740, 300 780"/>
+        <g class="hair-soft" aria-hidden="true">
+          <line x1="120" y1="700" x2="180" y2="700"/><line x1="220" y1="720" x2="280" y2="720"/>
+          <line x1="140" y1="760" x2="200" y2="760"/><line x1="240" y1="780" x2="300" y2="780"/>
+          <line x1="120" y1="820" x2="180" y2="820"/><line x1="220" y1="840" x2="280" y2="840"/>
+          <line x1="140" y1="880" x2="200" y2="880"/><line x1="240" y1="900" x2="300" y2="900"/>
+          <line x1="120" y1="940" x2="180" y2="940"/><line x1="220" y1="960" x2="280" y2="960"/>
+        </g>
+        <defs><path id="arc-mare" d="M 90 260 Q 340 210, 580 300"/></defs>
+        <text class="region fade-in" font-size="15"><textPath href="#arc-mare" startOffset="8%">MARE  INTERFACIA</textPath></text>
+        <text class="placename fade-in f2" x="150" y="530" font-size="12" transform="rotate(-4 150 530)">bay of latency</text>
+        <text class="placename fade-in f2" x="360" y="900" font-size="11" transform="rotate(-6 360 900)">quiet inlet</text>
+        <text class="placename fade-in f3" x="500" y="180" font-size="11" transform="rotate(2 500 180)">north reach</text>
+      </g>
+
+      <!-- REGION 2 — ARCHIPELAGO INSTRUMENTA (islands, middle) -->
+      <g id="region-arch">
+        <path class="hair draw coast-5" style="--dl:900" d="M 760 460 C 820 440, 900 460, 940 500 C 980 540, 990 600, 940 640 C 890 670, 800 660, 760 620 C 720 580, 720 500, 760 460 Z"/>
+        <path class="hair draw contour" style="--dl:700" d="M 1000 720 C 1060 700, 1140 720, 1180 760 C 1220 800, 1200 860, 1140 880 C 1080 900, 1000 880, 980 830 C 960 780, 960 740, 1000 720 Z"/>
+        <path class="hair draw contour c2" style="--dl:600" d="M 1180 460 C 1230 450, 1280 480, 1290 520 C 1300 560, 1260 590, 1210 590 C 1160 590, 1140 550, 1150 510 C 1155 480, 1170 470, 1180 460 Z"/>
+        <path class="hair draw contour c3" style="--dl:500" d="M 820 780 C 850 770, 890 790, 900 820 C 910 850, 880 880, 840 880 C 800 880, 780 850, 790 820 C 795 800, 810 785, 820 780 Z"/>
+        <path class="hair draw contour c4" style="--dl:400" d="M 1000 340 C 1030 340, 1055 360, 1050 390 C 1045 420, 1010 425, 990 405 C 975 385, 985 345, 1000 340 Z"/>
+        <path class="hair draw contour" style="--dl:450" d="M 1240 900 C 1270 895, 1310 915, 1315 945 C 1320 975, 1290 990, 1260 985 C 1230 980, 1220 950, 1230 925 Z"/>
+        <path class="hair-soft draw contour c2" style="--dl:500" d="M 800 500 C 850 500, 900 520, 900 560 C 900 590, 860 610, 810 590 C 780 580, 780 540, 800 500 Z"/>
+        <path class="hair-soft draw contour c3" style="--dl:500" d="M 1020 760 C 1070 750, 1130 770, 1150 800 C 1160 820, 1130 850, 1090 850 C 1050 850, 1020 830, 1020 760 Z"/>
+        <path d="M 860 560 C 950 620, 1000 700, 1080 800" fill="none" stroke="#111" stroke-width="0.75" stroke-dasharray="3 5" vector-effect="non-scaling-stroke" opacity="0.55"/>
+        <defs><path id="arc-arch" d="M 720 380 Q 1020 320, 1310 400"/></defs>
+        <text class="region fade-in f2" font-size="15"><textPath href="#arc-arch" startOffset="4%">ARCHIPELAGO  INSTRUMENTA</textPath></text>
+        <text class="placename fade-in f2" x="820" y="450" font-size="11" transform="rotate(-3 820 450)">isle of tools</text>
+        <text class="placename fade-in f3" x="1060" y="720" font-size="11" transform="rotate(2 1060 720)">shell atoll</text>
+        <text class="placename fade-in f3" x="1200" y="470" font-size="10.5" transform="rotate(-1 1200 470)">skerry vim</text>
+      </g>
+
+      <!-- REGION 3 — CAPE EDITORIA (cape, right third) -->
+      <g id="region-cape">
+        <path class="hair draw coast-5" style="--dl:2200" d="M 1400 42 C 1440 140, 1470 240, 1520 320 C 1570 400, 1620 460, 1660 540 C 1700 620, 1740 700, 1750 780 C 1760 860, 1740 940, 1700 1020 C 1660 1100, 1610 1150, 1560 1158 L 1958 1158 L 1958 42 Z"/>
+        <path class="hair-soft draw coast-2" style="--dl:1800" d="M 1500 80 C 1540 180, 1580 280, 1620 380 C 1660 480, 1690 580, 1710 680 C 1730 780, 1730 900, 1700 990"/>
+        <path class="hair-soft draw contour c2" style="--dl:1500" d="M 1560 100 C 1600 220, 1640 340, 1680 460 C 1720 580, 1740 700, 1740 820 C 1740 900, 1720 970, 1700 1030"/>
+        <path class="hair-soft draw contour c3" style="--dl:1400" d="M 1620 100 C 1650 240, 1680 380, 1710 520 C 1740 660, 1760 800, 1760 900"/>
+        <path class="hair-soft draw contour c4" style="--dl:1200" d="M 1680 100 C 1700 260, 1720 420, 1740 580 C 1760 740, 1780 880, 1780 970"/>
+        <path class="hair draw contour" style="--dl:500" d="M 1500 620 C 1470 640, 1460 680, 1490 700 C 1520 720, 1560 700, 1570 670 C 1580 640, 1540 610, 1500 620 Z"/>
+        <g class="hair-soft" aria-hidden="true">
+          <line x1="1750" y1="800" x2="1900" y2="720"/><line x1="1750" y1="800" x2="1900" y2="800"/>
+          <line x1="1750" y1="800" x2="1900" y2="880"/><line x1="1750" y1="800" x2="1900" y2="960"/>
+          <line x1="1750" y1="800" x2="1880" y2="640"/>
+        </g>
+        <defs><path id="arc-cape" d="M 1420 220 Q 1620 260, 1820 220"/></defs>
+        <text class="region fade-in f3" font-size="15"><textPath href="#arc-cape" startOffset="4%">CAPE  EDITORIA</textPath></text>
+        <text class="placename fade-in f3" x="1520" y="480" font-size="11" transform="rotate(6 1520 480)">letter ridge</text>
+        <text class="placename fade-in f3" x="1620" y="880" font-size="11" transform="rotate(-4 1620 880)">quiet cove</text>
+      </g>
+
+      <!-- soundings -->
+      <g class="hair-soft" aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:8px;fill:#111;opacity:0.4;">
+        <text x="130" y="640">·12</text><text x="230" y="700">·14</text>
+        <text x="180" y="820">·17</text><text x="260" y="900">·19</text>
+        <text x="140" y="980">·21</text><text x="330" y="780">·15</text>
+        <text x="400" y="880">·11</text><text x="470" y="740">·9</text>
+      </g>
+
+      <!-- pins injected here -->
+      <g id="pins"></g>
+    </svg>
+  </div>
+</main>
+
+<!-- ============ COMPASS ROSE ============ -->
+<div id="compass" aria-hidden="true">
+  <svg viewBox="0 0 108 108">
+    <g stroke="#111" stroke-width="0.75" fill="none" vector-effect="non-scaling-stroke">
+      <circle cx="54" cy="54" r="46"/>
+      <circle cx="54" cy="54" r="34" stroke-opacity="0.5"/>
+      <circle cx="54" cy="54" r="22" stroke-opacity="0.3"/>
+      <path d="M 54 6 L 60 54 L 54 102 L 48 54 Z" fill="#F1E8D4"/>
+      <path d="M 6 54 L 54 60 L 102 54 L 54 48 Z" fill="#F1E8D4"/>
+      <path d="M 20 20 L 54 54 L 88 88 M 88 20 L 54 54 L 20 88" stroke-opacity="0.5"/>
+      <path d="M 54 30 L 74 54 L 54 78 L 34 54 Z" stroke-opacity="0.55"/>
+      <circle cx="54" cy="54" r="2" fill="#1F3A5F" stroke="none"/>
+    </g>
+    <text class="rose-label" x="54" y="4"   text-anchor="middle" dominant-baseline="hanging">N</text>
+    <text class="rose-label" x="104" y="57" text-anchor="end">E</text>
+    <text class="rose-label" x="54" y="106" text-anchor="middle">S</text>
+    <text class="rose-label" x="4"  y="57"  text-anchor="start">W</text>
+  </svg>
+</div>
+
+<!-- ============ CARTOUCHE / LEGEND + ABOUT ============ -->
+<aside id="cartouche" aria-label="Legend and about">
+  <div class="cart-head">
+    <span>LEGEND · SCALE</span>
+    <span class="stroke" aria-hidden="true"></span>
+    <span id="cart-hint">TYPE  LEGEND</span>
+  </div>
+  <div class="scale-row">
+    <span class="scale-bar">
+      <svg width="130" height="10" viewBox="0 0 130 10">
+        <g stroke="#111" stroke-width="0.75" fill="none" vector-effect="non-scaling-stroke">
+          <line x1="2" y1="5" x2="128" y2="5"/>
+          <line x1="2" y1="1" x2="2" y2="9"/>
+          <line x1="44" y1="1" x2="44" y2="9"/>
+          <line x1="86" y1="1" x2="86" y2="9"/>
+          <line x1="128" y1="1" x2="128" y2="9"/>
+        </g>
+      </svg>
+      <span style="letter-spacing:.14em; font-size:9px; opacity:.75;">0 &nbsp; 12 &nbsp; 25 mi</span>
+    </span>
+  </div>
+  <div class="legend-row">
+    <span class="item"><span class="diamond-mark"></span>project</span>
+    <span class="item"><span class="line-mark"></span>coastline</span>
+    <span class="item"><span class="ring-mark"></span>contour</span>
+  </div>
+
+  <div id="about-body">
+    <div class="about-title">About &mdash; Randy Ren</div>
+    <div class="about-copy">
+      Randy is a designer-engineer working at the seam between AI systems and human interfaces.
+      Previously shipped consumer products used by millions; now focused on making agents feel
+      like real collaborators &mdash; the kind you'd want in the room, not the kind that eats
+      your afternoon. Believes the best interfaces disappear until you need them, then arrive
+      already knowing why. <em>Currently open to select client work and staff+ roles starting fall 2026.</em>
+    </div>
+    <div class="about-foot">OPEN &nbsp; · &nbsp; FALL 2026</div>
+  </div>
+</aside>
+
+<!-- ============ CURSOR CROSSHAIR ============ -->
+<div id="cursor" aria-hidden="true">
+  <svg viewBox="-14 -14 28 28">
+    <line x1="-14" y1="0" x2="-4" y2="0"/><line x1="4"  y1="0" x2="14" y2="0"/>
+    <line x1="0" y1="-14" x2="0" y2="-4"/><line x1="0" y1="4"  x2="0" y2="14"/>
+    <circle cx="0" cy="0" r="0.9" fill="#111" stroke="none"/>
+  </svg>
+  <div class="readout"><span class="co" id="co">37.75°N / 122.42°W</span><span class="name" id="cn"></span></div>
+</div>
+
+<!-- ============ WALL-LABEL PANEL ============ -->
+<aside id="panel" role="dialog" aria-modal="false" aria-labelledby="panel-title" aria-hidden="true">
+  <button id="panel-close" aria-label="Close project panel">&times;</button>
+  <div class="figure" id="panel-figure" aria-hidden="true"></div>
+  <div class="meta">
+    <span id="panel-year">2025</span>
+    <span id="panel-region">MARE INTERFACIA</span>
+  </div>
+  <h1 class="pt" id="panel-title">Project</h1>
+  <div class="disc" id="panel-disc">AI · Interface · Web</div>
+  <div class="body" id="panel-body"></div>
+  <div class="foot">
+    <span id="panel-coord">37.44°N / 122.28°W</span>
+    <span>PLATE i / vi</span>
+  </div>
+</aside>
+
+<script>
+/* PLATE i — surveyor console. Vanilla JS. No libs. */
+(function () {
+  'use strict';
+
+  var PROJECTS = [
+    { slug:'oryzo', num:'01', name:'Oryzo', year:'2025',
+      disc:'AI · Interface · Web',
+      tag:'Voice orchestration layer for autonomous agents. Turned 300ms of latency into a feature.',
+      body:[
+        'Oryzo is a voice orchestration layer for autonomous agents — routing, buffering, and reasoning about latency the way a switchboard operator once did for a city.',
+        'We reframed the awkward 300ms round-trip as breathing space: the agent thinks aloud while it thinks, and the interface lets you interrupt without penalty.',
+        'Shipped as a hosted API and a small React SDK; used inside a handful of research labs to make multi-agent conversation feel less like a courtroom and more like a room.'
+      ],
+      lat:37.44, lon:-122.28, region:'MARE INTERFACIA', regionId:'mare', x:320, y:640 },
+    { slug:'halcyon', num:'02', name:'Halcyon', year:'2025',
+      disc:'Product · WebGL · Design',
+      tag:'Realtime collaborative canvas for design teams. Half a million multiplayer cursors and counting.',
+      body:[
+        'Halcyon is a realtime collaborative canvas for design teams that treats cursors as first-class citizens — every session has a shared pulse, a shared silence.',
+        'The rendering pipeline is a single WebGL scene graph tuned to be quiet at 120fps, so nothing you draw ever feels laggy behind someone else\'s selection.',
+        'Half a million multiplayer cursors have moved through it since launch. It is the piece I am proudest of; it taught me that presence, done gently, is a feature.'
+      ],
+      lat:37.78, lon:-122.42, region:'MARE INTERFACIA', regionId:'mare', x:470, y:400 },
+    { slug:'aperture', num:'03', name:'Aperture', year:'2024',
+      disc:'Mobile · System · Concept',
+      tag:'Camera-first mobile OS. The lens is the app launcher.',
+      body:[
+        'Aperture was a concept mobile OS in which the camera viewfinder became the primary surface — apps arrived by pointing at things, not by tapping icons.',
+        'A menu felt wrong for a device carried past a thousand real objects a day. So the lens read intent — a receipt, a plant, a friend\'s face — and offered the right small tool.',
+        'Never shipped; explored in a five-week studio with a hardware partner. The demo is still one of the most humane camera interactions I\'ve ever touched.'
+      ],
+      lat:36.60, lon:-121.90, region:'ARCHIPELAGO INSTRUMENTA', regionId:'arch', x:850, y:540 },
+    { slug:'fieldnote', num:'04', name:'Fieldnote', year:'2024',
+      disc:'CLI · AI · Tool',
+      tag:'Terminal-native journaling agent. Writes with you, not for you.',
+      body:[
+        'Fieldnote is a small terminal-native journaling agent. It doesn\'t summarize your day at you; it asks one honest question at a time and gets out of the way.',
+        'Local-first, plaintext-first, keystroke-native. Every prompt is a hairline — never a paragraph, never a persona, never a nudge dressed up as a helper.',
+        'Used daily by a handful of writers and engineers. It is the smallest useful thing I\'ve made, and small useful things are what I want more of.'
+      ],
+      lat:36.80, lon:-121.60, region:'ARCHIPELAGO INSTRUMENTA', regionId:'arch', x:1100, y:780 },
+    { slug:'signal-garden', num:'05', name:'Signal Garden', year:'2024',
+      disc:'Hardware · Interface',
+      tag:'Ambient e-ink dashboards for distributed teams. Status without Slack.',
+      body:[
+        'Signal Garden is a family of small e-ink dashboards that live on a shelf and quietly show the state of a distributed team — who\'s heads-down, what\'s green, what\'s not.',
+        'The interface is almost print: refreshed a few times an hour, no alerts, no red dots, no dopamine. If you want the answer you look; if you don\'t, you don\'t.',
+        'I designed the industrial housing, the typography, and the sync protocol. Six teams currently keep them on the wall.'
+      ],
+      lat:38.30, lon:-122.10, region:'CAPE EDITORIA', regionId:'cape', x:1560, y:400 },
+    { slug:'loom', num:'06', name:'Loom', year:'2023',
+      disc:'Web3 · Audio · Experiment',
+      tag:'Peer-to-peer music mesh. No servers, no ads, just rooms.',
+      body:[
+        'Loom is a peer-to-peer music mesh — small rooms of listeners sharing a queue over WebRTC. No servers touch the stream; the mesh sings among itself.',
+        'It began as an experiment in whether "social listening" could survive without an audience metric. The answer was: only when everyone in the room can pause.',
+        'Kept running as a weekend art piece. About forty rooms are always warm at any given hour.'
+      ],
+      lat:38.10, lon:-121.80, region:'CAPE EDITORIA', regionId:'cape', x:1700, y:760 }
+  ];
+
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS(SVG_NS, tag);
+    if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function addLine(parent, x1, y1, x2, y2) {
+    parent.appendChild(svgEl('line', {x1:x1, y1:y1, x2:x2, y2:y2}));
+  }
+
+  // build graticule + neatline
+  (function buildGraticule() {
+    var g = document.getElementById('graticule');
+    var soft = svgEl('g', {'class':'hair-soft'});
+    for (var i = 100; i < 2000; i += 100) addLine(soft, i, 0, i, 1200);
+    for (var j = 100; j < 1200; j += 100) addLine(soft, 0, j, 2000, j);
+    g.appendChild(soft);
+    g.appendChild(svgEl('rect', {x:30, y:30, width:1940, height:1140, 'class':'hair'}));
+    g.appendChild(svgEl('rect', {x:42, y:42, width:1916, height:1116, 'class':'hair-soft'}));
+    var n = document.getElementById('neatline');
+    [300,600,900,1200,1500,1800].forEach(function (x) {
+      addLine(n, x, 30, x, 46); addLine(n, x, 1170, x, 1154);
+    });
+    [300,600,900].forEach(function (y) {
+      addLine(n, 30, y, 46, y); addLine(n, 1970, y, 1954, y);
+    });
+  })();
+
+  // DOM refs
+  var plate       = document.getElementById('plate');
+  var plateStage  = document.getElementById('plate-stage');
+  var plateCamera = document.getElementById('plate-camera');
+  var pinsG       = document.getElementById('pins');
+  var promptEl    = document.getElementById('prompt');
+  var logEl       = document.getElementById('log');
+  var cartouche   = document.getElementById('cartouche');
+  var cartHint    = document.getElementById('cart-hint');
+  var panel       = document.getElementById('panel');
+  var panelClose  = document.getElementById('panel-close');
+  var panelTitle  = document.getElementById('panel-title');
+  var panelDisc   = document.getElementById('panel-disc');
+  var panelBody   = document.getElementById('panel-body');
+  var panelYear   = document.getElementById('panel-year');
+  var panelRegion = document.getElementById('panel-region');
+  var panelCoord  = document.getElementById('panel-coord');
+  var panelFigure = document.getElementById('panel-figure');
+  var cursor      = document.getElementById('cursor');
+  var coEl        = document.getElementById('co');
+  var cnEl        = document.getElementById('cn');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // cookie / boot
+  function hasCookie(name) {
+    return document.cookie.split(';').some(function (c) { return c.trim().indexOf(name + '=') === 0; });
+  }
+  function setCookie(name, val) {
+    var d = new Date(); d.setFullYear(d.getFullYear() + 1);
+    document.cookie = name + '=' + val + '; expires=' + d.toUTCString() + '; path=/';
+  }
+  var firstVisit = !hasCookie('plate_visited');
+  if (firstVisit && !reduceMotion) {
+    plate.classList.add('boot');
+    typeIntoLog('SURVEY 001 — INITIALIZING…', 40);
+  } else {
+    plate.classList.add('static');
+  }
+  setTimeout(function () { setCookie('plate_visited', '1'); }, firstVisit ? 3600 : 200);
+
+  function skipBoot() {
+    if (!plate.classList.contains('boot')) return;
+    plate.classList.remove('boot');
+    plate.classList.add('static');
+    setCookie('plate_visited', '1');
+  }
+  document.addEventListener('keydown', skipBoot, { once: true, capture: true });
+  plateStage.addEventListener('click', skipBoot, { once: true, capture: true });
+
+  // pins
+  PROJECTS.forEach(function (p, i) {
+    var g = svgEl('g', {
+      'class':'pin pin-in p' + (i + 1),
+      'data-slug': p.slug, tabindex:'0', role:'button',
+      'aria-label': p.name + ' — ' + p.disc + ' — ' + fmtLatLon(p.lat, p.lon),
+      transform: 'translate(' + p.x + ' ' + p.y + ')'
+    });
+    g.appendChild(svgEl('circle', {'class':'ring', cx:0, cy:0, r:14}));
+    g.appendChild(svgEl('path', {'class':'diamond', d:'M 0 -6 L 6 0 L 0 6 L -6 0 Z'}));
+    var co = svgEl('text', {'class':'callout', x:12, y:-2}); co.textContent = fmtLatLon(p.lat, p.lon);
+    g.appendChild(co);
+    var num = svgEl('text', {'class':'callout', x:-12, y:-2, 'text-anchor':'end'}); num.textContent = p.num;
+    g.appendChild(num);
+    var slug = svgEl('text', {'class':'slug', x:0, y:22, 'text-anchor':'middle'}); slug.textContent = p.name;
+    g.appendChild(slug);
+    var tick = svgEl('line', {x1:0, y1:10, x2:0, y2:14, stroke:'#111', 'stroke-width':'0.75', 'vector-effect':'non-scaling-stroke'});
+    g.appendChild(tick);
+
+    g.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var cmd = 'goto ' + p.lat.toFixed(2) + ',' + p.lon.toFixed(2);
+      simulateType(cmd, function () {
+        cmdGoto(p);
+        setTimeout(function () { openPanel(p); }, 520);
+      });
+    });
+    g.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPanel(p); panPlateTo(p); }
+    });
+    g.addEventListener('mouseenter', function () { setCursorProject(p); });
+    g.addEventListener('mouseleave', function () { setCursorProject(null); });
+    pinsG.appendChild(g);
+  });
+
+  // cursor
+  function updateCursor(clientX, clientY) {
+    cursor.style.transform = 'translate(' + clientX + 'px,' + clientY + 'px)';
+    if (cursor._project) return;
+    var stageRect = plateStage.getBoundingClientRect();
+    var relX = (clientX - stageRect.left) / stageRect.width;
+    var relY = (clientY - stageRect.top)  / stageRect.height;
+    var cam = currentCamera;
+    var vbX = ((relX - 0.5) / cam.z + 0.5) * 2000 + (cam.tx * -1);
+    var vbY = ((relY - 0.5) / cam.z + 0.5) * 1200 + (cam.ty * -1);
+    if (vbX < 0) vbX = 0; else if (vbX > 2000) vbX = 2000;
+    if (vbY < 0) vbY = 0; else if (vbY > 1200) vbY = 1200;
+    var lon = -122.6 + (vbX / 2000) * (-121.1 - -122.6);
+    var lat = 38.5   + (vbY / 1200) * (36.5   - 38.5);
+    coEl.textContent = fmtLatLon(lat, lon);
+    cnEl.textContent = '';
+  }
+  function setCursorProject(p) {
+    cursor._project = p;
+    if (p) { coEl.textContent = fmtLatLon(p.lat, p.lon); cnEl.textContent = '  ' + p.name; }
+    else   { cnEl.textContent = ''; }
+  }
+  plateStage.addEventListener('mousemove', function (e) {
+    document.body.classList.remove('hide-cursor');
+    updateCursor(e.clientX, e.clientY);
+  });
+  plateStage.addEventListener('mouseleave', function () { document.body.classList.add('hide-cursor'); });
+  document.getElementById('drawer').addEventListener('mouseenter', function () { document.body.classList.add('hide-cursor'); });
+  panel.addEventListener('mouseenter', function () { document.body.classList.add('hide-cursor'); });
+  cartouche.addEventListener('mouseenter', function () { document.body.classList.add('hide-cursor'); });
+
+  // camera
+  var currentCamera = { tx: 0, ty: 0, z: 1 };
+  function applyCamera() {
+    if (reduceMotion) plateCamera.style.transition = 'none';
+    plateCamera.style.transform = 'translate(' + currentCamera.tx + 'px,' + currentCamera.ty + 'px) scale(' + currentCamera.z + ')';
+  }
+  function panPlateTo(p) {
+    var z = 1.9;
+    var stageRect = plateStage.getBoundingClientRect();
+    var stageW = stageRect.width, stageH = stageRect.height;
+    var contentAspect = 2000 / 1200;
+    var stageAspect = stageW / stageH;
+    var contentW, contentH, offsetX, offsetY;
+    if (stageAspect > contentAspect) {
+      contentH = stageH; contentW = contentH * contentAspect;
+      offsetX = (stageW - contentW) / 2; offsetY = 0;
+    } else {
+      contentW = stageW; contentH = contentW / contentAspect;
+      offsetX = 0; offsetY = (stageH - contentH) / 2;
+    }
+    var pinScreenX = offsetX + (p.x / 2000) * contentW;
+    var pinScreenY = offsetY + (p.y / 1200) * contentH;
+    var tx = (stageW/2 - pinScreenX) * z;
+    var ty = (stageH/2 - pinScreenY) * z;
+    currentCamera = { tx: tx, ty: ty, z: z };
+    plateCamera.style.transition = reduceMotion ? 'none' : 'transform 500ms cubic-bezier(0.2,0.9,0.3,1)';
+    applyCamera();
+    Array.prototype.forEach.call(pinsG.querySelectorAll('.pin'), function (n) {
+      n.classList.toggle('active', n.getAttribute('data-slug') === p.slug);
+    });
+  }
+  function resetCamera() {
+    currentCamera = { tx: 0, ty: 0, z: 1 };
+    plateCamera.style.transition = reduceMotion ? 'none' : 'transform 500ms cubic-bezier(0.2,0.9,0.3,1)';
+    applyCamera();
+    Array.prototype.forEach.call(pinsG.querySelectorAll('.pin'), function (n) { n.classList.remove('active'); });
+  }
+
+  // log
+  function pushLog(html, cls) {
+    var line = document.createElement('span');
+    line.className = 'log-line' + (cls ? ' ' + cls : '');
+    line.innerHTML = html;
+    logEl.appendChild(line);
+    while (logEl.children.length > 3) logEl.removeChild(logEl.firstChild);
+  }
+  function typeIntoLog(str, speed) {
+    var line = document.createElement('span');
+    line.className = 'log-line';
+    logEl.appendChild(line);
+    while (logEl.children.length > 3) logEl.removeChild(logEl.firstChild);
+    var i = 0;
+    (function step() {
+      if (i > str.length) return;
+      line.textContent = str.slice(0, i);
+      i++; setTimeout(step, speed);
+    })();
+  }
+
+  // commands
+  var history = [], histIdx = -1;
+  function projectBySlug(s) {
+    s = s.toLowerCase().replace(/\s+/g, '-');
+    for (var i = 0; i < PROJECTS.length; i++) if (PROJECTS[i].slug === s) return PROJECTS[i];
+    return null;
+  }
+  function cmdGoto(arg) {
+    var p = null;
+    if (typeof arg === 'object' && arg) p = arg;
+    else if (typeof arg === 'string') {
+      arg = arg.trim();
+      var m = arg.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+      if (m) {
+        var lat = parseFloat(m[1]), lon = parseFloat(m[2]);
+        var best = null, bestD = 1e9;
+        PROJECTS.forEach(function (pp) {
+          var d = (pp.lat - lat) * (pp.lat - lat) + (pp.lon - lon) * (pp.lon - lon);
+          if (d < bestD) { bestD = d; best = pp; }
+        });
+        p = best;
+      } else p = projectBySlug(arg);
+    }
+    if (!p) { pushLog('goto: unknown target', 'err'); return; }
+    pushLog('<span class="who">&gt;</span> goto ' + p.lat.toFixed(2) + ',' + p.lon.toFixed(2) + ' — ' + p.name);
+    panPlateTo(p);
+  }
+  function cmdOpen(slug) {
+    if (!slug) { pushLog('open: needs a project', 'err'); return; }
+    var p = projectBySlug(slug);
+    if (!p) { pushLog('open: no such project — ' + slug, 'err'); return; }
+    pushLog('<span class="who">&gt;</span> open ' + p.slug);
+    panPlateTo(p);
+    setTimeout(function () { openPanel(p); }, 220);
+  }
+  function cmdBearing() {
+    pushLog('<span class="who">&gt;</span> bearing — SAN FRANCISCO · <a href="mailto:hey@randy.sh" style="color:var(--prussian);text-decoration:underline;">hey@randy.sh</a> · +∞°');
+  }
+  function cmdLegend() {
+    var open = cartouche.classList.toggle('expanded');
+    cartHint.textContent = open ? 'TYPE  LEGEND  TO  CLOSE' : 'TYPE  LEGEND';
+    pushLog('<span class="who">&gt;</span> legend — ' + (open ? 'opened' : 'closed'));
+  }
+  function runCommand(raw) {
+    var line = raw.trim(); if (!line) return;
+    history.push(line); histIdx = history.length;
+    var parts = line.split(/\s+/);
+    var verb = parts.shift().toLowerCase();
+    var rest = parts.join(' ');
+    switch (verb) {
+      case 'goto':    cmdGoto(rest); break;
+      case 'open':    cmdOpen(rest); break;
+      case 'bearing': cmdBearing(); break;
+      case 'legend':  cmdLegend(); break;
+      default:
+        pushLog('<span class="who">&gt;</span> ' + line + ' — unknown verb — try goto / open / bearing / legend', 'err');
+    }
+  }
+
+  // prompt input
+  promptEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      runCommand(promptEl.value);
+      promptEl.value = '';
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (history.length === 0) return;
+      histIdx = Math.max(0, histIdx - 1);
+      promptEl.value = history[histIdx] || '';
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      histIdx = Math.min(history.length, histIdx + 1);
+      promptEl.value = history[histIdx] || '';
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      var val = promptEl.value;
+      var m = val.match(/^(open|goto)\s+(.*)$/i);
+      if (m) {
+        var stem = m[2].toLowerCase();
+        for (var i = 0; i < PROJECTS.length; i++) {
+          if (PROJECTS[i].slug.indexOf(stem) === 0) {
+            promptEl.value = m[1].toLowerCase() + ' ' + PROJECTS[i].slug;
+            break;
+          }
+        }
+      } else {
+        var stem2 = val.toLowerCase();
+        ['goto ', 'open ', 'bearing', 'legend'].some(function (v) {
+          if (v.indexOf(stem2) === 0) { promptEl.value = v; return true; }
+          return false;
+        });
+      }
+    } else if (e.key === 'Escape') {
+      closePanel();
+    }
+  });
+
+  // simulate typing (for pin clicks)
+  function simulateType(cmd, done) {
+    promptEl.focus();
+    promptEl.value = '';
+    var i = 0;
+    var interval = Math.max(12, Math.floor(200 / Math.max(cmd.length, 1)));
+    (function step() {
+      if (i > cmd.length) {
+        setTimeout(function () {
+          runCommand(cmd); promptEl.value = ''; if (done) done();
+        }, 80);
+        return;
+      }
+      promptEl.value = cmd.slice(0, i); i++;
+      setTimeout(step, interval);
+    })();
+  }
+
+  // panel
+  function figureFor(p) {
+    var seed = p.slug.charCodeAt(0) + p.slug.charCodeAt(1);
+    var rot = (seed * 13) % 40 - 20;
+    return (
+      '<svg viewBox="0 0 400 210" preserveAspectRatio="xMidYMid meet">' +
+      '<defs><pattern id="hatch-' + p.slug + '" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(' + rot + ')">' +
+      '<line x1="0" y1="0" x2="0" y2="6" stroke="#7A4A1F" stroke-width="0.6" opacity="0.6"/></pattern></defs>' +
+      '<rect x="0" y="0" width="400" height="210" fill="#F1E8D4"/>' +
+      '<rect x="14" y="14" width="372" height="182" fill="none" stroke="#111" stroke-width="0.75" vector-effect="non-scaling-stroke"/>' +
+      '<circle cx="' + (140 + (seed % 40)) + '" cy="' + (110 + (seed % 20)) + '" r="' + (52 + (seed % 12)) + '" fill="url(#hatch-' + p.slug + ')" stroke="#1F3A5F" stroke-width="0.75" vector-effect="non-scaling-stroke"/>' +
+      '<circle cx="' + (140 + (seed % 40)) + '" cy="' + (110 + (seed % 20)) + '" r="' + (28 + (seed % 6)) + '" fill="#F1E8D4" stroke="#111" stroke-width="0.75" vector-effect="non-scaling-stroke"/>' +
+      '<rect x="240" y="' + (54 + (seed % 20)) + '" width="' + (100 + (seed % 20)) + '" height="' + (60 + (seed % 20)) + '" fill="none" stroke="#111" stroke-width="0.75" vector-effect="non-scaling-stroke" transform="rotate(' + (rot / 2) + ' 290 90)"/>' +
+      '<path d="M 40 170 L ' + (100 + (seed % 30)) + ' 40 L 210 150 L 320 60" fill="none" stroke="#1F3A5F" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.75"/>' +
+      '<text x="20" y="200" font-family="IBM Plex Mono, monospace" font-size="9" fill="#111" opacity="0.55" letter-spacing="0.14em">FIG. ' + p.num + ' · ' + p.name.toUpperCase() + '</text>' +
+      '</svg>'
+    );
+  }
+  function openPanel(p) {
+    panelTitle.textContent = p.name;
+    panelDisc.textContent  = p.disc;
+    panelYear.textContent  = p.year;
+    panelRegion.textContent = p.region;
+    panelCoord.textContent = fmtLatLon(p.lat, p.lon);
+    panelBody.innerHTML = p.body.map(function (para) { return '<p>' + para + '</p>'; }).join('');
+    panelFigure.innerHTML = figureFor(p);
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    panPlateTo(p);
+  }
+  function closePanel() {
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    resetCamera();
+  }
+  panelClose.addEventListener('click', closePanel);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePanel(); });
+
+  // click outside cartouche closes it
+  document.addEventListener('click', function (e) {
+    if (cartouche.classList.contains('expanded') &&
+        !cartouche.contains(e.target) &&
+        !promptEl.contains(e.target)) {
+      cartouche.classList.remove('expanded');
+      cartHint.textContent = 'TYPE  LEGEND';
+    }
+  });
+
+  // helpers
+  function fmtLatLon(lat, lon) {
+    var ns = lat >= 0 ? 'N' : 'S';
+    var ew = lon >= 0 ? 'E' : 'W';
+    return Math.abs(lat).toFixed(2) + '°' + ns + ' / ' + Math.abs(lon).toFixed(2) + '°' + ew;
+  }
+
+  // welcome log
+  setTimeout(function () {
+    var hint = '<span class="who">·</span> plate ready — try <span style="color:var(--prussian);">open oryzo</span> · <span style="color:var(--prussian);">legend</span> · <span style="color:var(--prussian);">bearing</span>';
+    if (firstVisit && !reduceMotion) setTimeout(function () { pushLog(hint); }, 3600);
+    else pushLog(hint);
+  }, 60);
+
+  setTimeout(function () { promptEl.focus(); }, firstVisit ? 3700 : 200);
+
+  window.addEventListener('resize', function () {
+    var active = pinsG.querySelector('.pin.active');
+    if (active) {
+      var p = projectBySlug(active.getAttribute('data-slug'));
+      if (p) panPlateTo(p);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

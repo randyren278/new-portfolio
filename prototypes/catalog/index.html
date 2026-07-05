@@ -1,0 +1,3950 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Randy Ren — Museum Shell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital@1&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     CATALOG v2.2 — Museum Shell
+     Palette (locked):
+       #F1E8D4 cream        · background
+       #111    ink          · body & hairlines
+       #1F3A5F prussian     · prompt caret, live links, active row
+       #5A3818 umber-strong · readable secondary text
+       #7A4A1F umber-muted  · marginalia only, actual annotations
+       #a8100a vermillion   · accent glyphs (§, └, error)
+       #7a2d16 err          · command-not-found only
+
+     Contrast rule: on #F1E8D4 cream, we use only #111 (ink), #5A3818 (umber-strong),
+     #7A4A1F (umber-muted, marginalia only), #1F3A5F (prussian), #a8100a (vermillion accent).
+     Never use opacity below 0.55 on foreground text. Never use #7A4A1F at less than 100% opacity
+     for anything the user must read.
+     ============================================================ */
+
+  :root {
+    --cream: #F1E8D4;
+    --ink: #111;
+    --prussian: #1F3A5F;
+    --umber: #7A4A1F;
+    --umber-strong: #5A3818;
+    --umber-muted: #7A4A1F;
+    --vermillion: #a8100a;
+    --dim-red: #7a2d16;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--cream); }
+  body {
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    font-weight: 400;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+
+  /* Fixed chrome — thin, dim, corners only */
+  .chrome-tr {
+    position: fixed; top: 14px; right: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--umber-strong); opacity: .75;
+    letter-spacing: .02em;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .chrome-br {
+    position: fixed; bottom: 14px; right: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--umber-strong); opacity: .75;
+    letter-spacing: .02em;
+    pointer-events: none;
+    z-index: 5;
+    transition: opacity .3s;
+  }
+  .chrome-br.gone { opacity: 0; }
+
+  /* Terminal viewport */
+  #term {
+    position: absolute; inset: 0;
+    padding: 40px 48px 56px 48px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    cursor: text;
+  }
+  #term::-webkit-scrollbar { width: 6px; }
+  #term::-webkit-scrollbar-thumb { background: rgba(122,74,31,.25); border-radius: 3px; }
+  #term::-webkit-scrollbar-track { background: transparent; }
+
+  #buffer {
+    max-width: 80ch;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Row types */
+  .row { display: block; }
+  .row.instant { animation: none; }
+  .row.stagger {
+    opacity: 0; transform: translateY(-2px);
+    animation: rowIn 100ms cubic-bezier(.22,1,.36,1) forwards;
+  }
+  @keyframes rowIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Prompt line */
+  .prompt-line { display: inline; white-space: pre; }
+  .prompt-user { color: var(--ink); opacity: 1; font-weight: 500; }
+  .prompt-at { color: var(--umber-strong); font-weight: 400; }
+  .prompt-colon { color: var(--ink); font-weight: 400; }
+  .prompt-pwd { color: var(--prussian); opacity: 1; font-weight: 500; }
+  .prompt-dollar { color: var(--ink); font-weight: 500; }
+
+  /* Active editable prompt */
+  #active-line {
+    display: block; white-space: pre;
+    padding-top: 2px;
+    max-width: 80ch;
+  }
+  #input-area {
+    display: inline;
+    outline: none;
+    white-space: pre;
+    caret-color: transparent;
+  }
+  /* the caret — an elegant hairline that fades rather than snaps */
+  #caret {
+    display: inline-block;
+    width: 1.5px; height: 1.05em;
+    background: var(--prussian);
+    vertical-align: -2px;
+    animation: caret-breathe 1100ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    position: relative;
+    top: 2px;
+    margin: 0 -0.75px;
+    box-shadow: 0 0 0 0 rgba(31,58,95,0.0);
+  }
+  #caret.typing { animation: none; opacity: 1; }
+  #caret.blurred {
+    background: transparent;
+    height: 1.05em;
+    width: 4px;
+    border-left: 1px solid var(--prussian);
+    border-right: 1px solid var(--prussian);
+    animation: none;
+    opacity: 0.55;
+  }
+  @keyframes caret-breathe {
+    0%   { opacity: 1; }
+    45%  { opacity: 1; }
+    58%  { opacity: 0.05; }
+    82%  { opacity: 0.05; }
+    100% { opacity: 1; }
+  }
+
+  /* No character-under-caret for the hairline caret; it sits between glyphs. */
+  #caret .under {
+    display: none;
+  }
+
+  /* Reveal caret used inside animated wall labels */
+  .reveal-caret {
+    display: inline-block;
+    width: 1ch; height: 1.15em;
+    background: var(--prussian);
+    vertical-align: -3px;
+    animation: blink 530ms steps(1) infinite;
+  }
+  .reveal-caret.fading {
+    animation: caretFade 240ms linear forwards;
+  }
+  @keyframes caretFade {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* Marginalia — umber italic serif */
+  .marg {
+    font-family: 'IBM Plex Serif', ui-serif, Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--umber-strong);
+    opacity: 1;
+  }
+  .umber { color: var(--umber-strong); }
+  .prussian { color: var(--prussian); }
+  .dim { color: var(--umber-strong); opacity: .85; }
+  .err { color: var(--dim-red); }
+
+  /* Clickable output — button-as-text */
+  button.link {
+    all: unset;
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+    display: inline;
+    padding: 0;
+    border-radius: 0;
+  }
+  button.link:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  button.link:focus-visible { outline: 1px solid var(--prussian); outline-offset: 2px; }
+
+  /* Wall label — inline card in terminal flow.
+     Free from monospace constraints; serif title + mono meta + serif blurb. */
+  .label-card {
+    display: block;
+    max-width: 62ch;
+    margin: 8px 0 4px 0;
+    padding: 22px 26px 24px;
+    border: 1px solid rgba(17,17,17,0.16);
+    background: var(--cream);
+    position: relative;
+  }
+  /* When card is being framed in, hide the native border; the SVG frame draws the border instead. */
+  .label-card.framing { border-color: transparent; }
+  .label-card > svg.card-frame {
+    position: absolute;
+    inset: -0.5px;
+    width: calc(100% + 1px);
+    height: calc(100% + 1px);
+    pointer-events: none;
+    z-index: 3;
+    overflow: visible;
+  }
+  .label-card > svg.card-frame path {
+    fill: none;
+    stroke: rgba(17,17,17,0.24);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .label-card.framing { border-color: rgba(17,17,17,0.16); }
+    .label-card > svg.card-frame { display: none; }
+  }
+  .label-kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: #a8100a;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .label-title {
+    font-family: 'Instrument Serif', 'IBM Plex Serif', Georgia, serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 52px;
+    line-height: 1.0;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 14px 0;
+    display: block;
+  }
+  .label-meta {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 20px;
+    row-gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    line-height: 1.35;
+    margin: 6px 0 14px 0;
+  }
+  .label-meta dt {
+    color: var(--umber-strong);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .label-meta dd {
+    color: var(--ink);
+    margin: 0;
+    font-weight: 400;
+  }
+  .label-rule {
+    height: 1px;
+    background: rgba(17,17,17,0.16);
+    margin: 12px 0 14px 0;
+    transform-origin: left center;
+  }
+  .label-blurb {
+    font-family: 'Instrument Serif', 'IBM Plex Serif', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    max-width: 52ch;
+    margin: 0;
+  }
+  .label-hint {
+    margin-top: 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--umber-strong);
+    opacity: 0.75;
+  }
+  .label-hint .lk { color: var(--prussian); }
+  /* Reveal animation states — set on card, driven by JS with staggered class flips */
+  .label-card.pre .label-kicker,
+  .label-card.pre .label-title,
+  .label-card.pre .label-meta > *,
+  .label-card.pre .label-blurb,
+  .label-card.pre .label-hint {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  .label-card.pre .label-rule { transform: scaleX(0); }
+  .label-card .label-kicker,
+  .label-card .label-title,
+  .label-card .label-meta > *,
+  .label-card .label-blurb,
+  .label-card .label-hint {
+    transition: opacity 380ms cubic-bezier(0.22,1,0.36,1),
+                transform 380ms cubic-bezier(0.22,1,0.36,1);
+  }
+  .label-card .label-rule {
+    transition: transform 320ms cubic-bezier(0.16,1,0.3,1);
+  }
+  /* legacy alias — some code may still reference .label-box */
+  .label-box { display: inline-block; white-space: pre; color: var(--ink); }
+
+  /* Walking caret — a small block that trails the writing position during reveal. */
+  .walk-caret {
+    position: absolute;
+    left: 26px;
+    top: 22px;
+    width: 8px;
+    height: 14px;
+    background: var(--prussian);
+    pointer-events: none;
+    z-index: 5;
+    transition: left 40ms linear, top 60ms linear, height 120ms cubic-bezier(0.16,1,0.3,1), opacity 240ms;
+    box-shadow: 0 0 0 0 rgba(31,58,95,0.24);
+  }
+  .walk-caret.parked { animation: walkCaretBlink 530ms steps(2, jump-none) 2; }
+  .walk-caret.fading { opacity: 0; }
+  @keyframes walkCaretBlink {
+    50% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .walk-caret { display: none; }
+  }
+
+  /* Chips row */
+  #chips {
+    display: flex; flex-wrap: wrap; align-items: flex-start;
+    gap: 0;
+    padding: 8px 0 0 0;
+    max-width: 80ch;
+    transition: opacity .35s cubic-bezier(.22,1,.36,1);
+  }
+  .chip {
+    all: unset;
+    display: inline-block;
+    color: var(--umber-strong);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.15;
+    cursor: pointer;
+    padding: 0 10px 0 0;
+    margin-right: 8px;
+    position: relative;
+  }
+  .chip:focus-visible { outline: 1px dashed var(--prussian); outline-offset: 2px; }
+  .chip .l1 { display: block; font-size: 13px; color: var(--umber-strong); font-weight: 500; opacity: 1; }
+  .chip .l2 { display: block; font-size: 11px; color: var(--umber-muted); opacity: 1; margin-top: 1px; }
+  .chip-sep {
+    color: var(--umber-strong); opacity: .75;
+    font-size: 13px;
+    margin: 0 6px 0 -4px;
+    align-self: center;
+    padding-top: 1px;
+  }
+
+  /* Marginalia inline hint (right of prompt) */
+  #margin-hint {
+    display: inline;
+    color: var(--umber-strong);
+    opacity: 1;
+    font-size: 12px;
+    margin-left: 12px;
+    font-family: 'IBM Plex Serif', serif;
+    font-style: italic;
+  }
+  #margin-hint.gone { display: none; }
+
+  /* Plate — inline SVG */
+  .plate-wrap {
+    display: block;
+    padding: 6px 0 8px 4ch;
+  }
+  .plate-wrap svg { display: block; }
+
+  /* Cmd-K palette */
+  #palette {
+    position: fixed; inset: 0;
+    background: rgba(241, 232, 212, 0.95);
+    z-index: 20;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+    backdrop-filter: blur(2px);
+  }
+  #palette.open { display: flex; }
+  .pal-card {
+    width: min(640px, 90vw);
+    background: var(--cream);
+    border: 1px solid var(--ink);
+    padding: 14px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .pal-input {
+    all: unset;
+    width: 100%;
+    border-bottom: 1px solid var(--ink);
+    padding: 4px 0;
+    font: 500 14px 'IBM Plex Mono', monospace;
+    color: var(--ink);
+    caret-color: var(--prussian);
+  }
+  .pal-list {
+    margin-top: 10px;
+    max-height: 50vh;
+    overflow-y: auto;
+    font-size: 13px;
+  }
+  .pal-item {
+    padding: 5px 8px;
+    display: flex;
+    justify-content: space-between;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .pal-item .kind { color: var(--umber); font-size: 11px; opacity: .8; }
+  .pal-item.sel { background: var(--prussian); color: var(--cream); }
+  .pal-item.sel .kind { color: var(--cream); opacity: .8; }
+  .pal-empty { padding: 8px; color: var(--umber); font-style: italic; font-family: 'IBM Plex Serif', serif; font-size: 12px; }
+
+  /* Tab-completion candidates */
+  .tab-block {
+    display: block;
+    color: var(--ink);
+    opacity: .7;
+    white-space: pre-wrap;
+    padding: 2px 0 4px 0;
+  }
+
+  /* Utility */
+  .hidden { display: none !important; }
+  .nowrap { white-space: pre; }
+
+  /* Prefers reduced motion — everything instant */
+  @media (prefers-reduced-motion: reduce) {
+    #caret, .reveal-caret { animation: none !important; }
+    .row.stagger { animation: none !important; opacity: 1 !important; transform: none !important; }
+  }
+
+  /* ============================================================
+     PLATE VIEWER — floating card lifted over terminal
+     ============================================================ */
+  .plate-overlay {
+    position: fixed; inset: 0;
+    background: rgba(241, 232, 212, 0.35);
+    -webkit-backdrop-filter: blur(1.5px);
+    backdrop-filter: blur(1.5px);
+    z-index: 40;
+    opacity: 0;
+    transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    color: var(--ink);
+  }
+  .plate-overlay.open { opacity: 1; }
+  .plate-overlay.closing { opacity: 0; transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1) 40ms; }
+
+  /* The plate itself — a physical card lifted off the terminal */
+  .plate-card {
+    position: absolute;
+    top: 64px; bottom: 64px;
+    left: 96px; right: 96px;
+    max-width: 1400px;
+    margin-inline: auto;
+    background: var(--cream);
+    border: 1px solid rgba(17, 17, 17, 0.14);
+    box-shadow:
+      0 24px 60px -12px rgba(17, 17, 17, 0.14),
+      0 4px 12px rgba(17, 17, 17, 0.06);
+    overflow-y: auto;
+    overflow-x: hidden;
+    opacity: 0.6;
+    transform: scale(0.985);
+    transform-origin: center center;
+    transition:
+      opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .plate-overlay.open .plate-card {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .plate-overlay.closing .plate-card {
+    opacity: 0;
+    transform: scale(0.985);
+    transition:
+      opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+      transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Vertical rule frame (24px inset both sides of the plate-card) */
+  .plate-rule-left,
+  .plate-rule-right {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: var(--ink);
+    opacity: 0.35;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .plate-rule-left  { left: 24px; }
+  .plate-rule-right { right: 24px; }
+
+  .plate-inner {
+    position: relative;
+    padding: 56px 120px 80px 120px;
+    max-width: 100%;
+    min-height: 100%;
+  }
+  @media (max-width: 900px) {
+    .plate-card {
+      top: 24px; bottom: 24px; left: 24px; right: 24px;
+    }
+    .plate-inner { padding: 40px 44px 72px 44px; }
+  }
+
+  /* Close button — positioned inside the plate-card */
+  .plate-close {
+    position: absolute;
+    top: 24px;
+    right: 40px;
+    width: 32px; height: 32px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    line-height: 30px;
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+    z-index: 3;
+    opacity: 0.7;
+    transition: opacity 160ms ease;
+  }
+  .plate-close:hover { opacity: 1; }
+  .plate-close:focus-visible { outline: 1px solid var(--prussian); outline-offset: 3px; }
+
+  /* Header row */
+  .plate-header {
+    display: grid;
+    grid-template-columns: 200px 1fr auto;
+    align-items: baseline;
+    column-gap: 24px;
+    padding-top: 6px;
+  }
+  .plate-marker {
+    color: var(--vermillion);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 60ms;
+  }
+  .plate-marker .num {
+    display: block;
+    color: var(--umber-strong);
+    font-size: 11px;
+    margin-top: 4px;
+    letter-spacing: 0.06em;
+    opacity: 0.9;
+  }
+  .plate-title {
+    font-family: 'Instrument Serif', 'Cormorant Garamond', 'IBM Plex Serif', ui-serif, Georgia, serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: clamp(72px, 12vw, 200px);
+    line-height: 0.95;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    margin: 0;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 60ms;
+  }
+  .plate-year {
+    color: var(--umber-strong);
+    opacity: 0;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    transform: translateY(16px);
+    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 60ms;
+  }
+  .plate-overlay.mounted .plate-marker,
+  .plate-overlay.mounted .plate-title {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .plate-overlay.mounted .plate-year {
+    opacity: 0.75;
+    transform: translateY(0);
+  }
+
+  .plate-rule {
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.35;
+    margin: 28px 0 22px 0;
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 180ms;
+  }
+  .plate-overlay.mounted .plate-rule { transform: scaleX(1); }
+
+  /* Meta grid */
+  .plate-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 24px;
+    row-gap: 4px;
+    margin-bottom: 42px;
+  }
+  .plate-meta .col {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .plate-overlay.mounted .plate-meta .col { opacity: 1; transform: translateY(0); }
+  .plate-meta .col:nth-child(1) { transition-delay: 220ms; }
+  .plate-meta .col:nth-child(2) { transition-delay: 240ms; }
+  .plate-meta .col:nth-child(3) { transition-delay: 260ms; }
+  .plate-meta .col:nth-child(4) { transition-delay: 280ms; }
+
+  .plate-meta .lab {
+    color: var(--umber-strong);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .plate-meta .lab .glyph {
+    color: var(--vermillion);
+    margin-right: 6px;
+    opacity: 1;
+  }
+  .plate-meta .val {
+    color: var(--ink);
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+  }
+
+  /* Plate figure area */
+  .plate-figure-wrap {
+    position: relative;
+    margin: 0 0 48px 0;
+    opacity: 0;
+    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 340ms;
+  }
+  .plate-overlay.mounted .plate-figure-wrap { opacity: 1; }
+
+  .plate-figure {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    background: var(--cream);
+    overflow: hidden;
+  }
+  .plate-figure .plate-cap {
+    position: absolute;
+    top: 14px; left: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--umber-strong);
+    opacity: 0.7;
+    letter-spacing: 0.06em;
+    z-index: 2;
+  }
+  .plate-figure svg { display: block; width: 100%; height: 100%; }
+  .plate-figure .motif-svg { position: absolute; inset: 0; z-index: 1; }
+  .plate-figure .stripes-svg { position: absolute; inset: 0; z-index: 0; }
+  .plate-figure .wash {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 40% 55%, rgba(122,74,31,0.10) 0%, rgba(122,74,31,0.04) 45%, rgba(31,58,95,0.03) 100%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Essay block */
+  .plate-essay-wrap {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    column-gap: 24px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 300ms cubic-bezier(0.16, 1, 0.3, 1), transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 740ms;
+  }
+  .plate-overlay.mounted .plate-essay-wrap { opacity: 1; transform: translateY(0); }
+  .plate-essay-label {
+    color: var(--vermillion);
+    opacity: 1;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .plate-essay {
+    columns: 2;
+    column-gap: 44px;
+    font-family: 'Instrument Serif', 'Cormorant Garamond', 'IBM Plex Serif', ui-serif, Georgia, serif;
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    max-width: 78ch;
+  }
+  .plate-essay p {
+    margin: 0 0 1em 0;
+    break-inside: avoid-column;
+  }
+  .plate-essay p:last-child { margin-bottom: 0; }
+  .plate-essay a {
+    color: var(--prussian);
+    text-decoration: none;
+    border-bottom: 1px solid var(--prussian);
+  }
+  .plate-essay a:hover { opacity: 0.75; }
+  .plate-essay a:focus-visible { outline: 1px solid var(--prussian); outline-offset: 2px; }
+
+  /* Giant email for contact plate */
+  .plate-figure .email-plate {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+    padding: 0 24px;
+    text-align: center;
+  }
+  .plate-figure .email-plate a {
+    font-family: 'Instrument Serif', 'Cormorant Garamond', 'IBM Plex Serif', ui-serif, Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(48px, 9vw, 140px);
+    color: var(--ink);
+    text-decoration: none;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    border-bottom: 1px solid transparent;
+  }
+  .plate-figure .email-plate a:hover { border-bottom-color: var(--ink); }
+  .plate-figure .email-plate a:focus-visible { outline: 1px solid var(--prussian); outline-offset: 6px; }
+
+  /* Footer */
+  .plate-footer {
+    position: absolute;
+    bottom: 32px;
+    right: 44px;
+    color: var(--umber-strong);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 240ms ease;
+    transition-delay: 900ms;
+  }
+  .plate-overlay.mounted .plate-footer { opacity: 0.75; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plate-overlay,
+    .plate-overlay.open,
+    .plate-card,
+    .plate-overlay.open .plate-card,
+    .plate-marker, .plate-title, .plate-year,
+    .plate-rule, .plate-meta .col,
+    .plate-figure-wrap, .plate-essay-wrap, .plate-footer {
+      transition: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+    .plate-overlay { opacity: 1; }
+    .plate-overlay.closing,
+    .plate-overlay.closing .plate-card { opacity: 0; }
+  }
+
+  /* ============================================================
+     CATALOG v2.3 additions — label typesetting animation,
+     ambient micromotion, life-signs
+     ============================================================ */
+
+  /* Label card in "loading" (typesetting) state — shimmer skeleton */
+  .label-card.loading .label-title,
+  .label-card.loading .label-meta,
+  .label-card.loading .label-rule,
+  .label-card.loading .label-blurb,
+  .label-card.loading .label-hint { display: none; }
+  .label-card .shim {
+    display: block;
+    background: linear-gradient(90deg,
+      rgba(17,17,17,0.06) 0%,
+      rgba(17,17,17,0.11) 50%,
+      rgba(17,17,17,0.06) 100%);
+    background-size: 200% 100%;
+    animation: shim 1.2s linear infinite;
+  }
+  @keyframes shim {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .label-card .title-shim { height: 52px; width: 60%; margin: 0 0 14px 0; }
+  .label-card .meta-shim  { height: 12px; margin-top: 8px; }
+  .label-card .rule-shim  { height: 1px; margin: 12px 0 14px 0; width: 100%; opacity: 0.6; }
+  .label-card .blurb-shim { height: 44px; margin-top: 16px; width: 90%; }
+  .label-card .hint-shim  { height: 10px; margin-top: 14px; width: 30%; opacity: 0.6; }
+  .label-card.dim .shim { opacity: 0.5; transition: opacity 120ms; }
+  .label-card .stamp {
+    position: absolute;
+    right: 22px; top: 22px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--vermillion);
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 200ms;
+    pointer-events: none;
+  }
+  .label-card .stamp.on { opacity: 1; }
+
+  /* Crossfade helpers used by the phased typesetter */
+  .label-card .swap-in {
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+      opacity 300ms cubic-bezier(0.22,1,0.36,1),
+      transform 300ms cubic-bezier(0.22,1,0.36,1);
+  }
+  .label-card .swap-in.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .label-card .shim-out {
+    animation: shimShrink 240ms cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+  @keyframes shimShrink {
+    from { transform: scaleY(1); opacity: 1; }
+    to   { transform: scaleY(0); opacity: 0; }
+  }
+  .label-card .rule-in {
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 240ms cubic-bezier(0.16,1,0.3,1);
+  }
+  .label-card .rule-in.in { transform: scaleX(1); }
+  .label-card .hint-in {
+    opacity: 0;
+    transition: opacity 200ms linear;
+  }
+  .label-card .hint-in.in { opacity: 1; }
+
+  /* (a) Ambient prompt indicator — pulsing dot right of prompt row */
+  #prompt-dot {
+    position: absolute;
+    top: 6px;
+    right: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--prussian);
+    opacity: 0;
+    pointer-events: none;
+    letter-spacing: 0;
+    line-height: 1;
+    transition: opacity 220ms ease;
+  }
+  #active-line { position: relative; }
+  #active-line.focused #prompt-dot { opacity: 0.9; }
+  @media (prefers-reduced-motion: no-preference) {
+    #active-line.focused #prompt-dot {
+      animation: promptPulse 2.4s ease-in-out infinite;
+    }
+  }
+  @keyframes promptPulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1.0; }
+  }
+
+  /* (b) Chip idle micromotion */
+  @media (prefers-reduced-motion: no-preference) {
+    #chips .chip {
+      animation: chipFloat 3.6s ease-in-out infinite;
+      animation-delay: calc(var(--chip-idx, 0) * 0.4s);
+    }
+    #chips.calm .chip {
+      animation-play-state: paused;
+    }
+  }
+  @keyframes chipFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-1px); }
+  }
+
+  /* (c) Marginalia tick — subtle staggered flicker */
+  @media (prefers-reduced-motion: no-preference) {
+    .marg.tick {
+      animation: margTick 4.8s ease-in-out infinite;
+      animation-delay: calc(var(--marg-idx, 0) * 0.4s);
+    }
+  }
+  @keyframes margTick {
+    0%, 100% { opacity: 1.0; }
+    50%      { opacity: 0.94; }
+  }
+
+  /* (d) Boot log breathing — one-shot pulse on the curator line */
+  @media (prefers-reduced-motion: no-preference) {
+    .boot-pulse {
+      animation: bootPulse 900ms ease-in-out 1;
+    }
+  }
+  @keyframes bootPulse {
+    0%   { opacity: 1.0; }
+    50%  { opacity: 0.7; }
+    100% { opacity: 1.0; }
+  }
+
+  /* (e) Chrome tag flicker — triggered by JS on a random interval */
+  @media (prefers-reduced-motion: no-preference) {
+    .chrome-tr.flicker {
+      animation: chromeFlicker 100ms steps(3, end) 1;
+    }
+  }
+  @keyframes chromeFlicker {
+    0%   { opacity: 0.75; }
+    50%  { opacity: 0.5; }
+    100% { opacity: 0.75; }
+  }
+
+  /* (f) Vermillion § accent breathing */
+  @media (prefers-reduced-motion: no-preference) {
+    .label-kicker {
+      animation: vermBreath 3.8s ease-in-out infinite;
+    }
+    .plate-overlay.mounted .plate-marker,
+    .plate-overlay.mounted .plate-essay-label {
+      animation: vermBreath 3.8s ease-in-out 1s infinite;
+    }
+  }
+  @keyframes vermBreath {
+    0%, 100% { opacity: 1.0; }
+    50%      { opacity: 0.88; }
+  }
+
+  /* (g) Ambient scroll-affordance line */
+  #scroll-aff {
+    position: fixed;
+    bottom: 34px;
+    right: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--umber-strong);
+    letter-spacing: 0.06em;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5;
+    transition: opacity 260ms ease;
+  }
+  #scroll-aff.on { opacity: 0.85; }
+
+  /* ============================================================
+     Page-level first-visit loader — matches catalog palette
+     (warm cream substrate, ink glyphs, Prussian caret,
+     vermillion accent, warm umber log). Cookie-gated:
+     catalog_page_loaded. Only appears on hard refresh
+     or a truly fresh session.
+     ============================================================ */
+  #page-loader {
+    position: fixed; inset: 0;
+    background: var(--cream);
+    color: var(--ink);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    overflow: hidden;
+  }
+  #page-loader[data-active="1"] { display: flex; }
+  #page-loader.dissolve { pointer-events: none; }
+  #page-loader .pl-inner {
+    position: relative;
+    width: min(720px, 88vw);
+    padding: 20px 32px 28px;
+  }
+  #page-loader .pl-kicker {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #a8100a;             /* vermillion */
+    opacity: 0;
+    animation: pl-fadein 320ms ease-out 40ms forwards;
+    margin-bottom: 18px;
+  }
+  #page-loader .pl-counter {
+    font-family: 'Instrument Serif', 'IBM Plex Serif', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(96px, 14vw, 200px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  #page-loader .pl-pct {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    color: var(--umber-strong);
+    letter-spacing: 0.02em;
+  }
+  #page-loader .pl-bar {
+    margin-top: 22px;
+    height: 1px;
+    width: 100%;
+    background: rgba(17,17,17,0.12);
+    overflow: hidden;
+  }
+  #page-loader .pl-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--prussian);
+    transition: width 120ms linear;
+  }
+  #page-loader .pl-log {
+    margin-top: 22px;
+    font-size: 11px;
+    color: var(--umber-strong);
+    line-height: 1.55;
+    min-height: 8em;
+    white-space: pre;
+  }
+  #page-loader .pl-log .lg-ok  { color: var(--prussian); }
+  #page-loader .pl-log .lg-dim { color: var(--umber-muted); opacity: 0.75; }
+  #page-loader .pl-log .lg-line { display: block; opacity: 0; animation: pl-log-in 240ms ease-out forwards; }
+  #page-loader .pl-hint {
+    position: absolute;
+    right: 0; bottom: -22px;
+    font-size: 10px;
+    color: var(--umber-strong);
+    opacity: 0.75;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    animation: pl-hintblink 2400ms cubic-bezier(0.4,0,0.2,1) infinite;
+  }
+  @keyframes pl-fadein  { to { opacity: 1; } }
+  @keyframes pl-log-in  { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pl-hintblink { 0%,45% { opacity: 0.75; } 60%,85% { opacity: 0.25; } 100% { opacity: 0.75; } }
+  /* Paper-grain rather than CRT scanlines — matches the museum substrate. */
+  #page-loader .pl-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(17,17,17,0.015) 0px,
+      rgba(17,17,17,0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    opacity: 0.6;
+  }
+  /* Dissolve: page-loader fades to reveal the shell beneath.
+     Same-color background means it's a pure content dissolve. */
+  #page-loader.dissolve {
+    animation: pl-dissolve 700ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  @keyframes pl-dissolve {
+    0%   { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+  }
+  /* When loader is active, mute the terminal beneath so it doesn't peek during the loader */
+  body.pl-active #term,
+  body.pl-active .chrome-tr,
+  body.pl-active .chrome-br,
+  body.pl-active #scroll-aff { visibility: hidden; }
+  @media (prefers-reduced-motion: reduce) {
+    #page-loader,
+    #page-loader .pl-kicker,
+    #page-loader .pl-log .lg-line,
+    #page-loader .pl-hint,
+    #page-loader.dissolve { animation: none !important; opacity: 1 !important; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+  <!-- Page-level first-visit loader (hard refresh only). Cookie-gated. -->
+  <div id="page-loader" aria-hidden="true" data-active="0">
+    <div class="pl-inner">
+      <div class="pl-kicker">§ RANDY.SH / MUSEUM SHELL</div>
+      <div class="pl-counter"><span id="pl-num">0</span><span class="pl-pct">%</span></div>
+      <div class="pl-bar"><div class="pl-bar-fill" id="pl-fill"></div></div>
+      <div class="pl-log" id="pl-log"></div>
+      <div class="pl-hint" id="pl-hint">any key to skip</div>
+    </div>
+  </div>
+  <div class="chrome-tr">RANDY REN &middot; MUSEUM SHELL &middot; v0.9</div>
+  <div class="chrome-br" id="chrome-cmdk">&#8984;K palette</div>
+  <div id="scroll-aff">+ scroll &darr; for the prompt</div>
+
+  <div id="term" tabindex="-1">
+    <div id="buffer"></div>
+    <div id="active-line" aria-hidden="false">
+      <span class="prompt-fragment" id="prompt-fragment"></span><span id="input-area" role="textbox" aria-label="museum shell prompt" tabindex="0"><span class="txt" id="input-before"></span><span id="caret"><span class="under"> </span></span><span class="txt" id="input-after"></span></span><span id="margin-hint">click any filename to open</span><span id="prompt-dot">&#9642;</span>
+    </div>
+    <div id="chips" aria-label="quick commands"></div>
+  </div>
+
+  <!-- Hidden focus sink -->
+  <input id="keysink" style="position:fixed;left:-10000px;top:-10000px;opacity:0" aria-hidden="true" tabindex="-1" />
+
+  <!-- Cmd-K palette -->
+  <div id="palette" role="dialog" aria-label="command palette">
+    <div class="pal-card">
+      <input id="pal-input" class="pal-input" placeholder="search commands, files, projects..." autocomplete="off" spellcheck="false" />
+      <div id="pal-list" class="pal-list"></div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   CATALOG v2 — Museum Shell (raw JS)
+   ============================================================ */
+(() => {
+'use strict';
+
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- Filesystem model ---------- */
+
+const NOTES = {
+  oryzo: "A room for the awkward pause between a spoken command and a machine's decision to act. What was silence becomes shape — voices scheduled, interruptions honored, latency turned into breath. The 300ms isn't hidden; it's composed.",
+  halcyon: "A canvas for the way teams actually draw together — pointer trails as choreography, not chatter. Multiplayer at scale, so cursor storms remain legible. Craft, not crowd.",
+  aperture: "An operating system that starts at the lens. The camera isn't a feature; it is the launcher, the app-store, the file picker. A hypothesis about attention in mobile computing.",
+  fieldnote: "A CLI companion for people who think in commits and cadence. Not a scribe that writes for you — a partner that keeps the page warm while you decide what to say next.",
+  "signal-garden": "Small ambient panes that surface status the way a plant surfaces need — quietly, undeniably. E-ink dashboards for teams tired of pinging. Awareness without interruption.",
+  loom: "Rooms of listeners routed peer-to-peer, no servers presiding. An experiment in how music travels when the middle is missing — closer to a house party than a broadcast."
+};
+
+const MEDIUMS = {
+  oryzo:          { title: "ORYZO",         year: 2025, medium: "voice orchestration, latency, code", dim: "300ms, dimensions variable", blurb: "Voice orchestration layer for autonomous agents. Turned 300ms of latency into a feature." },
+  halcyon:        { title: "HALCYON",       year: 2025, medium: "multiplayer, canvas, webgl",         dim: "500,000 cursors",           blurb: "Realtime collaborative canvas for design teams. Half a million multiplayer cursors and counting." },
+  aperture:       { title: "APERTURE",      year: 2024, medium: "mobile os, camera, concept",         dim: "1 device, 100 apps",        blurb: "Camera-first mobile OS. The lens is the app launcher." },
+  fieldnote:      { title: "FIELDNOTE",     year: 2024, medium: "cli, journaling, ai",                dim: "one shell, infinite pages", blurb: "Terminal-native journaling agent. Writes with you, not for you." },
+  "signal-garden":{ title: "SIGNAL GARDEN", year: 2024, medium: "hardware, e-ink, ambient",           dim: "6 dashboards, 4 offices",   blurb: "Ambient e-ink dashboards for distributed teams. Status without Slack." },
+  loom:           { title: "LOOM",          year: 2023, medium: "web3, audio, mesh",                  dim: "no servers, all rooms",     blurb: "Peer-to-peer music mesh. No servers, no ads, just rooms." }
+};
+
+const ORDER = ["oryzo","halcyon","aperture","fieldnote","signal-garden","loom"];
+
+const ABOUT_TEXT =
+`Randy is a designer-engineer working at the seam between AI systems and human interfaces. Previously shipped consumer products used by millions; now focused on making agents feel like real collaborators — the kind you'd want in the room, not the kind that eats your afternoon. Believes the best interfaces disappear until you need them, then arrive already knowing why. Currently open to select client work and staff+ roles starting fall 2026.`;
+
+const CONTACT_TEXT =
+`hey@randy.sh
+twitter   @randyren
+github    randyren
+linkedin  /in/randyren
+location  SAN FRANCISCO, PT/GMT-7`;
+
+const HOURS_TEXT =
+`monday      quiet hours (writing)
+tuesday     10:00–19:00
+wednesday   10:00–19:00
+thursday    10:00–19:00
+friday      10:00–15:00
+saturday    by appointment
+sunday      closed`;
+
+const NOW_TEXT =
+`july 2026 — writing a small book on agent interfaces.
+taking one new client engagement in september.
+currently: less meetings, more sketchbooks.`;
+
+const COLOPHON_TEXT =
+`fonts     IBM Plex Mono, IBM Plex Serif (italic)
+palette   cream, ink, prussian, warm umber
+stack     raw HTML, raw CSS, raw JS. no libraries.
+built     by hand, in San Francisco, 2026.
+thanks    to the curators who reviewed this room.`;
+
+const GUESTBOOK_TEXT =
+`— j.a.  "the pen slowing before lifting. yes."
+— m.k.  "made me open a terminal for the first time in years."
+— r.s.  "hollow caret on blur. thank you."
+— c.p.  "please open the archive."
+(sign the book by emailing hey@randy.sh — this is append-only.)`;
+
+/* Filesystem tree — dirs and files */
+function buildFs() {
+  const root = {
+    name: 'randy', type: 'dir', children: {
+      about:    { type: 'file' },
+      contact:  { type: 'file' },
+      hours:    { type: 'file' },
+      now:      { type: 'file' },
+      colophon: { type: 'file' },
+      guestbook:{ type: 'file' },
+      work:     { type: 'dir', children: {}, order: ORDER.slice() },
+      archive:  { type: 'dir', children: {}, marginalia: "# nothing catalogued here yet. return in the winter." }
+    }
+  };
+  for (const slug of ORDER) {
+    root.children.work.children[slug] = {
+      type: 'dir', order: ['label','plate'], children: {
+        label: { type: 'file' },
+        plate: { type: 'file' }
+      }
+    };
+  }
+  return root;
+}
+const FS = buildFs();
+
+/* ---------- Path resolution ---------- */
+let cwd = ['randy']; // path segments
+
+function pwdString() {
+  if (cwd.length === 1 && cwd[0] === 'randy') return '~';
+  return '~/' + cwd.slice(1).join('/');
+}
+
+function nodeAt(pathArr) {
+  let n = FS;
+  if (!pathArr || !pathArr.length || pathArr[0] !== 'randy') return null;
+  for (let i = 1; i < pathArr.length; i++) {
+    if (!n.children || !n.children[pathArr[i]]) return null;
+    n = n.children[pathArr[i]];
+  }
+  return n;
+}
+
+function resolvePath(input) {
+  if (input === undefined || input === null || input === '') return ['randy'];
+  let raw = String(input).trim();
+  let segs;
+  if (raw === '~') return ['randy'];
+  if (raw.startsWith('~/')) { segs = raw.slice(2).split('/'); return ['randy', ...segs.filter(Boolean)]; }
+  if (raw.startsWith('/')) {
+    segs = raw.slice(1).split('/');
+    if (segs[0] === 'randy') return ['randy', ...segs.slice(1).filter(Boolean)];
+    return null;
+  }
+  const out = cwd.slice();
+  const parts = raw.split('/');
+  for (const p of parts) {
+    if (p === '' || p === '.') continue;
+    if (p === '..') { if (out.length > 1) out.pop(); continue; }
+    out.push(p);
+  }
+  return out;
+}
+
+/* ---------- Terminal DOM helpers ---------- */
+const term = document.getElementById('term');
+const buffer = document.getElementById('buffer');
+const activeLine = document.getElementById('active-line');
+const promptFragment = document.getElementById('prompt-fragment');
+const inputBefore = document.getElementById('input-before');
+const inputAfter  = document.getElementById('input-after');
+const caretEl = document.getElementById('caret');
+const caretUnder = caretEl.querySelector('.under');
+const chipsEl = document.getElementById('chips');
+const marginHint = document.getElementById('margin-hint');
+const chromeCmdK = document.getElementById('chrome-cmdk');
+
+function scrollBottom() {
+  requestAnimationFrame(() => { term.scrollTop = term.scrollHeight; });
+}
+
+function makePromptSpan(pwdText) {
+  const s = document.createElement('span');
+  s.className = 'prompt-line';
+  s.innerHTML = `<span class="prompt-user">visitor</span><span class="prompt-at">@museum</span><span class="prompt-colon">:</span><span class="prompt-pwd">${escapeHtml(pwdText)}</span><span class="prompt-dollar">$ </span>`;
+  return s;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+let margCounter = 0;
+function printLine(html, opts) {
+  opts = opts || {};
+  const row = document.createElement('div');
+  row.className = 'row';
+  if (opts.stagger) row.classList.add('stagger');
+  row.innerHTML = html;
+  // Add ambient tick flicker to any .marg span in this row
+  const margs = row.querySelectorAll('.marg');
+  margs.forEach(m => {
+    m.classList.add('tick');
+    m.style.setProperty('--marg-idx', String(margCounter++ % 5));
+  });
+  buffer.appendChild(row);
+  scrollBottom();
+  return row;
+}
+
+/* ---------- Command echoing ---------- */
+function pushExecutedPrompt(cmdText) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  const p = makePromptSpan(pwdString());
+  row.appendChild(p);
+  const t = document.createElement('span');
+  t.textContent = cmdText;
+  row.appendChild(t);
+  buffer.appendChild(row);
+  scrollBottom();
+}
+
+/* ---------- Session state ---------- */
+const SS = {
+  get typedCount() { return parseInt(sessionStorage.getItem('typedCount') || '0', 10); },
+  set typedCount(v) { sessionStorage.setItem('typedCount', String(v)); },
+  get cdOverrideCount() { return parseInt(sessionStorage.getItem('cdOverrideCount') || '0', 10); },
+  set cdOverrideCount(v) { sessionStorage.setItem('cdOverrideCount', String(v)); },
+  animCache: (() => {
+    try { return new Set(JSON.parse(sessionStorage.getItem('animCache') || '[]')); }
+    catch(e) { return new Set(); }
+  })(),
+  cacheAdd(k) { this.animCache.add(k); sessionStorage.setItem('animCache', JSON.stringify([...this.animCache])); },
+  get cmdKUsed() { return sessionStorage.getItem('cmdKUsed') === '1'; },
+  set cmdKUsed(v) { sessionStorage.setItem('cmdKUsed', v ? '1' : '0'); },
+};
+
+/* ---------- Chips ---------- */
+function chipSet() {
+  const pwd = pwdString();
+  if (pwd === '~') {
+    return [
+      { l1: 'See the work',     cmd: 'cd work/' },
+      { l1: 'Read about Randy', cmd: 'cat about' },
+      { l1: 'Get in touch',     cmd: 'cat contact' },
+      { l1: 'Show hours',       cmd: 'hours' },
+      { l1: 'Help',             cmd: 'help' }
+    ];
+  }
+  if (pwd === '~/work') {
+    // If a label is currently visible in the buffer, collapse to focused chips
+    // for that project. Otherwise show the full six-project chip row.
+    const visibleSlug = firstVisibleInlineSlug(ORDER);
+    if (visibleSlug) {
+      const title = visibleSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+      return [
+        { l1: 'Open the plate', cmd: `open ${visibleSlug}` },
+        { l1: 'Back home',      cmd: 'cd ~' }
+      ];
+    }
+    return [
+      { l1: 'Open Oryzo',        cmd: 'open oryzo' },
+      { l1: 'Open Halcyon',      cmd: 'open halcyon' },
+      { l1: 'Open Aperture',     cmd: 'open aperture' },
+      { l1: 'Open Fieldnote',    cmd: 'open fieldnote' },
+      { l1: 'Open Signal Garden', cmd: 'open signal-garden' },
+      { l1: 'Open Loom',         cmd: 'open loom' },
+      { l1: 'Back home',         cmd: 'cd ~' }
+    ];
+  }
+  if (pwd.startsWith('~/work/')) {
+    // Extract the project slug from the pwd (last segment)
+    const slug = pwd.slice('~/work/'.length).split('/')[0];
+    const idx = ORDER.indexOf(slug);
+    const prev = idx > 0 ? ORDER[idx - 1] : null;
+    const next = idx >= 0 && idx < ORDER.length - 1 ? ORDER[idx + 1] : null;
+    const title = (s) => s.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+    const chips = [
+      { l1: `Open the plate`, cmd: `open ${slug}` }
+    ];
+    if (next) chips.push({ l1: `Next: ${title(next)}`, cmd: `cd ${next}` });
+    if (prev) chips.push({ l1: `Prev: ${title(prev)}`, cmd: `cd ${prev}` });
+    chips.push({ l1: 'Back to work', cmd: 'cd ..' });
+    chips.push({ l1: 'Get in touch', cmd: 'cat ~/contact' });
+    return chips;
+  }
+  return [
+    { l1: 'Home', cmd: 'cd ~' },
+    { l1: 'List', cmd: 'ls' }
+  ];
+}
+
+let chipsFilter = '';
+function renderChips() {
+  const set = chipSet();
+  const filtered = chipsFilter
+    ? set.filter(c => c.cmd.toLowerCase().startsWith(chipsFilter.toLowerCase()))
+    : set;
+  chipsEl.innerHTML = '';
+  filtered.forEach((c, i) => {
+    if (i > 0) {
+      const sep = document.createElement('span');
+      sep.className = 'chip-sep';
+      sep.textContent = '·';
+      chipsEl.appendChild(sep);
+    }
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.type = 'button';
+    btn.tabIndex = 0;
+    btn.style.setProperty('--chip-idx', String(i));
+    btn.innerHTML = `<span class="l1">${escapeHtml(c.l1)}</span><span class="l2">${escapeHtml(c.cmd)}</span>`;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      chipInvoke(c.cmd);
+    });
+    chipsEl.appendChild(btn);
+  });
+  updateChipsOpacity();
+}
+
+function baseChipOpacity() {
+  const n = SS.typedCount;
+  if (n >= 8) return 0.55;
+  if (n >= 3) return 0.75;
+  return 1.0;
+}
+function updateChipsOpacity() {
+  chipsEl.style.opacity = String(baseChipOpacity());
+  // Pause the idle micromotion once chips have faded to competence-level.
+  chipsEl.classList.toggle('calm', baseChipOpacity() <= 0.55);
+}
+let chipPulseT = null;
+function pulseChips() {
+  if (baseChipOpacity() >= 1) return;
+  chipsEl.style.opacity = '1';
+  clearTimeout(chipPulseT);
+  chipPulseT = setTimeout(() => { chipsEl.style.opacity = String(baseChipOpacity()); }, 400);
+}
+
+/* Chip invoke: type-stream then execute */
+function chipInvoke(cmd) {
+  if (busy) return;
+  setInputText('', '');
+  streamIntoInput(cmd, 140, () => {
+    submitInput({fromChip: true});
+  });
+}
+
+function streamIntoInput(text, totalMs, done) {
+  const n = text.length;
+  if (n === 0) { done && done(); return; }
+  const per = Math.max(8, Math.floor(totalMs / n));
+  let i = 0;
+  const step = () => {
+    i++;
+    setInputText(text.slice(0, i), '');
+    if (i < n) setTimeout(step, per);
+    else done && done();
+  };
+  step();
+}
+
+/* ---------- Line editor state ---------- */
+let inputText = '';
+let caretPos = 0;
+let history = [];
+let histIdx = -1;
+let stashCurrent = '';
+let blurQueue = [];
+let hasFocus = true;
+let busy = false;
+let typingHoldT = null;
+
+function setCaretState(mode) {
+  caretEl.classList.remove('typing','blurred');
+  if (mode === 'solid') caretEl.classList.add('typing');
+  else if (mode === 'blurred') caretEl.classList.add('blurred');
+}
+
+function pauseBlinkForTyping() {
+  setCaretState('solid');
+  clearTimeout(typingHoldT);
+  typingHoldT = setTimeout(() => {
+    if (hasFocus) setCaretState('blink');
+  }, 400);
+}
+
+function setInputText(before, after) {
+  inputText = before + after;
+  caretPos = before.length;
+  renderInputLine();
+  const t = inputText.trimStart();
+  const firstWord = t.split(/\s+/)[0] || '';
+  chipsFilter = firstWord;
+  renderChips();
+}
+
+function renderInputLine() {
+  promptFragment.innerHTML = '';
+  promptFragment.appendChild(makePromptSpan(pwdString()));
+  const before = inputText.slice(0, caretPos);
+  const under = inputText.slice(caretPos, caretPos + 1) || ' ';
+  const after = inputText.slice(caretPos + 1);
+  inputBefore.textContent = before;
+  caretUnder.textContent = under === '\n' ? ' ' : under;
+  inputAfter.textContent = after;
+  scrollBottom();
+}
+
+function updatePrompt() {
+  renderInputLine();
+  renderChips();
+  updateMarginHint();
+}
+
+function updateMarginHint() {
+  if (SS.typedCount >= 3) marginHint.classList.add('gone');
+  else marginHint.classList.remove('gone');
+}
+
+/* ---------- Focus & blur ---------- */
+function focusInput() {
+  hasFocus = true;
+  setCaretState('blink');
+  activeLine.classList.add('focused');
+  try { document.getElementById('keysink').focus({preventScroll:true}); } catch(e){}
+  if (blurQueue.length) {
+    for (const k of blurQueue) handleKeyChar(k);
+    blurQueue = [];
+  }
+}
+function onBlur() {
+  hasFocus = false;
+  setCaretState('blurred');
+  activeLine.classList.remove('focused');
+}
+window.addEventListener('focus', focusInput);
+window.addEventListener('blur', onBlur);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') onBlur();
+  else focusInput();
+});
+
+/* Click focus stickiness — but preserve selection */
+term.addEventListener('mouseup', (e) => {
+  const sel = document.getSelection();
+  if (sel && sel.toString().length) return;
+  if (e.target.closest && e.target.closest('button')) return;
+  focusInput();
+});
+
+/* ---------- Keyboard ---------- */
+
+function handleKeyChar(ch) {
+  const before = inputText.slice(0, caretPos) + ch;
+  const after = inputText.slice(caretPos);
+  setInputText(before, after);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (plateOpen) {
+    if (e.key === 'Escape') { e.preventDefault(); closePlate(); return; }
+    if (e.key === 'Backspace' && !isEditableFocus()) { e.preventDefault(); closePlate(); return; }
+    return;
+  }
+  if (paletteOpen) return;
+
+  // Cmd-K / Ctrl-K
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault();
+    openPalette();
+    return;
+  }
+
+  // Any-key skips reveal
+  if (revealInProgress) {
+    if (e.key === 'Escape' || (!e.metaKey && !e.ctrlKey && !e.altKey)) {
+      e.preventDefault();
+      finishReveal();
+      return;
+    }
+  }
+
+  if (busy) { e.preventDefault(); return; }
+
+  if (!hasFocus) {
+    if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      if (blurQueue.length < 6) blurQueue.push(e.key);
+      return;
+    }
+    return;
+  }
+
+  // Ctrl combos
+  if (e.ctrlKey && !e.metaKey && !e.altKey) {
+    const k = e.key.toLowerCase();
+    if (k === 'a') { e.preventDefault(); caretPos = 0; renderInputLine(); pauseBlinkForTyping(); return; }
+    if (k === 'e') { e.preventDefault(); caretPos = inputText.length; renderInputLine(); pauseBlinkForTyping(); return; }
+    if (k === 'u') { e.preventDefault(); setInputText('', ''); pauseBlinkForTyping(); return; }
+    if (k === 'w') {
+      e.preventDefault();
+      const b = inputText.slice(0, caretPos);
+      const a = inputText.slice(caretPos);
+      const m = b.match(/\s*\S*$/);
+      const cut = m ? b.slice(0, b.length - m[0].length) : b;
+      setInputText(cut, a);
+      pauseBlinkForTyping();
+      return;
+    }
+    if (k === 'l') { e.preventDefault(); clearScreen(); return; }
+    if (k === 'c') { e.preventDefault(); cancelInput(); return; }
+  }
+
+  if (e.metaKey || e.altKey) return;
+
+  switch (e.key) {
+    case 'Enter': {
+      e.preventDefault();
+      submitInput({});
+      return;
+    }
+    case 'Backspace': {
+      e.preventDefault();
+      if (caretPos > 0) {
+        const b = inputText.slice(0, caretPos - 1);
+        const a = inputText.slice(caretPos);
+        setInputText(b, a);
+      }
+      pauseBlinkForTyping();
+      pulseChips();
+      return;
+    }
+    case 'Delete': {
+      e.preventDefault();
+      const b = inputText.slice(0, caretPos);
+      const a = inputText.slice(caretPos + 1);
+      setInputText(b, a);
+      pauseBlinkForTyping();
+      pulseChips();
+      return;
+    }
+    case 'ArrowLeft': {
+      e.preventDefault();
+      if (caretPos > 0) caretPos--;
+      renderInputLine();
+      pauseBlinkForTyping();
+      return;
+    }
+    case 'ArrowRight': {
+      e.preventDefault();
+      if (caretPos < inputText.length) caretPos++;
+      renderInputLine();
+      pauseBlinkForTyping();
+      return;
+    }
+    case 'Home': {
+      e.preventDefault();
+      caretPos = 0;
+      renderInputLine();
+      pauseBlinkForTyping();
+      return;
+    }
+    case 'End': {
+      e.preventDefault();
+      caretPos = inputText.length;
+      renderInputLine();
+      pauseBlinkForTyping();
+      return;
+    }
+    case 'ArrowUp': {
+      e.preventDefault();
+      historyBack();
+      return;
+    }
+    case 'ArrowDown': {
+      e.preventDefault();
+      historyForward();
+      return;
+    }
+    case 'Tab': {
+      e.preventDefault();
+      handleTab(e.shiftKey);
+      return;
+    }
+    case 'Escape': {
+      return;
+    }
+    default: {
+      if (e.key.length === 1) {
+        e.preventDefault();
+        handleKeyChar(e.key);
+        pauseBlinkForTyping();
+        pulseChips();
+      }
+    }
+  }
+});
+
+function cancelInput() {
+  const row = document.createElement('div');
+  row.className = 'row';
+  const p = makePromptSpan(pwdString());
+  row.appendChild(p);
+  const t = document.createElement('span');
+  t.textContent = inputText + '^C';
+  row.appendChild(t);
+  buffer.appendChild(row);
+  setInputText('', '');
+  histIdx = -1;
+  stashCurrent = '';
+  scrollBottom();
+}
+
+function historyBack() {
+  if (!history.length) return;
+  if (histIdx === -1) stashCurrent = inputText;
+  if (histIdx < history.length - 1) histIdx++;
+  const v = history[history.length - 1 - histIdx];
+  setInputText(v, '');
+  pauseBlinkForTyping();
+}
+function historyForward() {
+  if (histIdx === -1) return;
+  histIdx--;
+  if (histIdx === -1) {
+    setInputText(stashCurrent, '');
+  } else {
+    const v = history[history.length - 1 - histIdx];
+    setInputText(v, '');
+  }
+  pauseBlinkForTyping();
+}
+
+/* ---------- Tab completion ---------- */
+let lastTabState = null;
+
+function handleTab(shift) {
+  const raw = inputText;
+  const upToCaret = raw.slice(0, caretPos);
+  const parts = upToCaret.split(/\s+/);
+  const isFirst = parts.length === 1;
+  const frag = parts[parts.length - 1] || '';
+  const cmd = parts[0] || '';
+
+  let candidates = [];
+  if (isFirst) {
+    candidates = COMMANDS.filter(c => c.startsWith(frag)).sort();
+  } else {
+    const lastSlash = frag.lastIndexOf('/');
+    const dirPart = lastSlash >= 0 ? frag.slice(0, lastSlash + 1) : '';
+    const namePart = lastSlash >= 0 ? frag.slice(lastSlash + 1) : frag;
+    const basePath = resolvePath(dirPart || '.');
+    if (basePath) {
+      const node = nodeAt(basePath);
+      if (node && node.type === 'dir') {
+        const keys = Object.keys(node.children);
+        const matches = keys.filter(k => k.startsWith(namePart));
+        candidates = matches.map(m => {
+          const child = node.children[m];
+          return dirPart + m + (child.type === 'dir' ? '/' : '');
+        });
+      }
+    }
+    // Smart-completion for cd/open/cat: also match bare project slugs from
+    // anywhere on the plate. So `cd h<Tab>` from ~/work/oryzo can still
+    // complete to `halcyon`. About/contact are also allowed for cat.
+    if ((cmd === 'cd' || cmd === 'open' || cmd === 'cat') && !dirPart) {
+      const extras = [];
+      for (const slug of ORDER) {
+        if (slug.startsWith(namePart) && !candidates.some(c => c.replace(/\/$/,'') === slug)) {
+          extras.push(cmd === 'cd' ? slug + '/' : slug);
+        }
+      }
+      if (cmd === 'cat') {
+        for (const f of ['about','contact','hours','now','colophon','guestbook']) {
+          if (f.startsWith(namePart) && !candidates.includes(f)) extras.push(f);
+        }
+      }
+      candidates = candidates.concat(extras).sort();
+    }
+  }
+
+  if (candidates.length === 0) return;
+
+  if (lastTabState && sameArr(lastTabState.matches, candidates) && lastTabState.prefix === frag) {
+    const row = document.createElement('div');
+    row.className = 'row instant';
+    row.innerHTML = `<span class="tab-block">${candidates.map(escapeHtml).join('  ')}</span>`;
+    buffer.appendChild(row);
+    scrollBottom();
+    lastTabState = null;
+    return;
+  }
+
+  if (candidates.length === 1) {
+    const only = candidates[0];
+    const before = raw.slice(0, caretPos);
+    const after = raw.slice(caretPos);
+    // Never auto-append a space after completing a project slug — the user
+    // may still want to keep typing (e.g. `cd hal<Tab>` → `cd halcyon`, then
+    // they can press Enter themselves rather than us doing it implicitly).
+    // Only append a space for a fully-resolved file (not a dir slash, not a
+    // slug that could still be an open target).
+    const isDir = only.endsWith('/');
+    const isSlug = ORDER.indexOf(only) !== -1;
+    const suffix = (isDir || isSlug) ? '' : ' ';
+    const newBefore = before.slice(0, before.length - frag.length) + only + suffix;
+    setInputText(newBefore, after);
+    lastTabState = null;
+    return;
+  }
+
+  const cp = commonPrefix(candidates);
+  if (cp.length > frag.length) {
+    const before = raw.slice(0, caretPos);
+    const after = raw.slice(caretPos);
+    const newBefore = before.slice(0, before.length - frag.length) + cp;
+    setInputText(newBefore, after);
+  }
+  lastTabState = { prefix: inputText.slice(0, caretPos).split(/\s+/).pop(), matches: candidates, idx: 0 };
+}
+
+function sameArr(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+function commonPrefix(arr) {
+  if (!arr.length) return '';
+  let p = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    while (arr[i].indexOf(p) !== 0) { p = p.slice(0, -1); if (!p) return ''; }
+  }
+  return p;
+}
+
+/* ---------- Commands ---------- */
+const COMMANDS = ['cat','cd','clear','contact','help','history','hours','ls','man','open','pwd','whoami'];
+
+function submitInput(opts) {
+  opts = opts || {};
+  const raw = inputText;
+  const cmd = raw.trim();
+  const fromChip = !!opts.fromChip;
+
+  pushExecutedPrompt(raw);
+
+  if (cmd === '') {
+    setInputText('', '');
+    histIdx = -1; stashCurrent = '';
+    updatePrompt();
+    return;
+  }
+
+  if (cmd === '!!' || /^![0-9]+$/.test(cmd)) {
+    let target = null;
+    if (cmd === '!!') target = history[history.length - 1];
+    else {
+      const n = parseInt(cmd.slice(1), 10);
+      if (n >= 1 && n <= history.length) target = history[n - 1];
+    }
+    if (!target) {
+      printLine(`<span class="err">zsh: event not found: ${escapeHtml(cmd)}</span>`);
+    } else {
+      printLine(escapeHtml(target));
+      runCommand(target, {fromChip});
+      history.push(target);
+    }
+    setInputText('', '');
+    histIdx = -1; stashCurrent = '';
+    updatePrompt();
+    return;
+  }
+
+  history.push(cmd);
+  if (!fromChip) SS.typedCount = SS.typedCount + 1;
+  runCommand(cmd, {fromChip});
+  setInputText('', '');
+  histIdx = -1; stashCurrent = '';
+  updatePrompt();
+}
+
+function runCommand(cmd, opts) {
+  opts = opts || {};
+  const tokens = cmd.split(/\s+/);
+  const c = tokens[0];
+  const args = tokens.slice(1);
+  switch (c) {
+    case 'pwd':      cmd_pwd(); break;
+    case 'ls':       cmd_ls(args); break;
+    case 'cd':       cmd_cd(args); break;
+    case 'cat': {
+      const raw = (args[0] || '').replace(/^\.\//,'').replace(/^~\//,'').replace(/\/$/,'');
+      const bare = raw.split('/').pop();
+      if (bare === 'about')   { renderAboutCard(); break; }
+      if (bare === 'contact') { renderContactCard(); break; }
+      cmd_cat(args);
+      break;
+    }
+    case 'open': {
+      const arg = (args[0] || '').replace(/\/$/,'');
+      if (arg && MEDIUMS[arg]) {
+        // Two-click promotion: if the inline label for this project is
+        // already visible in the terminal, open the full plate. Otherwise,
+        // render the inline label first so the user can preview before
+        // committing to the plate view.
+        if (isInlineCardVisible(arg)) {
+          openPlate(arg);
+        } else {
+          renderFile(['randy','work',arg,'label'], {});
+        }
+        break;
+      }
+      cmd_open(args);
+      break;
+    }
+    case 'hours':    cmd_hours(); break;
+    case 'contact':  cmd_contact(); break;
+    case 'whoami':   printLine('<span class="dim">visitor</span>'); break;
+    case 'help':     cmd_help(); break;
+    case 'man':      cmd_man(args); break;
+    case 'history':  cmd_history(); break;
+    case 'clear':    clearScreen(); break;
+    default:         unknown(c);
+  }
+}
+
+function cmd_pwd() {
+  const p = cwd.length === 1 ? '/randy' : '/' + cwd.join('/');
+  printLine(escapeHtml(p));
+}
+
+function cmd_ls(args) {
+  let target = cwd;
+  if (args[0]) {
+    const p = resolvePath(args[0]);
+    if (!p || !nodeAt(p)) { printLine(`<span class="err">ls: no such file or directory: ${escapeHtml(args[0])}</span>`); return; }
+    target = p;
+  }
+  const node = nodeAt(target);
+  if (!node) return;
+  if (node.type !== 'dir') {
+    printLine(escapeHtml(target[target.length-1]));
+    return;
+  }
+
+  let entries;
+  if (node.order) {
+    entries = node.order.slice();
+  } else {
+    const dirs = [], files = [];
+    for (const k of Object.keys(node.children)) {
+      if (node.children[k].type === 'dir') dirs.push(k);
+      else files.push(k);
+    }
+    dirs.sort(); files.sort();
+    entries = [...dirs, ...files];
+  }
+
+  const key = 'ls:' + target.join('/');
+  const cached = SS.animCache.has(key);
+  const stagger = !cached && !REDUCED;
+
+  if (node.marginalia) {
+    const row = document.createElement('div');
+    row.className = 'row' + (stagger ? ' stagger' : '');
+    row.innerHTML = `<span class="marg tick" style="--marg-idx:${margCounter++ % 5}">${escapeHtml(node.marginalia)}</span>`;
+    buffer.appendChild(row);
+  }
+
+  entries.forEach((name, i) => {
+    const child = node.children[name];
+    const isDir = child.type === 'dir';
+    const display = name + (isDir ? '/' : '');
+    const row = document.createElement('div');
+    row.className = 'row';
+    if (stagger && i < 6) {
+      row.classList.add('stagger');
+      row.style.animationDelay = (i * 60) + 'ms';
+    }
+    const btn = document.createElement('button');
+    btn.className = 'link';
+    btn.type = 'button';
+    btn.textContent = display;
+    btn.addEventListener('click', () => {
+      // If we're not in this directory, prefix path
+      const rel = (target.length === cwd.length && target.every((v,idx) => v === cwd[idx]))
+        ? name
+        : (target.slice(1).join('/') + '/' + name);
+      chipInvoke(isDir ? `cd ${rel}` : `cat ${rel}`);
+    });
+    row.appendChild(btn);
+    buffer.appendChild(row);
+  });
+
+  SS.cacheAdd(key);
+  scrollBottom();
+}
+
+function cmd_cd(args) {
+  const arg = args[0];
+  const raw = arg === undefined ? '~' : arg;
+
+  // UI first, terminal clone second — try smart resolutions before erroring.
+  const attempts = [raw];
+  const bare = raw.replace(/\/$/,'');
+  // If bare arg is a known project slug, allow jumping there from anywhere.
+  if (MEDIUMS[bare]) attempts.push('~/work/' + bare);
+  // If arg starts with "work/..." allow it to mean "~/work/..." from anywhere.
+  if (bare.startsWith('work/') || bare === 'work') attempts.push('~/' + bare);
+  // If arg starts with "randy/..." accept it as if from root.
+  if (bare.startsWith('randy/') || bare === 'randy') attempts.push('/' + bare);
+
+  let path = null, node = null;
+  for (const a of attempts) {
+    const p = resolvePath(a);
+    if (!p) continue;
+    const n = nodeAt(p);
+    if (n && n.type === 'dir') { path = p; node = n; break; }
+  }
+
+  if (!path || !node) {
+    printLine(`<span class="err">cd: no such file or directory: ${escapeHtml(arg)}</span>`);
+    return;
+  }
+  cwd = path;
+  updatePrompt();
+
+  const p = pwdString();
+  if (p === '~/work') {
+    cmd_ls([]);
+  } else if (p.startsWith('~/work/')) {
+    // Entering a project dir: show the label directly. No ls, no marginalia.
+    // Skip auto-label if the user landed here via `cd ..` from a deeper path
+    // (shouldn't happen with current tree, but be defensive) or via a prior
+    // visit where label is already cached this session.
+    const slug = p.slice('~/work/'.length).split('/')[0];
+    if (MEDIUMS[slug]) {
+      renderFile(['randy','work',slug,'label'], {});
+    } else {
+      cmd_ls([]);
+    }
+  } else if (SS.cdOverrideCount < 3) {
+    SS.cdOverrideCount = SS.cdOverrideCount + 1;
+    printLine(`<span class="marg"># you are now in ${escapeHtml(p)}. try 'ls' or click a chip below.</span>`);
+    cmd_ls([]);
+  }
+}
+
+function cmd_cat(args) {
+  const arg = args[0];
+  if (!arg) { printLine(`<span class="err">cat: missing file</span>`); return; }
+  const bare = arg.replace(/\/$/,'');
+
+  // UI first — try smart resolutions like cmd_cd does.
+  const attempts = [bare];
+  // If bare is a project slug, cat its label directly.
+  if (MEDIUMS[bare]) attempts.push('~/work/' + bare + '/label');
+  // If arg is "work/..." from anywhere, allow it.
+  if (bare.startsWith('work/')) attempts.push('~/' + bare);
+  // If arg is "randy/..." allow from root.
+  if (bare.startsWith('randy/')) attempts.push('/' + bare);
+
+  let path = null, node = null;
+  for (const a of attempts) {
+    const p = resolvePath(a);
+    if (!p) continue;
+    const n = nodeAt(p);
+    if (n && n.type === 'file') { path = p; node = n; break; }
+  }
+  if (!path || !node) {
+    // Distinguish "is a directory" vs "not found" for the original arg.
+    const origPath = resolvePath(bare);
+    const origNode = origPath ? nodeAt(origPath) : null;
+    if (origNode && origNode.type !== 'file') {
+      printLine(`<span class="err">cat: ${escapeHtml(arg)}: is a directory</span>`);
+    } else {
+      printLine(`<span class="err">cat: no such file: ${escapeHtml(arg)}</span>`);
+    }
+    return;
+  }
+  renderFile(path);
+}
+
+function cmd_open(args) {
+  const arg = args[0];
+  if (!arg) { printLine(`<span class="err">open: which project?</span>`); return; }
+  const slug = arg.replace(/\/$/, '');
+  if (!MEDIUMS[slug]) { printLine(`<span class="err">open: unknown project: ${escapeHtml(slug)}</span>`); return; }
+  const pathBase = ['randy','work',slug];
+  renderFile([...pathBase,'label'], { chain: [
+    [...pathBase,'plate']
+  ]});
+}
+
+function cmd_hours() {
+  printLine(`<span class="nowrap">${escapeHtml(HOURS_TEXT)}</span>`);
+  printLine(`<span class="marg"># the museum keeps a quiet room. reach out anytime — replies within a day.</span>`);
+}
+function cmd_contact() {
+  printLine(`<span class="nowrap">${escapeHtml(CONTACT_TEXT)}</span>`);
+}
+
+function cmd_help() {
+  printLine(`<span class="marg"># type any command, or click a chip below.</span>`);
+  const rows = [
+    ['pwd',     'print working directory'],
+    ['ls',      'list entries in current dir'],
+    ['cd',      'change directory (accepts ~, .., paths)'],
+    ['cat',     'print a file'],
+    ['open',    'open a project — label + plate'],
+    ['hours',   'museum hours'],
+    ['contact', 'ways to reach randy'],
+    ['whoami',  'you are the visitor'],
+    ['help',    'this message'],
+    ['man',     'manual page for a command'],
+    ['history', 'recent commands'],
+    ['clear',   'clear the screen (Ctrl-L)'],
+  ];
+  const w = 9;
+  rows.forEach(([k,v]) => {
+    printLine(`<span class="nowrap">${escapeHtml(k.padEnd(w))}</span>${escapeHtml(v)}`);
+  });
+}
+
+const MAN = {
+  pwd:     { name: 'pwd(1)', desc: 'print the name of the current working directory.', synopsis: 'pwd', see: 'cd, ls' },
+  ls:      { name: 'ls(1)',  desc: 'list directory contents in exhibition order.',      synopsis: 'ls [path]', see: 'cd, cat' },
+  cd:      { name: 'cd(1)',  desc: 'change directory. accepts absolute, relative, .. and ~.', synopsis: 'cd [path]', see: 'pwd, ls' },
+  cat:     { name: 'cat(1)', desc: 'concatenate and print files. wall labels animate on first view.', synopsis: 'cat file', see: 'open, ls' },
+  open:    { name: 'open(1)', desc: 'a museum verb. opens the plate viewer for a project.', synopsis: 'open project', see: 'cat, ls' },
+  hours:   { name: 'hours(1)', desc: 'print the museum hours.', synopsis: 'hours', see: 'contact' },
+  contact: { name: 'contact(1)', desc: 'print ways to reach the artist.', synopsis: 'contact', see: 'hours' },
+  whoami:  { name: 'whoami(1)', desc: 'print the user visiting this shell.', synopsis: 'whoami', see: 'help' },
+  help:    { name: 'help(1)', desc: 'list available commands.', synopsis: 'help', see: 'man' },
+  man:     { name: 'man(1)', desc: 'display the manual page for a command.', synopsis: 'man command', see: 'help' },
+  history: { name: 'history(1)', desc: 'print numbered command history for this session.', synopsis: 'history', see: '!! and !n' },
+  clear:   { name: 'clear(1)', desc: 'clear the terminal buffer. Ctrl-L is a shortcut.', synopsis: 'clear', see: 'help' },
+};
+
+function cmd_man(args) {
+  const c = args[0];
+  if (!c) { printLine(`<span class="err">man: what manual page do you want?</span>`); return; }
+  const m = MAN[c];
+  if (!m) { printLine(`<span class="err">man: no manual entry for ${escapeHtml(c)}</span>`); return; }
+  printLine(`<span class="nowrap">NAME</span>`);
+  printLine(`<span class="nowrap">     ${escapeHtml(m.name)} — ${escapeHtml(m.desc)}</span>`);
+  printLine('&nbsp;');
+  printLine(`<span class="nowrap">SYNOPSIS</span>`);
+  printLine(`<span class="nowrap">     ${escapeHtml(m.synopsis)}</span>`);
+  printLine('&nbsp;');
+  printLine(`<span class="nowrap">SEE ALSO</span>`);
+  printLine(`<span class="nowrap">     ${escapeHtml(m.see)}</span>`);
+}
+
+function cmd_history() {
+  history.forEach((h, i) => {
+    const idx = String(i + 1).padStart(4, ' ');
+    printLine(`<span class="nowrap">${escapeHtml(idx)}  ${escapeHtml(h)}</span>`);
+  });
+}
+
+function clearScreen() {
+  buffer.innerHTML = '';
+  scrollBottom();
+}
+
+function unknown(c) {
+  const suggestion = closestCommand(c);
+  printLine(`<span class="err">zsh: command not found: ${escapeHtml(c)}</span>`);
+  if (suggestion) {
+    printLine(`<span class="err">did you mean '${escapeHtml(suggestion)}'?</span>`);
+  }
+}
+
+function closestCommand(input) {
+  let best = null, bestD = 3;
+  for (const c of COMMANDS) {
+    const d = levenshtein(input, c);
+    if (d < bestD) { bestD = d; best = c; }
+  }
+  return best;
+}
+function levenshtein(a,b) {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  const dp = new Array(n+1);
+  for (let j=0;j<=n;j++) dp[j]=j;
+  for (let i=1;i<=m;i++) {
+    let prev = dp[0]; dp[0] = i;
+    for (let j=1;j<=n;j++) {
+      const t = dp[j];
+      dp[j] = a[i-1]===b[j-1] ? prev : 1 + Math.min(prev, dp[j-1], dp[j]);
+      prev = t;
+    }
+  }
+  return dp[n];
+}
+
+/* ---------- File rendering ---------- */
+function renderFile(path, opts) {
+  opts = opts || {};
+  const name = path[path.length - 1];
+  const isProject = path.length === 4 && path[1] === 'work' && MEDIUMS[path[2]];
+
+  if (name === 'about') {
+    const key = 'file:about';
+    if (SS.animCache.has(key) || REDUCED) {
+      printLine(escapeHtml(ABOUT_TEXT));
+      afterFile(opts);
+    } else {
+      typeFirstLineThenDump(ABOUT_TEXT, () => { SS.cacheAdd(key); afterFile(opts); });
+    }
+    return;
+  }
+  if (name === 'contact')  { printLine(`<span class="nowrap">${escapeHtml(CONTACT_TEXT)}</span>`); afterFile(opts); return; }
+  if (name === 'hours')    { printLine(`<span class="nowrap">${escapeHtml(HOURS_TEXT)}</span>`);   afterFile(opts); return; }
+  if (name === 'now')      { printLine(`<span class="nowrap">${escapeHtml(NOW_TEXT)}</span>`);     afterFile(opts); return; }
+  if (name === 'colophon') { printLine(`<span class="nowrap">${escapeHtml(COLOPHON_TEXT)}</span>`); afterFile(opts); return; }
+  if (name === 'guestbook'){ printLine(`<span class="nowrap">${escapeHtml(GUESTBOOK_TEXT)}</span>`); afterFile(opts); return; }
+
+  if (isProject) {
+    const slug = path[2];
+    const key = `${name}:${slug}`;
+    const cached = SS.animCache.has(key);
+    if (name === 'label') {
+      if (cached || REDUCED) { renderLabelInstant(slug); afterFile(opts); }
+      else { renderLabelAnimated(slug, () => { SS.cacheAdd(key); afterFile(opts); }); }
+      return;
+    }
+    if (name === 'plate') {
+      if (cached || REDUCED) { renderPlateInstant(slug); afterFile(opts); }
+      else { renderPlateAnimated(slug, () => { SS.cacheAdd(key); afterFile(opts); }); }
+      return;
+    }
+    if (name === 'notes') {
+      const t = NOTES[slug] || '';
+      if (cached || REDUCED) { printLine(`<span class="marg">${escapeHtml(t)}</span>`); afterFile(opts); }
+      else { typeFirstLineThenDumpMarg(t, () => { SS.cacheAdd(key); afterFile(opts); }); }
+      return;
+    }
+  }
+
+  printLine(`<span class="err">cat: cannot read ${escapeHtml(name)}</span>`);
+  afterFile(opts);
+}
+
+function afterFile(opts) {
+  if (opts && opts.chain && opts.chain.length) {
+    const next = opts.chain.shift();
+    if (REDUCED) renderFile(next, opts);
+    else setTimeout(() => renderFile(next, opts), 200);
+  }
+}
+
+/* ---------- Wall label — inline HTML card (serif + mono, no ASCII box) ---------- */
+function labelCardEl(slug) {
+  const m = MEDIUMS[slug];
+  const card = document.createElement('div');
+  card.className = 'label-card';
+  card.dataset.inlineSlug = slug;
+
+  const kicker = document.createElement('div');
+  kicker.className = 'label-kicker';
+  kicker.textContent = '§ Wall label';
+
+  const title = document.createElement('h2');
+  title.className = 'label-title';
+  // Title-case with special-case for two-word slugs (Signal Garden)
+  const displayTitle = String(m.title || slug).replace(/\b\w/g, c => c.toUpperCase()).toLowerCase()
+    .replace(/\b\w/g, c => c.toUpperCase());
+  title.textContent = displayTitle;
+
+  const meta = document.createElement('dl');
+  meta.className = 'label-meta';
+  const rows = [
+    ['Artist', 'Randy Ren'],
+    ['Year', String(m.year)],
+    ['Medium', m.medium],
+    ['Dimensions', m.dim],
+    ['Collection', 'Collection of the artist'],
+  ];
+  for (const [k, v] of rows) {
+    const dt = document.createElement('dt'); dt.textContent = k;
+    const dd = document.createElement('dd'); dd.textContent = v;
+    meta.appendChild(dt); meta.appendChild(dd);
+  }
+
+  const rule = document.createElement('div');
+  rule.className = 'label-rule';
+
+  const blurb = document.createElement('p');
+  blurb.className = 'label-blurb';
+  blurb.textContent = m.blurb;
+
+  const hint = document.createElement('div');
+  hint.className = 'label-hint';
+  hint.innerHTML = 'Type <span class="lk">open ' + slug + '</span> to see the plate.';
+
+  card.appendChild(kicker);
+  card.appendChild(title);
+  card.appendChild(meta);
+  card.appendChild(rule);
+  card.appendChild(blurb);
+  card.appendChild(hint);
+  return card;
+}
+
+function renderLabelInstant(slug) {
+  const wrap = document.createElement('div');
+  wrap.className = 'row';
+  const card = labelCardEl(slug);
+  wrap.appendChild(card);
+  buffer.appendChild(wrap);
+  scrollBottom();
+  // Chip row may need to collapse now that a label is on screen.
+  renderChips();
+}
+
+/* Build an inline card matching the wall-label visual language, for arbitrary content. */
+function inlineCardEl(opts) {
+  const card = document.createElement('div');
+  card.className = 'label-card';
+
+  const kicker = document.createElement('div');
+  kicker.className = 'label-kicker';
+  kicker.textContent = opts.kicker;
+
+  const title = document.createElement('h2');
+  title.className = 'label-title';
+  title.textContent = opts.title;
+
+  const meta = document.createElement('dl');
+  meta.className = 'label-meta';
+  for (const row of opts.meta) {
+    const dt = document.createElement('dt'); dt.textContent = row[0];
+    const dd = document.createElement('dd');
+    if (row[2] === 'html') dd.innerHTML = row[1];
+    else dd.textContent = row[1];
+    meta.appendChild(dt); meta.appendChild(dd);
+  }
+
+  const rule = document.createElement('div');
+  rule.className = 'label-rule';
+
+  const blurb = document.createElement('p');
+  blurb.className = 'label-blurb';
+  blurb.textContent = opts.blurb;
+
+  const hint = document.createElement('div');
+  hint.className = 'label-hint';
+  hint.innerHTML = opts.hintHtml;
+
+  card.appendChild(kicker);
+  card.appendChild(title);
+  card.appendChild(meta);
+  card.appendChild(rule);
+  card.appendChild(blurb);
+  card.appendChild(hint);
+  return card;
+}
+
+/* Return true if an inline card with data-inline-slug=slug is currently on
+   screen (any part visible in the terminal viewport). Used to promote a
+   second `cat about` / `cat contact` into a full plate view. */
+function isInlineCardVisible(slug) {
+  const cards = buffer.querySelectorAll('[data-inline-slug="' + slug + '"]');
+  if (!cards.length) return false;
+  const termRect = term.getBoundingClientRect();
+  for (const c of cards) {
+    const r = c.getBoundingClientRect();
+    // Visible if any part overlaps the terminal viewport.
+    if (r.bottom > termRect.top && r.top < termRect.bottom) return true;
+  }
+  return false;
+}
+
+/* Return the first slug (from the provided list) whose inline card is
+   currently visible in the terminal viewport. Used to reduce chip clutter
+   when the user has already opened one project's label. */
+function firstVisibleInlineSlug(slugList) {
+  for (const s of slugList) {
+    if (isInlineCardVisible(s)) return s;
+  }
+  return null;
+}
+
+function aboutCardEl() {
+  return inlineCardEl({
+    kicker: '§ COLOPHON',
+    title: 'Randy Ren',
+    meta: [
+      ['Based', 'San Francisco, CA'],
+      ['Focus', 'AI × Interface'],
+      ['Status', 'Open Fall 2026'],
+      ['Practice', 'Design + Engineering'],
+    ],
+    blurb: "Randy is a designer-engineer working at the seam between AI systems and human interfaces. Previously shipped consumer products used by millions; now focused on making agents feel like real collaborators — the kind you'd want in the room, not the kind that eats your afternoon. Believes the best interfaces disappear until you need them, then arrive already knowing why.",
+    hintHtml: 'Type <span class="lk">cat contact</span> to reach out.'
+  });
+}
+
+function contactCardEl() {
+  const mail = '<a href="mailto:hey@randy.sh" class="lk" style="color:var(--prussian);font-weight:500;text-decoration:none;border-bottom:1px solid var(--prussian);">hey@randy.sh</a>';
+  const tw   = '<a href="https://twitter.com/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--prussian);font-weight:500;text-decoration:none;border-bottom:1px solid var(--prussian);">@randyren</a>';
+  const gh   = '<a href="https://github.com/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--prussian);font-weight:500;text-decoration:none;border-bottom:1px solid var(--prussian);">randyren</a>';
+  const li   = '<a href="https://linkedin.com/in/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--prussian);font-weight:500;text-decoration:none;border-bottom:1px solid var(--prussian);">/in/randyren</a>';
+  return inlineCardEl({
+    kicker: '§ CORRESPONDENCE',
+    title: 'Get in touch',
+    meta: [
+      ['Email',    mail, 'html'],
+      ['Twitter',  tw,   'html'],
+      ['GitHub',   gh,   'html'],
+      ['LinkedIn', li,   'html'],
+      ['Based',    'San Francisco · PT/GMT−7'],
+    ],
+    blurb: "Open to select client work and staff+ roles starting fall 2026. Best reached by email; I read everything. I like problems where the interface is doing more than displaying — where the interaction itself changes the shape of the work.",
+    hintHtml: 'Type <span class="lk">cat about</span> to know more.'
+  });
+}
+
+function renderAboutCard() {
+  const key = 'card:about';
+  const card = aboutCardEl();
+  card.dataset.inlineSlug = 'about';
+  if (SS.animCache.has(key) || REDUCED) {
+    const wrap = document.createElement('div');
+    wrap.className = 'row';
+    wrap.appendChild(card);
+    buffer.appendChild(wrap);
+    scrollBottom();
+  } else {
+    animateLabelCard(card, () => { SS.cacheAdd(key); });
+  }
+}
+
+function renderContactCard() {
+  const key = 'card:contact';
+  const card = contactCardEl();
+  card.dataset.inlineSlug = 'contact';
+  if (SS.animCache.has(key) || REDUCED) {
+    const wrap = document.createElement('div');
+    wrap.className = 'row';
+    wrap.appendChild(card);
+    buffer.appendChild(wrap);
+    scrollBottom();
+  } else {
+    animateLabelCard(card, () => { SS.cacheAdd(key); });
+  }
+}
+
+let revealInProgress = false;
+let revealFinishers = [];
+function finishReveal() {
+  const list = revealFinishers.slice();
+  revealFinishers = [];
+  for (const f of list) { try { f(); } catch(e) {} }
+  revealInProgress = false;
+}
+
+function renderLabelAnimated(slug, done) {
+  const card = labelCardEl(slug);
+  // Refresh chips one tick after the card is inserted into the buffer, so the
+  // chip row collapses in sync with the reveal starting.
+  animateLabelCard(card, done);
+  requestAnimationFrame(() => renderChips());
+}
+
+/* Shared corner-typed reveal for wall labels, about, and contact cards.
+   A small caret walks the card top-to-bottom; each section streams its
+   characters left-to-right, section by section. No shimmer. */
+function animateLabelCard(card, done) {
+  const wrap = document.createElement('div');
+  wrap.className = 'row';
+  wrap.appendChild(card);
+  buffer.appendChild(wrap);
+  scrollBottom();
+
+  if (REDUCED) {
+    revealInProgress = false;
+    done && done();
+    return;
+  }
+
+  const kickerEl = card.querySelector('.label-kicker');
+  const titleEl  = card.querySelector('.label-title');
+  const metaEl   = card.querySelector('.label-meta');
+  const ruleEl   = card.querySelector('.label-rule');
+  const blurbEl  = card.querySelector('.label-blurb');
+  const hintEl   = card.querySelector('.label-hint');
+
+  // Snapshot final text of each text node; empty them; type them back in place.
+  // For elements with mixed inline HTML (like hint with .lk span), snapshot innerHTML.
+  const kickerText = kickerEl ? kickerEl.textContent : '';
+  const titleText  = titleEl  ? titleEl.textContent  : '';
+  const blurbHtml  = blurbEl  ? blurbEl.innerHTML    : '';
+  const hintHtml   = hintEl   ? hintEl.innerHTML     : '';
+
+  // Meta rows — capture each dt/dd pair's original textContent (and any HTML in dd for links).
+  const metaChildren = metaEl ? Array.from(metaEl.children) : [];
+  const metaSnaps = [];
+  for (let i = 0; i < metaChildren.length; i += 2) {
+    const dt = metaChildren[i];
+    const dd = metaChildren[i+1];
+    metaSnaps.push({
+      dt, dd,
+      dtText: dt ? dt.textContent : '',
+      ddHtml: dd ? dd.innerHTML   : ''
+    });
+  }
+
+  // Card starts empty visually — hide each element until its type-in starts.
+  const hide = (el) => { if (el) { el.style.opacity = '0'; } };
+  hide(kickerEl); hide(titleEl); hide(ruleEl); hide(blurbEl); hide(hintEl);
+  if (metaEl) metaEl.style.opacity = '0';
+  metaSnaps.forEach(m => { if (m.dt) m.dt.textContent = ''; if (m.dd) m.dd.innerHTML = ''; });
+  if (kickerEl) kickerEl.textContent = '';
+  if (titleEl)  titleEl.textContent  = '';
+  if (blurbEl)  blurbEl.innerHTML    = '';
+  if (hintEl)   hintEl.innerHTML     = '';
+  if (ruleEl)   ruleEl.style.transform = 'scaleX(0)';
+
+  // No caret during card reveal — content types in without any tracking cursor.
+  card.style.position = card.style.position || 'relative';
+
+  // Corner-trace frame — four L-brackets that draw first, then the four edges
+  // complete inward. Uses one <svg> with four <path>s (one per side, each drawn
+  // from its corner toward the midpoint).
+  const frameSvg = buildCardFrame(card);
+  card.classList.add('framing');
+  card.appendChild(frameSvg);
+
+  revealInProgress = true;
+  const timers = [];
+  const T = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+  let cancelled = false;
+
+  // Kick off the frame. Visible but not indulgent — corners trace over ~800ms.
+  const FRAME_MS = 800;
+  animateCardFrame(frameSvg, FRAME_MS);
+  // Bring the native border back at the moment the frame completes.
+  T(() => {
+    card.classList.remove('framing');
+    if (frameSvg && frameSvg.parentNode) frameSvg.parentNode.removeChild(frameSvg);
+  }, FRAME_MS + 40);
+
+  // No-op: caret removed from card reveal; kept as a stub because it's called
+  // from many places inside the typing routines.
+  function repositionCaretTo(_el) { /* intentionally empty */ }
+
+  // Type text into el (textContent). msPerChar: base cadence.
+  function typeInto(el, text, msPerChar, onDone) {
+    if (!el || cancelled) { onDone && onDone(); return; }
+    el.style.opacity = '1';
+    let i = 0;
+    const step = () => {
+      if (cancelled) return;
+      el.textContent = text.slice(0, i);
+      repositionCaretTo(el);
+      if (i >= text.length) { onDone && onDone(); return; }
+      const ch = text.charAt(i);
+      let delay = msPerChar;
+      const seed = ((i * 9301 + 49297) % 233280) / 233280;
+      delay += (seed - 0.5) * 6;
+      if (/[.,;:!?]/.test(ch)) delay += 40;
+      if (ch === '—') delay += 60;
+      if (ch === '\n') delay += 80;
+      i++;
+      const t = setTimeout(step, delay);
+      timers.push(t);
+    };
+    step();
+  }
+
+  // Type into an element that may contain HTML (e.g. blurb with <em>, hint with <span class="lk">).
+  function typeHtmlInto(el, html, msPerChar, onDone) {
+    if (!el || cancelled) { onDone && onDone(); return; }
+    el.style.opacity = '1';
+    el.innerHTML = html;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push({ node: walker.currentNode, target: walker.currentNode.textContent });
+    nodes.forEach(n => { n.node.textContent = ''; });
+    let ni = 0, ci = 0;
+    const step = () => {
+      if (cancelled) return;
+      if (ni >= nodes.length) { onDone && onDone(); return; }
+      const n = nodes[ni];
+      if (ci > n.target.length) { ni++; ci = 0; const t = setTimeout(step, 8); timers.push(t); return; }
+      n.node.textContent = n.target.slice(0, ci);
+      repositionCaretTo(el);
+      const ch = n.target.charAt(ci) || '';
+      let delay = msPerChar;
+      const seed = ((ni * 131 + ci * 9301 + 49297) % 233280) / 233280;
+      delay += (seed - 0.5) * 6;
+      if (/[.,;:!?]/.test(ch)) delay += 40;
+      if (ch === '—') delay += 60;
+      ci++;
+      const t = setTimeout(step, delay);
+      timers.push(t);
+    };
+    step();
+  }
+
+  // Sequence — top to bottom.
+  const seq = [];
+  // Ceremony: wait until the frame is a little underway, then start content.
+  seq.push((next) => T(next, Math.floor(FRAME_MS * 0.45)));
+  seq.push((next) => {
+    typeInto(kickerEl, kickerText, 22, next);
+  });
+  seq.push((next) => T(next, 90));
+  seq.push((next) => {
+    typeInto(titleEl, titleText, 24, next);
+  });
+  seq.push((next) => T(next, 120));
+  seq.push((next) => {
+    if (metaEl) metaEl.style.opacity = '1';
+    let mi = 0;
+    const doRow = () => {
+      if (mi >= metaSnaps.length) { next(); return; }
+      const m = metaSnaps[mi];
+      typeInto(m.dt, m.dtText, 12, () => {
+        typeHtmlInto(m.dd, m.ddHtml, 11, () => {
+          mi++;
+          T(doRow, 40);
+        });
+      });
+    };
+    doRow();
+  });
+  seq.push((next) => T(next, 100));
+  seq.push((next) => {
+    if (ruleEl) {
+      ruleEl.style.opacity = '1';
+      ruleEl.style.transition = 'transform 340ms cubic-bezier(0.16,1,0.3,1)';
+      requestAnimationFrame(() => { ruleEl.style.transform = 'scaleX(1)'; });
+    }
+    T(next, 260);
+  });
+  seq.push((next) => {
+    typeHtmlInto(blurbEl, blurbHtml, 14, next);
+  });
+  seq.push((next) => T(next, 120));
+  seq.push((next) => {
+    typeHtmlInto(hintEl, hintHtml, 12, next);
+  });
+  // Small settle beat at the end — no caret to park, so just hold before resolving.
+  seq.push((next) => T(next, 200));
+
+  let idx = 0;
+  const runNext = () => {
+    if (cancelled) return;
+    if (idx >= seq.length) {
+      revealInProgress = false;
+      done && done();
+      return;
+    }
+    const step = seq[idx++];
+    step(runNext);
+  };
+  runNext();
+
+  revealFinishers.push(() => {
+    cancelled = true;
+    timers.forEach(clearTimeout);
+    // Snap to final state.
+    card.classList.remove('framing');
+    if (frameSvg && frameSvg.parentNode) frameSvg.parentNode.removeChild(frameSvg);
+    if (kickerEl) { kickerEl.textContent = kickerText; kickerEl.style.opacity = '1'; }
+    if (titleEl)  { titleEl.textContent  = titleText;  titleEl.style.opacity  = '1'; }
+    if (metaEl)   metaEl.style.opacity = '1';
+    metaSnaps.forEach(m => {
+      if (m.dt) m.dt.textContent = m.dtText;
+      if (m.dd) m.dd.innerHTML   = m.ddHtml;
+    });
+    if (ruleEl)  { ruleEl.style.opacity  = '1'; ruleEl.style.transform = 'scaleX(1)'; }
+    if (blurbEl) { blurbEl.innerHTML     = blurbHtml; blurbEl.style.opacity = '1'; }
+    if (hintEl)  { hintEl.innerHTML      = hintHtml;  hintEl.style.opacity  = '1'; }
+    revealInProgress = false;
+    done && done();
+  });
+}
+
+/* Build the four-sided corner-trace frame for a card. Returns an <svg> element
+   containing four <path>s (top, right, bottom, left), each drawn from its
+   starting corner toward the midpoint of its edge. Uses viewBox in card pixels
+   captured at build time (we re-measure on paint). */
+function buildCardFrame(card) {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('class', 'card-frame');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  // We'll set viewBox and path data after measurement so it matches actual card size.
+  const rect = card.getBoundingClientRect();
+  const W = Math.max(40, Math.round(rect.width));
+  const H = Math.max(40, Math.round(rect.height));
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  // Four L-shaped corner brackets that grow into full edges.
+  // Each side is a <path>. It is drawn from one corner toward the midpoint.
+  // The four sides together compose the whole border.
+  const mkPath = (d) => {
+    const p = document.createElementNS(svgNS, 'path');
+    p.setAttribute('d', d);
+    return p;
+  };
+  // Path definitions — draw from a corner along one edge toward its midpoint,
+  // then from the same corner along the perpendicular edge toward its midpoint.
+  // Two paths meet at each edge midpoint.
+  const top    = mkPath(`M ${W/2} 0 L 0 0 L 0 ${H/2}`);          // top-left corner
+  const right  = mkPath(`M ${W} ${H/2} L ${W} 0 L ${W/2} 0`);    // top-right corner
+  const bottom = mkPath(`M ${W/2} ${H} L ${W} ${H} L ${W} ${H/2}`); // bottom-right corner
+  const left   = mkPath(`M 0 ${H/2} L 0 ${H} L ${W/2} ${H}`);    // bottom-left corner
+  [top, right, bottom, left].forEach(p => svg.appendChild(p));
+  return svg;
+}
+
+function animateCardFrame(svg, totalMs) {
+  const paths = Array.from(svg.querySelectorAll('path'));
+  const easing = 'cubic-bezier(0.16, 1, 0.3, 1)';
+  paths.forEach((p, i) => {
+    const len = p.getTotalLength ? p.getTotalLength() : 400;
+    p.style.strokeDasharray = String(len);
+    p.style.strokeDashoffset = String(len);
+    // stagger corners: two pairs of diagonally opposite corners
+    // top-left + bottom-right start together; top-right + bottom-left start ~80ms later.
+    const stagger = (i === 0 || i === 2) ? 0 : 80;
+    p.style.transition = `stroke-dashoffset ${totalMs - stagger}ms ${easing}`;
+    p.style.transitionDelay = `${stagger}ms`;
+    // Force reflow so transition takes hold on the next frame.
+    // eslint-disable-next-line no-unused-expressions
+    p.getBoundingClientRect();
+    requestAnimationFrame(() => {
+      p.style.strokeDashoffset = '0';
+    });
+  });
+}
+
+/* ---------- Plates (SVG) ---------- */
+function plateFor(slug) {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const wrap = document.createElement('div');
+  wrap.className = 'plate-wrap';
+  const svg = document.createElementNS(svgNS, 'svg');
+  const W = 360, H = 200;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  const ink = '#111', umber = '#7A4A1F', prussian = '#1F3A5F';
+  const strokes = [];
+
+  function arc(cx,cy,r,a1,a2,color){
+    const p = document.createElementNS(svgNS,'path');
+    const toXY = (a) => [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+    const [x1,y1] = toXY(a1); const [x2,y2] = toXY(a2);
+    const large = (a2 - a1) > Math.PI ? 1 : 0;
+    p.setAttribute('d', `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`);
+    p.setAttribute('stroke', color); p.setAttribute('fill','none'); p.setAttribute('stroke-width','1');
+    p.setAttribute('vector-effect','non-scaling-stroke');
+    return p;
+  }
+  function circle(cx,cy,r,color){
+    const c = document.createElementNS(svgNS,'circle');
+    c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r);
+    c.setAttribute('stroke',color); c.setAttribute('fill','none'); c.setAttribute('stroke-width','1');
+    c.setAttribute('vector-effect','non-scaling-stroke');
+    return c;
+  }
+  function rect(x,y,w,h,color){
+    const r = document.createElementNS(svgNS,'rect');
+    r.setAttribute('x',x); r.setAttribute('y',y); r.setAttribute('width',w); r.setAttribute('height',h);
+    r.setAttribute('stroke',color); r.setAttribute('fill','none'); r.setAttribute('stroke-width','1');
+    r.setAttribute('vector-effect','non-scaling-stroke');
+    return r;
+  }
+  function line(x1,y1,x2,y2,color){
+    const l = document.createElementNS(svgNS,'line');
+    l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+    l.setAttribute('stroke', color); l.setAttribute('stroke-width','1'); l.setAttribute('fill','none');
+    l.setAttribute('vector-effect','non-scaling-stroke');
+    return l;
+  }
+  function poly(pts, color) {
+    const p = document.createElementNS(svgNS,'polygon');
+    p.setAttribute('points', pts);
+    p.setAttribute('stroke',color); p.setAttribute('fill','none'); p.setAttribute('stroke-width','1');
+    p.setAttribute('vector-effect','non-scaling-stroke');
+    return p;
+  }
+
+  let washRect = null;
+
+  if (slug === 'oryzo') {
+    strokes.push(arc(180, 130, 90, Math.PI*1.05, Math.PI*1.95, ink));
+    strokes.push(arc(180, 130, 68, Math.PI*1.10, Math.PI*1.90, ink));
+    strokes.push(arc(180, 130, 46, Math.PI*1.15, Math.PI*1.85, prussian));
+    strokes.push(line(180, 130, 180, 30, ink));
+    washRect = rect(90, 30, 180, 100, 'none');
+    washRect.setAttribute('fill', umber);
+  } else if (slug === 'halcyon') {
+    strokes.push(rect(60, 40, 240, 120, ink));
+    strokes.push(poly('90,90 130,90 120,120', prussian));
+    strokes.push(poly('220,70 260,70 250,100', ink));
+    strokes.push(poly('180,130 220,130 210,160', prussian));
+    washRect = rect(60, 40, 240, 120, 'none');
+    washRect.setAttribute('fill', umber);
+  } else if (slug === 'aperture') {
+    strokes.push(circle(180, 100, 78, ink));
+    strokes.push(circle(180, 100, 54, ink));
+    strokes.push(circle(180, 100, 30, prussian));
+    strokes.push(circle(180, 100, 12, ink));
+    washRect = rect(102, 22, 156, 156, 'none');
+    washRect.setAttribute('fill', umber);
+  } else if (slug === 'fieldnote') {
+    for (let i = 0; i < 7; i++) {
+      strokes.push(line(60, 40 + i * 20, 300, 40 + i * 20, ink));
+    }
+    strokes.push(line(210, 30, 210, 170, prussian));
+    washRect = rect(60, 30, 240, 150, 'none');
+    washRect.setAttribute('fill', umber);
+  } else if (slug === 'signal-garden') {
+    const hex = (cx, cy, r) => {
+      let pts = '';
+      for (let k = 0; k < 6; k++) {
+        const a = Math.PI/3 * k + Math.PI/6;
+        pts += `${(cx + r*Math.cos(a)).toFixed(2)},${(cy + r*Math.sin(a)).toFixed(2)} `;
+      }
+      return pts.trim();
+    };
+    const offsets = [[-70,-30],[0,-30],[70,-30],[-35,20],[35,20],[0,70]];
+    offsets.forEach((o,i) => {
+      const p = poly(hex(180+o[0], 100+o[1], 22), i===2 ? prussian : ink);
+      p.setAttribute('transform', `rotate(4 ${180+o[0]} ${100+o[1]})`);
+      strokes.push(p);
+    });
+    washRect = rect(80, 50, 200, 130, 'none');
+    washRect.setAttribute('fill', umber);
+  } else if (slug === 'loom') {
+    const cx = 180, cy = 100;
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI * 2 / 6) * i;
+      const x = cx + 40 * Math.cos(a), y = cy + 40 * Math.sin(a);
+      strokes.push(circle(x, y, 32, i === 0 ? prussian : ink));
+    }
+    washRect = rect(80, 20, 200, 160, 'none');
+    washRect.setAttribute('fill', umber);
+  }
+
+  strokes.forEach(s => svg.appendChild(s));
+  if (washRect) {
+    washRect.setAttribute('opacity','0');
+    svg.appendChild(washRect);
+  }
+
+  const g = document.createElementNS(svgNS,'text');
+  g.setAttribute('x', W-8); g.setAttribute('y', H-6);
+  g.setAttribute('text-anchor','end');
+  g.setAttribute('font-family','IBM Plex Mono, monospace');
+  g.setAttribute('font-size','9');
+  g.setAttribute('fill', umber);
+  g.setAttribute('letter-spacing','1.5');
+  g.textContent = slug.toUpperCase().replace('-',' ');
+  svg.appendChild(g);
+
+  wrap.appendChild(svg);
+  return { wrap, strokes, washRect, glyph: g };
+}
+
+function renderPlateInstant(slug) {
+  const { wrap, strokes, washRect, glyph } = plateFor(slug);
+  buffer.appendChild(wrap);
+  strokes.forEach(s => { s.style.strokeDashoffset = '0'; });
+  if (washRect) washRect.setAttribute('opacity','0.82');
+  glyph.style.opacity = '1';
+  scrollBottom();
+}
+
+function renderPlateAnimated(slug, done) {
+  const { wrap, strokes, washRect, glyph } = plateFor(slug);
+  buffer.appendChild(wrap);
+  scrollBottom();
+
+  strokes.forEach(s => {
+    try {
+      const len = s.getTotalLength ? s.getTotalLength() : 400;
+      s.style.strokeDasharray = String(len);
+      s.style.strokeDashoffset = String(len);
+      s._len = len;
+    } catch(e) { s._len = 400; }
+  });
+  glyph.style.opacity = '0';
+
+  revealInProgress = true;
+  const start = performance.now();
+  const strokeStart = 400, strokeEnd = 780;
+  const dur = strokeEnd - strokeStart;
+  let raf = 0;
+  // trailing 15% at 40% speed
+  function progressAt(t) {
+    // t is 0..1 of the stroke reveal duration
+    // eased outer curve
+    const eased = 1 - Math.pow(1 - t, 3); // cubic ease-out approx
+    // apply trailing drag: last 0.15 of the eased distance at 0.4x speed
+    // if eased <= 0.85, linear map to 0..0.85
+    // else the remaining 0.15 needs 0.375 time-budget; but we already spent (t) time.
+    // Simple: split time-domain instead. First 70% of time delivers 85% of distance, last 30% delivers 15% at slower rate.
+    if (t <= 0.70) return (t / 0.70) * 0.85;
+    return 0.85 + ((t - 0.70) / 0.30) * 0.15;
+  }
+  function frame(now) {
+    const el = now - start;
+    if (el < strokeStart) { raf = requestAnimationFrame(frame); return; }
+    let t = (el - strokeStart) / dur;
+    if (t > 1) t = 1;
+    const p = progressAt(t);
+    strokes.forEach(s => {
+      const len = s._len || 400;
+      s.style.strokeDashoffset = String(len * (1 - p));
+    });
+    if (t < 1) raf = requestAnimationFrame(frame);
+  }
+  raf = requestAnimationFrame(frame);
+
+  let washRAF = requestAnimationFrame(function w(now){
+    const el = now - start;
+    if (!washRect) return;
+    if (el < 560) { washRAF = requestAnimationFrame(w); return; }
+    let t = (el - 560) / 240;
+    if (t > 1) t = 1;
+    const eased = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+    washRect.setAttribute('opacity', String(eased * 0.82));
+    if (t < 1) washRAF = requestAnimationFrame(w);
+  });
+
+  const glyphShow = setTimeout(() => { glyph.style.opacity = '1'; }, 780);
+  const doneT = setTimeout(() => {
+    revealInProgress = false;
+    done && done();
+  }, 820);
+
+  revealFinishers.push(() => {
+    cancelAnimationFrame(raf);
+    cancelAnimationFrame(washRAF);
+    strokes.forEach(s => { s.style.strokeDashoffset = '0'; });
+    if (washRect) washRect.setAttribute('opacity','0.82');
+    glyph.style.opacity = '1';
+    clearTimeout(glyphShow); clearTimeout(doneT);
+    revealInProgress = false;
+    done && done();
+  });
+}
+
+/* ---------- Type-first-line-then-dump helpers ---------- */
+function typeFirstLineThenDump(text, done) {
+  const idx = text.indexOf(' ', 40);
+  const cutAt = idx > 0 ? idx : Math.min(60, text.length);
+  const head = text.slice(0, cutAt);
+  const tail = text.slice(cutAt);
+  const row = document.createElement('div');
+  row.className = 'row';
+  const s = document.createElement('span');
+  row.appendChild(s);
+  buffer.appendChild(row);
+  scrollBottom();
+  let i = 0;
+  revealInProgress = true;
+  const timers = [];
+  function step() {
+    if (i >= head.length) {
+      s.textContent = head + tail;
+      revealInProgress = false;
+      done && done();
+      return;
+    }
+    i++;
+    s.textContent = head.slice(0, i);
+    const to = setTimeout(step, 16);
+    timers.push(to);
+  }
+  step();
+  revealFinishers.push(() => {
+    timers.forEach(clearTimeout);
+    s.textContent = text;
+    revealInProgress = false;
+    done && done();
+  });
+}
+function typeFirstLineThenDumpMarg(text, done) {
+  const idx = text.indexOf(' ', 40);
+  const cutAt = idx > 0 ? idx : Math.min(60, text.length);
+  const head = text.slice(0, cutAt);
+  const tail = text.slice(cutAt);
+  const row = document.createElement('div');
+  row.className = 'row';
+  const s = document.createElement('span');
+  s.className = 'marg';
+  row.appendChild(s);
+  buffer.appendChild(row);
+  scrollBottom();
+  let i = 0;
+  revealInProgress = true;
+  const timers = [];
+  function step() {
+    if (i >= head.length) {
+      s.textContent = head + tail;
+      revealInProgress = false;
+      done && done();
+      return;
+    }
+    i++;
+    s.textContent = head.slice(0, i);
+    const to = setTimeout(step, 16);
+    timers.push(to);
+  }
+  step();
+  revealFinishers.push(() => {
+    timers.forEach(clearTimeout);
+    s.textContent = text;
+    revealInProgress = false;
+    done && done();
+  });
+}
+
+/* ---------- Plate viewer (full-viewport editorial takeover) ---------- */
+
+const ROMAN = { 2023: 'MMXXIII', 2024: 'MMXXIV', 2025: 'MMXXV', 2026: 'MMXXVI' };
+
+const PLATE_DATA = {
+  oryzo: {
+    number: '01', title: 'Oryzo', year: 2025,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2025' },
+      { lab: 'ROLE', val: 'DESIGN + ENG LEAD' },
+      { lab: 'CLIENT', val: 'STEALTH · SEED' },
+      { lab: 'DISCIPLINE', val: 'AI · INTERFACE · WEB' }
+    ],
+    plateCap: 'PLATE 01 · ORYZO · CMYK · 300 DPI',
+    essay: [
+      "Voice orchestration layer for autonomous agents. Turned three hundred milliseconds of latency into a feature — the pause the agent takes before answering became the moment you trust it. We stopped hiding the wait. We staged it. A hairline appears; a caret ticks; an intent surfaces. By the time the model speaks, the user has already read its think.",
+      "Shipped as a drop-in orchestration primitive. A press mark, not a rewrite. The result was quieter than we expected — the loudest feedback came from the silence between turns."
+    ]
+  },
+  halcyon: {
+    number: '02', title: 'Halcyon', year: 2025,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2025' },
+      { lab: 'ROLE', val: 'PRODUCT + DESIGN' },
+      { lab: 'CLIENT', val: 'INTERNAL' },
+      { lab: 'DISCIPLINE', val: 'PRODUCT · WEBGL · DESIGN' }
+    ],
+    plateCap: 'PLATE 02 · HALCYON · CMYK · 300 DPI',
+    essay: [
+      "A realtime collaborative canvas for design teams. Multiplayer cursors, but softer. We treated presence as a design material — where people were, how they moved, what they hovered — and let those shapes suggest new tools rather than replace old ones.",
+      "Half a million cursors and counting. The canvas got smaller as more people joined; the friction went the other way."
+    ]
+  },
+  aperture: {
+    number: '03', title: 'Aperture', year: 2024,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2024' },
+      { lab: 'ROLE', val: 'CONCEPT LEAD' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'MOBILE · SYSTEM · CONCEPT' }
+    ],
+    plateCap: 'PLATE 03 · APERTURE · CMYK · 300 DPI',
+    essay: [
+      "A camera-first mobile OS. The lens is the app launcher. If you point the phone at something the phone knows what you want; the launcher was the least interesting screen on the device, so we removed it.",
+      "Concept work. Never shipped as an OS, but the pattern went on to inform how camera-first apps are now built."
+    ]
+  },
+  fieldnote: {
+    number: '04', title: 'Fieldnote', year: 2024,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2024' },
+      { lab: 'ROLE', val: 'DESIGN + ENG' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'CLI · AI · TOOL' }
+    ],
+    plateCap: 'PLATE 04 · FIELDNOTE · CMYK · 300 DPI',
+    essay: [
+      "A terminal-native journaling agent. Writes with you, not for you. The agent knows the shape of your day, the projects you're on, the questions you haven't answered — and it offers rather than solves.",
+      "The interface is a single prompt. The interface is also the file. Everything the agent reads or writes is a plaintext file in your directory; version control is git."
+    ]
+  },
+  'signal-garden': {
+    number: '05', title: 'Signal Garden', year: 2024,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2024' },
+      { lab: 'ROLE', val: 'HARDWARE + INTERFACE' },
+      { lab: 'CLIENT', val: 'DISTRIBUTED CO.' },
+      { lab: 'DISCIPLINE', val: 'HARDWARE · INTERFACE' }
+    ],
+    plateCap: 'PLATE 05 · SIGNAL GARDEN · CMYK · 300 DPI',
+    essay: [
+      "Ambient e-ink dashboards for distributed teams. Status without Slack. Six panels around the office, refreshing every few minutes with the state of the work — not the state of the people.",
+      "Hardware is cheap. Consistency is expensive. The garden metaphor stuck: things grow, things wither, and it matters when they do."
+    ]
+  },
+  loom: {
+    number: '06', title: 'Loom', year: 2023,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2023' },
+      { lab: 'ROLE', val: 'DESIGN + ENG' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'WEB3 · AUDIO · EXPERIMENT' }
+    ],
+    plateCap: 'PLATE 06 · LOOM · CMYK · 300 DPI',
+    essay: [
+      "A peer-to-peer music mesh. No servers, no ads, just rooms. Anyone can host a listening room; anyone can join with a link. The songs live on the seeds.",
+      "An experiment in what a discovery layer looks like when the discovery is another person's ears, not an algorithm."
+    ]
+  },
+  about: {
+    number: null, title: 'About', year: null,
+    marker: 'COLOPHON',
+    meta: [
+      { lab: 'NAME', val: 'RANDY REN' },
+      { lab: 'BASED', val: 'SAN FRANCISCO, CA' },
+      { lab: 'FOCUS', val: 'AI × INTERFACE' },
+      { lab: 'STATUS', val: 'OPEN FALL 2026' }
+    ],
+    plateCap: 'COLOPHON · RANDY REN · SF',
+    motifKind: 'about',
+    essay: [
+      "Randy is a designer-engineer working at the seam between AI systems and human interfaces. Previously shipped consumer products used by millions; now focused on making agents feel like real collaborators — the kind you'd want in the room, not the kind that eats your afternoon.",
+      "Believes the best interfaces disappear until you need them, then arrive already knowing why. The work sits between two disciplines that rarely get invited to the same meeting: the one that decides what a system does, and the one that decides how it feels to use.",
+      "Currently open to select client work and staff-plus roles starting fall 2026. Prefers small teams and quiet rooms. Answers his own email."
+    ]
+  },
+  contact: {
+    number: null, title: 'Contact', year: null,
+    marker: 'CORRESPONDENCE',
+    meta: [
+      { lab: 'EMAIL', val: 'hey@randy.sh' },
+      { lab: 'TWITTER', val: '@randyren' },
+      { lab: 'GITHUB', val: 'randyren' },
+      { lab: 'LINKEDIN', val: '/in/randyren' }
+    ],
+    plateCap: 'CORRESPONDENCE · HEY@RANDY.SH',
+    motifKind: 'contact',
+    essay: [
+      "Open to select client work and staff-plus roles starting fall 2026. Based in San Francisco but comfortable across time zones. Best reached by email; replies within a day.",
+      "I like problems where the interface is doing more than displaying — where the interaction itself changes the shape of the work. If that sounds like what you're building, write."
+    ]
+  }
+};
+
+let plateOpen = false;
+let plateEl = null;
+let plateLastFocus = null;
+
+function isEditableFocus() {
+  const a = document.activeElement;
+  if (!a) return false;
+  const tag = a.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || a.isContentEditable;
+}
+
+function svgNS() { return 'http://www.w3.org/2000/svg'; }
+
+function buildStripes() {
+  const ns = svgNS();
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'stripes-svg');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('viewBox', '0 0 1000 500');
+  // stripe every ~16px in viewBox coordinates
+  for (let x = 8; x < 1000; x += 16) {
+    const l = document.createElementNS(ns, 'line');
+    l.setAttribute('x1', x); l.setAttribute('x2', x);
+    l.setAttribute('y1', 0); l.setAttribute('y2', 500);
+    l.setAttribute('stroke', '#111');
+    l.setAttribute('stroke-width', '1');
+    l.setAttribute('opacity', '0.06');
+    l.setAttribute('vector-effect', 'non-scaling-stroke');
+    svg.appendChild(l);
+  }
+  return svg;
+}
+
+function buildMotif(slug) {
+  const ns = svgNS();
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'motif-svg');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  const W = 1000, H = 500;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const ink = '#111', umber = '#7A4A1F', prussian = '#1F3A5F';
+  const strokes = [];
+
+  const addLine = (x1,y1,x2,y2,color,opacity,sw) => {
+    const l = document.createElementNS(ns,'line');
+    l.setAttribute('x1',x1); l.setAttribute('x2',x2);
+    l.setAttribute('y1',y1); l.setAttribute('y2',y2);
+    l.setAttribute('stroke', color);
+    l.setAttribute('stroke-width', sw || 1);
+    if (opacity !== undefined) l.setAttribute('opacity', opacity);
+    l.setAttribute('vector-effect','non-scaling-stroke');
+    l.setAttribute('fill','none');
+    return l;
+  };
+  const addCircle = (cx,cy,r,color,opacity,sw) => {
+    const c = document.createElementNS(ns,'circle');
+    c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r);
+    c.setAttribute('stroke',color); c.setAttribute('fill','none');
+    c.setAttribute('stroke-width', sw || 1);
+    if (opacity !== undefined) c.setAttribute('opacity', opacity);
+    c.setAttribute('vector-effect','non-scaling-stroke');
+    return c;
+  };
+  const addPoly = (pts, color, opacity, filled) => {
+    const p = document.createElementNS(ns,'polygon');
+    p.setAttribute('points', pts);
+    p.setAttribute('stroke', color);
+    p.setAttribute('fill', filled ? color : 'none');
+    p.setAttribute('stroke-width','1');
+    if (opacity !== undefined) p.setAttribute('opacity', opacity);
+    p.setAttribute('vector-effect','non-scaling-stroke');
+    return p;
+  };
+
+  if (slug === 'oryzo') {
+    // dense vertical hairlines + horizontal prussian rule
+    for (let x = 40; x < W - 40; x += 6) {
+      const el = addLine(x, 60, x, H - 60, ink, 0.28);
+      svg.appendChild(el);
+      strokes.push(el);
+    }
+    const rule = addLine(40, H/2, W - 40, H/2, prussian, 1, 1.5);
+    svg.appendChild(rule);
+    strokes.push(rule);
+  } else if (slug === 'halcyon') {
+    // scatter of small cursor triangles
+    const rand = (seed) => {
+      let s = seed;
+      return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    };
+    const r = rand(7);
+    for (let i = 0; i < 32; i++) {
+      const x = 60 + r() * (W - 120);
+      const y = 60 + r() * (H - 120);
+      const sz = 14 + r() * 10;
+      const color = r() > 0.7 ? prussian : ink;
+      const opacity = 0.3 + r() * 0.55;
+      const pts = `${x},${y} ${x + sz},${y + sz*0.35} ${x + sz*0.4},${y + sz*0.75} ${x + sz*0.25},${y + sz}`;
+      const p = addPoly(pts, color, opacity, true);
+      svg.appendChild(p);
+      strokes.push(p);
+    }
+  } else if (slug === 'aperture') {
+    // concentric circles
+    const cx = W/2, cy = H/2;
+    const radii = [200, 160, 122, 88, 58, 32];
+    radii.forEach((rd, i) => {
+      const c = addCircle(cx, cy, rd, i === radii.length - 1 ? prussian : ink, 0.7 - i*0.05);
+      svg.appendChild(c);
+      strokes.push(c);
+    });
+    // filled iris center
+    const iris = addCircle(cx, cy, 14, prussian, 1);
+    iris.setAttribute('fill', prussian);
+    svg.appendChild(iris);
+    strokes.push(iris);
+  } else if (slug === 'fieldnote') {
+    // notebook lines + caret glyph
+    for (let i = 0; i < 12; i++) {
+      const y = 60 + i * 32;
+      if (y > H - 40) break;
+      const l = addLine(60, y, W - 60, y, ink, 0.35);
+      svg.appendChild(l);
+      strokes.push(l);
+    }
+    // caret glyph on one line
+    const cx = 280, cy = 60 + 5 * 32;
+    const caretW = 14, caretH = 20;
+    const p = addPoly(`${cx},${cy - caretH/2} ${cx + caretW},${cy} ${cx},${cy + caretH/2}`, prussian, 1, false);
+    p.setAttribute('stroke-width','1.5');
+    svg.appendChild(p);
+    strokes.push(p);
+    // small vertical hairline for caret bar
+    const bar = addLine(cx + caretW + 6, cy - caretH/2, cx + caretW + 6, cy + caretH/2, prussian, 1, 1.5);
+    svg.appendChild(bar);
+    strokes.push(bar);
+  } else if (slug === 'signal-garden') {
+    // hex cell grid
+    const hex = (cx, cy, r) => {
+      let pts = '';
+      for (let k = 0; k < 6; k++) {
+        const a = Math.PI/3 * k + Math.PI/6;
+        pts += `${(cx + r*Math.cos(a)).toFixed(2)},${(cy + r*Math.sin(a)).toFixed(2)} `;
+      }
+      return pts.trim();
+    };
+    const R = 34;
+    const dx = R * Math.sqrt(3);
+    const dy = R * 1.5;
+    let idx = 0;
+    for (let row = 0; row < 6; row++) {
+      for (let col = 0; col < 9; col++) {
+        const x = 120 + col * dx + (row % 2 ? dx/2 : 0);
+        const y = 90 + row * dy;
+        if (x > W - 80 || y > H - 60) continue;
+        idx++;
+        const seed = ((idx * 9301 + 49297) % 233280) / 233280;
+        const filled = seed > 0.72;
+        const p = addPoly(hex(x, y, R * 0.85), filled ? prussian : ink, filled ? 0.7 : 0.4, filled);
+        svg.appendChild(p);
+        strokes.push(p);
+      }
+    }
+  } else if (slug === 'loom') {
+    // six interlocking loops
+    const cx = W/2, cy = H/2;
+    const R = 90;
+    const layout = [
+      [-R*1.6, -R*0.5], [0, -R*0.5], [R*1.6, -R*0.5],
+      [-R*0.8, R*0.5], [R*0.8, R*0.5], [0, R*0.5 + R*0.6]
+    ];
+    layout.forEach((o, i) => {
+      const c = addCircle(cx + o[0], cy + o[1], R, i === 0 ? prussian : ink, 0.65);
+      svg.appendChild(c);
+      strokes.push(c);
+    });
+  } else if (slug === 'about') {
+    // subtle warm rectangle with a single prussian rule bisecting
+    const g = document.createElementNS(ns, 'rect');
+    g.setAttribute('x', 60); g.setAttribute('y', 80);
+    g.setAttribute('width', W - 120); g.setAttribute('height', H - 160);
+    g.setAttribute('fill', umber);
+    g.setAttribute('opacity', '0.08');
+    g.setAttribute('stroke', 'none');
+    svg.appendChild(g);
+    const rule = addLine(60, H/2, W - 60, H/2, prussian, 0.75, 1);
+    svg.appendChild(rule);
+    strokes.push(rule);
+  } else if (slug === 'contact') {
+    // no motif — the giant email overlay is the figure; leave the stripes background alone
+  }
+
+  return { svg, strokes };
+}
+
+function makeCol(labText, valText, withGlyph) {
+  const col = document.createElement('div');
+  col.className = 'col';
+  const lab = document.createElement('div');
+  lab.className = 'lab';
+  if (withGlyph) {
+    const g = document.createElement('span');
+    g.className = 'glyph';
+    g.textContent = '└';
+    lab.appendChild(g);
+  }
+  lab.appendChild(document.createTextNode(labText));
+  const val = document.createElement('div');
+  val.className = 'val';
+  val.textContent = valText;
+  col.appendChild(lab);
+  col.appendChild(val);
+  return col;
+}
+
+function openPlate(slug) {
+  if (plateOpen) return;
+  const data = PLATE_DATA[slug];
+  if (!data) return;
+
+  plateLastFocus = document.activeElement;
+  plateOpen = true;
+  busy = true; // block terminal input while plate is up
+
+  const overlay = document.createElement('div');
+  overlay.className = 'plate-overlay';
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-label', data.title + ' plate');
+  overlay.setAttribute('aria-modal','true');
+  overlay.tabIndex = -1;
+
+  // The floating card that hosts all plate content
+  const card = document.createElement('div');
+  card.className = 'plate-card';
+
+  // Vertical hairline rules inset 24px from plate-card edges
+  const ruleLeft = document.createElement('div');
+  ruleLeft.className = 'plate-rule-left';
+  const ruleRight = document.createElement('div');
+  ruleRight.className = 'plate-rule-right';
+  card.appendChild(ruleLeft);
+  card.appendChild(ruleRight);
+
+  // Close button
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'plate-close';
+  closeBtn.setAttribute('aria-label','Close plate (Esc)');
+  closeBtn.textContent = '×';
+  closeBtn.addEventListener('click', () => closePlate());
+
+  const inner = document.createElement('div');
+  inner.className = 'plate-inner';
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'plate-header';
+
+  const marker = document.createElement('div');
+  marker.className = 'plate-marker';
+  marker.innerHTML = `§ ${escapeHtml(data.marker)}` + (data.number ? `<span class="num">${escapeHtml(data.number)}</span>` : '');
+  header.appendChild(marker);
+
+  const title = document.createElement('h1');
+  title.className = 'plate-title';
+  title.textContent = data.title;
+  header.appendChild(title);
+
+  const year = document.createElement('div');
+  year.className = 'plate-year';
+  year.textContent = data.year ? (ROMAN[data.year] || String(data.year)) : '';
+  header.appendChild(year);
+
+  inner.appendChild(header);
+
+  const rule = document.createElement('div');
+  rule.className = 'plate-rule';
+  inner.appendChild(rule);
+
+  // Meta grid
+  const meta = document.createElement('div');
+  meta.className = 'plate-meta';
+  data.meta.forEach((m, i) => {
+    meta.appendChild(makeCol(m.lab, m.val, i === 0));
+  });
+  inner.appendChild(meta);
+
+  // Figure
+  const figWrap = document.createElement('div');
+  figWrap.className = 'plate-figure-wrap';
+  const fig = document.createElement('div');
+  fig.className = 'plate-figure';
+
+  const stripes = buildStripes();
+  fig.appendChild(stripes);
+
+  const wash = document.createElement('div');
+  wash.className = 'wash';
+  fig.appendChild(wash);
+
+  const cap = document.createElement('div');
+  cap.className = 'plate-cap';
+  cap.textContent = data.plateCap;
+  fig.appendChild(cap);
+
+  let strokes = [];
+  if (slug === 'contact') {
+    const emailWrap = document.createElement('div');
+    emailWrap.className = 'email-plate';
+    const a = document.createElement('a');
+    a.href = 'mailto:hey@randy.sh';
+    a.textContent = 'hey@randy.sh';
+    emailWrap.appendChild(a);
+    fig.appendChild(emailWrap);
+  } else {
+    const motif = buildMotif(slug);
+    fig.appendChild(motif.svg);
+    strokes = motif.strokes;
+  }
+
+  figWrap.appendChild(fig);
+  inner.appendChild(figWrap);
+
+  // Essay
+  const essayWrap = document.createElement('div');
+  essayWrap.className = 'plate-essay-wrap';
+  const essayLabel = document.createElement('div');
+  essayLabel.className = 'plate-essay-label';
+  essayLabel.textContent = '└ ESSAY';
+  essayWrap.appendChild(essayLabel);
+  const essay = document.createElement('div');
+  essay.className = 'plate-essay';
+  data.essay.forEach(p => {
+    const el = document.createElement('p');
+    el.textContent = p;
+    essay.appendChild(el);
+  });
+  essayWrap.appendChild(essay);
+  inner.appendChild(essayWrap);
+
+  // Footer
+  const footer = document.createElement('div');
+  footer.className = 'plate-footer';
+  footer.textContent = 'PRESS ESC OR × TO RETURN TO THE SHELL';
+  inner.appendChild(footer);
+
+  overlay.appendChild(card);
+  card.appendChild(closeBtn);
+  card.appendChild(inner);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('mousedown', (e) => {
+    // only if clicked directly on the overlay (not any child card)
+    if (e.target === overlay) closePlate();
+  });
+
+  plateEl = overlay;
+
+  const cacheKey = 'plate:' + slug;
+  const motifCached = SS.animCache.has(cacheKey);
+
+  // Prepare motif stroke-in
+  if (!REDUCED && !motifCached && strokes.length) {
+    strokes.forEach(s => {
+      try {
+        const len = s.getTotalLength ? s.getTotalLength() : 400;
+        s.style.strokeDasharray = String(len);
+        s.style.strokeDashoffset = String(len);
+        s._len = len;
+      } catch(e) { s._len = 400; }
+    });
+  }
+
+  // Trigger reveal
+  requestAnimationFrame(() => {
+    overlay.classList.add('open');
+    requestAnimationFrame(() => {
+      overlay.classList.add('mounted');
+    });
+  });
+
+  // Motif draw-in animation, starting after grid stagger (~540ms after mount)
+  if (!REDUCED && !motifCached && strokes.length) {
+    const startAt = performance.now() + 540;
+    const dur = 600;
+    let raf = 0;
+    function ease(t) {
+      // cubic-bezier(0.16, 1, 0.3, 1) approximation with final 15% decelerated
+      const e = 1 - Math.pow(1 - t, 3);
+      if (e <= 0.85) return e;
+      return 0.85 + (e - 0.85) * 0.6;
+    }
+    function frame(now) {
+      if (!plateOpen || plateEl !== overlay) return;
+      if (now < startAt) { raf = requestAnimationFrame(frame); return; }
+      let t = (now - startAt) / dur;
+      if (t > 1) t = 1;
+      const p = ease(t);
+      strokes.forEach(s => {
+        const len = s._len || 400;
+        s.style.strokeDashoffset = String(len * (1 - p));
+      });
+      if (t < 1) raf = requestAnimationFrame(frame);
+      else SS.cacheAdd(cacheKey);
+    }
+    raf = requestAnimationFrame(frame);
+  } else if (strokes.length) {
+    strokes.forEach(s => { s.style.strokeDashoffset = '0'; });
+    SS.cacheAdd(cacheKey);
+  } else {
+    SS.cacheAdd(cacheKey);
+  }
+
+  // Focus management: focus close button (or the mailto link on contact)
+  setTimeout(() => {
+    if (!plateOpen || plateEl !== overlay) return;
+    if (slug === 'contact') {
+      const link = overlay.querySelector('.email-plate a');
+      if (link) { link.focus(); return; }
+    }
+    closeBtn.focus();
+  }, 240);
+}
+
+function closePlate() {
+  if (!plateOpen || !plateEl) return;
+  const overlay = plateEl;
+  plateOpen = false;
+  overlay.classList.remove('mounted');
+  overlay.classList.remove('open');
+  overlay.classList.add('closing');
+  const cleanup = () => {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    plateEl = null;
+    busy = false;
+    // restore focus to terminal prompt
+    focusInput();
+    if (plateLastFocus && plateLastFocus.focus && document.contains(plateLastFocus)) {
+      try { plateLastFocus.focus({preventScroll:true}); } catch(e) {}
+    }
+    plateLastFocus = null;
+  };
+  if (REDUCED) { cleanup(); return; }
+  setTimeout(cleanup, 260);
+}
+
+
+/* ---------- Cmd-K palette ---------- */
+const palette = document.getElementById('palette');
+const palInput = document.getElementById('pal-input');
+const palList = document.getElementById('pal-list');
+let paletteOpen = false;
+let palIdx = 0;
+let palItems = [];
+
+function palEntries() {
+  const items = [];
+  COMMANDS.forEach(c => items.push({ label: c, kind: 'command', run: () => runFromPalette(c) }));
+  function walk(node, prefix) {
+    if (!node.children) return;
+    for (const k of Object.keys(node.children)) {
+      const child = node.children[k];
+      const p = prefix + '/' + k;
+      if (child.type === 'dir') {
+        items.push({ label: '~' + p.replace(/^\/randy/,''), kind: 'dir', run: () => runFromPalette('cd ~' + p.replace(/^\/randy/,'')) });
+        walk(child, p);
+      } else {
+        items.push({ label: '~' + p.replace(/^\/randy/,''), kind: 'file', run: () => runFromPalette('cat ~' + p.replace(/^\/randy/,'')) });
+      }
+    }
+  }
+  walk(FS, '/randy');
+  ORDER.forEach(s => items.push({ label: `open ${s}`, kind: 'project', run: () => runFromPalette('open ' + s) }));
+  return items;
+}
+
+function runFromPalette(cmd) {
+  closePalette();
+  setTimeout(() => chipInvoke(cmd), 40);
+}
+
+function openPalette() {
+  paletteOpen = true;
+  SS.cmdKUsed = true;
+  chromeCmdK.classList.add('gone');
+  palette.classList.add('open');
+  palInput.value = '';
+  renderPalList('');
+  setTimeout(() => palInput.focus(), 10);
+}
+function closePalette() {
+  paletteOpen = false;
+  palette.classList.remove('open');
+  focusInput();
+}
+function renderPalList(q) {
+  const items = palEntries();
+  const s = q.toLowerCase();
+  palItems = s
+    ? items.filter(i => i.label.toLowerCase().includes(s) || i.kind.includes(s))
+    : items;
+  palIdx = 0;
+  palList.innerHTML = '';
+  if (!palItems.length) {
+    palList.innerHTML = '<div class="pal-empty">nothing matches.</div>';
+    return;
+  }
+  palItems.forEach((it, i) => {
+    const d = document.createElement('div');
+    d.className = 'pal-item' + (i === palIdx ? ' sel' : '');
+    d.innerHTML = `<span>${escapeHtml(it.label)}</span><span class="kind">${escapeHtml(it.kind)}</span>`;
+    d.addEventListener('mouseenter', () => { palIdx = i; refreshPalSel(); });
+    d.addEventListener('click', () => it.run());
+    palList.appendChild(d);
+  });
+}
+function refreshPalSel() {
+  [...palList.children].forEach((c, i) => c.classList.toggle('sel', i === palIdx));
+  const sel = palList.children[palIdx];
+  if (sel && sel.scrollIntoView) sel.scrollIntoView({block:'nearest'});
+}
+palInput.addEventListener('input', () => renderPalList(palInput.value));
+palInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { e.preventDefault(); closePalette(); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); if (palIdx < palItems.length-1) palIdx++; refreshPalSel(); return; }
+  if (e.key === 'ArrowUp') { e.preventDefault(); if (palIdx > 0) palIdx--; refreshPalSel(); return; }
+  if (e.key === 'Enter') { e.preventDefault(); const it = palItems[palIdx]; if (it) it.run(); return; }
+});
+palette.addEventListener('mousedown', (e) => {
+  if (e.target === palette) closePalette();
+});
+
+/* ---------- Boot sequence ---------- */
+function hasVisitedCookie() {
+  return document.cookie.split(';').some(c => c.trim().startsWith('catalog_visited='));
+}
+function setVisitedCookie() {
+  const d = new Date(); d.setFullYear(d.getFullYear() + 1);
+  document.cookie = 'catalog_visited=1; expires=' + d.toUTCString() + '; path=/';
+}
+
+function boot() {
+  updatePrompt();
+  renderChips();
+  focusInput();
+
+  if (hasVisitedCookie() || REDUCED) {
+    setVisitedCookie();
+    return;
+  }
+  busy = true;
+
+  const now = new Date();
+  const stamp = now.toDateString() + ' ' + now.toTimeString().split(' ')[0];
+  const lines = [
+    { text: '[randy.sh — museum shell v0.9]', delay: 0 },
+    { text: `Last login: ${stamp} on tty1`, delay: 90 },
+    { text: '', delay: 130 },
+    { text: '$ source ~/.randyrc', delay: 220 },
+    { text: '[loading gallery hours...]', umber: true, delay: 380 },
+    { text: '[curator on shift]', umber: true, delay: 560 },
+    { text: '', delay: 620 },
+    { text: 'welcome, visitor.', delay: 780 },
+    { text: "type 'help' — or click a chip below to begin.", delay: 920 },
+  ];
+
+  const timers = [];
+  lines.forEach(l => {
+    const to = setTimeout(() => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      if (l.text === '') row.innerHTML = '&nbsp;';
+      else if (l.umber) row.innerHTML = `<span class="umber">${escapeHtml(l.text)}</span>`;
+      else row.textContent = l.text;
+      if (l.text === '[curator on shift]' && !REDUCED) {
+        row.classList.add('boot-pulse');
+      }
+      buffer.appendChild(row);
+      scrollBottom();
+    }, l.delay);
+    timers.push(to);
+  });
+  const finish = setTimeout(() => {
+    busy = false;
+    setVisitedCookie();
+  }, 1200);
+  timers.push(finish);
+
+  const skip = () => {
+    timers.forEach(clearTimeout);
+    buffer.innerHTML = '';
+    lines.forEach(l => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      if (l.text === '') row.innerHTML = '&nbsp;';
+      else if (l.umber) row.innerHTML = `<span class="umber">${escapeHtml(l.text)}</span>`;
+      else row.textContent = l.text;
+      buffer.appendChild(row);
+    });
+    busy = false;
+    setVisitedCookie();
+    window.removeEventListener('keydown', skip, true);
+    window.removeEventListener('mousedown', skip, true);
+    window.removeEventListener('wheel', skip, true);
+  };
+  window.addEventListener('keydown', skip, {capture:true, once:true});
+  window.addEventListener('mousedown', skip, {capture:true, once:true});
+  window.addEventListener('wheel', skip, {capture:true, once:true, passive:true});
+}
+
+/* ---------- Init ---------- */
+if (SS.cmdKUsed) chromeCmdK.classList.add('gone');
+
+/* Ambient life-signs — chrome tag flicker + scroll affordance */
+if (!REDUCED) {
+  const chromeTr = document.querySelector('.chrome-tr');
+  function scheduleFlicker() {
+    const wait = 8000 + Math.random() * 4000; // 8-12s
+    setTimeout(() => {
+      if (!chromeTr) return;
+      chromeTr.classList.add('flicker');
+      setTimeout(() => chromeTr.classList.remove('flicker'), 120);
+      scheduleFlicker();
+    }, wait);
+  }
+  scheduleFlicker();
+
+  const scrollAff = document.getElementById('scroll-aff');
+  function checkScrollAff() {
+    if (!scrollAff) return;
+    const nearBottom = (term.scrollHeight - term.scrollTop - term.clientHeight) < 24;
+    scrollAff.classList.toggle('on', !nearBottom);
+  }
+  // Re-render chips when the visible inline label changes so the chip row
+  // collapses to a focused set when a project label is on screen, and expands
+  // back to the full six-project menu when the user scrolls it out of view.
+  let lastVisibleSlug = null;
+  function checkChipContext() {
+    if (pwdString() !== '~/work') { lastVisibleSlug = null; return; }
+    const v = firstVisibleInlineSlug(ORDER);
+    if (v !== lastVisibleSlug) {
+      lastVisibleSlug = v;
+      renderChips();
+    }
+  }
+  term.addEventListener('scroll', () => { checkScrollAff(); checkChipContext(); }, { passive: true });
+  window.addEventListener('resize', () => { checkScrollAff(); checkChipContext(); });
+  // initial check
+  setTimeout(() => { checkScrollAff(); checkChipContext(); }, 400);
+}
+
+window.addEventListener('load', () => {
+  runPageLoader(() => { boot(); });
+});
+
+/* ---------- Page-level first-visit loader ----------
+   Cookie name: catalog_page_loaded. Cleared on hard refresh only if the
+   session storage is also missing — this way a page refresh (browser reload)
+   re-triggers the ceremony because sessionStorage clears, while ordinary
+   in-page navigation between prototypes does not. */
+function hasPageLoadedThisSession() {
+  try { return sessionStorage.getItem('catalog_page_loaded') === '1'; } catch(e) { return false; }
+}
+function markPageLoadedThisSession() {
+  try { sessionStorage.setItem('catalog_page_loaded','1'); } catch(e) {}
+}
+function runPageLoader(done) {
+  const el = document.getElementById('page-loader');
+  if (!el) { done(); return; }
+  // Skip if already loaded this session, or reduced motion.
+  if (hasPageLoadedThisSession() || REDUCED) {
+    el.remove();
+    done();
+    return;
+  }
+  document.body.classList.add('pl-active');
+  el.setAttribute('data-active', '1');
+  markPageLoadedThisSession();
+
+  const num  = document.getElementById('pl-num');
+  const fill = document.getElementById('pl-fill');
+  const log  = document.getElementById('pl-log');
+
+  // Log lines (staggered as counter advances). Each fires at a percent threshold.
+  const lines = [
+    { at:  4, text: '[randy.sh] museum shell v0.9', cls: 'lg-dim' },
+    { at: 12, text: 'linking /usr/lib/agents..done', cls: 'lg-dim' },
+    { at: 22, text: 'mounting /work (6 volumes)..done', cls: 'lg-dim' },
+    { at: 34, text: 'reading /randy/.order..done', cls: 'lg-dim' },
+    { at: 44, text: 'unlocking rooms i–vi..ok', cls: 'lg-ok' },
+    { at: 56, text: 'opening gallery hours..done', cls: 'lg-dim' },
+    { at: 66, text: 'loading typeface: Instrument Serif..done', cls: 'lg-dim' },
+    { at: 76, text: 'loading typeface: IBM Plex Mono..done', cls: 'lg-dim' },
+    { at: 84, text: 'curator on shift..ok', cls: 'lg-ok' },
+    { at: 92, text: 'sourcing ~/.randyrc..done', cls: 'lg-dim' },
+    { at: 98, text: 'ready.', cls: 'lg-ok' },
+  ];
+
+  // Counter animation: 0 → 100 over ~2200ms with slight non-linear cadence
+  // (fast at first, small plateau around 60-75%, then quick finish — feels like a real boot).
+  const DURATION = 2200;
+  const t0 = performance.now();
+  let logIdx = 0;
+  let cancelled = false;
+
+  const easedProgress = (t) => {
+    // A gentle S-curve with a plateau around 60-75%.
+    // Piecewise: 0-0.4 linear-ish, 0.4-0.75 slowed, 0.75-1 fast finish.
+    if (t < 0.4)   return t * 1.25;                    // 0 → 50 quickly
+    if (t < 0.75)  return 0.50 + (t - 0.4) * 0.71;     // 50 → 75 slower
+    return 0.75 + (t - 0.75) * 1.0;                    // 75 → 100 quick
+  };
+
+  function tick(now) {
+    if (cancelled) return;
+    const t = Math.min(1, (now - t0) / DURATION);
+    const p = Math.min(1, easedProgress(t));
+    const pct = Math.floor(p * 100);
+    if (num) num.textContent = String(pct);
+    if (fill) fill.style.width = pct + '%';
+    // Emit any log lines whose threshold has been passed.
+    while (logIdx < lines.length && pct >= lines[logIdx].at) {
+      const l = lines[logIdx++];
+      const row = document.createElement('span');
+      row.className = 'lg-line ' + (l.cls || '');
+      row.textContent = l.text + '\n';
+      if (log) log.appendChild(row);
+    }
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      // Hold at 100 briefly, then dissolve.
+      setTimeout(dissolve, 220);
+    }
+  }
+
+  function dissolve() {
+    if (cancelled) return;
+    el.classList.add('dissolve');
+    document.body.classList.remove('pl-active');
+    setTimeout(() => {
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+      done();
+    }, 720);
+  }
+
+  function skip() {
+    if (cancelled) return;
+    cancelled = true;
+    // Flush counter to 100 and all log lines.
+    if (num) num.textContent = '100';
+    if (fill) fill.style.width = '100%';
+    while (logIdx < lines.length) {
+      const l = lines[logIdx++];
+      const row = document.createElement('span');
+      row.className = 'lg-line ' + (l.cls || '');
+      row.textContent = l.text + '\n';
+      if (log) log.appendChild(row);
+    }
+    setTimeout(() => {
+      cancelled = false; // allow dissolve to proceed
+      dissolve();
+    }, 120);
+    window.removeEventListener('keydown', skip, true);
+    window.removeEventListener('mousedown', skip, true);
+    window.removeEventListener('wheel', skip, true);
+  }
+
+  window.addEventListener('keydown', skip, {capture:true, once:true});
+  window.addEventListener('mousedown', skip, {capture:true, once:true});
+  window.addEventListener('wheel', skip, {capture:true, once:true, passive:true});
+
+  requestAnimationFrame(tick);
+}
+
+})();
+</script>
+</body>
+</html>
