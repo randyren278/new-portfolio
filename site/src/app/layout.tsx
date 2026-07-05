@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import type { Metadata } from 'next';
 import { Instrument_Serif, IBM_Plex_Mono, IBM_Plex_Serif } from 'next/font/google';
+import { getSiteUrl } from '@/lib/env';
 import './globals.css';
 
 const serif = Instrument_Serif({
@@ -22,9 +24,21 @@ const italic = IBM_Plex_Serif({
   variable: '--font-italic-google'
 });
 
-export const metadata = {
-  title: 'Randy Ren',
-  description: "randy ren's catalog. a museum expressed as a curator's terminal."
+export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
+  title: { default: 'randy ren — catalog', template: '%s · randy ren' },
+  description: "a museum expressed as a curator's terminal. six plates.",
+  openGraph: {
+    title: 'randy ren — catalog',
+    description: "a museum expressed as a curator's terminal.",
+    url: '/',
+    siteName: 'randy ren',
+    images: [{ url: '/og-default.png', width: 1200, height: 630 }],
+    locale: 'en_US',
+    type: 'website'
+  },
+  twitter: { card: 'summary_large_image', title: 'randy ren — catalog', images: ['/og-default.png'] },
+  icons: { icon: '/favicon.svg' }
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
