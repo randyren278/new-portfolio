@@ -1,2 +1,31 @@
-.superpowers/
+# Node / pnpm
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Env — never commit real credentials
+.env
+.env.local
+.env*.local
+
+# Strava tokens — local dev only, contains live OAuth secrets
+.strava-tokens.json
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
