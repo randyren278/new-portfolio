@@ -22,4 +22,14 @@ describe('typeInto', () => {
     await handle.done;
     expect(el.textContent).toBe('abcdef');
   });
+
+  it('abort resolves done promise', async () => {
+    vi.useFakeTimers();
+    const el = document.createElement('span');
+    const ctrl = new AbortController();
+    const handle = typeInto(el, 'abcdef', { msPerChar: 50, jitterMs: 0, signal: ctrl.signal });
+    ctrl.abort();
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(handle.done).resolves.toBeUndefined();
+  });
 });

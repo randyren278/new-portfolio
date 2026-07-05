@@ -24,7 +24,9 @@ export function typeInto(el: HTMLElement, text: string, opts: TypewriterOpts = {
 
   el.textContent = '';
 
+  let resolvePromise: (() => void) | null = null;
   const done = new Promise<void>((resolve) => {
+    resolvePromise = resolve;
     function step() {
       if (cancelled) return resolve();
       if (skipped) {
@@ -48,6 +50,7 @@ export function typeInto(el: HTMLElement, text: string, opts: TypewriterOpts = {
     signal.addEventListener('abort', () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
+      resolvePromise?.();
     });
   }
 
