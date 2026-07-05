@@ -17,6 +17,8 @@ export function Loader({ onDone }: { onDone: () => void }) {
     let raf = 0;
     const start = performance.now();
     let skipped = false;
+    let t1: ReturnType<typeof setTimeout> | null = null;
+    let t2: ReturnType<typeof setTimeout> | null = null;
 
     const skip = () => { skipped = true; };
     window.addEventListener('keydown', skip, { once: true });
@@ -28,14 +30,14 @@ export function Loader({ onDone }: { onDone: () => void }) {
       if ((skipped || t >= 1) && phaseRef.current === 'counting') {
         phaseRef.current = 'holding';
         setPhase('holding');
-        setTimeout(() => { phaseRef.current = 'dissolving'; setPhase('dissolving'); }, LOADER.hold);
-        setTimeout(() => { phaseRef.current = 'gone'; setPhase('gone'); onDone(); }, LOADER.hold + LOADER.dissolve);
+        t1 = setTimeout(() => { phaseRef.current = 'dissolving'; setPhase('dissolving'); }, LOADER.hold);
+        t2 = setTimeout(() => { phaseRef.current = 'gone'; setPhase('gone'); onDone(); }, LOADER.hold + LOADER.dissolve);
         return;
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('keydown', skip); window.removeEventListener('pointerdown', skip); };
+    return () => { cancelAnimationFrame(raf); if (t1) clearTimeout(t1); if (t2) clearTimeout(t2); window.removeEventListener('keydown', skip); window.removeEventListener('pointerdown', skip); };
   }, [reduced, onDone]);
 
   if (phase === 'gone') return null;
