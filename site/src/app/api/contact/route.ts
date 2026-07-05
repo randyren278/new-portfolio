@@ -11,6 +11,12 @@ function ipFrom(req: Request): string {
 }
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      return NextResponse.json({ ok: false, error: 'rate limiter not configured' }, { status: 503 });
+    }
+  }
+
   let json: unknown;
   try { json = await req.json(); } catch {
     return NextResponse.json({ ok: false, error: 'invalid json' }, { status: 400 });
