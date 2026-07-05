@@ -1,5 +1,5 @@
 import { BIO } from '@/content/bio';
-import { ORDER, PROJECTS, type Slug } from '@/content/projects';
+import { ORDER, type Slug } from '@/content/projects';
 import { getNode, listDir, resolvePath } from './filesystem';
 import { parse } from './parser';
 
@@ -60,22 +60,6 @@ function renderAbout(): string[] {
 function renderContact(): string[] {
   const socials = BIO.contact.social.map((s) => `  ${s.label.padEnd(10)} ${s.href}`);
   return [`email  ${BIO.contact.email}`, ...socials];
-}
-
-function renderLabel(slug: Slug): string[] {
-  const p = PROJECTS[slug];
-  return [
-    p.kicker,
-    p.title,
-    '',
-    `year   ${p.year}`,
-    `role   ${p.role}`,
-    `stack  ${p.stack}`,
-    '',
-    p.blurb,
-    '',
-    p.hint
-  ];
 }
 
 export function execute(input: string, ctx: ExecContext): CommandResult {
