@@ -27,10 +27,10 @@ const italic = IBM_Plex_Serif({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: { default: 'randy ren — catalog', template: '%s · randy ren' },
+  title: { default: 'randy ren · catalog', template: '%s · randy ren' },
   description: "a museum expressed as a curator's terminal. six plates.",
   openGraph: {
-    title: 'randy ren — catalog',
+    title: 'randy ren · catalog',
     description: "a museum expressed as a curator's terminal.",
     url: '/',
     siteName: 'randy ren',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     type: 'website'
   },
-  twitter: { card: 'summary_large_image', title: 'randy ren — catalog', images: ['/og-default.png'] },
+  twitter: { card: 'summary_large_image', title: 'randy ren · catalog', images: ['/og-default.png'] },
   icons: { icon: '/favicon.svg' }
 };
 
