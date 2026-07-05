@@ -113,9 +113,13 @@ const MOCK_ACTIVITY = {
   if (!result) fails.push('card element not found');
   else {
     if (result.kicker !== '§ LATEST FIELD RECORDING') fails.push('kicker wrong: ' + result.kicker);
-    if (result.title !== 'Morning ferry crossing') fails.push('title wrong: ' + result.title);
+    // Title is now generated from time-of-day + activity type, so it's not
+    // "Morning ferry crossing" any more. Assert shape instead: two words,
+    // ends with the activity verb.
+    if (!/^(Morning|Afternoon|Evening|Night|Late night) run$/.test(result.title))
+      fails.push('title shape wrong: ' + result.title);
     if (!result.classes.includes('label-card')) fails.push('missing .label-card class');
-    // dts should be [Distance, Pace, Type, Date]; dds should format from mocks.
+    // dts should be [Distance, Pace|Speed, Type, Date]; the mock is type=Run so Pace.
     const iDist = result.dts.indexOf('Distance');
     if (iDist < 0 || result.dds[iDist] !== '5.03 km') fails.push('distance wrong: ' + result.dds[iDist]);
     const iPace = result.dts.indexOf('Pace');

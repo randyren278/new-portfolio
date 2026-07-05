@@ -1001,6 +1001,57 @@ function formatPacePerKm(m, s) {
   return `${mm}:${String(ss).padStart(2, '0')} /km`;
 }
 
+function formatSpeedKmh(m, s) {
+  if (!m || !s) return '—';
+  const kmh = (m / 1000) / (s / 3600);
+  return kmh.toFixed(1) + ' km/h';
+}
+
+/* Strava's `type` field is broad (Run, Ride, Swim, Hike, Walk, VirtualRide,
+   EBikeRide, TrailRun, ...). Group them so we know whether to show pace
+   (foot activities) or speed (wheels/water). Everything unfamiliar defaults
+   to pace — matches the running-first character of the portfolio.
+
+   Also drives the time-of-day verb ("Morning run" vs "Morning ride"). */
+function activityKind(type) {
+  const t = String(type || '').toLowerCase();
+  if (t.includes('ride')) return 'ride';   // Ride, VirtualRide, EBikeRide, MountainBikeRide
+  if (t.includes('swim')) return 'swim';
+  if (t.includes('walk')) return 'walk';
+  if (t.includes('hike')) return 'hike';
+  if (t.includes('row'))  return 'row';    // Rowing, VirtualRow
+  return 'run'; // Run, TrailRun, VirtualRun, and anything else foot-based
+}
+
+/* Speed vs pace picker. Wheels/water get speed (km/h); feet get pace (min/km). */
+function paceOrSpeed(kind, m, s) {
+  if (kind === 'ride' || kind === 'swim' || kind === 'row') {
+    return { label: 'Speed', value: formatSpeedKmh(m, s) };
+  }
+  return { label: 'Pace', value: formatPacePerKm(m, s) };
+}
+
+/* Human-readable verb for the title. Reads Strava's type but doesn't quote
+   the athlete's own title text — the shell chooses its own words. */
+function activityVerb(kind) {
+  return { run: 'run', ride: 'ride', swim: 'swim', walk: 'walk', hike: 'hike', row: 'row' }[kind] || 'session';
+}
+
+/* Time-of-day bucket, using the activity's own start time (not the viewer's
+   wall clock). Matches Strava's default naming convention. */
+function timeOfDay(iso) {
+  const h = new Date(iso).getHours();
+  if (h < 5)  return 'Late night';
+  if (h < 12) return 'Morning';
+  if (h < 17) return 'Afternoon';
+  if (h < 21) return 'Evening';
+  return 'Night';
+}
+
+function generatedTitle(activity) {
+  return `${timeOfDay(activity.startDate)} ${activityVerb(activityKind(activity.activityType))}`;
+}
+
 function formatDate(iso) {
   const d = new Date(iso);
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1020,15 +1071,17 @@ function latestCardEl(activity) {
 
   const title = document.createElement('h2');
   title.className = 'label-title';
-  title.textContent = activity.name || 'Untitled activity';
+  title.textContent = generatedTitle(activity);
 
   const meta = document.createElement('dl');
   meta.className = 'label-meta';
+  const kind = activityKind(activity.activityType);
+  const speed = paceOrSpeed(kind, activity.distanceM, activity.movingTimeS);
   const rows = [
-    ['Distance', formatDistanceKm(activity.distanceM)],
-    ['Pace',     formatPacePerKm(activity.distanceM, activity.movingTimeS)],
-    ['Type',     String(activity.activityType || 'Activity')],
-    ['Date',     formatDate(activity.startDate)],
+    ['Distance',   formatDistanceKm(activity.distanceM)],
+    [speed.label,  speed.value],
+    ['Type',       String(activity.activityType || 'Activity')],
+    ['Date',       formatDate(activity.startDate)],
   ];
   for (const [k, v] of rows) {
     const dt = document.createElement('dt'); dt.textContent = k;
