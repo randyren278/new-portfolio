@@ -3,7 +3,7 @@ import { ORDER, type Slug } from '@/content/projects';
 import { getNode, listDir, resolvePath } from './filesystem';
 import { parse } from './parser';
 
-export type ExecContext = { cwd: string; visibleSlug: Slug | null };
+export type ExecContext = { cwd: string; visibleSlugs: Set<Slug> };
 
 export type CommandResult =
   | { kind: 'text'; lines: string[] }
@@ -111,7 +111,7 @@ export function execute(input: string, ctx: ExecContext): CommandResult {
       if (arg === 'about') return { kind: 'text', lines: renderAbout() };
       if (arg === 'contact') return { kind: 'text', lines: renderContact() };
       if (!isSlug(arg)) return { kind: 'error', message: `${cmd}: ${arg}: not a project` };
-      if (cmd === 'open' && ctx.visibleSlug === arg) return { kind: 'openPlate', slug: arg };
+      if (cmd === 'open' && ctx.visibleSlugs.has(arg)) return { kind: 'openPlate', slug: arg };
       return { kind: 'openInline', slug: arg };
     }
 

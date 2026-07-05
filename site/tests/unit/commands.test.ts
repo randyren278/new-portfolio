@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { execute } from '@/terminal/engine/commands';
+import type { Slug } from '@/content/projects';
 
-const ctx = (cwd: string, visibleSlug: null | 'oryzo' | 'halcyon' | 'paperlane' | 'atlas' | 'koinu' | 'linen' = null) =>
-  ({ cwd, visibleSlug });
+const ctx = (cwd: string, visible: null | Slug = null) =>
+  ({ cwd, visibleSlugs: new Set<Slug>(visible ? [visible] : []) });
 
 describe('execute', () => {
   it('pwd echoes the current directory as ~ form', () => {

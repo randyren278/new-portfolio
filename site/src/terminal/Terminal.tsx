@@ -24,7 +24,7 @@ export function Terminal() {
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const history = useMemo(createHistory, []);
-  const { visible, onChange } = useVisibleSlug();
+  const { visibleSlugs, onChange } = useVisibleSlug();
 
   const promptFor = (p: string) => (p === '/randy' ? '~' : `~${p.slice('/randy'.length)}`);
 
@@ -41,7 +41,7 @@ export function Terminal() {
         <span className={styles.echoText}>{raw}</span>
       </div>
     );
-    const result: CommandResult = execute(raw, { cwd, visibleSlug: visible });
+    const result: CommandResult = execute(raw, { cwd, visibleSlugs });
     switch (result.kind) {
       case 'text':
       case 'help':
@@ -63,7 +63,7 @@ export function Terminal() {
         setPlateSlug(result.slug);
         break;
     }
-  }, [cwd, visible, history, push, reduced, onChange]);
+  }, [cwd, visibleSlugs, history, push, reduced, onChange]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') { e.preventDefault(); runInput(input); setInput(''); history.reset(); return; }
@@ -78,7 +78,7 @@ export function Terminal() {
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  const chips = buildChipSet(cwd, visible);
+  const chips = buildChipSet(cwd, visibleSlugs);
 
   return (
     <div className={styles.frame} onClick={() => inputRef.current?.focus()}>

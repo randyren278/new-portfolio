@@ -4,11 +4,12 @@ import styles from './Chips.module.css';
 
 export type Chip = { l1: string; cmd: string };
 
-export function buildChipSet(cwd: string, visibleSlug: Slug | null): Chip[] {
+export function buildChipSet(cwd: string, visibleSlugs: Set<Slug>): Chip[] {
   if (cwd === '/randy/work') {
-    if (visibleSlug) {
+    if (visibleSlugs.size > 0) {
+      const target = Array.from(visibleSlugs).at(-1)!;
       return [
-        { l1: 'Open the plate', cmd: `open ${visibleSlug}` },
+        { l1: 'Open the plate', cmd: `open ${target}` },
         { l1: 'Back home', cmd: 'cd ~' }
       ];
     }

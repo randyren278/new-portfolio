@@ -3,12 +3,12 @@ import { useCallback, useRef, useState } from 'react';
 import type { Slug } from '@/content/projects';
 
 export function useVisibleSlug() {
-  const [visible, setVisible] = useState<Slug | null>(null);
-  const map = useRef<Map<Slug, boolean>>(new Map());
+  const setRef = useRef<Set<Slug>>(new Set());
+  const [visibleSlugs, setVisibleSlugs] = useState<Set<Slug>>(setRef.current);
   const onChange = useCallback((slug: Slug, isVisible: boolean) => {
-    map.current.set(slug, isVisible);
-    const first = Array.from(map.current.entries()).find(([, v]) => v)?.[0] ?? null;
-    setVisible(first);
+    if (isVisible) setRef.current.add(slug);
+    else setRef.current.delete(slug);
+    setVisibleSlugs(new Set(setRef.current));
   }, []);
-  return { visible, onChange };
+  return { visibleSlugs, onChange };
 }
