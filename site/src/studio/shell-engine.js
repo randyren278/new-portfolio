@@ -168,7 +168,6 @@ function chipSet() {
       { l1: 'Read about Randy', cmd: 'cat about' },
       { l1: 'Latest run/ride',  cmd: 'latest' },
       { l1: 'Get in touch',     cmd: 'cat contact' },
-      { l1: 'Show hours',       cmd: 'hours' },
       { l1: 'Help',             cmd: 'help' }
     ];
   }
