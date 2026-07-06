@@ -1,9 +1,7 @@
-// Snapshot of every editable content constant from the original index.html.
-// This is what boots the museum shell in Phase 1 (before the DB is wired up in
-// Phase 2). Once /admin edits land in Postgres, `page.tsx` will build the same
-// shape from DB rows instead of importing this file.
-//
-// The literals below are copied verbatim from index.html — do not hand-edit.
+// Snapshot of every editable content constant. This is what boots the
+// studio shell — a single source of truth passed as props to the client
+// wrapper. The literals below are the current canonical strings; edit here
+// (or wire this file up to a DB later) to change what the shell prints.
 
 /* eslint-disable */
 

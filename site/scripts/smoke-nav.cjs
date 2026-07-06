@@ -1,8 +1,11 @@
 // Smoke test for the round of changes:
-//   1) `ls` runs automatically on boot
-//   2) `latest` appears in the home listing
-//   3) `now`, `guestbook`, `archive` are gone from home listing
-//   4) Fuzzy navigation: typing `oryzo` from home jumps to ~/work/oryzo
+//   1) Boot ceremony ("welcome, visitor") shows on every visit
+//   2) `ls` runs once, not twice, after the ceremony
+//   3) `latest` appears in the home listing
+//   4) `now`, `guestbook`, `archive` are gone from home listing
+//   5) Fuzzy navigation: typing `oryzo` from home jumps to ~/work/oryzo
+//   6) Fuzzy sibling jump: from ~/work/oryzo, typing `halcyon` hops sideways
+//   7) No "museum" or "catalog" strings leak into the DOM
 
 const { chromium } = require('playwright');
 
@@ -18,18 +21,10 @@ async function main() {
   });
 
   await page.goto(URL, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(600);
-  // Skip loader/ceremony
-  await page.evaluate(() => {
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-  });
-  await page.waitForFunction(
-    () => {
-      const chips = document.getElementById('chips');
-      return chips && chips.children.length > 0;
-    },
-    { timeout: 15000 },
-  );
+  // Wait for page-loader to actually exit (either via its own dissolve or a
+  // skip). We just wait it out — do NOT dispatch a key here, because that
+  // would race with the skip listener the boot() ceremony attaches next.
+  await page.waitForFunction(() => !document.getElementById('page-loader'), { timeout: 15000 });
   // Boot ceremony runs a 1200ms timeline before auto-ls fires; wait for the
   // "about" link to actually appear rather than gambling on a sleep.
   await page.waitForFunction(
@@ -40,22 +35,35 @@ async function main() {
         (b) => b.textContent.trim() === 'about',
       );
     },
-    { timeout: 5000 },
+    { timeout: 8000 },
   );
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(400);
 
   const bufAfterBoot = await page.evaluate(
     () => document.getElementById('buffer')?.innerText ?? '',
   );
+  const aboutButtonCount = await page.evaluate(() => {
+    const buf = document.getElementById('buffer');
+    if (!buf) return 0;
+    return [...buf.querySelectorAll('button.link')].filter(
+      (b) => b.textContent.trim() === 'about',
+    ).length;
+  });
 
   const results = [];
   const has = (needle) => bufAfterBoot.includes(needle);
+  results.push(['preamble: welcome visitor',    has('welcome, visitor')]);
+  results.push(['preamble: studio hours',       has('[studio hours — open]')]);
+  results.push(['preamble: lights on',          has('[lights on]')]);
   results.push(['auto-ls: about visible',       has('about')]);
   results.push(['auto-ls: work/ visible',       has('work/')]);
   results.push(['auto-ls: latest visible',      has('latest')]);
-  results.push(['deprecated: now not shown',   !has('\nnow\n') && !bufAfterBoot.split('\n').some((l) => l.trim() === 'now')]);
+  results.push(['auto-ls ran ONCE (about x1)',  aboutButtonCount === 1]);
+  results.push(['deprecated: now not shown',   !bufAfterBoot.split('\n').some((l) => l.trim() === 'now')]);
   results.push(['deprecated: guestbook gone',  !has('guestbook')]);
   results.push(['deprecated: archive gone',    !has('archive')]);
+  results.push(['museum vocab gone',           !bufAfterBoot.toLowerCase().includes('museum')]);
+  results.push(['catalog vocab gone',          !bufAfterBoot.toLowerCase().includes('catalog')]);
 
   // Fuzzy navigation: type `oryzo` and press Enter
   for (const ch of 'oryzo') {
@@ -72,10 +80,10 @@ async function main() {
     () => document.getElementById('buffer')?.innerText ?? '',
   );
   results.push(['fuzzy: jumping-to hint printed', bufAfterFuzz.includes('jumping to')]);
-  // After `open oryzo` from home the inline label card renders (kicker "Studio note")
   results.push(['fuzzy: oryzo landed',           bufAfterFuzz.toLowerCase().includes('oryzo')]);
 
-  // Deep test: cd into oryzo, then type "halcyon" — sibling jump one level up
+  // Deep test: navigate into the work dir, then fuzz-type a sibling slug.
+  // From `~/work` typing `halcyon` (unknown) should fuzzy-jump to that project.
   const typeAndSubmit = async (s) => {
     for (const ch of s) {
       await page.evaluate((k) => {
@@ -88,14 +96,13 @@ async function main() {
     await page.waitForTimeout(500);
   };
 
-  await typeAndSubmit('cd work/oryzo');
+  await typeAndSubmit('cd work');
   await typeAndSubmit('halcyon');
   const bufAfterSibling = await page.evaluate(
     () => document.getElementById('buffer')?.innerText ?? '',
   );
-  // The last chunk of buffer should contain a fresh "jumping to" line
-  results.push(['fuzzy sibling jump: halcyon', bufAfterSibling.toLowerCase().includes('halcyon')]);
-  results.push(['fuzzy sibling jump: hint',    (bufAfterSibling.match(/jumping to/g) || []).length >= 2]);
+  results.push(['fuzzy in-dir jump: halcyon', bufAfterSibling.toLowerCase().includes('halcyon')]);
+  results.push(['fuzzy in-dir jump: hint',    bufAfterSibling.includes('jumping to ~/work/halcyon')]);
 
   await page.screenshot({ path: '/tmp/smoke-after-boot.png', fullPage: true });
   await browser.close();

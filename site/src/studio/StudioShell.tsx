@@ -8,16 +8,16 @@ import './shell.css';
 /**
  * Client wrapper around the imperative shell engine.
  *
- * The engine (shell-engine.js) is the original ~2,800-line index.html script
- * extracted verbatim — same FS model, same page-loader S-curve, same boot
- * ceremony, same plate reveal animation. Only the top-level content constants
- * (NOTES, MEDIUMS, ABOUT_TEXT, PLATE_DATA, etc.) come from a `content` prop
- * so the /admin route can edit them.
+ * The engine (shell-engine.js) is a ~2,800-line hand-written script — same FS
+ * model, same page-loader S-curve, same boot ceremony, same plate reveal
+ * animation. Content constants (NOTES, MEDIUMS, ABOUT_TEXT, PLATE_DATA, etc.)
+ * come from a `content` prop so future edits don't require touching the
+ * engine.
  *
- * The DOM structure below is copy-pasted from index.html's <body> because the
- * engine uses `document.getElementById(...)` and expects these exact IDs.
+ * The DOM structure below is written to match exactly what the engine's
+ * `document.getElementById(...)` calls expect — do not rename IDs.
  */
-export function MuseumShell({ content }: { content: ShellContent }) {
+export function StudioShell({ content }: { content: ShellContent }) {
   const mountedRef = useRef(false);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export function MuseumShell({ content }: { content: ShellContent }) {
 
   return (
     <>
-      {/* Page-level first-visit loader (hard refresh only). Cookie-gated. */}
+      {/* First-visit page loader (per browser session). */}
       <div id="page-loader" aria-hidden="true" data-active="0">
         <div className="pl-inner">
           <div className="pl-kicker">§ RANDY.SH</div>

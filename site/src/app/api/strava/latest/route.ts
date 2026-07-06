@@ -3,7 +3,7 @@ import { fetchLatestActivityWithGps } from '@/strava/client';
 import { decodePolyline, projectToSvgPath } from '@/strava/polyline';
 
 /**
- * Public endpoint the museum shell calls when the user types `latest`.
+ * Public endpoint the studio shell calls when the user types `latest`.
  *
  * Returns the most recent GPS-bearing activity, with the polyline already
  * projected server-side into a 360×200 SVG viewBox path. The client just

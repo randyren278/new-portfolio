@@ -1,9 +1,7 @@
 /* ============================================================
-   CATALOG v2 — Museum Shell (raw JS)
-   Extracted verbatim from index.html; wrapped as bootShell(content)
-   so top-level content constants come from a server-injected object
-   instead of being hard-coded. All engine behavior is byte-for-byte
-   preserved.
+   randy.sh — studio shell engine (raw JS)
+   Wrapped as bootShell(content) so top-level content constants
+   come from a server-injected object instead of being hard-coded.
    ============================================================ */
 export function bootShell(content) {
 'use strict';
@@ -2696,23 +2694,16 @@ palette.addEventListener('mousedown', (e) => {
 });
 
 /* ---------- Boot sequence ---------- */
-function hasVisitedCookie() {
-  return document.cookie.split(';').some(c => c.trim().startsWith('catalog_visited='));
-}
-function setVisitedCookie() {
-  const d = new Date(); d.setFullYear(d.getFullYear() + 1);
-  document.cookie = 'catalog_visited=1; expires=' + d.toUTCString() + '; path=/';
-}
 
 function boot() {
   updatePrompt();
   renderChips();
   focusInput();
 
-  if (hasVisitedCookie() || REDUCED) {
-    setVisitedCookie();
-    // Auto-list on first paint so visitors see the navigable filesystem
-    // immediately, without having to know to type `ls`.
+  // Reduced-motion visitors get the filesystem straight away — the ceremony
+  // would just flash past. Everyone else gets the full preamble every load;
+  // the cookie fast-path is gone.
+  if (REDUCED) {
     cmd_ls([]);
     return;
   }
@@ -2748,16 +2739,28 @@ function boot() {
     }, l.delay);
     timers.push(to);
   });
-  const finish = setTimeout(() => {
+  // Once the ceremony finishes (either the natural timeline or a user-skip)
+  // we run a single trailing `ls`. `bootDone` guards against both paths
+  // firing back-to-back — without it the timed finish fires, then the user's
+  // very next keystroke re-enters skip() and appends a second `ls` block.
+  let bootDone = false;
+  const removeSkipListeners = () => {
+    window.removeEventListener('keydown', skip, true);
+    window.removeEventListener('mousedown', skip, true);
+    window.removeEventListener('wheel', skip, true);
+  };
+  const complete = () => {
+    if (bootDone) return;
+    bootDone = true;
     busy = false;
-    setVisitedCookie();
-    // Boot ceremony done — reveal the filesystem so the visitor has something
-    // to click without needing to know the `ls` command.
     cmd_ls([]);
-  }, 1200);
+    removeSkipListeners();
+  };
+  const finish = setTimeout(complete, 1200);
   timers.push(finish);
 
   const skip = () => {
+    if (bootDone) return;
     timers.forEach(clearTimeout);
     buffer.innerHTML = '';
     lines.forEach(l => {
@@ -2768,13 +2771,7 @@ function boot() {
       else row.textContent = l.text;
       buffer.appendChild(row);
     });
-    busy = false;
-    setVisitedCookie();
-    // Same auto-ls after a skipped boot — parity with the timed path.
-    cmd_ls([]);
-    window.removeEventListener('keydown', skip, true);
-    window.removeEventListener('mousedown', skip, true);
-    window.removeEventListener('wheel', skip, true);
+    complete();
   };
   window.addEventListener('keydown', skip, {capture:true, once:true});
   window.addEventListener('mousedown', skip, {capture:true, once:true});
@@ -2836,15 +2833,13 @@ if (document.readyState === 'complete') {
 }
 
 /* ---------- Page-level first-visit loader ----------
-   Cookie name: catalog_page_loaded. Cleared on hard refresh only if the
-   session storage is also missing — this way a page refresh (browser reload)
-   re-triggers the ceremony because sessionStorage clears, while ordinary
-   in-page navigation between prototypes does not. */
+   Storage key: randy_page_loaded (sessionStorage — clears on new tab / hard
+   refresh, so a browser reload replays the ceremony). */
 function hasPageLoadedThisSession() {
-  try { return sessionStorage.getItem('catalog_page_loaded') === '1'; } catch(e) { return false; }
+  try { return sessionStorage.getItem('randy_page_loaded') === '1'; } catch(e) { return false; }
 }
 function markPageLoadedThisSession() {
-  try { sessionStorage.setItem('catalog_page_loaded','1'); } catch(e) {}
+  try { sessionStorage.setItem('randy_page_loaded','1'); } catch(e) {}
 }
 function runPageLoader(done) {
   const el = document.getElementById('page-loader');

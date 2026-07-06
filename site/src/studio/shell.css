@@ -1,5 +1,5 @@
   /* ============================================================
-     CATALOG v2.2 — Museum Shell
+     randy.sh — studio shell (stylesheet)
      Palette (locked):
        #F1E8D4 cream        · background
        #111    ink          · body & hairlines
@@ -791,8 +791,7 @@
   }
 
   /* ============================================================
-     CATALOG v2.3 additions — label typesetting animation,
-     ambient micromotion, life-signs
+     Label typesetting animation, ambient micromotion, life-signs
      ============================================================ */
 
   /* Label card in "loading" (typesetting) state — shimmer skeleton */
@@ -974,11 +973,11 @@
   #scroll-aff.on { opacity: 0.85; }
 
   /* ============================================================
-     Page-level first-visit loader — matches catalog palette
+     Page-level first-visit loader — matches the studio palette
      (warm cream substrate, ink glyphs, Prussian caret,
-     vermillion accent, warm umber log). Cookie-gated:
-     catalog_page_loaded. Only appears on hard refresh
-     or a truly fresh session.
+     vermillion accent, warm umber log). Session-gated by
+     sessionStorage key `randy_page_loaded` — only appears on
+     hard refresh or a truly fresh session.
      ============================================================ */
   #page-loader {
     position: fixed; inset: 0;
@@ -1061,7 +1060,7 @@
   @keyframes pl-fadein  { to { opacity: 1; } }
   @keyframes pl-log-in  { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes pl-hintblink { 0%,45% { opacity: 0.75; } 60%,85% { opacity: 0.25; } 100% { opacity: 0.75; } }
-  /* Paper-grain rather than CRT scanlines — matches the museum substrate. */
+  /* Paper-grain rather than CRT scanlines — matches the studio substrate. */
   #page-loader .pl-inner::before {
     content: '';
     position: absolute;

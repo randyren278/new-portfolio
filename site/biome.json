@@ -12,5 +12,5 @@
     "lineWidth": 100
   },
   "javascript": { "formatter": { "quoteStyle": "single", "semicolons": "always" } },
-  "files": { "ignore": ["src/museum/shell-engine.js"] }
+  "files": { "ignore": ["src/studio/shell-engine.js"] }
 }

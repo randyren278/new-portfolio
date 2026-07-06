@@ -1,5 +1,5 @@
 import { loadShellContent } from '@/content/loader';
-import { MuseumShell } from '@/museum/MuseumShell';
+import { StudioShell } from '@/studio/StudioShell';
 
 // Server component: fetches all shell content (Phase 1: static snapshot,
 // Phase 2: Postgres) and hands it to the client wrapper. The wrapper does
@@ -7,5 +7,5 @@ import { MuseumShell } from '@/museum/MuseumShell';
 
 export default async function Page() {
   const content = await loadShellContent();
-  return <MuseumShell content={content} />;
+  return <StudioShell content={content} />;
 }

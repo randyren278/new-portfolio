@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Randy Ren specimen tag">
+  <!-- background: cream in light mode, transparent for adaptive dark treatments -->
+  <rect width="64" height="64" fill="#F1E8D4"/>
+  <!-- specimen tag outline with notched corner -->
+  <path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#111111" stroke-width="2"/>
+  <!-- eyelet -->
+  <circle cx="14" cy="28" r="2.2" fill="#111111"/>
+  <!-- initials -->
+  <text x="30" y="47" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" font-size="14" font-weight="500" fill="#111111">RR</text>
+</svg>
