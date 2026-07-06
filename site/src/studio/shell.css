@@ -1177,28 +1177,18 @@
        ⌘K is otherwise unreachable without a physical keyboard. */
     .chrome-br { pointer-events: auto; }
 
-    /* Move #keysink from off-screen into the viewport as a 1×1 invisible
-       input. iOS Safari REFUSES to summon the soft keyboard for inputs
-       positioned far off-screen; pinning it to the corner (pointer-events
-       stays none so it never intercepts terminal taps) lets a programmatic
-       .focus() from the terminal's onPointerDown handler open the keyboard. */
-    .keysink {
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
-      border: 0;
-      padding: 0;
-      margin: 0;
-      /* 16px font-size prevents iOS Safari from auto-zooming on focus. */
-      font-size: 16px;
-    }
+    /* Note: no mobile .keysink override. On touch the input stays parked
+       off-screen (left:-10000px per the base rule), and iOS Safari refuses
+       to summon the soft keyboard for off-viewport inputs — which is
+       exactly what we want. Typing is intentionally disabled on mobile;
+       the input model is chips + label taps. */
 
     /* Plate viewer: the 96/24px inset + 4-column meta grid + 2-column essay
-       all overflow below ~500px. One breakpoint's worth of fixes. */
+       all overflow below ~500px. These rules are dead code on mobile
+       because the engine now blocks the openPlate() code path on touch
+       (see TOUCH const in shell-engine.js), but they remain here as a
+       fallback for hybrid devices that report (pointer: coarse) yet still
+       route to the plate via some future path. */
     .plate-card {
       top: 20px;
       right: 16px;
@@ -1230,11 +1220,25 @@
       right: 20px;
     }
 
-    /* Chips: HIG-compliant 44px min touch target and slightly bigger type. */
+    /* Chips: on desktop the row is inline-block with `·` separators between
+       cells; on mobile that produces ragged wraps with orphaned separators
+       (see prior iteration). Switch to a 2-column CSS grid so cells share
+       one width and wrapping is deterministic. Hide the .chip-sep spans
+       entirely — they'd break the grid layout. Each grid cell is the tap
+       target (l1 + l2 comfortably exceeds 44px vertically) so we drop the
+       old min-height + padding rules. */
+    #chips {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px 16px;
+      padding-top: 16px;
+      max-width: 100%;
+    }
+    .chip-sep { display: none; }
     .chip {
-      min-height: 44px;
-      padding: 8px 12px;
-      align-items: center;
+      display: block;
+      padding: 0;
+      margin: 0;
     }
     .chip .l1 { font-size: 14px; }
     .chip .l2 { font-size: 12px; }

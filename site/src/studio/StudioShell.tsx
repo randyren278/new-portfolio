@@ -28,14 +28,6 @@ export function StudioShell({ content }: { content: ShellContent }) {
     bootShell(content);
   }, [content]);
 
-  // Tap anywhere in the terminal → focus the hidden #keysink input. On iOS
-  // this is what actually summons the soft keyboard (a programmatic focus
-  // from a user gesture is the only reliable trigger). Desktop is inert —
-  // the engine already keeps keysink focused on load.
-  const focusKeysink = () => {
-    document.getElementById('keysink')?.focus({ preventScroll: true });
-  };
-
   // Fires the same event the engine's Cmd+K listener listens for. The
   // listener lives on `document` (shell-engine.js:385) so dispatch there,
   // not on window — events bubble up, not down.
@@ -84,7 +76,7 @@ export function StudioShell({ content }: { content: ShellContent }) {
       </button>
       <div id="scroll-aff">+ scroll ↓ for the prompt</div>
 
-      <div id="term" tabIndex={-1} onPointerDown={focusKeysink}>
+      <div id="term" tabIndex={-1}>
         <div id="buffer" />
         <div id="active-line" aria-hidden="false">
           <span className="prompt-fragment" id="prompt-fragment" />
@@ -107,11 +99,12 @@ export function StudioShell({ content }: { content: ShellContent }) {
       </div>
 
       {/*
-        Hidden focus sink. Positioned via CSS (.keysink) — NOT inline styles —
-        so the (pointer: coarse) media query in shell.css can override the
-        default off-screen placement on touch devices. iOS Safari refuses to
-        summon the soft keyboard for inputs positioned far off-screen, so on
-        touch we pin it to the viewport at 1×1 / opacity:0 / pointer-events:none.
+        Hidden focus sink. Positioned off-screen by the .keysink class in
+        shell.css. On desktop the engine keeps it focused so keydown events
+        route to the shell's own input handler. On touch the placement stays
+        off-screen unconditionally so iOS Safari refuses to summon the soft
+        keyboard — typing on mobile is intentionally disabled; the whole
+        input model there is chips + label taps.
       */}
       <input
         id="keysink"

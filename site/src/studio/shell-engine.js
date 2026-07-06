@@ -7,6 +7,10 @@ export function bootShell(content) {
 'use strict';
 
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// TOUCH devices don't get the full-plate modal — the inline label card is
+// the entire project surface. Also drives the mobile chip label wording so
+// "Open the project" (which implies the plate) becomes "Show the note".
+const TOUCH = window.matchMedia('(pointer: coarse)').matches;
 
 /* ---------- Filesystem model ---------- */
 
@@ -178,7 +182,7 @@ function chipSet() {
     if (visibleSlug) {
       const title = visibleSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
       return [
-        { l1: 'Open the project', cmd: `open ${visibleSlug}` },
+        { l1: TOUCH ? 'Show the note' : 'Open the project', cmd: `open ${visibleSlug}` },
         { l1: 'Back home',      cmd: 'cd ~' }
       ];
     }
@@ -200,7 +204,7 @@ function chipSet() {
     const next = idx >= 0 && idx < ORDER.length - 1 ? ORDER[idx + 1] : null;
     const title = (s) => s.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
     const chips = [
-      { l1: `Open the project`, cmd: `open ${slug}` }
+      { l1: TOUCH ? 'Show the note' : 'Open the project', cmd: `open ${slug}` }
     ];
     if (next) chips.push({ l1: `Next: ${title(next)}`, cmd: `cd ${next}` });
     if (prev) chips.push({ l1: `Prev: ${title(prev)}`, cmd: `cd ${prev}` });
@@ -729,7 +733,11 @@ function runCommand(cmd, opts) {
         // already visible in the terminal, open the full plate. Otherwise,
         // render the inline label first so the user can preview before
         // committing to the plate view.
-        if (isInlineCardVisible(arg)) {
+        //
+        // On touch devices we skip the plate entirely — the inline label
+        // is the whole project surface. `open` becomes idempotent: the
+        // label re-renders (or stays cached) but no full-screen modal.
+        if (!TOUCH && isInlineCardVisible(arg)) {
           openPlate(arg);
         } else {
           renderFile(['randy','work',arg,'label'], {});
