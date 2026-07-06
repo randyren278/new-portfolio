@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 // refactoring those declarations without benefit.
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://randy.sh'),
+  metadataBase: new URL('https://www.randyren.org'),
   title: 'Randy Ren',
   description: 'A working catalogue.',
   icons: {
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Randy Ren',
     description: 'A working catalogue.',
-    url: 'https://randy.sh',
-    siteName: 'randy.sh',
+    url: 'https://www.randyren.org',
+    siteName: 'randyren.org',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     locale: 'en_US',
     type: 'website',
