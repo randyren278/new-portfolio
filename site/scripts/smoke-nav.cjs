@@ -104,6 +104,51 @@ async function main() {
   results.push(['fuzzy in-dir jump: halcyon', bufAfterSibling.toLowerCase().includes('halcyon')]);
   results.push(['fuzzy in-dir jump: hint',    bufAfterSibling.includes('jumping to ~/work/halcyon')]);
 
+  // Regression: a fresh page load, then a keystroke well after the ceremony
+  // completed, must NOT re-trigger the boot ceremony. This used to happen
+  // because runPageLoader's skip() listeners lived on window and were never
+  // torn down when the loader dissolved naturally — a keydown seconds later
+  // would call skip() → schedule dissolve() → call done() a second time,
+  // running boot() again.
+  const page2 = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+  let bootLineCount = 0;
+  await page2.exposeFunction('__bootLine', () => { bootLineCount += 1; });
+  await page2.goto(URL, { waitUntil: 'networkidle' });
+  await page2.evaluate(() => {
+    const buf = document.getElementById('buffer');
+    if (!buf) return;
+    new MutationObserver((muts) => {
+      for (const m of muts) for (const n of m.addedNodes) {
+        if (n.textContent && n.textContent.includes('[randy.sh — studio v0.9]')) {
+          // @ts-ignore playwright injection
+          window.__bootLine();
+        }
+      }
+    }).observe(buf, { childList: true, subtree: true });
+  });
+  await page2.waitForFunction(() => !document.getElementById('page-loader'), { timeout: 15000 });
+  await page2.waitForFunction(
+    () => {
+      const buf = document.getElementById('buffer');
+      return buf && [...buf.querySelectorAll('button.link')].some(
+        (b) => b.textContent.trim() === 'about',
+      );
+    },
+    { timeout: 8000 },
+  );
+  await page2.waitForTimeout(600);
+  const bootsAfterCeremony = bootLineCount;
+  // Simulate the user pressing a key ~1.5s after the ceremony finished.
+  await page2.evaluate(() => {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'w', bubbles: true }));
+  });
+  await page2.waitForTimeout(2000);
+  results.push([
+    `no double-boot after post-ceremony keypress (n=${bootLineCount})`,
+    bootLineCount === bootsAfterCeremony && bootLineCount === 1,
+  ]);
+  await page2.close();
+
   await page.screenshot({ path: '/tmp/smoke-after-boot.png', fullPage: true });
   await browser.close();
 

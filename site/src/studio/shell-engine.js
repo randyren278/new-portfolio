@@ -2888,6 +2888,24 @@ function runPageLoader(done) {
     return 0.75 + (t - 0.75) * 1.0;                    // 75 → 100 quick
   };
 
+  // Latches so `done` fires at most once and skip() can't run after the
+  // loader has already dissolved (its listeners live on `window`, so a
+  // keystroke seconds after natural completion used to re-enter skip →
+  // schedule another dissolve → call `done` a second time → boot again).
+  let doneFired = false;
+  const teardownSkipListeners = () => {
+    window.removeEventListener('keydown', skip, true);
+    window.removeEventListener('mousedown', skip, true);
+    window.removeEventListener('wheel', skip, true);
+  };
+  const finish = () => {
+    if (doneFired) return;
+    doneFired = true;
+    teardownSkipListeners();
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+    done();
+  };
+
   function tick(now) {
     if (cancelled) return;
     const t = Math.min(1, (now - t0) / DURATION);
@@ -2912,18 +2930,16 @@ function runPageLoader(done) {
   }
 
   function dissolve() {
-    if (cancelled) return;
+    if (cancelled || doneFired) return;
     el.classList.add('dissolve');
     document.body.classList.remove('pl-active');
-    setTimeout(() => {
-      if (el && el.parentNode) el.parentNode.removeChild(el);
-      done();
-    }, 720);
+    setTimeout(finish, 720);
   }
 
   function skip() {
-    if (cancelled) return;
+    if (cancelled || doneFired) return;
     cancelled = true;
+    teardownSkipListeners();
     // Flush counter to 100 and all log lines.
     if (num) num.textContent = '100';
     if (fill) fill.style.width = '100%';
@@ -2938,9 +2954,6 @@ function runPageLoader(done) {
       cancelled = false; // allow dissolve to proceed
       dissolve();
     }, 120);
-    window.removeEventListener('keydown', skip, true);
-    window.removeEventListener('mousedown', skip, true);
-    window.removeEventListener('wheel', skip, true);
   }
 
   window.addEventListener('keydown', skip, {capture:true, once:true});
