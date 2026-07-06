@@ -1,0 +1,1099 @@
+  /* ============================================================
+     CATALOG v2.2 — Museum Shell
+     Palette (locked):
+       #F1E8D4 cream        · background
+       #111    ink          · body & hairlines
+       #1F3A5F prussian     · prompt caret, live links, active row
+       #5A3818 umber-strong · readable secondary text
+       #7A4A1F umber-muted  · marginalia only, actual annotations
+       #a8100a vermillion   · accent glyphs (§, └, error)
+       #7a2d16 err          · command-not-found only
+
+     Contrast rule: on #F1E8D4 cream, we use only #111 (ink), #5A3818 (umber-strong),
+     #7A4A1F (umber-muted, marginalia only), #1F3A5F (prussian), #a8100a (vermillion accent).
+     Never use opacity below 0.55 on foreground text. Never use #7A4A1F at less than 100% opacity
+     for anything the user must read.
+     ============================================================ */
+
+  :root {
+    --cream: #F1E8D4;
+    --ink: #111;
+    --prussian: #1F3A5F;
+    --umber: #7A4A1F;
+    --umber-strong: #5A3818;
+    --umber-muted: #7A4A1F;
+    --vermillion: #a8100a;
+    --dim-red: #7a2d16;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--cream); }
+  body {
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    font-weight: 400;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+
+  /* Fixed chrome — thin, dim, corners only */
+  .chrome-tr {
+    position: fixed; top: 14px; right: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--umber-strong); opacity: .75;
+    letter-spacing: .02em;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .chrome-br {
+    position: fixed; bottom: 14px; right: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--umber-strong); opacity: .75;
+    letter-spacing: .02em;
+    pointer-events: none;
+    z-index: 5;
+    transition: opacity .3s;
+  }
+  .chrome-br.gone { opacity: 0; }
+
+  /* Terminal viewport */
+  #term {
+    position: absolute; inset: 0;
+    padding: 40px 48px 56px 48px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    cursor: text;
+  }
+  #term::-webkit-scrollbar { width: 6px; }
+  #term::-webkit-scrollbar-thumb { background: rgba(122,74,31,.25); border-radius: 3px; }
+  #term::-webkit-scrollbar-track { background: transparent; }
+
+  #buffer {
+    max-width: 80ch;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Row types */
+  .row { display: block; }
+  .row.instant { animation: none; }
+  .row.stagger {
+    opacity: 0; transform: translateY(-2px);
+    animation: rowIn 100ms cubic-bezier(.22,1,.36,1) forwards;
+  }
+  @keyframes rowIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Prompt line */
+  .prompt-line { display: inline; white-space: pre; }
+  .prompt-user { color: var(--ink); opacity: 1; font-weight: 500; }
+  .prompt-at { color: var(--umber-strong); font-weight: 400; }
+  .prompt-colon { color: var(--ink); font-weight: 400; }
+  .prompt-pwd { color: var(--prussian); opacity: 1; font-weight: 500; }
+  .prompt-dollar { color: var(--ink); font-weight: 500; }
+
+  /* Active editable prompt */
+  #active-line {
+    display: block; white-space: pre;
+    padding-top: 2px;
+    max-width: 80ch;
+  }
+  #input-area {
+    display: inline;
+    outline: none;
+    white-space: pre;
+    caret-color: transparent;
+  }
+  /* the caret — an elegant hairline that fades rather than snaps */
+  #caret {
+    display: inline-block;
+    width: 1.5px; height: 1.05em;
+    background: var(--prussian);
+    vertical-align: -2px;
+    animation: caret-breathe 1100ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    position: relative;
+    top: 2px;
+    margin: 0 -0.75px;
+    box-shadow: 0 0 0 0 rgba(31,58,95,0.0);
+  }
+  #caret.typing { animation: none; opacity: 1; }
+  #caret.blurred {
+    background: transparent;
+    height: 1.05em;
+    width: 4px;
+    border-left: 1px solid var(--prussian);
+    border-right: 1px solid var(--prussian);
+    animation: none;
+    opacity: 0.55;
+  }
+  @keyframes caret-breathe {
+    0%   { opacity: 1; }
+    45%  { opacity: 1; }
+    58%  { opacity: 0.05; }
+    82%  { opacity: 0.05; }
+    100% { opacity: 1; }
+  }
+
+  /* No character-under-caret for the hairline caret; it sits between glyphs. */
+  #caret .under {
+    display: none;
+  }
+
+  /* Reveal caret used inside animated wall labels */
+  .reveal-caret {
+    display: inline-block;
+    width: 1ch; height: 1.15em;
+    background: var(--prussian);
+    vertical-align: -3px;
+    animation: blink 530ms steps(1) infinite;
+  }
+  .reveal-caret.fading {
+    animation: caretFade 240ms linear forwards;
+  }
+  @keyframes caretFade {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* Marginalia — umber italic serif */
+  .marg {
+    font-family: 'IBM Plex Serif', ui-serif, Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--umber-strong);
+    opacity: 1;
+  }
+  .umber { color: var(--umber-strong); }
+  .prussian { color: var(--prussian); }
+  .dim { color: var(--umber-strong); opacity: .85; }
+  .err { color: var(--dim-red); }
+
+  /* Clickable output — button-as-text */
+  button.link {
+    all: unset;
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+    display: inline;
+    padding: 0;
+    border-radius: 0;
+  }
+  button.link:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  button.link:focus-visible { outline: 1px solid var(--prussian); outline-offset: 2px; }
+
+  /* Wall label — inline card in terminal flow.
+     Free from monospace constraints; serif title + mono meta + serif blurb. */
+  .label-card {
+    display: block;
+    max-width: 62ch;
+    margin: 8px 0 4px 0;
+    padding: 22px 26px 24px;
+    border: 1px solid rgba(17,17,17,0.16);
+    background: var(--cream);
+    position: relative;
+  }
+  /* When card is being framed in, hide the native border; the SVG frame draws the border instead. */
+  .label-card.framing { border-color: transparent; }
+  .label-card > svg.card-frame {
+    position: absolute;
+    inset: -0.5px;
+    width: calc(100% + 1px);
+    height: calc(100% + 1px);
+    pointer-events: none;
+    z-index: 3;
+    overflow: visible;
+  }
+  .label-card > svg.card-frame path {
+    fill: none;
+    stroke: rgba(17,17,17,0.24);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .label-card.framing { border-color: rgba(17,17,17,0.16); }
+    .label-card > svg.card-frame { display: none; }
+  }
+  .label-kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: #a8100a;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .label-title {
+    font-family: 'Instrument Serif', 'IBM Plex Serif', Georgia, serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 52px;
+    line-height: 1.0;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 14px 0;
+    display: block;
+  }
+  .label-meta {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 20px;
+    row-gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    line-height: 1.35;
+    margin: 6px 0 14px 0;
+  }
+  .label-meta dt {
+    color: var(--umber-strong);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .label-meta dd {
+    color: var(--ink);
+    margin: 0;
+    font-weight: 400;
+  }
+  .label-rule {
+    height: 1px;
+    background: rgba(17,17,17,0.16);
+    margin: 12px 0 14px 0;
+    transform-origin: left center;
+  }
+  .label-blurb {
+    font-family: 'Instrument Serif', 'IBM Plex Serif', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    max-width: 52ch;
+    margin: 0;
+  }
+  .label-hint {
+    margin-top: 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--umber-strong);
+    opacity: 0.75;
+  }
+  .label-hint .lk { color: var(--prussian); }
+  /* Reveal animation states — set on card, driven by JS with staggered class flips */
+  .label-card.pre .label-kicker,
+  .label-card.pre .label-title,
+  .label-card.pre .label-meta > *,
+  .label-card.pre .label-blurb,
+  .label-card.pre .label-hint {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  .label-card.pre .label-rule { transform: scaleX(0); }
+  .label-card .label-kicker,
+  .label-card .label-title,
+  .label-card .label-meta > *,
+  .label-card .label-blurb,
+  .label-card .label-hint {
+    transition: opacity 380ms cubic-bezier(0.22,1,0.36,1),
+                transform 380ms cubic-bezier(0.22,1,0.36,1);
+  }
+  .label-card .label-rule {
+    transition: transform 320ms cubic-bezier(0.16,1,0.3,1);
+  }
+  /* legacy alias — some code may still reference .label-box */
+  .label-box { display: inline-block; white-space: pre; color: var(--ink); }
+
+  /* Walking caret — a small block that trails the writing position during reveal. */
+  .walk-caret {
+    position: absolute;
+    left: 26px;
+    top: 22px;
+    width: 8px;
+    height: 14px;
+    background: var(--prussian);
+    pointer-events: none;
+    z-index: 5;
+    transition: left 40ms linear, top 60ms linear, height 120ms cubic-bezier(0.16,1,0.3,1), opacity 240ms;
+    box-shadow: 0 0 0 0 rgba(31,58,95,0.24);
+  }
+  .walk-caret.parked { animation: walkCaretBlink 530ms steps(2, jump-none) 2; }
+  .walk-caret.fading { opacity: 0; }
+  @keyframes walkCaretBlink {
+    50% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .walk-caret { display: none; }
+  }
+
+  /* Chips row */
+  #chips {
+    display: flex; flex-wrap: wrap; align-items: flex-start;
+    gap: 0;
+    padding: 8px 0 0 0;
+    max-width: 80ch;
+    transition: opacity .35s cubic-bezier(.22,1,.36,1);
+  }
+  .chip {
+    all: unset;
+    display: inline-block;
+    color: var(--umber-strong);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.15;
+    cursor: pointer;
+    padding: 0 10px 0 0;
+    margin-right: 8px;
+    position: relative;
+  }
+  .chip:focus-visible { outline: 1px dashed var(--prussian); outline-offset: 2px; }
+  .chip .l1 { display: block; font-size: 13px; color: var(--umber-strong); font-weight: 500; opacity: 1; }
+  .chip .l2 { display: block; font-size: 11px; color: var(--umber-muted); opacity: 1; margin-top: 1px; }
+  .chip-sep {
+    color: var(--umber-strong); opacity: .75;
+    font-size: 13px;
+    margin: 0 6px 0 -4px;
+    align-self: center;
+    padding-top: 1px;
+  }
+
+  /* Marginalia inline hint (right of prompt) */
+  #margin-hint {
+    display: inline;
+    color: var(--umber-strong);
+    opacity: 1;
+    font-size: 12px;
+    margin-left: 12px;
+    font-family: 'IBM Plex Serif', serif;
+    font-style: italic;
+  }
+  #margin-hint.gone { display: none; }
+
+  /* Plate — inline SVG */
+  .plate-wrap {
+    display: block;
+    padding: 6px 0 8px 4ch;
+  }
+  .plate-wrap svg { display: block; }
+
+  /* Cmd-K palette */
+  #palette {
+    position: fixed; inset: 0;
+    background: rgba(241, 232, 212, 0.95);
+    z-index: 20;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+    backdrop-filter: blur(2px);
+  }
+  #palette.open { display: flex; }
+  .pal-card {
+    width: min(640px, 90vw);
+    background: var(--cream);
+    border: 1px solid var(--ink);
+    padding: 14px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .pal-input {
+    all: unset;
+    width: 100%;
+    border-bottom: 1px solid var(--ink);
+    padding: 4px 0;
+    font: 500 14px 'IBM Plex Mono', monospace;
+    color: var(--ink);
+    caret-color: var(--prussian);
+  }
+  .pal-list {
+    margin-top: 10px;
+    max-height: 50vh;
+    overflow-y: auto;
+    font-size: 13px;
+  }
+  .pal-item {
+    padding: 5px 8px;
+    display: flex;
+    justify-content: space-between;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .pal-item .kind { color: var(--umber); font-size: 11px; opacity: .8; }
+  .pal-item.sel { background: var(--prussian); color: var(--cream); }
+  .pal-item.sel .kind { color: var(--cream); opacity: .8; }
+  .pal-empty { padding: 8px; color: var(--umber); font-style: italic; font-family: 'IBM Plex Serif', serif; font-size: 12px; }
+
+  /* Tab-completion candidates */
+  .tab-block {
+    display: block;
+    color: var(--ink);
+    opacity: .7;
+    white-space: pre-wrap;
+    padding: 2px 0 4px 0;
+  }
+
+  /* Utility */
+  .hidden { display: none !important; }
+  .nowrap { white-space: pre; }
+
+  /* Prefers reduced motion — everything instant */
+  @media (prefers-reduced-motion: reduce) {
+    #caret, .reveal-caret { animation: none !important; }
+    .row.stagger { animation: none !important; opacity: 1 !important; transform: none !important; }
+  }
+
+  /* ============================================================
+     PLATE VIEWER — floating card lifted over terminal
+     ============================================================ */
+  .plate-overlay {
+    position: fixed; inset: 0;
+    background: rgba(241, 232, 212, 0.35);
+    -webkit-backdrop-filter: blur(1.5px);
+    backdrop-filter: blur(1.5px);
+    z-index: 40;
+    opacity: 0;
+    transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    color: var(--ink);
+  }
+  .plate-overlay.open { opacity: 1; }
+  .plate-overlay.closing { opacity: 0; transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1) 40ms; }
+
+  /* The plate itself — a physical card lifted off the terminal */
+  .plate-card {
+    position: absolute;
+    top: 64px; bottom: 64px;
+    left: 96px; right: 96px;
+    max-width: 1400px;
+    margin-inline: auto;
+    background: var(--cream);
+    border: 1px solid rgba(17, 17, 17, 0.14);
+    box-shadow:
+      0 24px 60px -12px rgba(17, 17, 17, 0.14),
+      0 4px 12px rgba(17, 17, 17, 0.06);
+    overflow-y: auto;
+    overflow-x: hidden;
+    opacity: 0.6;
+    transform: scale(0.985);
+    transform-origin: center center;
+    transition:
+      opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .plate-overlay.open .plate-card {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .plate-overlay.closing .plate-card {
+    opacity: 0;
+    transform: scale(0.985);
+    transition:
+      opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+      transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Vertical rule frame (24px inset both sides of the plate-card) */
+  .plate-rule-left,
+  .plate-rule-right {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: var(--ink);
+    opacity: 0.35;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .plate-rule-left  { left: 24px; }
+  .plate-rule-right { right: 24px; }
+
+  .plate-inner {
+    position: relative;
+    padding: 56px 120px 80px 120px;
+    max-width: 100%;
+    min-height: 100%;
+  }
+  @media (max-width: 900px) {
+    .plate-card {
+      top: 24px; bottom: 24px; left: 24px; right: 24px;
+    }
+    .plate-inner { padding: 40px 44px 72px 44px; }
+  }
+
+  /* Close button — positioned inside the plate-card */
+  .plate-close {
+    position: absolute;
+    top: 24px;
+    right: 40px;
+    width: 32px; height: 32px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    line-height: 30px;
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+    z-index: 3;
+    opacity: 0.7;
+    transition: opacity 160ms ease;
+  }
+  .plate-close:hover { opacity: 1; }
+  .plate-close:focus-visible { outline: 1px solid var(--prussian); outline-offset: 3px; }
+
+  /* Header row */
+  .plate-header {
+    display: grid;
+    grid-template-columns: 200px 1fr auto;
+    align-items: baseline;
+    column-gap: 24px;
+    padding-top: 6px;
+  }
+  .plate-marker {
+    color: var(--vermillion);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 60ms;
+  }
+  .plate-marker .num {
+    display: block;
+    color: var(--umber-strong);
+    font-size: 11px;
+    margin-top: 4px;
+    letter-spacing: 0.06em;
+    opacity: 0.9;
+  }
+  .plate-title {
+    font-family: 'Instrument Serif', 'Cormorant Garamond', 'IBM Plex Serif', ui-serif, Georgia, serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: clamp(72px, 12vw, 200px);
+    line-height: 0.95;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    margin: 0;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 60ms;
+  }
+  .plate-year {
+    color: var(--umber-strong);
+    opacity: 0;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    transform: translateY(16px);
+    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 60ms;
+  }
+  .plate-overlay.mounted .plate-marker,
+  .plate-overlay.mounted .plate-title {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .plate-overlay.mounted .plate-year {
+    opacity: 0.75;
+    transform: translateY(0);
+  }
+
+  .plate-rule {
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.35;
+    margin: 28px 0 22px 0;
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 180ms;
+  }
+  .plate-overlay.mounted .plate-rule { transform: scaleX(1); }
+
+  /* Meta grid */
+  .plate-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 24px;
+    row-gap: 4px;
+    margin-bottom: 42px;
+  }
+  .plate-meta .col {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .plate-overlay.mounted .plate-meta .col { opacity: 1; transform: translateY(0); }
+  .plate-meta .col:nth-child(1) { transition-delay: 220ms; }
+  .plate-meta .col:nth-child(2) { transition-delay: 240ms; }
+  .plate-meta .col:nth-child(3) { transition-delay: 260ms; }
+  .plate-meta .col:nth-child(4) { transition-delay: 280ms; }
+
+  .plate-meta .lab {
+    color: var(--umber-strong);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .plate-meta .lab .glyph {
+    color: var(--vermillion);
+    margin-right: 6px;
+    opacity: 1;
+  }
+  .plate-meta .val {
+    color: var(--ink);
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+  }
+
+  /* Plate figure area */
+  .plate-figure-wrap {
+    position: relative;
+    margin: 0 0 48px 0;
+    opacity: 0;
+    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 340ms;
+  }
+  .plate-overlay.mounted .plate-figure-wrap { opacity: 1; }
+
+  .plate-figure {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    background: var(--cream);
+    overflow: hidden;
+  }
+  .plate-figure .plate-cap {
+    position: absolute;
+    top: 14px; left: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--umber-strong);
+    opacity: 0.7;
+    letter-spacing: 0.06em;
+    z-index: 2;
+  }
+  .plate-figure svg { display: block; width: 100%; height: 100%; }
+  .plate-figure .motif-svg { position: absolute; inset: 0; z-index: 1; }
+  .plate-figure .stripes-svg { position: absolute; inset: 0; z-index: 0; }
+  .plate-figure .wash {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 40% 55%, rgba(122,74,31,0.10) 0%, rgba(122,74,31,0.04) 45%, rgba(31,58,95,0.03) 100%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Essay block */
+  .plate-essay-wrap {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    column-gap: 24px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 300ms cubic-bezier(0.16, 1, 0.3, 1), transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 740ms;
+  }
+  .plate-overlay.mounted .plate-essay-wrap { opacity: 1; transform: translateY(0); }
+  .plate-essay-label {
+    color: var(--vermillion);
+    opacity: 1;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .plate-essay {
+    columns: 2;
+    column-gap: 44px;
+    font-family: 'Instrument Serif', 'Cormorant Garamond', 'IBM Plex Serif', ui-serif, Georgia, serif;
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    max-width: 78ch;
+  }
+  .plate-essay p {
+    margin: 0 0 1em 0;
+    break-inside: avoid-column;
+  }
+  .plate-essay p:last-child { margin-bottom: 0; }
+  .plate-essay a {
+    color: var(--prussian);
+    text-decoration: none;
+    border-bottom: 1px solid var(--prussian);
+  }
+  .plate-essay a:hover { opacity: 0.75; }
+  .plate-essay a:focus-visible { outline: 1px solid var(--prussian); outline-offset: 2px; }
+
+  /* Giant email for contact plate */
+  .plate-figure .email-plate {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+    padding: 0 24px;
+    text-align: center;
+  }
+  .plate-figure .email-plate a {
+    font-family: 'Instrument Serif', 'Cormorant Garamond', 'IBM Plex Serif', ui-serif, Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(48px, 9vw, 140px);
+    color: var(--ink);
+    text-decoration: none;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    border-bottom: 1px solid transparent;
+  }
+  .plate-figure .email-plate a:hover { border-bottom-color: var(--ink); }
+  .plate-figure .email-plate a:focus-visible { outline: 1px solid var(--prussian); outline-offset: 6px; }
+
+  /* Footer */
+  .plate-footer {
+    position: absolute;
+    bottom: 32px;
+    right: 44px;
+    color: var(--umber-strong);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 240ms ease;
+    transition-delay: 900ms;
+  }
+  .plate-overlay.mounted .plate-footer { opacity: 0.75; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plate-overlay,
+    .plate-overlay.open,
+    .plate-card,
+    .plate-overlay.open .plate-card,
+    .plate-marker, .plate-title, .plate-year,
+    .plate-rule, .plate-meta .col,
+    .plate-figure-wrap, .plate-essay-wrap, .plate-footer {
+      transition: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+    .plate-overlay { opacity: 1; }
+    .plate-overlay.closing,
+    .plate-overlay.closing .plate-card { opacity: 0; }
+  }
+
+  /* ============================================================
+     CATALOG v2.3 additions — label typesetting animation,
+     ambient micromotion, life-signs
+     ============================================================ */
+
+  /* Label card in "loading" (typesetting) state — shimmer skeleton */
+  .label-card.loading .label-title,
+  .label-card.loading .label-meta,
+  .label-card.loading .label-rule,
+  .label-card.loading .label-blurb,
+  .label-card.loading .label-hint { display: none; }
+  .label-card .shim {
+    display: block;
+    background: linear-gradient(90deg,
+      rgba(17,17,17,0.06) 0%,
+      rgba(17,17,17,0.11) 50%,
+      rgba(17,17,17,0.06) 100%);
+    background-size: 200% 100%;
+    animation: shim 1.2s linear infinite;
+  }
+  @keyframes shim {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .label-card .title-shim { height: 52px; width: 60%; margin: 0 0 14px 0; }
+  .label-card .meta-shim  { height: 12px; margin-top: 8px; }
+  .label-card .rule-shim  { height: 1px; margin: 12px 0 14px 0; width: 100%; opacity: 0.6; }
+  .label-card .blurb-shim { height: 44px; margin-top: 16px; width: 90%; }
+  .label-card .hint-shim  { height: 10px; margin-top: 14px; width: 30%; opacity: 0.6; }
+  .label-card.dim .shim { opacity: 0.5; transition: opacity 120ms; }
+  .label-card .stamp {
+    position: absolute;
+    right: 22px; top: 22px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--vermillion);
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 200ms;
+    pointer-events: none;
+  }
+  .label-card .stamp.on { opacity: 1; }
+
+  /* Crossfade helpers used by the phased typesetter */
+  .label-card .swap-in {
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+      opacity 300ms cubic-bezier(0.22,1,0.36,1),
+      transform 300ms cubic-bezier(0.22,1,0.36,1);
+  }
+  .label-card .swap-in.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .label-card .shim-out {
+    animation: shimShrink 240ms cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+  @keyframes shimShrink {
+    from { transform: scaleY(1); opacity: 1; }
+    to   { transform: scaleY(0); opacity: 0; }
+  }
+  .label-card .rule-in {
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 240ms cubic-bezier(0.16,1,0.3,1);
+  }
+  .label-card .rule-in.in { transform: scaleX(1); }
+  .label-card .hint-in {
+    opacity: 0;
+    transition: opacity 200ms linear;
+  }
+  .label-card .hint-in.in { opacity: 1; }
+
+  /* (a) Ambient prompt indicator — pulsing dot right of prompt row */
+  #prompt-dot {
+    position: absolute;
+    top: 6px;
+    right: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--prussian);
+    opacity: 0;
+    pointer-events: none;
+    letter-spacing: 0;
+    line-height: 1;
+    transition: opacity 220ms ease;
+  }
+  #active-line { position: relative; }
+  #active-line.focused #prompt-dot { opacity: 0.9; }
+  @media (prefers-reduced-motion: no-preference) {
+    #active-line.focused #prompt-dot {
+      animation: promptPulse 2.4s ease-in-out infinite;
+    }
+  }
+  @keyframes promptPulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1.0; }
+  }
+
+  /* (b) Chip idle micromotion */
+  @media (prefers-reduced-motion: no-preference) {
+    #chips .chip {
+      animation: chipFloat 3.6s ease-in-out infinite;
+      animation-delay: calc(var(--chip-idx, 0) * 0.4s);
+    }
+    #chips.calm .chip {
+      animation-play-state: paused;
+    }
+  }
+  @keyframes chipFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-1px); }
+  }
+
+  /* (c) Marginalia tick — subtle staggered flicker */
+  @media (prefers-reduced-motion: no-preference) {
+    .marg.tick {
+      animation: margTick 4.8s ease-in-out infinite;
+      animation-delay: calc(var(--marg-idx, 0) * 0.4s);
+    }
+  }
+  @keyframes margTick {
+    0%, 100% { opacity: 1.0; }
+    50%      { opacity: 0.94; }
+  }
+
+  /* (d) Boot log breathing — one-shot pulse on the curator line */
+  @media (prefers-reduced-motion: no-preference) {
+    .boot-pulse {
+      animation: bootPulse 900ms ease-in-out 1;
+    }
+  }
+  @keyframes bootPulse {
+    0%   { opacity: 1.0; }
+    50%  { opacity: 0.7; }
+    100% { opacity: 1.0; }
+  }
+
+  /* (e) Chrome tag flicker — triggered by JS on a random interval */
+  @media (prefers-reduced-motion: no-preference) {
+    .chrome-tr.flicker {
+      animation: chromeFlicker 100ms steps(3, end) 1;
+    }
+  }
+  @keyframes chromeFlicker {
+    0%   { opacity: 0.75; }
+    50%  { opacity: 0.5; }
+    100% { opacity: 0.75; }
+  }
+
+  /* (f) Vermillion § accent breathing */
+  @media (prefers-reduced-motion: no-preference) {
+    .label-kicker {
+      animation: vermBreath 3.8s ease-in-out infinite;
+    }
+    .plate-overlay.mounted .plate-marker,
+    .plate-overlay.mounted .plate-essay-label {
+      animation: vermBreath 3.8s ease-in-out 1s infinite;
+    }
+  }
+  @keyframes vermBreath {
+    0%, 100% { opacity: 1.0; }
+    50%      { opacity: 0.88; }
+  }
+
+  /* (g) Ambient scroll-affordance line */
+  #scroll-aff {
+    position: fixed;
+    bottom: 34px;
+    right: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--umber-strong);
+    letter-spacing: 0.06em;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5;
+    transition: opacity 260ms ease;
+  }
+  #scroll-aff.on { opacity: 0.85; }
+
+  /* ============================================================
+     Page-level first-visit loader — matches catalog palette
+     (warm cream substrate, ink glyphs, Prussian caret,
+     vermillion accent, warm umber log). Cookie-gated:
+     catalog_page_loaded. Only appears on hard refresh
+     or a truly fresh session.
+     ============================================================ */
+  #page-loader {
+    position: fixed; inset: 0;
+    background: var(--cream);
+    color: var(--ink);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    overflow: hidden;
+  }
+  #page-loader[data-active="1"] { display: flex; }
+  #page-loader.dissolve { pointer-events: none; }
+  #page-loader .pl-inner {
+    position: relative;
+    width: min(720px, 88vw);
+    padding: 20px 32px 28px;
+  }
+  #page-loader .pl-kicker {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #a8100a;             /* vermillion */
+    opacity: 0;
+    animation: pl-fadein 320ms ease-out 40ms forwards;
+    margin-bottom: 18px;
+  }
+  #page-loader .pl-counter {
+    font-family: 'Instrument Serif', 'IBM Plex Serif', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(96px, 14vw, 200px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  #page-loader .pl-pct {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    color: var(--umber-strong);
+    letter-spacing: 0.02em;
+  }
+  #page-loader .pl-bar {
+    margin-top: 22px;
+    height: 1px;
+    width: 100%;
+    background: rgba(17,17,17,0.12);
+    overflow: hidden;
+  }
+  #page-loader .pl-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--prussian);
+    transition: width 120ms linear;
+  }
+  #page-loader .pl-log {
+    margin-top: 22px;
+    font-size: 11px;
+    color: var(--umber-strong);
+    line-height: 1.55;
+    min-height: 8em;
+    white-space: pre;
+  }
+  #page-loader .pl-log .lg-ok  { color: var(--prussian); }
+  #page-loader .pl-log .lg-dim { color: var(--umber-muted); opacity: 0.75; }
+  #page-loader .pl-log .lg-line { display: block; opacity: 0; animation: pl-log-in 240ms ease-out forwards; }
+  #page-loader .pl-hint {
+    position: absolute;
+    right: 0; bottom: -22px;
+    font-size: 10px;
+    color: var(--umber-strong);
+    opacity: 0.75;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    animation: pl-hintblink 2400ms cubic-bezier(0.4,0,0.2,1) infinite;
+  }
+  @keyframes pl-fadein  { to { opacity: 1; } }
+  @keyframes pl-log-in  { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pl-hintblink { 0%,45% { opacity: 0.75; } 60%,85% { opacity: 0.25; } 100% { opacity: 0.75; } }
+  /* Paper-grain rather than CRT scanlines — matches the museum substrate. */
+  #page-loader .pl-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(17,17,17,0.015) 0px,
+      rgba(17,17,17,0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    opacity: 0.6;
+  }
+  /* Dissolve: page-loader fades to reveal the shell beneath.
+     Same-color background means it's a pure content dissolve. */
+  #page-loader.dissolve {
+    animation: pl-dissolve 700ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  @keyframes pl-dissolve {
+    0%   { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+  }
+  /* When loader is active, mute the terminal beneath so it doesn't peek during the loader */
+  body.pl-active #term,
+  body.pl-active .chrome-tr,
+  body.pl-active .chrome-br,
+  body.pl-active #scroll-aff { visibility: hidden; }
+  @media (prefers-reduced-motion: reduce) {
+    #page-loader,
+    #page-loader .pl-kicker,
+    #page-loader .pl-log .lg-line,
+    #page-loader .pl-hint,
+    #page-loader.dissolve { animation: none !important; opacity: 1 !important; transform: none !important; }
+  }

@@ -1,12 +1,11 @@
-'use client';
-import { useState } from 'react';
-import { Loader } from '@/terminal/Loader';
-import { Terminal } from '@/terminal/Terminal';
-import { useSessionFlag } from '@/terminal/hooks/useSessionFlag';
+import { loadShellContent } from '@/content/loader';
+import { MuseumShell } from '@/museum/MuseumShell';
 
-export default function Home() {
-  const [seen, mark] = useSessionFlag('randy.seen');
-  const [ready, setReady] = useState(seen);
-  if (!ready) return <Loader onDone={() => { mark(); setReady(true); }} />;
-  return <Terminal />;
+// Server component: fetches all shell content (Phase 1: static snapshot,
+// Phase 2: Postgres) and hands it to the client wrapper. The wrapper does
+// not fetch anything at runtime — everything is hydrated from these props.
+
+export default async function Page() {
+  const content = await loadShellContent();
+  return <MuseumShell content={content} />;
 }
