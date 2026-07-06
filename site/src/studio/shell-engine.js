@@ -2511,8 +2511,11 @@ function openPlate(slug) {
   card.appendChild(inner);
   document.body.appendChild(overlay);
 
-  overlay.addEventListener('mousedown', (e) => {
-    // only if clicked directly on the overlay (not any child card)
+  overlay.addEventListener('pointerdown', (e) => {
+    // only if clicked/tapped directly on the overlay (not any child card).
+    // pointerdown fires for mouse, touch, and pen — a superset of mousedown
+    // that also works reliably on iOS Safari where mousedown synthesis from
+    // touch is inconsistent.
     if (e.target === overlay) closePlate();
   });
 
@@ -2688,7 +2691,7 @@ palInput.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowUp') { e.preventDefault(); if (palIdx > 0) palIdx--; refreshPalSel(); return; }
   if (e.key === 'Enter') { e.preventDefault(); const it = palItems[palIdx]; if (it) it.run(); return; }
 });
-palette.addEventListener('mousedown', (e) => {
+palette.addEventListener('pointerdown', (e) => {
   if (e.target === palette) closePalette();
 });
 
@@ -2745,7 +2748,7 @@ function boot() {
   let bootDone = false;
   const removeSkipListeners = () => {
     window.removeEventListener('keydown', skip, true);
-    window.removeEventListener('mousedown', skip, true);
+    window.removeEventListener('pointerdown', skip, true);
     window.removeEventListener('wheel', skip, true);
   };
   const complete = () => {
@@ -2773,7 +2776,8 @@ function boot() {
     complete();
   };
   window.addEventListener('keydown', skip, {capture:true, once:true});
-  window.addEventListener('mousedown', skip, {capture:true, once:true});
+  // pointerdown is a superset of mousedown that also fires on iOS touch taps.
+  window.addEventListener('pointerdown', skip, {capture:true, once:true});
   window.addEventListener('wheel', skip, {capture:true, once:true, passive:true});
 }
 
@@ -2894,7 +2898,7 @@ function runPageLoader(done) {
   let doneFired = false;
   const teardownSkipListeners = () => {
     window.removeEventListener('keydown', skip, true);
-    window.removeEventListener('mousedown', skip, true);
+    window.removeEventListener('pointerdown', skip, true);
     window.removeEventListener('wheel', skip, true);
   };
   const finish = () => {
@@ -2956,7 +2960,7 @@ function runPageLoader(done) {
   }
 
   window.addEventListener('keydown', skip, {capture:true, once:true});
-  window.addEventListener('mousedown', skip, {capture:true, once:true});
+  window.addEventListener('pointerdown', skip, {capture:true, once:true});
   window.addEventListener('wheel', skip, {capture:true, once:true, passive:true});
 
   requestAnimationFrame(tick);

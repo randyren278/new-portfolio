@@ -37,6 +37,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Required so env(safe-area-inset-*) resolves to non-zero on notched
+  // iPhones — every CSS max(14px, env(safe-area-inset-top)) below depends
+  // on this flag.
+  viewportFit: 'cover',
   themeColor: '#F1E8D4',
 };
 

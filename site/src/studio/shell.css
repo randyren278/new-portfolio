@@ -37,11 +37,34 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
+    /* Kill iOS rubber-band exposing address-bar chrome when the plate
+       overlay scrolls internally. No-op on desktop (overflow:hidden already
+       prevents root scroll). */
+    overscroll-behavior: none;
+  }
+
+  /* Hidden focus sink. Base placement is off-screen for desktop; the touch
+     override in the (pointer: coarse) block below pins it to the viewport
+     at 1×1 / opacity:0 so iOS Safari will summon the soft keyboard when
+     the terminal's onPointerDown handler focuses it. */
+  .keysink {
+    position: fixed;
+    left: -10000px;
+    top: -10000px;
+    opacity: 0;
+    pointer-events: none;
   }
 
   /* Fixed chrome — thin, dim, corners only */
   .chrome-tr {
     position: fixed; top: 14px; right: 20px;
+    /* Safe-area override: on notched iPhones with viewport-fit=cover the env()
+       returns the status-bar inset; on desktop it resolves to 0 and max()
+       leaves the base 14/20 values untouched. Two rules (original + max()
+       override) so browsers that fail to parse the second rule fall back
+       cleanly to the desktop values above. */
+    top: max(14px, env(safe-area-inset-top, 0px));
+    right: max(20px, env(safe-area-inset-right, 0px));
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px; color: var(--umber-strong); opacity: .75;
     letter-spacing: .02em;
@@ -50,12 +73,24 @@
   }
   .chrome-br {
     position: fixed; bottom: 14px; right: 20px;
+    bottom: max(14px, env(safe-area-inset-bottom, 0px));
+    right: max(20px, env(safe-area-inset-right, 0px));
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px; color: var(--umber-strong); opacity: .75;
     letter-spacing: .02em;
+    /* .chrome-br is a <button> now. Keep pointer-events:none on desktop so
+       drag-select in the bottom-right corner still works; the (pointer:coarse)
+       block below re-enables clicks on touch input surfaces. Also reset the
+       user-agent button styles so it renders identically to the old <div>. */
     pointer-events: none;
     z-index: 5;
     transition: opacity .3s;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    text-align: right;
   }
   .chrome-br.gone { opacity: 0; }
 
@@ -541,10 +576,16 @@
     cursor: pointer;
     padding: 0;
     z-index: 3;
-    opacity: 0.7;
+    /* On touch there's no :hover, so the button must render at full opacity
+       by default. Gate the desktop dim-until-hover behavior inside a hover
+       media query so touch users always see it clearly. */
+    opacity: 1;
     transition: opacity 160ms ease;
   }
-  .plate-close:hover { opacity: 1; }
+  @media (hover: hover) {
+    .plate-close { opacity: 0.7; }
+    .plate-close:hover { opacity: 1; }
+  }
   .plate-close:focus-visible { outline: 1px solid var(--prussian); outline-offset: 3px; }
 
   /* Header row */
@@ -961,6 +1002,10 @@
     position: fixed;
     bottom: 34px;
     right: 20px;
+    /* Additive lift on notched iPhones so the hint never touches the home
+       indicator. On desktop env() resolves to 0 and this collapses to 34px. */
+    bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+    right: max(20px, env(safe-area-inset-right, 0px));
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
     color: var(--umber-strong);
@@ -1095,4 +1140,114 @@
     #page-loader .pl-log .lg-line,
     #page-loader .pl-hint,
     #page-loader.dissolve { animation: none !important; opacity: 1 !important; transform: none !important; }
+  }
+
+  /* ────────────────────────────────────────────────────────────────────
+     Mobile / touch overrides. Everything above is desktop-first and
+     must not move at ≥1200px. Everything below is gated behind
+     `pointer: coarse` (all touch devices — phones and tablets) so it
+     cannot leak into desktop rendering, no matter the viewport width.
+     ────────────────────────────────────────────────────────────────── */
+
+  @media (pointer: coarse) {
+    /* Kill iOS 300ms tap-delay + gray tap-flash on every tappable surface.
+       Safe on desktop mice (they never fire touchstart) — but gated inside
+       (pointer: coarse) anyway as belt-and-suspenders. */
+    button.link,
+    .chip,
+    .plate-close,
+    .plate-essay a,
+    .plate-figure .email-plate a,
+    #chrome-cmdk,
+    .pal-item {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Terminal side-padding: 48px on 375px width leaves only 279px content.
+       Drop to 20px + honor the home-indicator inset at the bottom. */
+    #term {
+      padding: 24px 20px calc(40px + env(safe-area-inset-bottom, 0px)) 20px;
+      /* Buffer momentum-scrolls; disable horizontal-pan-based navigation. */
+      touch-action: pan-y;
+    }
+
+    /* Bottom-right hint becomes tappable — the desktop rule pins pointer-events
+       to none for drag-select preservation; here we re-enable it because
+       ⌘K is otherwise unreachable without a physical keyboard. */
+    .chrome-br { pointer-events: auto; }
+
+    /* Move #keysink from off-screen into the viewport as a 1×1 invisible
+       input. iOS Safari REFUSES to summon the soft keyboard for inputs
+       positioned far off-screen; pinning it to the corner (pointer-events
+       stays none so it never intercepts terminal taps) lets a programmatic
+       .focus() from the terminal's onPointerDown handler open the keyboard. */
+    .keysink {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      /* 16px font-size prevents iOS Safari from auto-zooming on focus. */
+      font-size: 16px;
+    }
+
+    /* Plate viewer: the 96/24px inset + 4-column meta grid + 2-column essay
+       all overflow below ~500px. One breakpoint's worth of fixes. */
+    .plate-card {
+      top: 20px;
+      right: 16px;
+      bottom: 20px;
+      left: 16px;
+    }
+    .plate-inner {
+      padding: 32px 20px 56px 20px;
+    }
+    .plate-header {
+      grid-template-columns: 1fr auto;
+      row-gap: 8px;
+    }
+    .plate-marker { grid-column: 1 / -1; }
+    .plate-meta {
+      grid-template-columns: repeat(2, 1fr);
+      row-gap: 16px;
+    }
+    .plate-essay {
+      columns: 1;
+      column-gap: 0;
+      font-size: clamp(15px, 4vw, 17px);
+    }
+    .plate-close {
+      width: 44px;
+      height: 44px;
+      line-height: 42px;
+      top: 16px;
+      right: 20px;
+    }
+
+    /* Chips: HIG-compliant 44px min touch target and slightly bigger type. */
+    .chip {
+      min-height: 44px;
+      padding: 8px 12px;
+      align-items: center;
+    }
+    .chip .l1 { font-size: 14px; }
+    .chip .l2 { font-size: 12px; }
+
+    /* :active state parity: iOS never fires :hover on tap, so without
+       :active every tap reads as broken. Mirror every :hover rule in the
+       codebase to the corresponding :active. */
+    button.link:active {
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+    .plate-essay a:active { opacity: 0.6; }
+    .plate-figure .email-plate a:active { border-bottom-color: var(--ink); }
+    .chip:active { background: rgba(122,74,31,.08); }
   }

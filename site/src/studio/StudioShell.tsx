@@ -28,6 +28,23 @@ export function StudioShell({ content }: { content: ShellContent }) {
     bootShell(content);
   }, [content]);
 
+  // Tap anywhere in the terminal → focus the hidden #keysink input. On iOS
+  // this is what actually summons the soft keyboard (a programmatic focus
+  // from a user gesture is the only reliable trigger). Desktop is inert —
+  // the engine already keeps keysink focused on load.
+  const focusKeysink = () => {
+    document.getElementById('keysink')?.focus({ preventScroll: true });
+  };
+
+  // Fires the same event the engine's Cmd+K listener listens for. The
+  // listener lives on `document` (shell-engine.js:385) so dispatch there,
+  // not on window — events bubble up, not down.
+  const openPalette = () => {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }),
+    );
+  };
+
   return (
     <>
       {/* First-visit page loader (per browser session). */}
@@ -48,12 +65,26 @@ export function StudioShell({ content }: { content: ShellContent }) {
         </div>
       </div>
       <div className="chrome-tr">RANDY REN</div>
-      <div className="chrome-br" id="chrome-cmdk">
+      {/*
+        The bottom-right chrome hint is now a real button on touch devices —
+        tapping it opens the command palette (Cmd+K is otherwise unreachable
+        without a physical keyboard). On desktop the base CSS rule keeps
+        pointer-events:none on .chrome-br so it remains inert and drag-select
+        in the bottom-right corner is unaffected; the (pointer: coarse) block
+        re-enables pointer-events on touch input surfaces.
+      */}
+      <button
+        type="button"
+        className="chrome-br"
+        id="chrome-cmdk"
+        onClick={openPalette}
+        aria-label="Open command palette"
+      >
         ⌘K palette
-      </div>
+      </button>
       <div id="scroll-aff">+ scroll ↓ for the prompt</div>
 
-      <div id="term" tabIndex={-1}>
+      <div id="term" tabIndex={-1} onPointerDown={focusKeysink}>
         <div id="buffer" />
         <div id="active-line" aria-hidden="false">
           <span className="prompt-fragment" id="prompt-fragment" />
@@ -75,12 +106,23 @@ export function StudioShell({ content }: { content: ShellContent }) {
         <div id="chips" aria-label="quick commands" />
       </div>
 
-      {/* Hidden focus sink */}
+      {/*
+        Hidden focus sink. Positioned via CSS (.keysink) — NOT inline styles —
+        so the (pointer: coarse) media query in shell.css can override the
+        default off-screen placement on touch devices. iOS Safari refuses to
+        summon the soft keyboard for inputs positioned far off-screen, so on
+        touch we pin it to the viewport at 1×1 / opacity:0 / pointer-events:none.
+      */}
       <input
         id="keysink"
-        style={{ position: 'fixed', left: -10000, top: -10000, opacity: 0 }}
+        className="keysink"
         aria-hidden="true"
         tabIndex={-1}
+        inputMode="text"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
       />
 
       {/* Cmd-K palette */}
