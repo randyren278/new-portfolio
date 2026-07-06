@@ -1177,6 +1177,17 @@
        ⌘K is otherwise unreachable without a physical keyboard. */
     .chrome-br { pointer-events: auto; }
 
+    /* The prompt line itself must not be tappable. On desktop #input-area is
+       a role="textbox" tabIndex=0 span (for a11y / focus routing) — mobile
+       browsers treat it as an editable text surface and offer the soft
+       keyboard when tapped. Take it out of the tap flow entirely; the
+       engine also no-ops focusInput() on TOUCH so nothing routes focus
+       into the hidden #keysink. */
+    #input-area {
+      pointer-events: none;
+      user-select: none;
+    }
+
     /* Note: no mobile .keysink override. On touch the input stays parked
        off-screen (left:-10000px per the base rule), and iOS Safari refuses
        to summon the soft keyboard for off-viewport inputs — which is

@@ -102,21 +102,52 @@ async function main() {
     keysinkLeft !== null && keysinkLeft <= -1000,
   ]);
 
-  // 3b) Tap the terminal. On desktop the engine calls focusInput() via its
-  // own mouseup handler and activeElement becomes the off-screen #keysink.
-  // On real iOS Safari that focus is a no-op for keyboard summoning —
-  // Safari refuses to show the keyboard for inputs positioned far off-
-  // screen. The invariant we care about is that the input STAYS off-screen
-  // (checked above); the activeElement identity is incidental.
+  // 3b) Tap the terminal. On mobile the engine no-ops focusInput() on
+  // TOUCH so activeElement should NOT become the keysink INPUT — that
+  // was the last-mile bug where iOS still summoned the soft keyboard
+  // because .focus() inside a synthesized touch→mouseup gesture bypasses
+  // the off-screen-input protection.
   await page.tap('#term', { position: { x: 150, y: 400 } });
   await page.waitForTimeout(300);
-  const keysinkStillOffscreen = await page.evaluate(() => {
+  const activeAfterTermTap = await page.evaluate(
+    () => document.activeElement?.tagName || 'NONE',
+  );
+  results.push([
+    `mobile: tap #term does NOT focus INPUT [active=${activeAfterTermTap}]`,
+    activeAfterTermTap !== 'INPUT',
+  ]);
+
+  // Also tap the prompt line itself — this is the specific element the
+  // user was tapping when the keyboard kept popping up. Its pointer-events
+  // are now 'none' on mobile, so the tap should pass through to #term
+  // (which no-ops per the assertion above).
+  const promptBox = await page.evaluate(() => {
+    const el = document.getElementById('active-line');
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { x: r.left + 30, y: r.top + r.height / 2 };
+  });
+  if (promptBox) {
+    await page.mouse.click(promptBox.x, promptBox.y);
+    await page.waitForTimeout(300);
+    const activeAfterPromptTap = await page.evaluate(
+      () => document.activeElement?.tagName || 'NONE',
+    );
+    results.push([
+      `mobile: tap active prompt line does NOT focus INPUT [active=${activeAfterPromptTap}]`,
+      activeAfterPromptTap !== 'INPUT',
+    ]);
+  }
+
+  // The keysink itself must be readonly + inputMode=none — belt-and-
+  // suspenders in case something focuses it anyway.
+  const keysinkAttrs = await page.evaluate(() => {
     const k = document.getElementById('keysink');
-    return k ? parseFloat(getComputedStyle(k).left) <= -1000 : false;
+    return k ? { readOnly: k.readOnly, inputMode: k.inputMode } : null;
   });
   results.push([
-    `mobile: after tap #keysink still off-screen (no soft keyboard)`,
-    keysinkStillOffscreen,
+    `mobile: #keysink is readonly + inputMode=none [ro=${keysinkAttrs?.readOnly} im=${keysinkAttrs?.inputMode}]`,
+    keysinkAttrs?.readOnly === true && keysinkAttrs?.inputMode === 'none',
   ]);
 
   // 4) chrome-cmdk button + tap-to-open-palette

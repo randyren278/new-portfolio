@@ -111,7 +111,8 @@ export function StudioShell({ content }: { content: ShellContent }) {
         className="keysink"
         aria-hidden="true"
         tabIndex={-1}
-        inputMode="text"
+        readOnly
+        inputMode="none"
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="off"

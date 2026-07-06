@@ -349,6 +349,13 @@ function updateMarginHint() {
 
 /* ---------- Focus & blur ---------- */
 function focusInput() {
+  // On touch devices we suppress ALL focus paths — mouseup, window focus,
+  // visibilitychange, palette/plate close handlers. Calling .focus() on
+  // the hidden keysink input inside a synthesized user-gesture (touchend
+  // → mouseup) makes iOS Safari summon the soft keyboard even for
+  // off-screen inputs, which is exactly what we're trying to avoid.
+  // Typing on mobile is disabled by design; the input model is chips.
+  if (TOUCH) return;
   hasFocus = true;
   setCaretState('blink');
   activeLine.classList.add('focused');
