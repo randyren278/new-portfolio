@@ -46,24 +46,12 @@ friday      10:00–15:00
 saturday    by appointment
 sunday      closed`;
 
-export const NOW_TEXT =
-`july 2026 — writing a small book on agent interfaces.
-taking one new client engagement in september.
-currently: less meetings, more sketchbooks.`;
-
 export const COLOPHON_TEXT =
 `fonts     IBM Plex Mono, IBM Plex Serif (italic)
 palette   cream, ink, prussian, warm umber
 stack     raw HTML, raw CSS, raw JS. no libraries.
 built     by hand, in San Francisco, 2026.
 thanks    to the curators who reviewed this room.`;
-
-export const GUESTBOOK_TEXT =
-`— j.a.  "the pen slowing before lifting. yes."
-— m.k.  "made me open a terminal for the first time in years."
-— r.s.  "hollow caret on blur. thank you."
-— c.p.  "please open the archive."
-(sign the book by emailing hey@randy.sh — this is append-only.)`;
 
 export const MAN = {
   pwd:     { name: 'pwd(1)', desc: 'print the name of the current working directory.', synopsis: 'pwd', see: 'cd, ls' },

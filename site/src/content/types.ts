@@ -38,9 +38,7 @@ export type ShellContent = {
   ABOUT_TEXT: string;
   CONTACT_TEXT: string;
   HOURS_TEXT: string;
-  NOW_TEXT: string;
   COLOPHON_TEXT: string;
-  GUESTBOOK_TEXT: string;
   MAN: Record<string, ManEntry>;
   PLATE_DATA: Record<string, PlateEntry>;
 };

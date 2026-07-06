@@ -21,22 +21,19 @@ const ORDER = content.ORDER;
 const ABOUT_TEXT = content.ABOUT_TEXT;
 const CONTACT_TEXT = content.CONTACT_TEXT;
 const HOURS_TEXT = content.HOURS_TEXT;
-const NOW_TEXT = content.NOW_TEXT;
 const COLOPHON_TEXT = content.COLOPHON_TEXT;
-const GUESTBOOK_TEXT = content.GUESTBOOK_TEXT;
 
-/* Filesystem tree — dirs and files */
+/* Filesystem tree — dirs and files.
+   `latest` is a command, not a file; it appears as a synthetic row in the
+   root listing (see cmd_ls) so first-time visitors can discover it. */
 function buildFs() {
   const root = {
     name: 'randy', type: 'dir', children: {
       about:    { type: 'file' },
       contact:  { type: 'file' },
       hours:    { type: 'file' },
-      now:      { type: 'file' },
       colophon: { type: 'file' },
-      guestbook:{ type: 'file' },
-      work:     { type: 'dir', children: {}, order: ORDER.slice() },
-      archive:  { type: 'dir', children: {}, marginalia: "# nothing catalogued here yet. return in the winter." }
+      work:     { type: 'dir', children: {}, order: ORDER.slice() }
     }
   };
   for (const slug of ORDER) {
@@ -171,6 +168,7 @@ function chipSet() {
     return [
       { l1: 'See the work',     cmd: 'cd work/' },
       { l1: 'Read about Randy', cmd: 'cat about' },
+      { l1: 'Latest run/ride',  cmd: 'latest' },
       { l1: 'Get in touch',     cmd: 'cat contact' },
       { l1: 'Show hours',       cmd: 'hours' },
       { l1: 'Help',             cmd: 'help' }
@@ -602,7 +600,7 @@ function handleTab(shift) {
         }
       }
       if (cmd === 'cat') {
-        for (const f of ['about','contact','hours','now','colophon','guestbook']) {
+        for (const f of ['about','contact','hours','colophon']) {
           if (f.startsWith(namePart) && !candidates.includes(f)) extras.push(f);
         }
       }
@@ -823,6 +821,26 @@ function cmd_ls(args) {
     row.appendChild(btn);
     buffer.appendChild(row);
   });
+
+  // Synthetic entry: `latest` is a command, not a file, but we want visitors
+  // to see it in the root listing so they discover the Strava widget. It's
+  // rendered like a file row but its click handler runs the command directly.
+  if (target.length === 1 && target[0] === 'randy') {
+    const i = entries.length;
+    const row = document.createElement('div');
+    row.className = 'row';
+    if (stagger && i < 6) {
+      row.classList.add('stagger');
+      row.style.animationDelay = (i * 60) + 'ms';
+    }
+    const btn = document.createElement('button');
+    btn.className = 'link';
+    btn.type = 'button';
+    btn.textContent = 'latest';
+    btn.addEventListener('click', () => { chipInvoke('latest'); });
+    row.appendChild(btn);
+    buffer.appendChild(row);
+  }
 
   SS.cacheAdd(key);
   scrollBottom();
@@ -1192,11 +1210,104 @@ function clearScreen() {
 }
 
 function unknown(c) {
+  // Fuzzy navigation: when a bare token doesn't match any command, try to
+  // read it as a place. This is the "gimmick" nicety — from anywhere in the
+  // tree, typing e.g. `work` or `oryzo` or `abo` should just take you there
+  // instead of erroring. Scope is intentional: root files, root dirs, project
+  // slugs, and children of the current or parent directory (one level up,
+  // one level down).
+  const hit = fuzzyNavTarget(c);
+  if (hit) {
+    printLine(`<span class="marg"># ${escapeHtml(hit.hint)}</span>`);
+    runCommand(hit.cmd, {});
+    return;
+  }
   const suggestion = closestCommand(c);
   printLine(`<span class="err">zsh: command not found: ${escapeHtml(c)}</span>`);
   if (suggestion) {
     printLine(`<span class="err">did you mean '${escapeHtml(suggestion)}'?</span>`);
   }
+}
+
+/* Fuzzy navigation resolver.
+   Returns null (no confident match) or { cmd, hint } where cmd is the actual
+   engine command to run (e.g. "cd work" / "cat about" / "open oryzo") and
+   hint is a short line rendered above the result so the user sees what we
+   interpreted. */
+function fuzzyNavTarget(raw) {
+  const q = String(raw || '').trim().toLowerCase();
+  if (q.length < 2) return null;
+
+  // Candidate pool: label → { verb, arg, place }.
+  // `verb` is what runCommand receives; `place` is the human-readable hint.
+  const pool = [];
+  // Root files
+  for (const f of ['about','contact','hours','colophon']) {
+    pool.push({ label: f, verb: 'cat', arg: `~/${f}`, place: `~/${f}` });
+  }
+  // Root dirs
+  pool.push({ label: 'work', verb: 'cd', arg: '~/work', place: '~/work' });
+  // Project slugs — "open" is the most useful verb from anywhere.
+  for (const slug of ORDER) {
+    pool.push({ label: slug, verb: 'open', arg: slug, place: `~/work/${slug}` });
+  }
+  // Latest command (no path — surface as itself).
+  pool.push({ label: 'latest', verb: 'latest', arg: '', place: '~/latest' });
+  // Current-dir children (one level "down" from where you stand).
+  const here = nodeAt(cwd);
+  if (here && here.children) {
+    for (const k of Object.keys(here.children)) {
+      const child = here.children[k];
+      const rel = k;
+      const place = (pwdString() === '~' ? '~/' : pwdString() + '/') + k;
+      const verb = child.type === 'dir' ? 'cd' : 'cat';
+      pool.push({ label: k, verb, arg: rel, place });
+    }
+  }
+  // Sibling entries (one level "up" — parent's other children).
+  if (cwd.length > 1) {
+    const parent = nodeAt(cwd.slice(0, -1));
+    if (parent && parent.children) {
+      const self = cwd[cwd.length - 1];
+      for (const k of Object.keys(parent.children)) {
+        if (k === self) continue;
+        const child = parent.children[k];
+        // Reference the sibling by absolute-ish path so cd resolves correctly
+        // regardless of where the user is.
+        const parentPath = cwd.slice(1, -1).join('/');
+        const rel = parentPath ? `~/${parentPath}/${k}` : `~/${k}`;
+        const verb = child.type === 'dir' ? 'cd' : 'cat';
+        pool.push({ label: k, verb, arg: rel, place: rel });
+      }
+    }
+  }
+
+  // Rank: prefix > substring > small Levenshtein. Break ties by shortest label
+  // (prefer "work" over "workroom" for `work`).
+  let best = null;
+  let bestScore = Infinity;
+  for (const c of pool) {
+    const label = c.label.toLowerCase();
+    let score;
+    if (label === q) score = 0;
+    else if (label.startsWith(q)) score = 1;
+    else if (label.includes(q)) score = 2;
+    else {
+      const d = levenshtein(q, label);
+      // Only accept typo-tolerant matches when the query is close enough that
+      // a bystander would agree — cap at 2 edits.
+      if (d > 2) continue;
+      score = 2 + d;
+    }
+    // Tiebreak on shorter labels (better exact intent).
+    score = score * 100 + label.length;
+    if (score < bestScore) { bestScore = score; best = c; }
+  }
+  if (!best) return null;
+
+  const cmd = best.arg ? `${best.verb} ${best.arg}` : best.verb;
+  const hint = `jumping to ${best.place}`;
+  return { cmd, hint };
 }
 
 function closestCommand(input) {
@@ -1241,9 +1352,7 @@ function renderFile(path, opts) {
   }
   if (name === 'contact')  { printLine(`<span class="nowrap">${escapeHtml(CONTACT_TEXT)}</span>`); afterFile(opts); return; }
   if (name === 'hours')    { printLine(`<span class="nowrap">${escapeHtml(HOURS_TEXT)}</span>`);   afterFile(opts); return; }
-  if (name === 'now')      { printLine(`<span class="nowrap">${escapeHtml(NOW_TEXT)}</span>`);     afterFile(opts); return; }
   if (name === 'colophon') { printLine(`<span class="nowrap">${escapeHtml(COLOPHON_TEXT)}</span>`); afterFile(opts); return; }
-  if (name === 'guestbook'){ printLine(`<span class="nowrap">${escapeHtml(GUESTBOOK_TEXT)}</span>`); afterFile(opts); return; }
 
   if (isProject) {
     const slug = path[2];
@@ -2602,6 +2711,9 @@ function boot() {
 
   if (hasVisitedCookie() || REDUCED) {
     setVisitedCookie();
+    // Auto-list on first paint so visitors see the navigable filesystem
+    // immediately, without having to know to type `ls`.
+    cmd_ls([]);
     return;
   }
   busy = true;
@@ -2639,6 +2751,9 @@ function boot() {
   const finish = setTimeout(() => {
     busy = false;
     setVisitedCookie();
+    // Boot ceremony done — reveal the filesystem so the visitor has something
+    // to click without needing to know the `ls` command.
+    cmd_ls([]);
   }, 1200);
   timers.push(finish);
 
@@ -2655,6 +2770,8 @@ function boot() {
     });
     busy = false;
     setVisitedCookie();
+    // Same auto-ls after a skipped boot — parity with the timed path.
+    cmd_ls([]);
     window.removeEventListener('keydown', skip, true);
     window.removeEventListener('mousedown', skip, true);
     window.removeEventListener('wheel', skip, true);
