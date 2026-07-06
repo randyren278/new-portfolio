@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 // declarations, which would fight the "byte-for-byte" preservation goal.
 
 export const metadata: Metadata = {
-  title: 'Randy Ren — Museum Shell',
+  title: 'Randy Ren',
 };
 
 export const viewport: Viewport = {

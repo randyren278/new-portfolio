@@ -33,7 +33,7 @@ export function MuseumShell({ content }: { content: ShellContent }) {
       {/* Page-level first-visit loader (hard refresh only). Cookie-gated. */}
       <div id="page-loader" aria-hidden="true" data-active="0">
         <div className="pl-inner">
-          <div className="pl-kicker">§ RANDY.SH / MUSEUM SHELL</div>
+          <div className="pl-kicker">§ RANDY.SH</div>
           <div className="pl-counter">
             <span id="pl-num">0</span>
             <span className="pl-pct">%</span>
@@ -47,7 +47,7 @@ export function MuseumShell({ content }: { content: ShellContent }) {
           </div>
         </div>
       </div>
-      <div className="chrome-tr">RANDY REN · MUSEUM SHELL · v0.9</div>
+      <div className="chrome-tr">RANDY REN</div>
       <div className="chrome-br" id="chrome-cmdk">
         ⌘K palette
       </div>
@@ -60,7 +60,7 @@ export function MuseumShell({ content }: { content: ShellContent }) {
           <span
             id="input-area"
             role="textbox"
-            aria-label="museum shell prompt"
+            aria-label="randy.sh prompt"
             tabIndex={0}
           >
             <span className="txt" id="input-before" />

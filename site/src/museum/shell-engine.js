@@ -110,7 +110,7 @@ function scrollBottom() {
 function makePromptSpan(pwdText) {
   const s = document.createElement('span');
   s.className = 'prompt-line';
-  s.innerHTML = `<span class="prompt-user">visitor</span><span class="prompt-at">@museum</span><span class="prompt-colon">:</span><span class="prompt-pwd">${escapeHtml(pwdText)}</span><span class="prompt-dollar">$ </span>`;
+  s.innerHTML = `<span class="prompt-user">visitor</span><span class="prompt-at">@studio</span><span class="prompt-colon">:</span><span class="prompt-pwd">${escapeHtml(pwdText)}</span><span class="prompt-dollar">$ </span>`;
   return s;
 }
 
@@ -183,7 +183,7 @@ function chipSet() {
     if (visibleSlug) {
       const title = visibleSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
       return [
-        { l1: 'Open the plate', cmd: `open ${visibleSlug}` },
+        { l1: 'Open the project', cmd: `open ${visibleSlug}` },
         { l1: 'Back home',      cmd: 'cd ~' }
       ];
     }
@@ -205,7 +205,7 @@ function chipSet() {
     const next = idx >= 0 && idx < ORDER.length - 1 ? ORDER[idx + 1] : null;
     const title = (s) => s.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
     const chips = [
-      { l1: `Open the plate`, cmd: `open ${slug}` }
+      { l1: `Open the project`, cmd: `open ${slug}` }
     ];
     if (next) chips.push({ l1: `Next: ${title(next)}`, cmd: `cd ${next}` });
     if (prev) chips.push({ l1: `Prev: ${title(prev)}`, cmd: `cd ${prev}` });
@@ -926,7 +926,7 @@ function cmd_open(args) {
 
 function cmd_hours() {
   printLine(`<span class="nowrap">${escapeHtml(HOURS_TEXT)}</span>`);
-  printLine(`<span class="marg"># the museum keeps a quiet room. reach out anytime — replies within a day.</span>`);
+  printLine(`<span class="marg"># the studio keeps quiet hours for writing. reach out anytime — replies within a day.</span>`);
 }
 function cmd_contact() {
   printLine(`<span class="nowrap">${escapeHtml(CONTACT_TEXT)}</span>`);
@@ -940,7 +940,7 @@ function cmd_help() {
     ['cd',      'change directory (accepts ~, .., paths)'],
     ['cat',     'print a file'],
     ['open',    'open a project — label + plate'],
-    ['hours',   'museum hours'],
+    ['hours',   'hours'],
     ['contact', 'ways to reach randy'],
     ['latest',  'most recent gps activity from strava'],
     ['whoami',  'you are the visitor'],
@@ -981,7 +981,7 @@ function cmd_history() {
 
 /* ---------- latest: Strava field recording ----------
    Fetches /api/strava/latest, formats distance + pace, renders an inline
-   card in the same visual language as the wall labels. GPS trace is drawn
+   card in the same visual language as the studio notes. GPS trace is drawn
    as an SVG polyline in --ink on --cream. */
 
 // In-shell memoization — avoids a network round-trip on repeat invocations
@@ -1279,7 +1279,7 @@ function afterFile(opts) {
   }
 }
 
-/* ---------- Wall label — inline HTML card (serif + mono, no ASCII box) ---------- */
+/* ---------- Studio note — inline HTML card (serif + mono, no ASCII box) ---------- */
 function labelCardEl(slug) {
   const m = MEDIUMS[slug];
   const card = document.createElement('div');
@@ -1288,7 +1288,7 @@ function labelCardEl(slug) {
 
   const kicker = document.createElement('div');
   kicker.className = 'label-kicker';
-  kicker.textContent = '§ Wall label';
+  kicker.textContent = '§ Studio note';
 
   const title = document.createElement('h2');
   title.className = 'label-title';
@@ -1304,7 +1304,7 @@ function labelCardEl(slug) {
     ['Year', String(m.year)],
     ['Medium', m.medium],
     ['Dimensions', m.dim],
-    ['Collection', 'Collection of the artist'],
+    ['From',       'From the studio'],
   ];
   for (const [k, v] of rows) {
     const dt = document.createElement('dt'); dt.textContent = k;
@@ -1321,7 +1321,7 @@ function labelCardEl(slug) {
 
   const hint = document.createElement('div');
   hint.className = 'label-hint';
-  hint.innerHTML = 'Type <span class="lk">open ' + slug + '</span> to see the plate.';
+  hint.innerHTML = 'Type <span class="lk">open ' + slug + '</span> to see the full page.';
 
   card.appendChild(kicker);
   card.appendChild(title);
@@ -1413,7 +1413,7 @@ function firstVisibleInlineSlug(slugList) {
 
 function aboutCardEl() {
   return inlineCardEl({
-    kicker: '§ COLOPHON',
+    kicker: '§ ABOUT THE STUDIO',
     title: 'Randy Ren',
     meta: [
       ['Based', 'San Francisco, CA'],
@@ -1432,7 +1432,7 @@ function contactCardEl() {
   const gh   = '<a href="https://github.com/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--prussian);font-weight:500;text-decoration:none;border-bottom:1px solid var(--prussian);">randyren</a>';
   const li   = '<a href="https://linkedin.com/in/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--prussian);font-weight:500;text-decoration:none;border-bottom:1px solid var(--prussian);">/in/randyren</a>';
   return inlineCardEl({
-    kicker: '§ CORRESPONDENCE',
+    kicker: '§ GET IN TOUCH',
     title: 'Get in touch',
     meta: [
       ['Email',    mail, 'html'],
@@ -1493,7 +1493,7 @@ function renderLabelAnimated(slug, done) {
   requestAnimationFrame(() => renderChips());
 }
 
-/* Shared corner-typed reveal for wall labels, about, and contact cards.
+/* Shared corner-typed reveal for studio notes, about, and contact cards.
    A small caret walks the card top-to-bottom; each section streams its
    characters left-to-right, section by section. No shimmer. */
 function animateLabelCard(card, done) {
@@ -2609,12 +2609,12 @@ function boot() {
   const now = new Date();
   const stamp = now.toDateString() + ' ' + now.toTimeString().split(' ')[0];
   const lines = [
-    { text: '[randy.sh — museum shell v0.9]', delay: 0 },
+    { text: '[randy.sh — studio v0.9]', delay: 0 },
     { text: `Last login: ${stamp} on tty1`, delay: 90 },
     { text: '', delay: 130 },
     { text: '$ source ~/.randyrc', delay: 220 },
-    { text: '[loading gallery hours...]', umber: true, delay: 380 },
-    { text: '[curator on shift]', umber: true, delay: 560 },
+    { text: '[studio hours — open]', umber: true, delay: 380 },
+    { text: '[lights on]', umber: true, delay: 560 },
     { text: '', delay: 620 },
     { text: 'welcome, visitor.', delay: 780 },
     { text: "type 'help' — or click a chip below to begin.", delay: 920 },
@@ -2628,7 +2628,7 @@ function boot() {
       if (l.text === '') row.innerHTML = '&nbsp;';
       else if (l.umber) row.innerHTML = `<span class="umber">${escapeHtml(l.text)}</span>`;
       else row.textContent = l.text;
-      if (l.text === '[curator on shift]' && !REDUCED) {
+      if (l.text === '[lights on]' && !REDUCED) {
         row.classList.add('boot-pulse');
       }
       buffer.appendChild(row);
@@ -2748,7 +2748,7 @@ function runPageLoader(done) {
 
   // Log lines (staggered as counter advances). Each fires at a percent threshold.
   const lines = [
-    { at:  4, text: '[randy.sh] museum shell v0.9', cls: 'lg-dim' },
+    { at:  4, text: '[randy.sh] studio v0.9', cls: 'lg-dim' },
     { at: 12, text: 'linking /usr/lib/agents..done', cls: 'lg-dim' },
     { at: 22, text: 'mounting /work (6 volumes)..done', cls: 'lg-dim' },
     { at: 34, text: 'reading /randy/.order..done', cls: 'lg-dim' },
@@ -2756,7 +2756,7 @@ function runPageLoader(done) {
     { at: 56, text: 'opening gallery hours..done', cls: 'lg-dim' },
     { at: 66, text: 'loading typeface: Instrument Serif..done', cls: 'lg-dim' },
     { at: 76, text: 'loading typeface: IBM Plex Mono..done', cls: 'lg-dim' },
-    { at: 84, text: 'curator on shift..ok', cls: 'lg-ok' },
+    { at: 84, text: 'lights on..ok', cls: 'lg-ok' },
     { at: 92, text: 'sourcing ~/.randyrc..done', cls: 'lg-dim' },
     { at: 98, text: 'ready.', cls: 'lg-ok' },
   ];
