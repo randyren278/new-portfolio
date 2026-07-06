@@ -950,6 +950,8 @@ function cmd_contact() {
 
 function cmd_help() {
   printLine(`<span class="marg"># type any command, or click a chip below.</span>`);
+  // Intentionally omits `whoami` and `man` — both still work if typed
+  // directly, they just don't need to advertise themselves here.
   const rows = [
     ['pwd',     'print working directory'],
     ['ls',      'list entries in current dir'],
@@ -959,9 +961,7 @@ function cmd_help() {
     ['hours',   'hours'],
     ['contact', 'ways to reach randy'],
     ['latest',  'most recent gps activity from strava'],
-    ['whoami',  'you are the visitor'],
     ['help',    'this message'],
-    ['man',     'manual page for a command'],
     ['history', 'recent commands'],
     ['clear',   'clear the screen (Ctrl-L)'],
   ];
@@ -2864,8 +2864,8 @@ function runPageLoader(done) {
     { at: 12, text: 'linking /usr/lib/agents..done', cls: 'lg-dim' },
     { at: 22, text: 'mounting /work (6 volumes)..done', cls: 'lg-dim' },
     { at: 34, text: 'reading /randy/.order..done', cls: 'lg-dim' },
-    { at: 44, text: 'unlocking rooms i–vi..ok', cls: 'lg-ok' },
-    { at: 56, text: 'opening gallery hours..done', cls: 'lg-dim' },
+    { at: 44, text: 'linking /work/*..ok', cls: 'lg-ok' },
+    { at: 56, text: 'starting shell..done', cls: 'lg-dim' },
     { at: 66, text: 'loading typeface: Instrument Serif..done', cls: 'lg-dim' },
     { at: 76, text: 'loading typeface: IBM Plex Mono..done', cls: 'lg-dim' },
     { at: 84, text: 'lights on..ok', cls: 'lg-ok' },

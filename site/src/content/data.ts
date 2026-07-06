@@ -49,11 +49,11 @@ export const COLOPHON_TEXT =
 palette   cream, ink, prussian, warm umber
 stack     raw HTML, raw CSS, raw JS. no libraries.
 built     by hand, in San Francisco, 2026.
-thanks    to the curators who reviewed this room.`;
+thanks    to the friends who reviewed this early.`;
 
 export const MAN = {
   pwd:     { name: 'pwd(1)', desc: 'print the name of the current working directory.', synopsis: 'pwd', see: 'cd, ls' },
-  ls:      { name: 'ls(1)',  desc: 'list directory contents in exhibition order.',      synopsis: 'ls [path]', see: 'cd, cat' },
+  ls:      { name: 'ls(1)',  desc: 'list directory contents in listing order.',      synopsis: 'ls [path]', see: 'cd, cat' },
   cd:      { name: 'cd(1)',  desc: 'change directory. accepts absolute, relative, .. and ~.', synopsis: 'cd [path]', see: 'pwd, ls' },
   cat:     { name: 'cat(1)', desc: 'concatenate and print files. studio notes animate on first view.', synopsis: 'cat file', see: 'open, ls' },
   open:    { name: 'open(1)', desc: 'opens the full page for a project.', synopsis: 'open project', see: 'cat, ls' },

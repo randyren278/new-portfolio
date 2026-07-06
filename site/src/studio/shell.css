@@ -917,7 +917,7 @@
     50%      { opacity: 0.94; }
   }
 
-  /* (d) Boot log breathing — one-shot pulse on the curator line */
+  /* (d) Boot log breathing — one-shot pulse on the ready line */
   @media (prefers-reduced-motion: no-preference) {
     .boot-pulse {
       animation: bootPulse 900ms ease-in-out 1;
