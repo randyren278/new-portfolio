@@ -65,6 +65,7 @@ export const MAN = {
   history: { name: 'history(1)', desc: 'print numbered command history for this session.', synopsis: 'history', see: '!! and !n' },
   clear:   { name: 'clear(1)', desc: 'clear the terminal buffer. Ctrl-L is a shortcut.', synopsis: 'clear', see: 'help' },
   latest:  { name: 'latest(1)', desc: 'render the most recent GPS activity as an inline field recording.', synopsis: 'latest', see: 'open' },
+  theme:   { name: 'theme(1)', desc: 'switch the shell palette. auto follows the system preference.', synopsis: 'theme dark | light | auto', see: 'help' },
 };
 
 export const PLATE_DATA = {

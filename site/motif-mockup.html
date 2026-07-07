@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>randy.sh — motif treatments</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     Six project motifs × three treatments × two themes.
+     Same SVG geometry pulled straight from shell-engine.js plateFor().
+     Only the color mapping changes per treatment.
+     ============================================================ */
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    background: #141414;
+    color: #ddd;
+    -webkit-font-smoothing: antialiased;
+    padding: 40px 32px 80px;
+  }
+
+  h1 {
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: .02em;
+    margin: 0 0 6px;
+    color: #eee;
+  }
+  h2 {
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: .02em;
+    margin: 40px 0 12px;
+    color: #eee;
+  }
+  h2 .qual { color: #888; font-weight: 400; margin-left: 8px; }
+  .lede {
+    font-size: 12px;
+    color: #888;
+    max-width: 780px;
+    margin: 0 0 8px;
+    line-height: 1.65;
+  }
+  .lede em { color: #ccc; font-style: normal; }
+
+  .container { max-width: 1400px; margin: 0 auto; }
+
+  /* one row per motif; nine columns: four treatments × two themes, plus slug */
+  .motif-row {
+    display: grid;
+    grid-template-columns: 90px repeat(8, 1fr);
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .motif-row.header {
+    position: sticky;
+    top: 0;
+    background: #141414;
+    padding: 12px 0 10px;
+    z-index: 10;
+    border-bottom: 1px solid #2a2a2a;
+    margin-bottom: 14px;
+  }
+  .motif-row.header .col-head {
+    font-size: 10px;
+    color: #999;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .motif-row.header .col-head strong {
+    display: block;
+    color: #f5f5f5;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: .01em;
+    margin-bottom: 2px;
+  }
+  .motif-row.header .col-head em {
+    font-style: normal;
+    color: #666;
+    font-size: 9px;
+  }
+
+  .slug {
+    font-size: 11px;
+    color: #999;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    text-align: right;
+    padding-right: 6px;
+  }
+
+  .cell {
+    background: var(--cell-bg);
+    padding: 8px;
+    border: 1px solid var(--cell-border);
+  }
+  .cell.dark  { --cell-bg: #0a0908; --cell-border: #1a1a1a; }
+  .cell.light { --cell-bg: #fafaf7; --cell-border: #d8d8d5; }
+
+  .cell svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 360 / 200;
+  }
+
+  /* treatment separator */
+  .treatment-sep {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: transparent;
+    margin: 2px 0;
+  }
+
+  /* on-page navigation */
+  .actions {
+    display: flex; gap: 12px;
+    margin: 24px 0 32px;
+    font-size: 12px;
+    color: #999;
+  }
+  .actions strong { color: #eee; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>randy.sh — motif treatments</h1>
+<p class="lede">
+  Six project plate motifs, drawn on both new palettes, in three treatments.
+  Same geometry the engine already draws — only the color mapping changes.
+</p>
+<p class="lede">
+  Rows = motifs (oryzo, halcyon, aperture, fieldnote, signal-garden, loom).
+  Column groups = treatments. Within each group: <em>left = dark, right = light</em>.
+</p>
+
+<div class="actions">
+  <span><strong>A · two-tone</strong>: everything ink, wash muted. Strictest mono.</span>
+  <span><strong>B · one-accent</strong>: warm accent (red-orange both themes).</span>
+  <span><strong>C · stripped</strong>: no wash, no accent. Just ink.</span>
+  <span><strong>D · stripped + heritage</strong>: no wash, blue on dark, red on light.</span>
+</div>
+
+<!-- Header row (sticky) -->
+<div class="motif-row header">
+  <div></div>
+  <div class="col-head"><strong>A · two-tone</strong>dark<em> — #0a0908</em></div>
+  <div class="col-head"><strong>A · two-tone</strong>light<em> — #fafaf7</em></div>
+  <div class="col-head"><strong>B · one-accent</strong>dark</div>
+  <div class="col-head"><strong>B · one-accent</strong>light</div>
+  <div class="col-head"><strong>C · stripped</strong>dark</div>
+  <div class="col-head"><strong>C · stripped</strong>light</div>
+  <div class="col-head"><strong>D · stripped + heritage</strong>dark<em> — blue</em></div>
+  <div class="col-head"><strong>D · stripped + heritage</strong>light<em> — red</em></div>
+</div>
+
+<div id="grid"></div>
+
+</div>
+
+<script>
+/*
+  Motif geometry — copied verbatim from shell-engine.js plateFor(),
+  parameterized by a palette object {ink, muted, accent}.
+
+  Each motif returns an array of stroke element specs + a washRect spec.
+  We then render into SVG per treatment/theme.
+
+  Treatments define how to map the ORIGINAL (ink, umber, prussian) roles:
+    A two-tone   → ink, muted-wash, ink            (prussian collapses to ink)
+    B one-accent → ink, muted-wash, accent         (prussian → accent)
+    C stripped   → ink, no-wash,    ink            (no umber, no prussian chroma)
+
+  Themes provide the concrete color values.
+*/
+
+const svgNS = 'http://www.w3.org/2000/svg';
+const W = 360, H = 200;
+
+// ---- Theme palettes ---------------------------------------------------------
+// `accent` is the strict-mono warm accent (errors / boot pulse / one motif element).
+// `heritage` is the OPPOSITE-CHROMA accent — blue on dark, red on light. It's a
+// nod to the original site's prussian+vermillion pair, used only in treatment D
+// so the plate motifs get one bright element that carries visual DNA from the
+// current site into the new palette.
+const THEMES = {
+  dark:  { ink: '#ededed', muted: '#6a6a6a', accent: '#ff5a45', heritage: '#7cb7ff' /* lifted prussian */ },
+  light: { ink: '#0f0f0f', muted: '#8a8a8a', accent: '#c23a1e', heritage: '#a8100a' /* original vermillion */ },
+};
+
+// ---- Treatments — map the three roles to palette colors + wash opacity ------
+function treatmentA(p) { // two-tone
+  return { primary: p.ink, secondary: p.ink, wash: p.muted, washOpacity: 0.14, glyph: p.muted };
+}
+function treatmentB(p) { // one accent — warm
+  return { primary: p.ink, secondary: p.accent, wash: p.muted, washOpacity: 0.14, glyph: p.muted };
+}
+function treatmentC(p) { // stripped — no wash, ink only
+  return { primary: p.ink, secondary: p.ink, wash: null, washOpacity: 0, glyph: p.muted };
+}
+function treatmentD(p) { // stripped + heritage accent (blue on dark, red on light)
+  return { primary: p.ink, secondary: p.heritage, wash: null, washOpacity: 0, glyph: p.muted };
+}
+
+// ---- Geometry builders (mirrors shell-engine.js) ----------------------------
+function el(tag, attrs) {
+  const e = document.createElementNS(svgNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function arc(cx, cy, r, a1, a2, color) {
+  const toXY = a => [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+  const [x1,y1] = toXY(a1); const [x2,y2] = toXY(a2);
+  const large = (a2 - a1) > Math.PI ? 1 : 0;
+  return el('path', {
+    d: `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`,
+    stroke: color, fill: 'none', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke',
+  });
+}
+function circle(cx, cy, r, color) {
+  return el('circle', { cx, cy, r, stroke: color, fill: 'none', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke' });
+}
+function rect(x, y, w, h, color) {
+  return el('rect', { x, y, width: w, height: h, stroke: color, fill: 'none', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke' });
+}
+function line(x1, y1, x2, y2, color) {
+  return el('line', { x1, y1, x2, y2, stroke: color, 'stroke-width': 1, fill: 'none', 'vector-effect': 'non-scaling-stroke' });
+}
+function poly(pts, color) {
+  return el('polygon', { points: pts, stroke: color, fill: 'none', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke' });
+}
+
+// Renders one motif into a fresh SVG using the given treatment map.
+// `t` has { primary, secondary, wash, washOpacity, glyph }
+function renderMotif(slug, t) {
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: svgNS });
+
+  // wash first so strokes sit on top (matches engine z-order: wash appended last but visually behind by opacity)
+  let washRect = null;
+  const strokes = [];
+
+  if (slug === 'oryzo') {
+    strokes.push(arc(180, 130, 90, Math.PI*1.05, Math.PI*1.95, t.primary));
+    strokes.push(arc(180, 130, 68, Math.PI*1.10, Math.PI*1.90, t.primary));
+    strokes.push(arc(180, 130, 46, Math.PI*1.15, Math.PI*1.85, t.secondary)); // <- prussian role
+    strokes.push(line(180, 130, 180, 30, t.primary));
+    if (t.wash) washRect = rect(90, 30, 180, 100, 'none'), washRect.setAttribute('fill', t.wash);
+  } else if (slug === 'halcyon') {
+    strokes.push(rect(60, 40, 240, 120, t.primary));
+    strokes.push(poly('90,90 130,90 120,120',   t.secondary)); // <- prussian
+    strokes.push(poly('220,70 260,70 250,100',  t.primary));
+    strokes.push(poly('180,130 220,130 210,160', t.secondary)); // <- prussian
+    if (t.wash) washRect = rect(60, 40, 240, 120, 'none'), washRect.setAttribute('fill', t.wash);
+  } else if (slug === 'aperture') {
+    strokes.push(circle(180, 100, 78, t.primary));
+    strokes.push(circle(180, 100, 54, t.primary));
+    strokes.push(circle(180, 100, 30, t.secondary)); // <- prussian
+    strokes.push(circle(180, 100, 12, t.primary));
+    if (t.wash) washRect = rect(102, 22, 156, 156, 'none'), washRect.setAttribute('fill', t.wash);
+  } else if (slug === 'fieldnote') {
+    for (let i = 0; i < 7; i++) strokes.push(line(60, 40 + i*20, 300, 40 + i*20, t.primary));
+    strokes.push(line(210, 30, 210, 170, t.secondary)); // <- prussian
+    if (t.wash) washRect = rect(60, 30, 240, 150, 'none'), washRect.setAttribute('fill', t.wash);
+  } else if (slug === 'signal-garden') {
+    const hex = (cx, cy, r) => {
+      let pts = '';
+      for (let k = 0; k < 6; k++) {
+        const a = Math.PI/3 * k + Math.PI/6;
+        pts += `${(cx + r*Math.cos(a)).toFixed(2)},${(cy + r*Math.sin(a)).toFixed(2)} `;
+      }
+      return pts.trim();
+    };
+    const offsets = [[-70,-30],[0,-30],[70,-30],[-35,20],[35,20],[0,70]];
+    offsets.forEach((o, i) => {
+      const p = poly(hex(180+o[0], 100+o[1], 22), i===2 ? t.secondary : t.primary); // idx 2 was prussian
+      p.setAttribute('transform', `rotate(4 ${180+o[0]} ${100+o[1]})`);
+      strokes.push(p);
+    });
+    if (t.wash) washRect = rect(80, 50, 200, 130, 'none'), washRect.setAttribute('fill', t.wash);
+  } else if (slug === 'loom') {
+    const cx = 180, cy = 100;
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI * 2 / 6) * i;
+      const x = cx + 40 * Math.cos(a), y = cy + 40 * Math.sin(a);
+      strokes.push(circle(x, y, 32, i === 0 ? t.secondary : t.primary)); // idx 0 was prussian
+    }
+    if (t.wash) washRect = rect(80, 20, 200, 160, 'none'), washRect.setAttribute('fill', t.wash);
+  }
+
+  if (washRect) {
+    washRect.setAttribute('opacity', String(t.washOpacity));
+    svg.appendChild(washRect);
+  }
+  strokes.forEach(s => svg.appendChild(s));
+
+  const glyph = el('text', {
+    x: W - 8, y: H - 6, 'text-anchor': 'end',
+    'font-family': 'IBM Plex Mono, monospace', 'font-size': 9,
+    fill: t.glyph, 'letter-spacing': 1.5,
+  });
+  glyph.textContent = slug.toUpperCase().replace('-', ' ');
+  svg.appendChild(glyph);
+
+  return svg;
+}
+
+// ---- Layout ---------------------------------------------------------------
+const slugs = ['oryzo', 'halcyon', 'aperture', 'fieldnote', 'signal-garden', 'loom'];
+const treatments = [treatmentA, treatmentB, treatmentC, treatmentD];
+const themes = ['dark', 'light'];
+
+const grid = document.getElementById('grid');
+
+slugs.forEach(slug => {
+  const row = document.createElement('div');
+  row.className = 'motif-row';
+
+  const slugCol = document.createElement('div');
+  slugCol.className = 'slug';
+  slugCol.textContent = slug;
+  row.appendChild(slugCol);
+
+  treatments.forEach(fn => {
+    themes.forEach(theme => {
+      const cell = document.createElement('div');
+      cell.className = `cell ${theme}`;
+      const t = fn(THEMES[theme]);
+      cell.appendChild(renderMotif(slug, t));
+      row.appendChild(cell);
+    });
+  });
+
+  grid.appendChild(row);
+});
+</script>
+
+</body>
+</html>

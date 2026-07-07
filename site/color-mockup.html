@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>randy.sh — black & white</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     Two palettes, side-by-side. Sharp. Monochrome plus one accent.
+     Same content in both. Layout unchanged from the real site.
+     ============================================================ */
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    background: #171717;
+    color: #ddd;
+    -webkit-font-smoothing: antialiased;
+    padding: 40px 24px 80px;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: .02em;
+    margin: 0 0 6px;
+    color: #eee;
+  }
+  .lede {
+    font-size: 12px;
+    color: #888;
+    max-width: 720px;
+    margin: 0 0 40px;
+    line-height: 1.65;
+  }
+  .lede em { color: #ccc; font-style: normal; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  @media (max-width: 1100px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #2a2a2a;
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #1f1f1f;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 12px;
+    color: #999;
+  }
+  .card-head strong {
+    color: #f5f5f5;
+    font-weight: 500;
+    letter-spacing: .02em;
+  }
+  .card-head .swatch-row { display: flex; gap: 6px; }
+  .card-head .sw {
+    width: 12px; height: 12px;
+    border: 1px solid rgba(255,255,255,.15);
+  }
+
+  .card-note {
+    padding: 10px 20px 14px;
+    background: #1b1b1b;
+    border-bottom: 1px solid #2a2a2a;
+    color: #888;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .card-note em { color: #bbb; font-style: normal; }
+
+  /* ------------------------------------------------------------
+     Mockup surface — layout identical between the two palettes;
+     the palette overrides the vars below.
+     ------------------------------------------------------------ */
+  .mock {
+    padding: 30px 32px 34px;
+    min-height: 460px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    background: var(--bg);
+    color: var(--ink);
+    position: relative;
+  }
+  .mock .chrome-tr {
+    position: absolute; top: 14px; right: 20px;
+    font-size: 10px; color: var(--muted);
+    letter-spacing: .02em;
+  }
+  .mock .chrome-br {
+    position: absolute; bottom: 14px; right: 20px;
+    font-size: 10px; color: var(--muted);
+    letter-spacing: .02em;
+  }
+
+  .mock .row { white-space: pre-wrap; }
+  .mock .row.blank { height: 1.2em; }
+  .mock .muted { color: var(--muted); }
+
+  /* prompt line */
+  .mock .prompt-user { color: var(--ink); font-weight: 500; }
+  .mock .prompt-at   { color: var(--muted); }
+  .mock .prompt-pwd  { color: var(--ink); font-weight: 500; }
+  .mock .prompt-dollar { color: var(--ink); }
+
+  /* caret — sharp block, breathes */
+  .mock .caret {
+    display: inline-block;
+    width: 7px; height: 1.05em;
+    background: var(--ink);
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: caretBreathe 1100ms cubic-bezier(.4,0,.2,1) infinite;
+  }
+  @keyframes caretBreathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  /* filesystem listing — hierarchy via weight, not color */
+  .mock .fs {
+    color: var(--ink);
+  }
+  .mock .fs .tree { color: var(--muted); }
+  .mock .fs .ext  { color: var(--muted); }
+
+  /* chip row */
+  .mock .chip-row {
+    margin-top: 22px;
+    display: flex; flex-wrap: wrap; gap: 8px 14px;
+    font-size: 12px;
+  }
+  .mock .chip {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1px;
+    cursor: pointer;
+    transition: border-color 120ms ease;
+  }
+  .mock .chip:hover { border-bottom-color: var(--ink); }
+  .mock .chip-sep { color: var(--muted); }
+
+  /* rare accent — only for status/error, so hierarchy stays sharp */
+  .mock .accent { color: var(--accent); }
+
+  /* ------------------------------------------------------------
+     PALETTE — BLACK
+     near-black bg with a whisper of warmth (not clinical grey),
+     near-white ink, muted = 40% of ink. Errors get vermillion.
+     ------------------------------------------------------------ */
+  .p-black {
+    --bg: #0a0908;
+    --ink: #ededed;
+    --muted: #6a6a6a;
+    --rule: #2a2a2a;
+    --accent: #ff5a45;   /* reserved for errors + [lights on] pulse */
+  }
+
+  /* ------------------------------------------------------------
+     PALETTE — WHITE
+     near-white paper, deep ink, same rules mirrored.
+     ------------------------------------------------------------ */
+  .p-white {
+    --bg: #fafaf7;
+    --ink: #0f0f0f;
+    --muted: #8a8a8a;
+    --rule: #d8d8d5;
+    --accent: #c23a1e;
+  }
+
+</style>
+</head>
+<body>
+  <h1>randy.sh — black &amp; white</h1>
+  <p class="lede">
+    Two palettes, same first screen, same content. Strict monochrome — hierarchy
+    carried by weight, opacity, and rules rather than color. <em>One warm accent
+    reserved for errors and the boot pulse</em>, so it means something when it shows.
+  </p>
+
+  <div class="grid">
+
+    <!-- ============================================================
+         BLACK
+    ============================================================ -->
+    <div class="card">
+      <div class="card-head">
+        <strong>Black — OLED-safe, near-black substrate</strong>
+        <div class="swatch-row">
+          <div class="sw" style="background:#0a0908"></div>
+          <div class="sw" style="background:#ededed"></div>
+          <div class="sw" style="background:#6a6a6a"></div>
+          <div class="sw" style="background:#ff5a45"></div>
+        </div>
+      </div>
+      <div class="card-note">
+        <em>#0a0908</em> substrate — pure <em>#000</em> is harsher than it needs to be
+        and can smear on OLED sub-pixels; this is one notch up, imperceptible
+        on OLED, kinder to LCD.
+      </div>
+      <div class="mock p-black">
+        <div class="chrome-tr">randyren.org · studio hours — open</div>
+        <div class="chrome-br">⌘K palette</div>
+
+        <div class="row muted">[randy.sh — studio v0.9]</div>
+        <div class="row muted">Last login: Mon Jul 6 2026 14:22:08 on tty1</div>
+        <div class="row blank"></div>
+        <div class="row">$ source ~/.randyrc</div>
+        <div class="row muted">[studio hours — open]</div>
+        <div class="row muted">[lights on]</div>
+        <div class="row blank"></div>
+        <div class="row">welcome, visitor.</div>
+        <div class="row muted">type 'help' — or click a chip below to begin.</div>
+        <div class="row blank"></div>
+
+        <div class="fs"><span class="tree">├──</span> about<span class="ext">.txt</span></div>
+        <div class="fs"><span class="tree">├──</span> projects/</div>
+        <div class="fs"><span class="tree">├──</span> writing/</div>
+        <div class="fs"><span class="tree">└──</span> contact<span class="ext">.txt</span></div>
+        <div class="row blank"></div>
+
+        <div class="row">
+          <span class="prompt-user">visitor</span><span class="prompt-at">@studio</span><span class="prompt-at">:</span><span class="prompt-pwd">~</span><span class="prompt-dollar">$ </span><span class="caret"></span>
+        </div>
+
+        <div class="chip-row">
+          <span class="chip">about</span>
+          <span class="chip-sep">·</span>
+          <span class="chip">projects</span>
+          <span class="chip-sep">·</span>
+          <span class="chip">writing</span>
+          <span class="chip-sep">·</span>
+          <span class="chip">latest run</span>
+          <span class="chip-sep">·</span>
+          <span class="chip">contact</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         WHITE
+    ============================================================ -->
+    <div class="card">
+      <div class="card-head">
+        <strong>White — near-white paper, deep ink</strong>
+        <div class="swatch-row">
+          <div class="sw" style="background:#fafaf7"></div>
+          <div class="sw" style="background:#0f0f0f"></div>
+          <div class="sw" style="background:#8a8a8a"></div>
+          <div class="sw" style="background:#c23a1e"></div>
+        </div>
+      </div>
+      <div class="card-note">
+        <em>#fafaf7</em> paper — half a notch off pure white, kills the glare of
+        <em>#fff</em> in a bright room. Ink at <em>#0f0f0f</em>, muted at 40%. Same
+        semantic rules as the black one, mirrored.
+      </div>
+      <div class="mock p-white">
+        <div class="chrome-tr">randyren.org · studio hours — open</div>
+        <div class="chrome-br">⌘K palette</div>
+
+        <div class="row muted">[randy.sh — studio v0.9]</div>
+        <div class="row muted">Last login: Mon Jul 6 2026 14:22:08 on tty1</div>
+        <div class="row blank"></div>
+        <div class="row">$ source ~/.randyrc</div>
+        <div class="row muted">[studio hours — open]</div>
+        <div class="row muted">[lights on]</div>
+        <div class="row blank"></div>
+        <div class="row">welcome, visitor.</div>
+        <div class="row muted">type 'help' — or click a chip below to begin.</div>
+        <div class="row blank"></div>
+
+        <div class="fs"><span class="tree">├──</span> about<span class="ext">.txt</span></div>
+        <div class="fs"><span class="tree">├──</span> projects/</div>
+        <div class="fs"><span class="tree">├──</span> writing/</div>
+        <div class="fs"><span class="tree">└──</span> contact<span class="ext">.txt</span></div>
+        <div class="row blank"></div>
+
+        <div class="row">
+          <span class="prompt-user">visitor</span><span class="prompt-at">@studio</span><span class="prompt-at">:</span><span class="prompt-pwd">~</span><span class="prompt-dollar">$ </span><span class="caret"></span>
+        </div>
+
+        <div class="chip-row">
+          <span class="chip">about</span>
+          <span class="chip-sep">·</span>
+          <span class="chip">projects</span>
+          <span class="chip-sep">·</span>
+          <span class="chip">writing</span>
+          <span class="chip-sep">·</span>
+          <span class="chip">latest run</span>
+          <span class="chip-sep">·</span>
+          <span class="chip">contact</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

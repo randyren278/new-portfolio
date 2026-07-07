@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import { HEAD_SCRIPT } from '@/studio/theme';
 
 // Fonts come from Google via a raw <link> tag because the shell CSS
 // references named families by string; using next/font would require
@@ -41,13 +42,35 @@ export const viewport: Viewport = {
   // iPhones — every CSS max(14px, env(safe-area-inset-top)) below depends
   // on this flag.
   viewportFit: 'cover',
-  themeColor: '#F1E8D4',
+  // Two themeColors so iOS Safari's status bar matches the active palette.
+  // The media queries pick the right one based on the *system* preference;
+  // if the user picks a theme explicitly, this becomes cosmetic (still fine).
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fafaf7' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0908' },
+  ],
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // suppressHydrationWarning: the head script below sets a `data-theme`
+    // attribute on <html> BEFORE React hydrates, so the client-side DOM
+    // has an attribute the server-rendered HTML doesn't. React would
+    // otherwise log a hydration warning. This is the same pattern
+    // next-themes and shadcn use and it's safe — we're intentionally
+    // out-of-band, and no descendant state depends on the pre-hydration
+    // attribute value.
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/*
+          Pre-paint theme resolver. Runs synchronously before body renders,
+          sets data-theme on <html> from localStorage or prefers-color-scheme,
+          and starts a matchMedia listener that keeps `auto` in sync with the
+          system. Placing it FIRST in <head> ensures the attribute is set
+          before shell.css parses; without it, we'd get a one-frame flash
+          of the wrong palette on cold loads.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: HEAD_SCRIPT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

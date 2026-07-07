@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ShellContent } from '@/content/types';
 import { bootShell } from './shell-engine.js';
+import { apply as applyTheme, current as currentTheme, getStored } from './theme';
 import './shell.css';
 
 /**
@@ -20,12 +21,29 @@ import './shell.css';
 export function StudioShell({ content }: { content: ShellContent }) {
   const mountedRef = useRef(false);
 
+  // `theme` is the currently-rendered value ('light' | 'dark'). Initialized
+  // to 'light' for SSR — the pre-paint script in <head> already set the
+  // correct `data-theme` on <html> before this component hydrates, so the
+  // useEffect below reads the DOM to sync state without flicker.
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
   useEffect(() => {
     // React 18/19 StrictMode double-invokes effects in dev; the engine binds
     // window listeners and starts animations, so we boot it exactly once.
     if (mountedRef.current) return;
     mountedRef.current = true;
+    setTheme(currentTheme());
     bootShell(content);
+
+    // Keep the toggle glyph in sync when theme flips from another source
+    // (the `theme` command in the engine, or the system-pref matchMedia
+    // listener when the user hasn't picked a specific theme).
+    const onFlip = (e: Event) => {
+      const detail = (e as CustomEvent<{ theme: 'light' | 'dark' }>).detail;
+      if (detail?.theme) setTheme(detail.theme);
+    };
+    document.addEventListener('themechange', onFlip);
+    return () => document.removeEventListener('themechange', onFlip);
   }, [content]);
 
   // Fires the same event the engine's Cmd+K listener listens for. The
@@ -35,6 +53,18 @@ export function StudioShell({ content }: { content: ShellContent }) {
     document.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }),
     );
+  };
+
+  // Toggle click. If the visitor was on 'auto' (no stored value) we flip
+  // to the opposite of what's currently rendered — treat this as their
+  // explicit first choice. Otherwise flip between their explicit choices.
+  const toggleTheme = () => {
+    const stored = getStored();
+    if (stored === 'auto') {
+      applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+    } else {
+      applyTheme(stored === 'dark' ? 'light' : 'dark');
+    }
   };
 
   return (
@@ -56,6 +86,25 @@ export function StudioShell({ content }: { content: ShellContent }) {
           </div>
         </div>
       </div>
+      {/*
+        Top-left chrome — dark/light toggle. Symmetrical to .chrome-tr.
+        Filled dot for the active theme. Same pointer-events pattern as
+        .chrome-br: inert on desktop (preserves drag-select from that
+        corner), tappable on touch. The button element gives us a11y and
+        keyboard focus; the aria-label follows the ACTION (what the click
+        will do) rather than the current state.
+      */}
+      <button
+        type="button"
+        className="chrome-tl"
+        id="chrome-theme"
+        onClick={toggleTheme}
+        aria-label={
+          theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+        }
+      >
+        {theme === 'dark' ? '● dark' : '○ light'}
+      </button>
       <div className="chrome-tr">RANDY REN</div>
       {/*
         The bottom-right chrome hint is now a real button on touch devices —

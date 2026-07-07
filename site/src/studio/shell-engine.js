@@ -12,6 +12,25 @@ const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // "Open the project" (which implies the plate) becomes "Show the note".
 const TOUCH = window.matchMedia('(pointer: coarse)').matches;
 
+/* ---------- Theme-aware color palette ----------
+   All inline SVG generation reads colors here rather than hardcoding hex.
+   Values come from the CSS custom properties on <html data-theme="…">,
+   which is set pre-paint by src/studio/theme.ts. Call this fresh at each
+   render/redraw site — the user can flip theme at any time, and the
+   `themechange` CustomEvent (dispatched by theme.ts) triggers a redraw
+   pass through the listener at the bottom of this file.
+
+   Named `themePalette` to avoid shadowing the `palette` DOM constant
+   later in this file (the Cmd-K palette element). */
+function themePalette() {
+  const cs = getComputedStyle(document.documentElement);
+  return {
+    ink:    cs.getPropertyValue('--ink').trim()    || '#111',
+    muted:  cs.getPropertyValue('--muted').trim()  || '#7A4A1F',
+    accent: cs.getPropertyValue('--accent').trim() || '#a8100a',
+  };
+}
+
 /* ---------- Filesystem model ---------- */
 
 /* Content constants — sourced from server-injected `content` object.
@@ -103,7 +122,9 @@ const marginHint = document.getElementById('margin-hint');
 const chromeCmdK = document.getElementById('chrome-cmdk');
 
 function scrollBottom() {
-  requestAnimationFrame(() => { term.scrollTop = term.scrollHeight; });
+  requestAnimationFrame(() => {
+    term.scrollTop = term.scrollHeight;
+  });
 }
 
 function makePromptSpan(pwdText) {
@@ -393,6 +414,50 @@ function handleKeyChar(ch) {
   setInputText(before, after);
 }
 
+/* ---------- Theme change — redraw motifs on flip ----------
+   theme.ts dispatches a `themechange` CustomEvent on `document` whenever
+   the palette flips (toggle click, `theme` command, or an `auto` visitor
+   whose system pref changed). Every SVG built by this engine reads its
+   colors at DRAW time from CSS vars — but the strokes/fills are baked into
+   attributes at build. So on flip we walk every tagged motif SVG and
+   rebuild it in place. Cheap: total ~7 motifs at any time, and only when
+   the user actively toggles. */
+document.addEventListener('themechange', () => {
+  // Plate motif (small, in the plate overlay + inline card): container is
+  // .plate-wrap with data-motif-slug.
+  document.querySelectorAll('.plate-wrap[data-motif-slug]').forEach(wrap => {
+    const slug = wrap.getAttribute('data-motif-slug');
+    if (!slug) return;
+    const fresh = plateFor(slug);
+    // Keep the plate-wrap element; replace its inner SVG. The stroke
+    // reveal animations are one-shot on first draw — after a theme flip
+    // we want the motif to appear at full-opacity, not re-animate.
+    wrap.innerHTML = '';
+    fresh.strokes.forEach(s => { s.style.strokeDashoffset = '0'; });
+    if (fresh.washRect) fresh.washRect.setAttribute('opacity','0.82');
+    fresh.glyph.style.opacity = '1';
+    // The wrap already contains one child (a fresh SVG) from plateFor; move it in.
+    while (fresh.wrap.firstChild) wrap.appendChild(fresh.wrap.firstChild);
+  });
+
+  // Full-page motif (~/projects listing): the SVG itself is tagged.
+  document.querySelectorAll('svg.motif-svg[data-motif-slug]').forEach(oldSvg => {
+    const slug = oldSvg.getAttribute('data-motif-slug');
+    if (!slug) return;
+    const parent = oldSvg.parentNode;
+    if (!parent) return;
+    const { svg: newSvg, strokes } = buildMotif(slug);
+    // Skip the stroke-in animation on flip — motif was already visible.
+    strokes.forEach(s => { s.style.strokeDashoffset = '0'; });
+    parent.replaceChild(newSvg, oldSvg);
+  });
+
+  // Strava polyline: single-path SVG, restroke to fresh ink.
+  document.querySelectorAll('svg[data-strava-polyline] path').forEach(p => {
+    p.setAttribute('stroke', themePalette().ink);
+  });
+});
+
 document.addEventListener('keydown', (e) => {
   if (plateOpen) {
     if (e.key === 'Escape') { e.preventDefault(); closePlate(); return; }
@@ -671,7 +736,7 @@ function commonPrefix(arr) {
 }
 
 /* ---------- Commands ---------- */
-const COMMANDS = ['cat','cd','clear','contact','help','history','hours','latest','ls','man','open','pwd','whoami'];
+const COMMANDS = ['cat','cd','clear','contact','help','history','hours','latest','ls','man','open','pwd','theme','whoami'];
 
 function submitInput(opts) {
   opts = opts || {};
@@ -762,6 +827,7 @@ function runCommand(cmd, opts) {
     case 'man':      cmd_man(args); break;
     case 'history':  cmd_history(); break;
     case 'clear':    clearScreen(); break;
+    case 'theme':    cmd_theme(args); break;
     default:         unknown(c);
   }
 }
@@ -977,6 +1043,7 @@ function cmd_help() {
     ['latest',  'most recent gps activity from strava'],
     ['help',    'this message'],
     ['history', 'recent commands'],
+    ['theme',   'dark | light | auto'],
     ['clear',   'clear the screen (Ctrl-L)'],
   ];
   const w = 9;
@@ -1007,6 +1074,46 @@ function cmd_history() {
     const idx = String(i + 1).padStart(4, ' ');
     printLine(`<span class="nowrap">${escapeHtml(idx)}  ${escapeHtml(h)}</span>`);
   });
+}
+
+/* ---------- theme: dark | light | auto ----------
+   Reads/writes the same localStorage key as src/studio/theme.ts (`theme`)
+   and dispatches the same `themechange` event so the redraw listener at
+   the bottom of this file picks it up. Also drives the top-left chrome
+   button's glyph — see StudioShell.tsx's `themechange` handler.
+
+   Without an argument, prints the current effective theme and stored
+   preference. `theme auto` clears the stored value so the visitor
+   follows their system preference again. */
+function cmd_theme(args) {
+  const arg = (args[0] || '').toLowerCase();
+  const html = document.documentElement;
+  const stored = (() => {
+    try { return localStorage.getItem('theme') || 'auto'; } catch { return 'auto'; }
+  })();
+  const rendered = html.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+
+  if (!arg) {
+    printLine(`<span class="dim">theme rendered: ${rendered}, stored: ${stored}</span>`);
+    printLine('<span class="dim">usage: theme dark | light | auto</span>');
+    return;
+  }
+  if (arg !== 'dark' && arg !== 'light' && arg !== 'auto') {
+    printLine(`<span class="err">theme: unknown value "${escapeHtml(arg)}"; expected dark, light, or auto</span>`);
+    return;
+  }
+
+  const next = arg === 'auto'
+    ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : arg;
+
+  html.setAttribute('data-theme', next);
+  try {
+    if (arg === 'auto') localStorage.removeItem('theme');
+    else localStorage.setItem('theme', arg);
+  } catch {}
+  document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: next } }));
+  printLine(`<span class="dim">theme set to ${arg}${arg === 'auto' ? ` (resolved: ${next})` : ''}</span>`);
 }
 
 /* ---------- latest: Strava field recording ----------
@@ -1132,10 +1239,11 @@ function latestCardEl(activity) {
   svg.setAttribute('viewBox', '0 0 360 200');
   svg.setAttribute('width', '100%');
   svg.setAttribute('style', 'display:block; max-width:100%; height:auto;');
+  svg.setAttribute('data-strava-polyline', '1'); // for themechange redraw
   const path = document.createElementNS(svgNS, 'path');
   path.setAttribute('d', activity.polylinePath);
   path.setAttribute('fill', 'none');
-  path.setAttribute('stroke', '#111'); // --ink
+  path.setAttribute('stroke', themePalette().ink);
   path.setAttribute('stroke-width', '1');
   path.setAttribute('stroke-linejoin', 'round');
   path.setAttribute('stroke-linecap', 'round');
@@ -1548,10 +1656,10 @@ function aboutCardEl() {
 }
 
 function contactCardEl() {
-  const mail = '<a href="mailto:hey@randy.sh" class="lk" style="color:var(--prussian);font-weight:500;text-decoration:none;border-bottom:1px solid var(--prussian);">hey@randy.sh</a>';
-  const tw   = '<a href="https://twitter.com/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--prussian);font-weight:500;text-decoration:none;border-bottom:1px solid var(--prussian);">@randyren</a>';
-  const gh   = '<a href="https://github.com/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--prussian);font-weight:500;text-decoration:none;border-bottom:1px solid var(--prussian);">randyren</a>';
-  const li   = '<a href="https://linkedin.com/in/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--prussian);font-weight:500;text-decoration:none;border-bottom:1px solid var(--prussian);">/in/randyren</a>';
+  const mail = '<a href="mailto:hey@randy.sh" class="lk" style="color:var(--ink);font-weight:500;text-decoration:none;border-bottom:1px solid var(--ink);">hey@randy.sh</a>';
+  const tw   = '<a href="https://twitter.com/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--ink);font-weight:500;text-decoration:none;border-bottom:1px solid var(--ink);">@randyren</a>';
+  const gh   = '<a href="https://github.com/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--ink);font-weight:500;text-decoration:none;border-bottom:1px solid var(--ink);">randyren</a>';
+  const li   = '<a href="https://linkedin.com/in/randyren" target="_blank" rel="noopener" class="lk" style="color:var(--ink);font-weight:500;text-decoration:none;border-bottom:1px solid var(--ink);">/in/randyren</a>';
   return inlineCardEl({
     kicker: '§ GET IN TOUCH',
     title: 'Get in touch',
@@ -1889,12 +1997,20 @@ function plateFor(slug) {
   const svgNS = 'http://www.w3.org/2000/svg';
   const wrap = document.createElement('div');
   wrap.className = 'plate-wrap';
+  wrap.setAttribute('data-motif-slug', slug); // for themechange redraw
   const svg = document.createElementNS(svgNS, 'svg');
   const W = 360, H = 200;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   svg.setAttribute('width', W);
   svg.setAttribute('height', H);
-  const ink = '#111', umber = '#7A4A1F', prussian = '#1F3A5F';
+  /* Treatment D — stripped + heritage accent.
+     `ink` for the majority of strokes, `accent` for the one asymmetric
+     element per motif (was prussian in the old cream palette). No wash —
+     the motif floats on the plate figure's own muted radial. `muted` is
+     used only for the corner slug glyph. All colors resolved fresh so a
+     `themechange` redraw picks up the flipped palette. */
+  const p = themePalette();
+  const ink = p.ink, accent = p.accent, muted = p.muted;
   const strokes = [];
 
   function arc(cx,cy,r,a1,a2,color){
@@ -1941,31 +2057,23 @@ function plateFor(slug) {
   if (slug === 'oryzo') {
     strokes.push(arc(180, 130, 90, Math.PI*1.05, Math.PI*1.95, ink));
     strokes.push(arc(180, 130, 68, Math.PI*1.10, Math.PI*1.90, ink));
-    strokes.push(arc(180, 130, 46, Math.PI*1.15, Math.PI*1.85, prussian));
+    strokes.push(arc(180, 130, 46, Math.PI*1.15, Math.PI*1.85, accent));
     strokes.push(line(180, 130, 180, 30, ink));
-    washRect = rect(90, 30, 180, 100, 'none');
-    washRect.setAttribute('fill', umber);
   } else if (slug === 'halcyon') {
     strokes.push(rect(60, 40, 240, 120, ink));
-    strokes.push(poly('90,90 130,90 120,120', prussian));
+    strokes.push(poly('90,90 130,90 120,120', accent));
     strokes.push(poly('220,70 260,70 250,100', ink));
-    strokes.push(poly('180,130 220,130 210,160', prussian));
-    washRect = rect(60, 40, 240, 120, 'none');
-    washRect.setAttribute('fill', umber);
+    strokes.push(poly('180,130 220,130 210,160', accent));
   } else if (slug === 'aperture') {
     strokes.push(circle(180, 100, 78, ink));
     strokes.push(circle(180, 100, 54, ink));
-    strokes.push(circle(180, 100, 30, prussian));
+    strokes.push(circle(180, 100, 30, accent));
     strokes.push(circle(180, 100, 12, ink));
-    washRect = rect(102, 22, 156, 156, 'none');
-    washRect.setAttribute('fill', umber);
   } else if (slug === 'fieldnote') {
     for (let i = 0; i < 7; i++) {
       strokes.push(line(60, 40 + i * 20, 300, 40 + i * 20, ink));
     }
-    strokes.push(line(210, 30, 210, 170, prussian));
-    washRect = rect(60, 30, 240, 150, 'none');
-    washRect.setAttribute('fill', umber);
+    strokes.push(line(210, 30, 210, 170, accent));
   } else if (slug === 'signal-garden') {
     const hex = (cx, cy, r) => {
       let pts = '';
@@ -1977,21 +2085,17 @@ function plateFor(slug) {
     };
     const offsets = [[-70,-30],[0,-30],[70,-30],[-35,20],[35,20],[0,70]];
     offsets.forEach((o,i) => {
-      const p = poly(hex(180+o[0], 100+o[1], 22), i===2 ? prussian : ink);
+      const p = poly(hex(180+o[0], 100+o[1], 22), i===2 ? accent : ink);
       p.setAttribute('transform', `rotate(4 ${180+o[0]} ${100+o[1]})`);
       strokes.push(p);
     });
-    washRect = rect(80, 50, 200, 130, 'none');
-    washRect.setAttribute('fill', umber);
   } else if (slug === 'loom') {
     const cx = 180, cy = 100;
     for (let i = 0; i < 6; i++) {
       const a = (Math.PI * 2 / 6) * i;
       const x = cx + 40 * Math.cos(a), y = cy + 40 * Math.sin(a);
-      strokes.push(circle(x, y, 32, i === 0 ? prussian : ink));
+      strokes.push(circle(x, y, 32, i === 0 ? accent : ink));
     }
-    washRect = rect(80, 20, 200, 160, 'none');
-    washRect.setAttribute('fill', umber);
   }
 
   strokes.forEach(s => svg.appendChild(s));
@@ -2005,7 +2109,7 @@ function plateFor(slug) {
   g.setAttribute('text-anchor','end');
   g.setAttribute('font-family','IBM Plex Mono, monospace');
   g.setAttribute('font-size','9');
-  g.setAttribute('fill', umber);
+  g.setAttribute('fill', muted);
   g.setAttribute('letter-spacing','1.5');
   g.textContent = slug.toUpperCase().replace('-',' ');
   svg.appendChild(g);
@@ -2199,7 +2303,7 @@ function buildStripes() {
     const l = document.createElementNS(ns, 'line');
     l.setAttribute('x1', x); l.setAttribute('x2', x);
     l.setAttribute('y1', 0); l.setAttribute('y2', 500);
-    l.setAttribute('stroke', '#111');
+    l.setAttribute('stroke', themePalette().ink);
     l.setAttribute('stroke-width', '1');
     l.setAttribute('opacity', '0.06');
     l.setAttribute('vector-effect', 'non-scaling-stroke');
@@ -2212,10 +2316,15 @@ function buildMotif(slug) {
   const ns = svgNS();
   const svg = document.createElementNS(ns, 'svg');
   svg.setAttribute('class', 'motif-svg');
+  svg.setAttribute('data-motif-slug', slug); // for themechange redraw
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
   const W = 1000, H = 500;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const ink = '#111', umber = '#7A4A1F', prussian = '#1F3A5F';
+  /* Full-page motif ~/projects. Same treatment-D mapping as plateFor().
+     `about` motif keeps its subtle background rectangle — we use muted
+     instead of the old umber. Colors read live from CSS vars. */
+  const p = themePalette();
+  const ink = p.ink, accent = p.accent, muted = p.muted;
   const strokes = [];
 
   const addLine = (x1,y1,x2,y2,color,opacity,sw) => {
@@ -2250,13 +2359,13 @@ function buildMotif(slug) {
   };
 
   if (slug === 'oryzo') {
-    // dense vertical hairlines + horizontal prussian rule
+    // dense vertical hairlines + horizontal accent rule
     for (let x = 40; x < W - 40; x += 6) {
       const el = addLine(x, 60, x, H - 60, ink, 0.28);
       svg.appendChild(el);
       strokes.push(el);
     }
-    const rule = addLine(40, H/2, W - 40, H/2, prussian, 1, 1.5);
+    const rule = addLine(40, H/2, W - 40, H/2, accent, 1, 1.5);
     svg.appendChild(rule);
     strokes.push(rule);
   } else if (slug === 'halcyon') {
@@ -2270,7 +2379,7 @@ function buildMotif(slug) {
       const x = 60 + r() * (W - 120);
       const y = 60 + r() * (H - 120);
       const sz = 14 + r() * 10;
-      const color = r() > 0.7 ? prussian : ink;
+      const color = r() > 0.7 ? accent : ink;
       const opacity = 0.3 + r() * 0.55;
       const pts = `${x},${y} ${x + sz},${y + sz*0.35} ${x + sz*0.4},${y + sz*0.75} ${x + sz*0.25},${y + sz}`;
       const p = addPoly(pts, color, opacity, true);
@@ -2282,13 +2391,13 @@ function buildMotif(slug) {
     const cx = W/2, cy = H/2;
     const radii = [200, 160, 122, 88, 58, 32];
     radii.forEach((rd, i) => {
-      const c = addCircle(cx, cy, rd, i === radii.length - 1 ? prussian : ink, 0.7 - i*0.05);
+      const c = addCircle(cx, cy, rd, i === radii.length - 1 ? accent : ink, 0.7 - i*0.05);
       svg.appendChild(c);
       strokes.push(c);
     });
     // filled iris center
-    const iris = addCircle(cx, cy, 14, prussian, 1);
-    iris.setAttribute('fill', prussian);
+    const iris = addCircle(cx, cy, 14, accent, 1);
+    iris.setAttribute('fill', accent);
     svg.appendChild(iris);
     strokes.push(iris);
   } else if (slug === 'fieldnote') {
@@ -2303,12 +2412,12 @@ function buildMotif(slug) {
     // caret glyph on one line
     const cx = 280, cy = 60 + 5 * 32;
     const caretW = 14, caretH = 20;
-    const p = addPoly(`${cx},${cy - caretH/2} ${cx + caretW},${cy} ${cx},${cy + caretH/2}`, prussian, 1, false);
+    const p = addPoly(`${cx},${cy - caretH/2} ${cx + caretW},${cy} ${cx},${cy + caretH/2}`, accent, 1, false);
     p.setAttribute('stroke-width','1.5');
     svg.appendChild(p);
     strokes.push(p);
     // small vertical hairline for caret bar
-    const bar = addLine(cx + caretW + 6, cy - caretH/2, cx + caretW + 6, cy + caretH/2, prussian, 1, 1.5);
+    const bar = addLine(cx + caretW + 6, cy - caretH/2, cx + caretW + 6, cy + caretH/2, accent, 1, 1.5);
     svg.appendChild(bar);
     strokes.push(bar);
   } else if (slug === 'signal-garden') {
@@ -2333,7 +2442,7 @@ function buildMotif(slug) {
         idx++;
         const seed = ((idx * 9301 + 49297) % 233280) / 233280;
         const filled = seed > 0.72;
-        const p = addPoly(hex(x, y, R * 0.85), filled ? prussian : ink, filled ? 0.7 : 0.4, filled);
+        const p = addPoly(hex(x, y, R * 0.85), filled ? accent : ink, filled ? 0.7 : 0.4, filled);
         svg.appendChild(p);
         strokes.push(p);
       }
@@ -2347,20 +2456,20 @@ function buildMotif(slug) {
       [-R*0.8, R*0.5], [R*0.8, R*0.5], [0, R*0.5 + R*0.6]
     ];
     layout.forEach((o, i) => {
-      const c = addCircle(cx + o[0], cy + o[1], R, i === 0 ? prussian : ink, 0.65);
+      const c = addCircle(cx + o[0], cy + o[1], R, i === 0 ? accent : ink, 0.65);
       svg.appendChild(c);
       strokes.push(c);
     });
   } else if (slug === 'about') {
-    // subtle warm rectangle with a single prussian rule bisecting
+    // subtle muted rectangle with a single accent rule bisecting
     const g = document.createElementNS(ns, 'rect');
     g.setAttribute('x', 60); g.setAttribute('y', 80);
     g.setAttribute('width', W - 120); g.setAttribute('height', H - 160);
-    g.setAttribute('fill', umber);
+    g.setAttribute('fill', muted);
     g.setAttribute('opacity', '0.08');
     g.setAttribute('stroke', 'none');
     svg.appendChild(g);
-    const rule = addLine(60, H/2, W - 60, H/2, prussian, 0.75, 1);
+    const rule = addLine(60, H/2, W - 60, H/2, accent, 0.75, 1);
     svg.appendChild(rule);
     strokes.push(rule);
   } else if (slug === 'contact') {

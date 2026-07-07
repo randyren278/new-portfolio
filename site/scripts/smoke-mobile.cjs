@@ -246,6 +246,38 @@ async function main() {
   });
   results.push(['mobile: viewport meta includes viewport-fit=cover', hasViewportFit]);
 
+  // ---- Theme toggle on mobile ----
+  // (15) chrome-tl is tappable on touch (pointer-events must be auto).
+  // (16) Tapping it flips data-theme.
+  // (17) Tapping it does NOT summon the soft keyboard (keysink must stay
+  //      off-screen; we assert by checking that the active element is not
+  //      an input after the tap).
+  const themeBefore = await page.evaluate(() =>
+    document.documentElement.getAttribute('data-theme'),
+  );
+  const tlPointerEvents = await page.evaluate(() => {
+    const el = document.getElementById('chrome-theme');
+    if (!el) return null;
+    return getComputedStyle(el).pointerEvents;
+  });
+  results.push(['mobile: chrome-tl pointer-events auto', tlPointerEvents === 'auto']);
+
+  await page.tap('#chrome-theme');
+  await page.waitForTimeout(180);
+  const themeAfter = await page.evaluate(() =>
+    document.documentElement.getAttribute('data-theme'),
+  );
+  results.push([
+    'mobile: chrome-tl tap flips data-theme',
+    themeAfter !== themeBefore && (themeAfter === 'dark' || themeAfter === 'light'),
+  ]);
+
+  const activeIsInput = await page.evaluate(() => {
+    const ae = document.activeElement;
+    return !!(ae && ae.tagName === 'INPUT' && ae.id !== 'pal-input');
+  });
+  results.push(['mobile: chrome-tl tap does not focus terminal input', !activeIsInput]);
+
   await page.screenshot({ path: '/tmp/smoke-mobile.png', fullPage: true });
   await browser.close();
 

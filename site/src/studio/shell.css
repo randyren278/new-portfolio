@@ -1,33 +1,68 @@
   /* ============================================================
      randy.sh — studio shell (stylesheet)
-     Palette (locked):
-       #F1E8D4 cream        · background
-       #111    ink          · body & hairlines
-       #1F3A5F prussian     · prompt caret, live links, active row
-       #5A3818 umber-strong · readable secondary text
-       #7A4A1F umber-muted  · marginalia only, actual annotations
-       #a8100a vermillion   · accent glyphs (§, └, error)
-       #7a2d16 err          · command-not-found only
 
-     Contrast rule: on #F1E8D4 cream, we use only #111 (ink), #5A3818 (umber-strong),
-     #7A4A1F (umber-muted, marginalia only), #1F3A5F (prussian), #a8100a (vermillion accent).
-     Never use opacity below 0.55 on foreground text. Never use #7A4A1F at less than 100% opacity
-     for anything the user must read.
+     Palette API (five roles). Two themes, chosen by data-theme on <html>.
+     Set pre-paint by src/studio/theme.ts inline in <head>.
+
+       --bg      background substrate
+       --ink     primary body text, hairlines
+       --muted   secondary text, marginalia, tree glyphs, chip separators
+       --rule    thin dividers, card borders (rgba composited from ink)
+       --accent  the ONE warm accent — errors, boot pulse, motif accent
+
+     Split-rgb pairs (--bg-rgb / --ink-rgb / --muted-rgb) exist so we can
+     compose rgba() from them:  rgba(var(--ink-rgb), 0.16)
+     The `rgb(from …)` syntax isn't universal yet, hence the split.
+
+     Legacy names (--cream, --prussian, --umber, --umber-strong,
+     --umber-muted, --vermillion, --dim-red) are aliases into the new API
+     so the engine's inline color strings keep working during migration.
+     Do not add NEW uses of the legacy names; use --ink / --muted / --accent.
+
+     Contrast rule: never use opacity below 0.55 on foreground TEXT. Where
+     "muted" is intended, use color: var(--muted); opacity: 1 — not a
+     stacked opacity on --ink. Opacity is for genuine fade animations.
      ============================================================ */
 
+  :root[data-theme="light"] {
+    --bg: #fafaf7;
+    --ink: #0f0f0f;
+    --muted: #8a8a8a;
+    --rule: #d8d8d5;
+    --accent: #a8100a;         /* heritage vermillion */
+
+    --bg-rgb: 250 250 247;
+    --ink-rgb: 15 15 15;
+    --muted-rgb: 138 138 138;
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0a0908;
+    --ink: #ededed;
+    --muted: #6a6a6a;
+    --rule: #2a2a2a;
+    --accent: #7cb7ff;         /* heritage prussian, lifted for dark contrast */
+
+    --bg-rgb: 10 9 8;
+    --ink-rgb: 237 237 237;
+    --muted-rgb: 106 106 106;
+  }
+
+  /* Legacy aliases — resolve to the new API. Kept so uncanonicalized
+     references (engine SVG, inline anchor styles) don't break during the
+     migration. Do not introduce new usages. */
   :root {
-    --cream: #F1E8D4;
-    --ink: #111;
-    --prussian: #1F3A5F;
-    --umber: #7A4A1F;
-    --umber-strong: #5A3818;
-    --umber-muted: #7A4A1F;
-    --vermillion: #a8100a;
-    --dim-red: #7a2d16;
+    --cream: var(--bg);
+    --prussian: var(--ink);
+    --umber: var(--muted);
+    --umber-strong: var(--muted);
+    --umber-muted: var(--muted);
+    --vermillion: var(--accent);
+    --dim-red: var(--accent);
   }
 
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; height: 100%; background: var(--cream); }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); }
   body {
     font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
     font-weight: 400;
@@ -94,6 +129,33 @@
   }
   .chrome-br.gone { opacity: 0; }
 
+  /* Top-left chrome — theme toggle. Symmetrical to .chrome-tr but a real
+     button (dispatches theme flip). Unlike .chrome-br this stays tappable
+     on desktop — theme has no keyboard shortcut, and the top-left corner
+     isn't a common drag-select origin like the top-right is. Reset
+     user-agent button chrome so it looks like text. */
+  .chrome-tl {
+    position: fixed; top: 14px; left: 20px;
+    top: max(14px, env(safe-area-inset-top, 0px));
+    left: max(20px, env(safe-area-inset-left, 0px));
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--muted); opacity: 1;
+    letter-spacing: .02em;
+    z-index: 5;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    text-align: left;
+    transition: color 120ms ease;
+  }
+  .chrome-tl:hover { color: var(--ink); }
+  .chrome-tl:focus-visible {
+    outline: 1px solid var(--ink);
+    outline-offset: 3px;
+  }
+
   /* Terminal viewport */
   #term {
     position: absolute; inset: 0;
@@ -104,7 +166,7 @@
     cursor: text;
   }
   #term::-webkit-scrollbar { width: 6px; }
-  #term::-webkit-scrollbar-thumb { background: rgba(122,74,31,.25); border-radius: 3px; }
+  #term::-webkit-scrollbar-thumb { background: rgba(var(--muted-rgb), .25); border-radius: 3px; }
   #term::-webkit-scrollbar-track { background: transparent; }
 
   #buffer {
@@ -154,7 +216,7 @@
     position: relative;
     top: 2px;
     margin: 0 -0.75px;
-    box-shadow: 0 0 0 0 rgba(31,58,95,0.0);
+    box-shadow: 0 0 0 0 rgba(var(--ink-rgb), 0);
   }
   #caret.typing { animation: none; opacity: 1; }
   #caret.blurred {
@@ -228,8 +290,8 @@
     max-width: 62ch;
     margin: 8px 0 4px 0;
     padding: 22px 26px 24px;
-    border: 1px solid rgba(17,17,17,0.16);
-    background: var(--cream);
+    border: 1px solid rgba(var(--ink-rgb), 0.16);
+    background: var(--bg);
     position: relative;
   }
   /* When card is being framed in, hide the native border; the SVG frame draws the border instead. */
@@ -245,19 +307,19 @@
   }
   .label-card > svg.card-frame path {
     fill: none;
-    stroke: rgba(17,17,17,0.24);
+    stroke: rgba(var(--ink-rgb), 0.24);
     stroke-width: 1;
     vector-effect: non-scaling-stroke;
   }
   @media (prefers-reduced-motion: reduce) {
-    .label-card.framing { border-color: rgba(17,17,17,0.16); }
+    .label-card.framing { border-color: rgba(var(--ink-rgb), 0.16); }
     .label-card > svg.card-frame { display: none; }
   }
   .label-kicker {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
     letter-spacing: 0.14em;
-    color: #a8100a;
+    color: var(--accent);
     text-transform: uppercase;
     margin-bottom: 8px;
   }
@@ -296,7 +358,7 @@
   }
   .label-rule {
     height: 1px;
-    background: rgba(17,17,17,0.16);
+    background: rgba(var(--ink-rgb), 0.16);
     margin: 12px 0 14px 0;
     transform-origin: left center;
   }
@@ -316,10 +378,10 @@
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--umber-strong);
-    opacity: 0.75;
+    color: var(--muted);
+    opacity: 1;
   }
-  .label-hint .lk { color: var(--prussian); }
+  .label-hint .lk { color: var(--ink); }
   /* Reveal animation states — set on card, driven by JS with staggered class flips */
   .label-card.pre .label-kicker,
   .label-card.pre .label-title,
@@ -355,7 +417,7 @@
     pointer-events: none;
     z-index: 5;
     transition: left 40ms linear, top 60ms linear, height 120ms cubic-bezier(0.16,1,0.3,1), opacity 240ms;
-    box-shadow: 0 0 0 0 rgba(31,58,95,0.24);
+    box-shadow: 0 0 0 0 rgba(var(--ink-rgb), 0.24);
   }
   .walk-caret.parked { animation: walkCaretBlink 530ms steps(2, jump-none) 2; }
   .walk-caret.fading { opacity: 0; }
@@ -419,7 +481,7 @@
   /* Cmd-K palette */
   #palette {
     position: fixed; inset: 0;
-    background: rgba(241, 232, 212, 0.95);
+    background: rgba(var(--bg-rgb), 0.95);
     z-index: 20;
     display: none;
     align-items: flex-start;
@@ -457,7 +519,7 @@
     color: var(--ink);
     cursor: pointer;
   }
-  .pal-item .kind { color: var(--umber); font-size: 11px; opacity: .8; }
+  .pal-item .kind { color: var(--muted); font-size: 11px; opacity: 1; }
   .pal-item.sel { background: var(--prussian); color: var(--cream); }
   .pal-item.sel .kind { color: var(--cream); opacity: .8; }
   .pal-empty { padding: 8px; color: var(--umber); font-style: italic; font-family: 'IBM Plex Serif', serif; font-size: 12px; }
@@ -465,8 +527,8 @@
   /* Tab-completion candidates */
   .tab-block {
     display: block;
-    color: var(--ink);
-    opacity: .7;
+    color: var(--muted);
+    opacity: 1;
     white-space: pre-wrap;
     padding: 2px 0 4px 0;
   }
@@ -486,7 +548,7 @@
      ============================================================ */
   .plate-overlay {
     position: fixed; inset: 0;
-    background: rgba(241, 232, 212, 0.35);
+    background: rgba(var(--bg-rgb), 0.35);
     -webkit-backdrop-filter: blur(1.5px);
     backdrop-filter: blur(1.5px);
     z-index: 40;
@@ -506,11 +568,11 @@
     left: 96px; right: 96px;
     max-width: 1400px;
     margin-inline: auto;
-    background: var(--cream);
-    border: 1px solid rgba(17, 17, 17, 0.14);
+    background: var(--bg);
+    border: 1px solid rgba(var(--ink-rgb), 0.14);
     box-shadow:
-      0 24px 60px -12px rgba(17, 17, 17, 0.14),
-      0 4px 12px rgba(17, 17, 17, 0.06);
+      0 24px 60px -12px rgba(var(--ink-rgb), 0.14),
+      0 4px 12px rgba(var(--ink-rgb), 0.06);
     overflow-y: auto;
     overflow-x: hidden;
     opacity: 0.6;
@@ -539,7 +601,7 @@
     top: 0; bottom: 0;
     width: 1px;
     background: var(--ink);
-    opacity: 0.35;
+    opacity: 0.45;
     z-index: 1;
     pointer-events: none;
   }
@@ -630,7 +692,7 @@
     transition-delay: 60ms;
   }
   .plate-year {
-    color: var(--umber-strong);
+    color: var(--muted);
     opacity: 0;
     font-size: 11px;
     letter-spacing: 0.14em;
@@ -644,14 +706,14 @@
     transform: translateY(0);
   }
   .plate-overlay.mounted .plate-year {
-    opacity: 0.75;
+    opacity: 1;
     transform: translateY(0);
   }
 
   .plate-rule {
     height: 1px;
     background: var(--ink);
-    opacity: 0.35;
+    opacity: 0.45;
     margin: 28px 0 22px 0;
     transform-origin: left center;
     transform: scaleX(0);
@@ -721,8 +783,8 @@
     top: 14px; left: 16px;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
-    color: var(--umber-strong);
-    opacity: 0.7;
+    color: var(--muted);
+    opacity: 1;
     letter-spacing: 0.06em;
     z-index: 2;
   }
@@ -731,7 +793,12 @@
   .plate-figure .stripes-svg { position: absolute; inset: 0; z-index: 0; }
   .plate-figure .wash {
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 40% 55%, rgba(122,74,31,0.10) 0%, rgba(122,74,31,0.04) 45%, rgba(31,58,95,0.03) 100%);
+    /* Single-color muted radial. The old cream-era version blended umber
+       and prussian; on strict mono a single wash reads cleaner. */
+    background: radial-gradient(ellipse at 40% 55%,
+      rgba(var(--muted-rgb), 0.10) 0%,
+      rgba(var(--muted-rgb), 0.04) 45%,
+      rgba(var(--muted-rgb), 0.00) 100%);
     z-index: 0;
     pointer-events: none;
   }
@@ -804,7 +871,7 @@
     position: absolute;
     bottom: 32px;
     right: 44px;
-    color: var(--umber-strong);
+    color: var(--muted);
     font-size: 10px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -812,7 +879,7 @@
     transition: opacity 240ms ease;
     transition-delay: 900ms;
   }
-  .plate-overlay.mounted .plate-footer { opacity: 0.75; }
+  .plate-overlay.mounted .plate-footer { opacity: 1; }
 
   @media (prefers-reduced-motion: reduce) {
     .plate-overlay,
@@ -844,9 +911,9 @@
   .label-card .shim {
     display: block;
     background: linear-gradient(90deg,
-      rgba(17,17,17,0.06) 0%,
-      rgba(17,17,17,0.11) 50%,
-      rgba(17,17,17,0.06) 100%);
+      rgba(var(--ink-rgb), 0.06) 0%,
+      rgba(var(--ink-rgb), 0.11) 50%,
+      rgba(var(--ink-rgb), 0.06) 100%);
     background-size: 200% 100%;
     animation: shim 1.2s linear infinite;
   }
@@ -1046,7 +1113,7 @@
     font-size: 10px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #a8100a;             /* vermillion */
+    color: var(--accent);
     opacity: 0;
     animation: pl-fadein 320ms ease-out 40ms forwards;
     margin-bottom: 18px;
@@ -1072,7 +1139,7 @@
     margin-top: 22px;
     height: 1px;
     width: 100%;
-    background: rgba(17,17,17,0.12);
+    background: rgba(var(--ink-rgb), 0.12);
     overflow: hidden;
   }
   #page-loader .pl-bar-fill {
@@ -1090,7 +1157,7 @@
     white-space: pre;
   }
   #page-loader .pl-log .lg-ok  { color: var(--prussian); }
-  #page-loader .pl-log .lg-dim { color: var(--umber-muted); opacity: 0.75; }
+  #page-loader .pl-log .lg-dim { color: var(--muted); opacity: 1; }
   #page-loader .pl-log .lg-line { display: block; opacity: 0; animation: pl-log-in 240ms ease-out forwards; }
   #page-loader .pl-hint {
     position: absolute;
@@ -1113,8 +1180,8 @@
     pointer-events: none;
     background-image: repeating-linear-gradient(
       0deg,
-      rgba(17,17,17,0.015) 0px,
-      rgba(17,17,17,0.015) 1px,
+      rgba(var(--ink-rgb), 0.015) 0px,
+      rgba(var(--ink-rgb), 0.015) 1px,
       transparent 1px,
       transparent 3px
     );
@@ -1264,5 +1331,5 @@
     }
     .plate-essay a:active { opacity: 0.6; }
     .plate-figure .email-plate a:active { border-bottom-color: var(--ink); }
-    .chip:active { background: rgba(122,74,31,.08); }
+    .chip:active { background: rgba(var(--muted-rgb), .08); }
   }
