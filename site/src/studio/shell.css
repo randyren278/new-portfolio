@@ -100,11 +100,22 @@
        cleanly to the desktop values above. */
     top: max(14px, env(safe-area-inset-top, 0px));
     right: max(20px, env(safe-area-inset-right, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; color: var(--umber-strong); opacity: .75;
+    font-size: 11px;
     letter-spacing: .02em;
+    /* Parent is pointer-inert so the wordmark span doesn't block drag-select
+       in the top-right corner. The theme button re-enables pointer-events
+       on itself below. */
     pointer-events: none;
     z-index: 5;
+  }
+  .chrome-tr-mark {
+    color: var(--umber-strong);
+    opacity: .75;
   }
   .chrome-br {
     position: fixed; bottom: 14px; right: 20px;
@@ -129,29 +140,28 @@
   }
   .chrome-br.gone { opacity: 0; }
 
-  /* Top-left chrome — theme toggle. Symmetrical to .chrome-tr but a real
-     button (dispatches theme flip). Unlike .chrome-br this stays tappable
-     on desktop — theme has no keyboard shortcut, and the top-left corner
-     isn't a common drag-select origin like the top-right is. Reset
-     user-agent button chrome so it looks like text. */
-  .chrome-tl {
-    position: fixed; top: 14px; left: 20px;
-    top: max(14px, env(safe-area-inset-top, 0px));
-    left: max(20px, env(safe-area-inset-left, 0px));
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; color: var(--muted); opacity: 1;
-    letter-spacing: .02em;
-    z-index: 5;
+  /* Theme toggle — lives INSIDE the .chrome-tr cluster (under the
+     RANDY REN wordmark). Not fixed; participates in the parent's flex
+     flow so both elements right-align regardless of toggle text width
+     (`○ light` vs `● dark`). Parent is pointer-inert; we re-enable
+     pointer-events here unconditionally (desktop AND touch — theme is
+     the only chrome control that isn't reachable via keyboard shortcut
+     on desktop, so it stays tappable everywhere). */
+  .chrome-theme {
+    pointer-events: auto;
     background: transparent;
     border: 0;
     padding: 0;
     margin: 0;
     cursor: pointer;
-    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: .02em;
     transition: color 120ms ease;
   }
-  .chrome-tl:hover { color: var(--ink); }
-  .chrome-tl:focus-visible {
+  .chrome-theme:hover { color: var(--ink); }
+  .chrome-theme:focus-visible {
     outline: 1px solid var(--ink);
     outline-offset: 3px;
   }
@@ -1037,9 +1047,11 @@
     100% { opacity: 1.0; }
   }
 
-  /* (e) Chrome tag flicker — triggered by JS on a random interval */
+  /* (e) Chrome tag flicker — triggered by JS on a random interval.
+     Applied to the wordmark span (not the parent cluster), so the
+     theme button underneath doesn't dim during the flicker beat. */
   @media (prefers-reduced-motion: no-preference) {
-    .chrome-tr.flicker {
+    .chrome-tr-mark.flicker {
       animation: chromeFlicker 100ms steps(3, end) 1;
     }
   }

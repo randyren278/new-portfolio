@@ -87,25 +87,29 @@ export function StudioShell({ content }: { content: ShellContent }) {
         </div>
       </div>
       {/*
-        Top-left chrome — dark/light toggle. Symmetrical to .chrome-tr.
-        Filled dot for the active theme. Same pointer-events pattern as
-        .chrome-br: inert on desktop (preserves drag-select from that
-        corner), tappable on touch. The button element gives us a11y and
-        keyboard focus; the aria-label follows the ACTION (what the click
-        will do) rather than the current state.
+        Top-right chrome cluster — RANDY REN wordmark plus the theme
+        toggle stacked underneath it. Both are site-identity/site-level
+        controls, so they share a container and the right edge stays
+        flush regardless of the toggle text's width. The parent stays
+        pointer-events:none (so the wordmark doesn't block drag-select
+        near that corner); the button inside re-enables pointer-events
+        so it remains tappable. The aria-label follows the ACTION (what
+        the click will do) rather than the current state.
       */}
-      <button
-        type="button"
-        className="chrome-tl"
-        id="chrome-theme"
-        onClick={toggleTheme}
-        aria-label={
-          theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
-        }
-      >
-        {theme === 'dark' ? '● dark' : '○ light'}
-      </button>
-      <div className="chrome-tr">RANDY REN</div>
+      <div className="chrome-tr">
+        <span className="chrome-tr-mark">RANDY REN</span>
+        <button
+          type="button"
+          className="chrome-theme"
+          id="chrome-theme"
+          onClick={toggleTheme}
+          aria-label={
+            theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+          }
+        >
+          {theme === 'dark' ? '● dark' : '○ light'}
+        </button>
+      </div>
       {/*
         The bottom-right chrome hint is now a real button on touch devices —
         tapping it opens the command palette (Cmd+K is otherwise unreachable

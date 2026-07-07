@@ -2969,13 +2969,13 @@ if (SS.cmdKUsed) chromeCmdK.classList.add('gone');
 
 /* Ambient life-signs — chrome tag flicker + scroll affordance */
 if (!REDUCED) {
-  const chromeTr = document.querySelector('.chrome-tr');
+  const chromeMark = document.querySelector('.chrome-tr-mark');
   function scheduleFlicker() {
     const wait = 8000 + Math.random() * 4000; // 8-12s
     setTimeout(() => {
-      if (!chromeTr) return;
-      chromeTr.classList.add('flicker');
-      setTimeout(() => chromeTr.classList.remove('flicker'), 120);
+      if (!chromeMark) return;
+      chromeMark.classList.add('flicker');
+      setTimeout(() => chromeMark.classList.remove('flicker'), 120);
       scheduleFlicker();
     }, wait);
   }

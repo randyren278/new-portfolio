@@ -162,7 +162,7 @@ async function main() {
     () => document.getElementById('chrome-theme')?.textContent?.trim() ?? '',
   );
   results.push([
-    'theme: chrome-tl toggle visible',
+    'theme: toggle visible in top-right cluster',
     toggleLabel === '● dark' || toggleLabel === '○ light',
   ]);
   results.push([
