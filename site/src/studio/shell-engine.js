@@ -127,6 +127,29 @@ function scrollBottom() {
   });
 }
 
+/* Pin the top of `el` to the top of #term (with a small breathing offset).
+   Used at card-insert time so the visitor sees the kicker/title of what
+   they just opened, instead of watching it type in below the fold.
+
+   Fires exactly once per card insert — we do NOT chase the card as it
+   grows. The reveal types at a fixed anchor; when the card is taller
+   than the viewport, the tail spills off the bottom and is one flick
+   away. This is deliberately simple: no flags, no side-effects on
+   downstream scrollBottom calls, no CSS scroll-room reservation.
+
+   requestAnimationFrame first so append/innerHTML have laid out; then
+   offsetTop is measured in #buffer's coordinate space (the offset parent
+   of the card row). If the card is short enough that its top is already
+   visible (buffer shorter than viewport), the clamp to 0 no-ops. */
+function pinTopOfCard(el, breath) {
+  if (breath === undefined) breath = 12;
+  if (!el) return;
+  requestAnimationFrame(() => {
+    if (!el.offsetParent) return;
+    term.scrollTop = Math.max(0, el.offsetTop - breath);
+  });
+}
+
 function makePromptSpan(pwdText) {
   const s = document.createElement('span');
   s.className = 'prompt-line';
@@ -1276,6 +1299,7 @@ function renderLatestCard(activity) {
     wrap.appendChild(card);
     buffer.appendChild(wrap);
     scrollBottom();
+    pinTopOfCard(wrap);
   } else {
     animateLabelCard(card, () => { SS.cacheAdd(key); });
   }
@@ -1568,6 +1592,7 @@ function renderLabelInstant(slug) {
   wrap.appendChild(card);
   buffer.appendChild(wrap);
   scrollBottom();
+  pinTopOfCard(wrap);
   // Chip row may need to collapse now that a label is on screen.
   renderChips();
 }
@@ -1685,6 +1710,7 @@ function renderAboutCard() {
     wrap.appendChild(card);
     buffer.appendChild(wrap);
     scrollBottom();
+    pinTopOfCard(wrap);
   } else {
     animateLabelCard(card, () => { SS.cacheAdd(key); });
   }
@@ -1700,6 +1726,7 @@ function renderContactCard() {
     wrap.appendChild(card);
     buffer.appendChild(wrap);
     scrollBottom();
+    pinTopOfCard(wrap);
   } else {
     animateLabelCard(card, () => { SS.cacheAdd(key); });
   }
@@ -1731,6 +1758,7 @@ function animateLabelCard(card, done) {
   wrap.appendChild(card);
   buffer.appendChild(wrap);
   scrollBottom();
+  pinTopOfCard(wrap);
 
   if (REDUCED) {
     revealInProgress = false;
@@ -2125,12 +2153,14 @@ function renderPlateInstant(slug) {
   if (washRect) washRect.setAttribute('opacity','0.82');
   glyph.style.opacity = '1';
   scrollBottom();
+  pinTopOfCard(wrap);
 }
 
 function renderPlateAnimated(slug, done) {
   const { wrap, strokes, washRect, glyph } = plateFor(slug);
   buffer.appendChild(wrap);
   scrollBottom();
+  pinTopOfCard(wrap);
 
   strokes.forEach(s => {
     try {

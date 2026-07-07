@@ -7,6 +7,12 @@
 //
 // Playwright is used (not sips/magick) so IBM Plex Mono and Instrument Serif
 // render from Google Fonts instead of falling back to a system serif.
+//
+// Palette is shell.css's DARK theme — that's the site's default first-
+// impression, and this is what raster fallbacks + the social-preview image
+// should match:
+//   --bg #0a0908   --ink #ededed   --muted #6a6a6a
+//   --rule #2a2a2a --accent #7cb7ff
 
 import { chromium } from 'playwright';
 import { writeFileSync } from 'node:fs';
@@ -28,10 +34,10 @@ const targets = [
     w: 32, h: 32,
     body: `
       <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
-        <rect width="64" height="64" fill="#F1E8D4"/>
-        <path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#111" stroke-width="2.4"/>
-        <circle cx="14" cy="28" r="2.6" fill="#111"/>
-        <text x="30" y="48" font-family="'IBM Plex Mono', monospace" font-size="16" font-weight="600" fill="#111">RR</text>
+        <rect width="64" height="64" fill="#0a0908"/>
+        <path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#ededed" stroke-width="2.4"/>
+        <circle cx="14" cy="28" r="2.6" fill="#ededed"/>
+        <text x="30" y="48" font-family="'IBM Plex Mono', monospace" font-size="16" font-weight="600" fill="#ededed">RR</text>
       </svg>
     `,
   },
@@ -40,10 +46,10 @@ const targets = [
     w: 16, h: 16,
     body: `
       <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="image-rendering:crisp-edges">
-        <rect width="64" height="64" fill="#F1E8D4"/>
-        <path d="M6 20 L44 20 L58 34 L58 56 L6 56 Z" fill="none" stroke="#111" stroke-width="4"/>
-        <circle cx="14" cy="28" r="3.5" fill="#111"/>
-        <text x="30" y="50" font-family="'IBM Plex Mono', monospace" font-size="18" font-weight="700" fill="#111">RR</text>
+        <rect width="64" height="64" fill="#0a0908"/>
+        <path d="M6 20 L44 20 L58 34 L58 56 L6 56 Z" fill="none" stroke="#ededed" stroke-width="4"/>
+        <circle cx="14" cy="28" r="3.5" fill="#ededed"/>
+        <text x="30" y="50" font-family="'IBM Plex Mono', monospace" font-size="18" font-weight="700" fill="#ededed">RR</text>
       </svg>
     `,
   },
@@ -51,35 +57,35 @@ const targets = [
     name: 'apple-touch-icon.png',
     w: 180, h: 180,
     body: `
-      <div style="width:180px;height:180px;background:#F1E8D4;display:grid;place-items:center;">
+      <div style="width:180px;height:180px;background:#0a0908;display:grid;place-items:center;">
         <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="132" height="132">
-          <path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#111" stroke-width="2"/>
-          <circle cx="14" cy="28" r="2.2" fill="#111"/>
-          <text x="30" y="47" font-family="'IBM Plex Mono', monospace" font-size="14" font-weight="500" fill="#111">RR</text>
+          <path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#ededed" stroke-width="2"/>
+          <circle cx="14" cy="28" r="2.2" fill="#ededed"/>
+          <text x="30" y="47" font-family="'IBM Plex Mono', monospace" font-size="14" font-weight="500" fill="#ededed">RR</text>
         </svg>
       </div>
     `,
   },
   {
-    // Specimen plate — 1200×630 OG image.
+    // Specimen plate — 1200×630 OG image, dark palette.
     name: 'og-image.png',
     w: 1200, h: 630,
     body: `
       <div style="
         width:1200px;height:630px;
-        background:#F1E8D4;color:#111;
+        background:#0a0908;color:#ededed;
         font-family:'IBM Plex Mono', ui-monospace, Menlo, monospace;
         display:flex;flex-direction:column;
         padding:80px 96px;box-sizing:border-box;
         position:relative;
       ">
         <!-- top hairline -->
-        <div style="position:absolute;top:0;left:0;right:0;height:5px;background:#111;"></div>
+        <div style="position:absolute;top:0;left:0;right:0;height:5px;background:#ededed;"></div>
 
         <!-- kicker row -->
-        <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:22px;letter-spacing:0.16em;color:#5A3818;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:22px;letter-spacing:0.16em;color:#6a6a6a;">
           <div>
-            <span style="color:#a8100a;font-family:'IBM Plex Serif',serif;font-style:italic;font-size:30px;letter-spacing:0;padding-right:8px;">§</span>
+            <span style="color:#7cb7ff;font-family:'IBM Plex Serif',serif;font-style:italic;font-size:30px;letter-spacing:0;padding-right:8px;">§</span>
             RANDY.SH
           </div>
           <div>STUDIO</div>
@@ -89,27 +95,27 @@ const targets = [
         <div style="
           font-family:'Instrument Serif', serif;font-style:italic;font-weight:400;
           font-size:180px;line-height:1;letter-spacing:-0.01em;
-          margin-top:80px;margin-bottom:4px;
+          margin-top:80px;margin-bottom:4px;color:#ededed;
         ">Randy Ren.</div>
 
         <!-- location -->
         <div style="
           font-family:'IBM Plex Serif', serif;font-style:italic;
-          font-size:36px;color:#5A3818;margin-bottom:52px;
+          font-size:36px;color:#6a6a6a;margin-bottom:52px;
         ">Vancouver, BC.</div>
 
         <!-- colophon -->
         <div style="
           font-family:'IBM Plex Mono', monospace;
-          font-size:22px;color:#7A4A1F;letter-spacing:0.02em;margin-bottom:36px;
+          font-size:22px;color:#6a6a6a;letter-spacing:0.02em;margin-bottom:36px;
         ">a working catalogue.</div>
 
         <!-- hairline -->
-        <div style="height:2px;background:rgba(17,17,17,.55);margin-bottom:22px;"></div>
+        <div style="height:2px;background:#2a2a2a;margin-bottom:22px;"></div>
 
         <!-- footer: single OPEN -> on the right -->
-        <div style="display:flex;justify-content:flex-end;align-items:baseline;font-size:22px;color:#5A3818;letter-spacing:0.08em;">
-          <span style="color:#1F3A5F;font-weight:500;letter-spacing:0.16em;">OPEN →</span>
+        <div style="display:flex;justify-content:flex-end;align-items:baseline;font-size:22px;color:#6a6a6a;letter-spacing:0.08em;">
+          <span style="color:#7cb7ff;font-weight:500;letter-spacing:0.16em;">OPEN →</span>
         </div>
       </div>
     `,

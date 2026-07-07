@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>brand-mockup — favicon + OG in both palettes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Serif:ital@1&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* palette pulled verbatim from shell.css so what you see here IS the site. */
+      --l-bg: #fafaf7; --l-ink: #0f0f0f; --l-muted: #8a8a8a; --l-rule: #d8d8d5; --l-accent: #a8100a;
+      --d-bg: #0a0908; --d-ink: #ededed; --d-muted: #6a6a6a; --d-rule: #2a2a2a; --d-accent: #7cb7ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #d0d0cc; color: #111;
+      font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; font-size: 13px;
+      line-height: 1.4;
+    }
+    .page { padding: 32px 40px 80px; max-width: 1400px; margin: 0 auto; }
+    h1 { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400;
+      font-size: 44px; letter-spacing: -0.01em; margin: 0 0 4px; color: #111; }
+    .lede { color: #555; margin: 0 0 40px; max-width: 60ch; }
+    h2 { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500;
+      letter-spacing: 0.14em; text-transform: uppercase; color: #111; margin: 40px 0 12px; }
+    .caption { color: #555; font-size: 12px; margin-top: 6px; }
+    .grid { display: grid; gap: 24px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .tile { border: 1px solid #b8b8b4; background: #ececea; padding: 20px; border-radius: 4px; }
+    .tile.dark { background: #1a1a18; border-color: #333; color: #ddd; }
+    .tile.dark .caption { color: #999; }
+    .tile.light { background: #f4f4f0; }
+
+    /* ---- favicon previews ---- */
+    .fav-row { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; }
+    .fav-slot { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .fav-slot .lbl { font-size: 11px; color: #777; letter-spacing: 0.08em; text-transform: uppercase; }
+    .fav-16 { width: 16px; height: 16px; image-rendering: pixelated; }
+    .fav-32 { width: 32px; height: 32px; image-rendering: pixelated; }
+    .fav-64 { width: 64px; height: 64px; }
+    .fav-180 { width: 96px; height: 96px; border-radius: 20%; overflow: hidden; }
+
+    /* Simulate the Chrome tab strip so we can see how each raster reads. */
+    .tabstrip {
+      margin-top: 14px;
+      display: flex; align-items: center; gap: 0;
+      background: #dfdfdc; padding: 6px 10px; border-radius: 6px 6px 0 0;
+      max-width: 380px;
+    }
+    .tabstrip.dark { background: #2a2a2a; }
+    .tabstrip .tab {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; font-size: 11px;
+      background: #fff; color: #333; border-radius: 6px 6px 0 0;
+      max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .tabstrip.dark .tab { background: #3a3a3a; color: #ddd; }
+    .tabstrip .tab img, .tabstrip .tab svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ---- OG previews ---- */
+    .og-frame {
+      width: 100%;
+      max-width: 640px;
+      aspect-ratio: 1200 / 630;
+      border: 1px solid #999;
+      display: block;
+      margin: 0 auto;
+    }
+    .og-svg { width: 100%; height: 100%; display: block; }
+
+    /* Simulate a compact iMessage/Slack link preview so the OG has context. */
+    .link-preview {
+      max-width: 460px;
+      border: 1px solid #d6d6d3;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+      margin-top: 14px;
+    }
+    .link-preview.dark { background: #1c1c1a; border-color: #333; }
+    .link-preview .lp-img { width: 100%; aspect-ratio: 1200/630; }
+    .link-preview .lp-meta { padding: 10px 12px; font-size: 12px; }
+    .link-preview .lp-meta .lp-title { font-weight: 500; color: #111; margin: 0 0 2px; font-family: system-ui, sans-serif; }
+    .link-preview .lp-meta .lp-desc { color: #666; margin: 0 0 4px; font-family: system-ui, sans-serif; font-size: 11px; }
+    .link-preview .lp-meta .lp-domain { color: #999; font-size: 10px; text-transform: lowercase; letter-spacing: 0.03em; font-family: system-ui, sans-serif; }
+    .link-preview.dark .lp-meta .lp-title { color: #eee; }
+    .link-preview.dark .lp-meta .lp-desc { color: #aaa; }
+    .link-preview.dark .lp-meta .lp-domain { color: #888; }
+
+    .decision {
+      margin-top: 22px; padding: 14px 16px; background: #f4f4f0;
+      border-left: 3px solid #a8100a; font-size: 12px; color: #444;
+    }
+    .decision strong { color: #111; }
+
+    hr.section { border: 0; border-top: 1px solid #b8b8b4; margin: 60px 0; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+<h1>Brand assets — favicon + OG</h1>
+<p class="lede">
+  Two decisions to make. The site now runs a dual dark/light theme; the shipped
+  favicon and og-image are still on the old cream palette. Compare below —
+  the SVG favicon can adapt live to the visitor's system theme, but the
+  raster PNGs and the single OG image each ship one palette. Pick which.
+</p>
+
+<!-- =========================================================
+     PART 1 — FAVICON
+     ========================================================= -->
+<h2>Favicon</h2>
+<p class="caption">
+  The specimen-tag glyph stays. Same shape, migrated colors. Rendered at 16 /
+  32 / 64 / 180 pixels below. Left tile = light-bg PNG on a light tab strip;
+  right tile = dark-bg PNG on a dark tab strip. The SVG favicon adapts to
+  <code>prefers-color-scheme</code> automatically and ships regardless.
+</p>
+
+<div class="grid grid-2">
+
+  <!-- LIGHT-BG PNG option -->
+  <div class="tile light">
+    <div class="caption">Option A · light bg + dark ink (raster PNGs)</div>
+    <div class="fav-row">
+      <div class="fav-slot"><svg class="fav-16" viewBox="0 0 64 64"><rect width="64" height="64" fill="#fafaf7"/><path d="M6 20 L44 20 L58 34 L58 56 L6 56 Z" fill="none" stroke="#0f0f0f" stroke-width="4"/><circle cx="14" cy="28" r="3.5" fill="#0f0f0f"/><text x="30" y="50" font-family="IBM Plex Mono, monospace" font-size="18" font-weight="700" fill="#0f0f0f">RR</text></svg><div class="lbl">16</div></div>
+      <div class="fav-slot"><svg class="fav-32" viewBox="0 0 64 64"><rect width="64" height="64" fill="#fafaf7"/><path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#0f0f0f" stroke-width="2.4"/><circle cx="14" cy="28" r="2.6" fill="#0f0f0f"/><text x="30" y="48" font-family="IBM Plex Mono, monospace" font-size="16" font-weight="600" fill="#0f0f0f">RR</text></svg><div class="lbl">32</div></div>
+      <div class="fav-slot"><svg class="fav-64" viewBox="0 0 64 64"><rect width="64" height="64" fill="#fafaf7"/><path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#0f0f0f" stroke-width="2"/><circle cx="14" cy="28" r="2.2" fill="#0f0f0f"/><text x="30" y="47" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#0f0f0f">RR</text></svg><div class="lbl">64</div></div>
+      <div class="fav-slot"><svg class="fav-180" viewBox="0 0 180 180" style="background:#fafaf7;"><rect width="180" height="180" fill="#fafaf7"/><g transform="translate(24,24) scale(2.06)"><path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#0f0f0f" stroke-width="2"/><circle cx="14" cy="28" r="2.2" fill="#0f0f0f"/><text x="30" y="47" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#0f0f0f">RR</text></g></svg><div class="lbl">180</div></div>
+    </div>
+    <div class="tabstrip">
+      <div class="tab"><svg viewBox="0 0 64 64"><rect width="64" height="64" fill="#fafaf7"/><path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#0f0f0f" stroke-width="2.4"/><circle cx="14" cy="28" r="2.6" fill="#0f0f0f"/><text x="30" y="48" font-family="IBM Plex Mono, monospace" font-size="16" font-weight="600" fill="#0f0f0f">RR</text></svg><span>randy.sh — a working catalogue</span></div>
+    </div>
+    <div class="tabstrip dark">
+      <div class="tab"><svg viewBox="0 0 64 64"><rect width="64" height="64" fill="#fafaf7"/><path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#0f0f0f" stroke-width="2.4"/><circle cx="14" cy="28" r="2.6" fill="#0f0f0f"/><text x="30" y="48" font-family="IBM Plex Mono, monospace" font-size="16" font-weight="600" fill="#0f0f0f">RR</text></svg><span>randy.sh — a working catalogue</span></div>
+    </div>
+    <p class="caption" style="margin-top:14px">Reads as a small bright square on dark tabs — a bit of a beacon.</p>
+  </div>
+
+  <!-- DARK-BG PNG option -->
+  <div class="tile dark">
+    <div class="caption">Option B · dark bg + light ink (raster PNGs)</div>
+    <div class="fav-row">
+      <div class="fav-slot"><svg class="fav-16" viewBox="0 0 64 64"><rect width="64" height="64" fill="#0a0908"/><path d="M6 20 L44 20 L58 34 L58 56 L6 56 Z" fill="none" stroke="#ededed" stroke-width="4"/><circle cx="14" cy="28" r="3.5" fill="#ededed"/><text x="30" y="50" font-family="IBM Plex Mono, monospace" font-size="18" font-weight="700" fill="#ededed">RR</text></svg><div class="lbl" style="color:#aaa">16</div></div>
+      <div class="fav-slot"><svg class="fav-32" viewBox="0 0 64 64"><rect width="64" height="64" fill="#0a0908"/><path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#ededed" stroke-width="2.4"/><circle cx="14" cy="28" r="2.6" fill="#ededed"/><text x="30" y="48" font-family="IBM Plex Mono, monospace" font-size="16" font-weight="600" fill="#ededed">RR</text></svg><div class="lbl" style="color:#aaa">32</div></div>
+      <div class="fav-slot"><svg class="fav-64" viewBox="0 0 64 64"><rect width="64" height="64" fill="#0a0908"/><path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#ededed" stroke-width="2"/><circle cx="14" cy="28" r="2.2" fill="#ededed"/><text x="30" y="47" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#ededed">RR</text></svg><div class="lbl" style="color:#aaa">64</div></div>
+      <div class="fav-slot"><svg class="fav-180" viewBox="0 0 180 180" style="background:#0a0908;"><rect width="180" height="180" fill="#0a0908"/><g transform="translate(24,24) scale(2.06)"><path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#ededed" stroke-width="2"/><circle cx="14" cy="28" r="2.2" fill="#ededed"/><text x="30" y="47" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#ededed">RR</text></g></svg><div class="lbl" style="color:#aaa">180</div></div>
+    </div>
+    <div class="tabstrip">
+      <div class="tab"><svg viewBox="0 0 64 64"><rect width="64" height="64" fill="#0a0908"/><path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#ededed" stroke-width="2.4"/><circle cx="14" cy="28" r="2.6" fill="#ededed"/><text x="30" y="48" font-family="IBM Plex Mono, monospace" font-size="16" font-weight="600" fill="#ededed">RR</text></svg><span>randy.sh — a working catalogue</span></div>
+    </div>
+    <div class="tabstrip dark">
+      <div class="tab"><svg viewBox="0 0 64 64"><rect width="64" height="64" fill="#0a0908"/><path d="M8 22 L44 22 L56 34 L56 54 L8 54 Z" fill="none" stroke="#ededed" stroke-width="2.4"/><circle cx="14" cy="28" r="2.6" fill="#ededed"/><text x="30" y="48" font-family="IBM Plex Mono, monospace" font-size="16" font-weight="600" fill="#ededed">RR</text></svg><span>randy.sh — a working catalogue</span></div>
+    </div>
+    <p class="caption" style="margin-top:14px; color:#aaa">Reads as a small dark tile on light tabs — nearly invisible until close.</p>
+  </div>
+</div>
+
+<div class="decision">
+  <strong>The trade-off:</strong> both PNGs look "good" in one tab strip and
+  "weird" in the other. Option A is loud on dark chrome (a bright square in a
+  row of grey). Option B is quiet on light chrome (a small dark rectangle).
+  <br /><br />
+  Recommendation: <strong>Option B (dark)</strong> — the site's default
+  first-impression is dark, and Chrome's dark tab strip is now the majority
+  case on tech-worker machines. The favicon should match the arrival
+  experience.
+</div>
+
+<hr class="section" />
+
+<!-- =========================================================
+     PART 2 — OG CARD
+     ========================================================= -->
+<h2>OG card (1200×630)</h2>
+<p class="caption">
+  This is the image Twitter, iMessage, and Slack render for
+  <code>randy.sh</code>. Composition preserved from the current shipped card;
+  only the palette moves. One image ships; pick which.
+</p>
+
+<div class="grid grid-2">
+
+  <!-- DARK OG -->
+  <div class="tile dark">
+    <div class="caption">Option A · Dark (recommended)</div>
+    <svg class="og-frame og-svg" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="630" fill="#0a0908"/>
+      <!-- top hairline -->
+      <rect x="0" y="0" width="1200" height="5" fill="#ededed"/>
+      <!-- kicker: § accent + RANDY.SH label -->
+      <text x="96" y="130" fill="#6a6a6a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="3.5">
+        <tspan fill="#7cb7ff" font-family="IBM Plex Serif, serif" font-style="italic" font-size="30" dx="0">§</tspan>
+        <tspan dx="12">RANDY.SH</tspan>
+      </text>
+      <text x="1104" y="130" text-anchor="end" fill="#6a6a6a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="3.5">STUDIO</text>
+      <!-- big serif name -->
+      <text x="96" y="360" fill="#ededed" font-family="Instrument Serif, serif" font-style="italic" font-size="180" letter-spacing="-1.8">Randy Ren.</text>
+      <!-- location -->
+      <text x="96" y="420" fill="#6a6a6a" font-family="IBM Plex Serif, serif" font-style="italic" font-size="36">San Francisco, CA.</text>
+      <!-- colophon -->
+      <text x="96" y="490" fill="#6a6a6a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="0.4">a working catalogue.</text>
+      <!-- hairline -->
+      <rect x="96" y="520" width="1008" height="1.5" fill="#2a2a2a"/>
+      <!-- OPEN → -->
+      <text x="1104" y="580" text-anchor="end" fill="#7cb7ff" font-family="IBM Plex Mono, monospace" font-size="22" font-weight="500" letter-spacing="3.5">OPEN →</text>
+    </svg>
+    <div class="link-preview dark">
+      <div class="lp-img"><svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+        <rect width="1200" height="630" fill="#0a0908"/>
+        <rect x="0" y="0" width="1200" height="5" fill="#ededed"/>
+        <text x="96" y="130" fill="#6a6a6a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="3.5">
+          <tspan fill="#7cb7ff" font-family="IBM Plex Serif, serif" font-style="italic" font-size="30">§</tspan>
+          <tspan dx="12">RANDY.SH</tspan>
+        </text>
+        <text x="1104" y="130" text-anchor="end" fill="#6a6a6a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="3.5">STUDIO</text>
+        <text x="96" y="360" fill="#ededed" font-family="Instrument Serif, serif" font-style="italic" font-size="180" letter-spacing="-1.8">Randy Ren.</text>
+        <text x="96" y="420" fill="#6a6a6a" font-family="IBM Plex Serif, serif" font-style="italic" font-size="36">San Francisco, CA.</text>
+        <text x="96" y="490" fill="#6a6a6a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="0.4">a working catalogue.</text>
+        <rect x="96" y="520" width="1008" height="1.5" fill="#2a2a2a"/>
+        <text x="1104" y="580" text-anchor="end" fill="#7cb7ff" font-family="IBM Plex Mono, monospace" font-size="22" font-weight="500" letter-spacing="3.5">OPEN →</text>
+      </svg></div>
+      <div class="lp-meta">
+        <p class="lp-title">Randy Ren</p>
+        <p class="lp-desc">A working catalogue.</p>
+        <p class="lp-domain">randyren.org</p>
+      </div>
+    </div>
+    <p class="caption" style="margin-top:14px; color:#aaa">Sits comfortably in dark-mode Twitter and iMessage; the § accent glows.</p>
+  </div>
+
+  <!-- LIGHT OG -->
+  <div class="tile light">
+    <div class="caption">Option B · Light</div>
+    <svg class="og-frame og-svg" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="630" fill="#fafaf7"/>
+      <rect x="0" y="0" width="1200" height="5" fill="#0f0f0f"/>
+      <text x="96" y="130" fill="#8a8a8a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="3.5">
+        <tspan fill="#a8100a" font-family="IBM Plex Serif, serif" font-style="italic" font-size="30">§</tspan>
+        <tspan dx="12">RANDY.SH</tspan>
+      </text>
+      <text x="1104" y="130" text-anchor="end" fill="#8a8a8a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="3.5">STUDIO</text>
+      <text x="96" y="360" fill="#0f0f0f" font-family="Instrument Serif, serif" font-style="italic" font-size="180" letter-spacing="-1.8">Randy Ren.</text>
+      <text x="96" y="420" fill="#8a8a8a" font-family="IBM Plex Serif, serif" font-style="italic" font-size="36">San Francisco, CA.</text>
+      <text x="96" y="490" fill="#8a8a8a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="0.4">a working catalogue.</text>
+      <rect x="96" y="520" width="1008" height="1.5" fill="#d8d8d5"/>
+      <text x="1104" y="580" text-anchor="end" fill="#a8100a" font-family="IBM Plex Mono, monospace" font-size="22" font-weight="500" letter-spacing="3.5">OPEN →</text>
+    </svg>
+    <div class="link-preview">
+      <div class="lp-img"><svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+        <rect width="1200" height="630" fill="#fafaf7"/>
+        <rect x="0" y="0" width="1200" height="5" fill="#0f0f0f"/>
+        <text x="96" y="130" fill="#8a8a8a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="3.5">
+          <tspan fill="#a8100a" font-family="IBM Plex Serif, serif" font-style="italic" font-size="30">§</tspan>
+          <tspan dx="12">RANDY.SH</tspan>
+        </text>
+        <text x="1104" y="130" text-anchor="end" fill="#8a8a8a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="3.5">STUDIO</text>
+        <text x="96" y="360" fill="#0f0f0f" font-family="Instrument Serif, serif" font-style="italic" font-size="180" letter-spacing="-1.8">Randy Ren.</text>
+        <text x="96" y="420" fill="#8a8a8a" font-family="IBM Plex Serif, serif" font-style="italic" font-size="36">San Francisco, CA.</text>
+        <text x="96" y="490" fill="#8a8a8a" font-family="IBM Plex Mono, monospace" font-size="22" letter-spacing="0.4">a working catalogue.</text>
+        <rect x="96" y="520" width="1008" height="1.5" fill="#d8d8d5"/>
+        <text x="1104" y="580" text-anchor="end" fill="#a8100a" font-family="IBM Plex Mono, monospace" font-size="22" font-weight="500" letter-spacing="3.5">OPEN →</text>
+      </svg></div>
+      <div class="lp-meta">
+        <p class="lp-title">Randy Ren</p>
+        <p class="lp-desc">A working catalogue.</p>
+        <p class="lp-domain">randyren.org</p>
+      </div>
+    </div>
+    <p class="caption" style="margin-top:14px">Closer to the shipped card. The red accent reads editorial, warmer.</p>
+  </div>
+</div>
+
+<div class="decision">
+  <strong>Recommendation:</strong> Option A (dark). It matches the site the
+  first time a visitor lands, and the site launches on the palette that
+  handles OLED beautifully. The blue § in italic serif is a stronger
+  signature than the red on cream.
+</div>
+
+</div>
+</body>
+</html>
