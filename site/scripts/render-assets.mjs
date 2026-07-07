@@ -79,8 +79,9 @@ const targets = [
         padding:80px 96px;box-sizing:border-box;
         position:relative;
       ">
-        <!-- top hairline -->
-        <div style="position:absolute;top:0;left:0;right:0;height:5px;background:#ededed;"></div>
+        <!-- top hairline: subtle rule (matches --rule) so it reads as a
+             quiet frame gesture, not a bright status bar -->
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#2a2a2a;"></div>
 
         <!-- kicker row -->
         <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:22px;letter-spacing:0.16em;color:#6a6a6a;">
