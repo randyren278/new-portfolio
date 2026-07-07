@@ -14,10 +14,15 @@
 //      - Tap opens the palette
 //      - Tap outside dismisses it (pointerdown path)
 //   5) The full plate modal is BLOCKED on mobile:
-//      - After navigating to ~/work/oryzo and running `open oryzo` twice
-//        via chip taps, .plate-overlay.open never appears
-//   6) Chip label wording flips to "Show the note" (not "Open the project")
-//   7) viewport meta includes viewport-fit=cover
+//      - After navigating to ~/work/oryzo, .plate-overlay.open never appears
+//   6) The "Show the note" / "Open the project" chip is REMOVED on mobile
+//      (there is no full-plate view — the chip would just re-render the
+//      label the visitor is already looking at)
+//   7) The inline studio-note card's .label-hint ("Type `open oryzo` to
+//      see the full page.") is not rendered on touch — same reason
+//   8) After `cat about` completes, the card's hint is inside the terminal
+//      viewport bounds (scroll-follow keeps the reveal in frame)
+//   9) viewport meta includes viewport-fit=cover
 //
 // Runs against localhost:3877 (dev server started outside this test).
 
@@ -215,28 +220,98 @@ async function main() {
   );
   await page.waitForTimeout(500);
 
-  // The chip set should now show "Show the note" (mobile wording).
-  const hasShowTheNote = await page.evaluate(() => {
-    const chips = [...document.querySelectorAll('#chips .chip .l1')];
-    return chips.some((c) => c.textContent.trim() === 'Show the note');
+  // The chip row must NOT contain a "Show the note" or "Open the project"
+  // chip on mobile — the full-plate view is disabled on touch, so the chip
+  // would just re-render the label the visitor is already looking at.
+  const chipLabelsAfterOpen = await page.evaluate(() => {
+    return [...document.querySelectorAll('#chips .chip .l1')]
+      .map((c) => c.textContent.trim());
   });
+  const noRedundantChip = !chipLabelsAfterOpen.includes('Show the note')
+    && !chipLabelsAfterOpen.includes('Open the project');
   results.push([
-    `mobile: chip label reads "Show the note" (not "Open the project")`,
-    hasShowTheNote,
+    `mobile: no "Show the note"/"Open the project" chip in ~/work/oryzo`,
+    noRedundantChip,
   ]);
 
-  // Tap "Show the note" TWICE. The second tap on desktop would promote to
-  // full plate; on mobile it must stay a label.
-  const clickedShow1 = await clickChipByLabel('Show the note');
-  await page.waitForTimeout(500);
-  const clickedShow2 = await clickChipByLabel('Show the note');
-  await page.waitForTimeout(1000);
+  // The inline studio-note card must NOT contain a .label-hint element.
+  // The hint on desktop reads "Type `open oryzo` to see the full page." —
+  // misleading on mobile where the full page doesn't exist.
+  const noteHintPresent = await page.evaluate(() => {
+    return !!document.querySelector(
+      '.label-card[data-inline-slug="oryzo"] .label-hint'
+    );
+  });
+  results.push([
+    `mobile: studio-note card omits .label-hint on touch`,
+    !noteHintPresent,
+  ]);
+
+  // The plate overlay must never open on touch. The chip that used to
+  // attempt the promotion is now gone, so this is defense-in-depth: even
+  // if some future path calls openPlate(), the engine's TOUCH guard
+  // must still prevent it.
   const plateEverOpened = await page.evaluate(
     () => !!document.querySelector('.plate-overlay.open'),
   );
   results.push([
-    `mobile: two "Show the note" taps do NOT open plate overlay`,
+    `mobile: .plate-overlay.open never appears on touch`,
     !plateEverOpened,
+  ]);
+
+  // Scroll-follow: fire `cat about` (a card taller than the iPhone-13
+  // viewport with hint enabled). Wait for its reveal to complete, then
+  // assert the card's hint is inside the terminal viewport bounds. If
+  // the animator failed to scroll-follow the growing tail, the hint
+  // would render below the fold and this fails.
+  await page.evaluate(() => {
+    // Navigate back home so the about-card lays out at the buffer bottom
+    // rather than after a stack of previous cards.
+    const chips = [...document.querySelectorAll('#chips .chip')];
+    const back = chips.find((c) => c.querySelector('.l1')?.textContent.trim() === 'Back home')
+              || chips.find((c) => c.querySelector('.l1')?.textContent.trim() === 'Back to work');
+    if (back) back.click();
+  });
+  await page.waitForTimeout(300);
+  // Cascade back to ~
+  await page.evaluate(() => {
+    const chips = [...document.querySelectorAll('#chips .chip')];
+    const back = chips.find((c) => c.querySelector('.l1')?.textContent.trim() === 'Back home');
+    if (back) back.click();
+  });
+  await page.waitForTimeout(400);
+  await clickChipByLabel('Read about Randy');
+  // Wait until the about-card is fully revealed. animateLabelCard flips
+  // revealInProgress false when done; we also fall back to a fixed wait.
+  await page.waitForFunction(
+    () => {
+      const c = document.querySelector('.label-card[data-inline-slug="about"]');
+      const h = c && c.querySelector('.label-hint');
+      // hint rendered AND has non-empty text = reveal finished the hint beat.
+      return !!(h && h.textContent && h.textContent.trim().length > 4);
+    },
+    { timeout: 12000 },
+  );
+  // Give the trailing settle beat a moment to fire followCardTail one last time.
+  await page.waitForTimeout(400);
+
+  const hintInFrame = await page.evaluate(() => {
+    const term = document.getElementById('term');
+    const hint = document.querySelector(
+      '.label-card[data-inline-slug="about"] .label-hint'
+    );
+    if (!term || !hint) return { ok: false, why: 'missing element' };
+    const t = term.getBoundingClientRect();
+    const h = hint.getBoundingClientRect();
+    return {
+      ok: h.bottom <= t.bottom + 4 && h.top >= t.top - 4,
+      hb: h.bottom, tb: t.bottom, ht: h.top, tt: t.top,
+    };
+  });
+  results.push([
+    `mobile: about-card .label-hint is in terminal viewport after reveal` +
+      (hintInFrame.ok ? '' : ` (hint b=${Math.round(hintInFrame.hb)}, term b=${Math.round(hintInFrame.tb)})`),
+    hintInFrame.ok,
   ]);
 
   // 7) viewport-fit=cover in meta

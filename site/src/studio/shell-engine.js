@@ -127,26 +127,26 @@ function scrollBottom() {
   });
 }
 
-/* Pin the top of `el` to the top of #term (with a small breathing offset).
-   Used at card-insert time so the visitor sees the kicker/title of what
-   they just opened, instead of watching it type in below the fold.
+/* Keep the bottom of `el` at the bottom of #term (with a small breath).
+   Used during the reveal animation to follow the growing tail of a card
+   as each section types in. Ensures the currently-typing section is
+   always in view — critical on mobile where a full card is taller than
+   the 667px viewport, so the kicker/title scroll off the top (they were
+   the FIRST thing the visitor saw — that's fine) while the tail — where
+   the visitor's eye is now — stays at the visible bottom.
 
-   Fires exactly once per card insert — we do NOT chase the card as it
-   grows. The reveal types at a fixed anchor; when the card is taller
-   than the viewport, the tail spills off the bottom and is one flick
-   away. This is deliberately simple: no flags, no side-effects on
-   downstream scrollBottom calls, no CSS scroll-room reservation.
-
-   requestAnimationFrame first so append/innerHTML have laid out; then
-   offsetTop is measured in #buffer's coordinate space (the offset parent
-   of the card row). If the card is short enough that its top is already
-   visible (buffer shorter than viewport), the clamp to 0 no-ops. */
-function pinTopOfCard(el, breath) {
+   Fires once per section-complete callback in animateLabelCard (~6× per
+   reveal). Cheaper than per-character because rAF coalesces multiple
+   layouts into a single scroll write. On desktop the card fits in one
+   viewport, offsetTop + offsetHeight - clientHeight goes negative, and
+   the Math.max(0, …) clamps it — no visible scroll motion. */
+function followCardTail(el, breath) {
   if (breath === undefined) breath = 12;
   if (!el) return;
   requestAnimationFrame(() => {
     if (!el.offsetParent) return;
-    term.scrollTop = Math.max(0, el.offsetTop - breath);
+    const target = el.offsetTop + el.offsetHeight - term.clientHeight + breath;
+    term.scrollTop = Math.max(0, target);
   });
 }
 
@@ -225,8 +225,12 @@ function chipSet() {
     const visibleSlug = firstVisibleInlineSlug(ORDER);
     if (visibleSlug) {
       const title = visibleSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+      // On touch there is no full-plate view, so the "Show the note" chip
+      // would just re-render the label the visitor is already looking at.
+      // Collapse to a single navigation chip.
+      if (TOUCH) return [{ l1: 'Back home', cmd: 'cd ~' }];
       return [
-        { l1: TOUCH ? 'Show the note' : 'Open the project', cmd: `open ${visibleSlug}` },
+        { l1: 'Open the project', cmd: `open ${visibleSlug}` },
         { l1: 'Back home',      cmd: 'cd ~' }
       ];
     }
@@ -247,8 +251,11 @@ function chipSet() {
     const prev = idx > 0 ? ORDER[idx - 1] : null;
     const next = idx >= 0 && idx < ORDER.length - 1 ? ORDER[idx + 1] : null;
     const title = (s) => s.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
-    const chips = [
-      { l1: TOUCH ? 'Show the note' : 'Open the project', cmd: `open ${slug}` }
+    // On touch the "open" chip would re-render the same label the visitor
+    // is looking at (plate is disabled on mobile). Start with an empty chip
+    // list and only add navigation.
+    const chips = TOUCH ? [] : [
+      { l1: 'Open the project', cmd: `open ${slug}` }
     ];
     if (next) chips.push({ l1: `Next: ${title(next)}`, cmd: `cd ${next}` });
     if (prev) chips.push({ l1: `Prev: ${title(prev)}`, cmd: `cd ${prev}` });
@@ -1299,7 +1306,6 @@ function renderLatestCard(activity) {
     wrap.appendChild(card);
     buffer.appendChild(wrap);
     scrollBottom();
-    pinTopOfCard(wrap);
   } else {
     animateLabelCard(card, () => { SS.cacheAdd(key); });
   }
@@ -1581,7 +1587,10 @@ function labelCardEl(slug) {
   card.appendChild(meta);
   card.appendChild(rule);
   card.appendChild(blurb);
-  card.appendChild(hint);
+  // The hint points at the full-plate view — which doesn't exist on
+  // touch. Skip the append so mobile visitors aren't told to "Type
+  // `open oryzo` to see the full page" when there IS no full page.
+  if (!TOUCH) card.appendChild(hint);
   return card;
 }
 
@@ -1592,7 +1601,6 @@ function renderLabelInstant(slug) {
   wrap.appendChild(card);
   buffer.appendChild(wrap);
   scrollBottom();
-  pinTopOfCard(wrap);
   // Chip row may need to collapse now that a label is on screen.
   renderChips();
 }
@@ -1710,7 +1718,6 @@ function renderAboutCard() {
     wrap.appendChild(card);
     buffer.appendChild(wrap);
     scrollBottom();
-    pinTopOfCard(wrap);
   } else {
     animateLabelCard(card, () => { SS.cacheAdd(key); });
   }
@@ -1726,7 +1733,6 @@ function renderContactCard() {
     wrap.appendChild(card);
     buffer.appendChild(wrap);
     scrollBottom();
-    pinTopOfCard(wrap);
   } else {
     animateLabelCard(card, () => { SS.cacheAdd(key); });
   }
@@ -1758,7 +1764,6 @@ function animateLabelCard(card, done) {
   wrap.appendChild(card);
   buffer.appendChild(wrap);
   scrollBottom();
-  pinTopOfCard(wrap);
 
   if (REDUCED) {
     revealInProgress = false;
@@ -1886,23 +1891,26 @@ function animateLabelCard(card, done) {
     step();
   }
 
-  // Sequence — top to bottom.
+  // Sequence — top to bottom. Each content-producing beat calls
+  // followCardTail(wrap) before handing off, so the growing card keeps
+  // its currently-typing section at the visible bottom on mobile. On
+  // desktop the card fits in one viewport and the scroll no-ops.
   const seq = [];
   // Ceremony: wait until the frame is a little underway, then start content.
   seq.push((next) => T(next, Math.floor(FRAME_MS * 0.45)));
   seq.push((next) => {
-    typeInto(kickerEl, kickerText, 22, next);
+    typeInto(kickerEl, kickerText, 22, () => { followCardTail(wrap); next(); });
   });
   seq.push((next) => T(next, 90));
   seq.push((next) => {
-    typeInto(titleEl, titleText, 24, next);
+    typeInto(titleEl, titleText, 24, () => { followCardTail(wrap); next(); });
   });
   seq.push((next) => T(next, 120));
   seq.push((next) => {
     if (metaEl) metaEl.style.opacity = '1';
     let mi = 0;
     const doRow = () => {
-      if (mi >= metaSnaps.length) { next(); return; }
+      if (mi >= metaSnaps.length) { followCardTail(wrap); next(); return; }
       const m = metaSnaps[mi];
       typeInto(m.dt, m.dtText, 12, () => {
         typeHtmlInto(m.dd, m.ddHtml, 11, () => {
@@ -1923,11 +1931,11 @@ function animateLabelCard(card, done) {
     T(next, 260);
   });
   seq.push((next) => {
-    typeHtmlInto(blurbEl, blurbHtml, 14, next);
+    typeHtmlInto(blurbEl, blurbHtml, 14, () => { followCardTail(wrap); next(); });
   });
   seq.push((next) => T(next, 120));
   seq.push((next) => {
-    typeHtmlInto(hintEl, hintHtml, 12, next);
+    typeHtmlInto(hintEl, hintHtml, 12, () => { followCardTail(wrap); next(); });
   });
   // Small settle beat at the end — no caret to park, so just hold before resolving.
   seq.push((next) => T(next, 200));
@@ -2153,14 +2161,12 @@ function renderPlateInstant(slug) {
   if (washRect) washRect.setAttribute('opacity','0.82');
   glyph.style.opacity = '1';
   scrollBottom();
-  pinTopOfCard(wrap);
 }
 
 function renderPlateAnimated(slug, done) {
   const { wrap, strokes, washRect, glyph } = plateFor(slug);
   buffer.appendChild(wrap);
   scrollBottom();
-  pinTopOfCard(wrap);
 
   strokes.forEach(s => {
     try {
