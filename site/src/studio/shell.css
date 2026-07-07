@@ -293,6 +293,33 @@
   button.link:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
   button.link:focus-visible { outline: 1px solid var(--prussian); outline-offset: 2px; }
 
+  /* Help output rows — each row is a full tappable button with a two-
+     column grid so the description wraps under itself, not under the
+     command column. The old printLine(`<span class="nowrap">${padded}</span>${desc}`)
+     idiom wrapped descriptions back to column 0 on narrow viewports;
+     the grid layout gives each column its own wrap origin. */
+  .help-row {
+    all: unset;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 12px;
+    cursor: pointer;
+    padding: 2px 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+  }
+  .help-row .hc { font-weight: 500; color: var(--ink); }
+  .help-row .hd { color: var(--muted); }
+  .help-row:hover .hc {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .help-row:focus-visible {
+    outline: 1px solid var(--prussian);
+    outline-offset: 2px;
+  }
+
   /* Wall label — inline card in terminal flow.
      Free from monospace constraints; serif title + mono meta + serif blurb. */
   .label-card {
@@ -1238,6 +1265,7 @@
     .plate-essay a,
     .plate-figure .email-plate a,
     #chrome-cmdk,
+    .help-row,
     .pal-item {
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
@@ -1344,4 +1372,23 @@
     .plate-essay a:active { opacity: 0.6; }
     .plate-figure .email-plate a:active { border-bottom-color: var(--ink); }
     .chip:active { background: rgba(var(--muted-rgb), .08); }
+
+    /* iOS Safari auto-zooms into any focused input with font-size < 16px
+       and — crucially — does NOT zoom back on blur. Tapping ⌘K therefore
+       left the page stuck at ~1.5× zoom. Bumping the palette input to
+       16px kills the trigger. Scoped inside (pointer: coarse) so desktop
+       stays at the 14px density set at .pal-input's base rule. */
+    .pal-input { font-size: 16px; }
+
+    /* Help rows: comfortable tap target + :active mirror for :hover. */
+    .help-row {
+      padding: 6px 0;
+      column-gap: 14px;
+      font-size: 14px;
+    }
+    .help-row:active .hc {
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
   }

@@ -104,6 +104,20 @@ async function main() {
   results.push(['fuzzy in-dir jump: halcyon', bufAfterSibling.toLowerCase().includes('halcyon')]);
   results.push(['fuzzy in-dir jump: hint',    bufAfterSibling.includes('jumping to ~/work/halcyon')]);
 
+  // Help menu structural check: cmd_help() now renders each row as a
+  // .help-row button (previously it was flat printLine text that wrapped
+  // ugly on narrow viewports). Desktop just asserts the structure — the
+  // mobile smoke covers the tap-to-invoke path.
+  await typeAndSubmit('cd ~');
+  await typeAndSubmit('help');
+  const helpRowCountDesktop = await page.evaluate(
+    () => document.querySelectorAll('.help-row').length,
+  );
+  results.push([
+    `help: renders as .help-row buttons [n=${helpRowCountDesktop}]`,
+    helpRowCountDesktop >= 10,
+  ]);
+
   // Regression: a fresh page load, then a keystroke well after the ceremony
   // completed, must NOT re-trigger the boot ceremony. This used to happen
   // because runPageLoader's skip() listeners lived on window and were never

@@ -1056,7 +1056,7 @@ function cmd_contact() {
 }
 
 function cmd_help() {
-  printLine(`<span class="marg"># type any command, or click a chip below.</span>`);
+  printLine(`<span class="marg"># type any command, or tap a row below.</span>`);
   // Intentionally omits `whoami` and `man` — both still work if typed
   // directly, they just don't need to advertise themselves here.
   const rows = [
@@ -1073,10 +1073,28 @@ function cmd_help() {
     ['theme',   'dark | light | auto'],
     ['clear',   'clear the screen (Ctrl-L)'],
   ];
-  const w = 9;
-  rows.forEach(([k,v]) => {
-    printLine(`<span class="nowrap">${escapeHtml(k.padEnd(w))}</span>${escapeHtml(v)}`);
+  // Each row is a full-width tappable button. The previous printLine
+  // idiom padded the command column with spaces inside a .nowrap span
+  // and left the description as bare inline text — which meant long
+  // descriptions wrapped back to column 0 on narrow viewports, tangling
+  // into the next row. Grid gives each column its own wrap origin.
+  // On mobile the row is also the only way to invoke bare-verb
+  // commands (pwd, history, theme, etc.) since typing is disabled.
+  rows.forEach(([cmd, desc]) => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'help-row';
+    btn.setAttribute('aria-label', `Run ${cmd} — ${desc}`);
+    btn.innerHTML =
+      `<span class="hc">${escapeHtml(cmd)}</span>` +
+      `<span class="hd">${escapeHtml(desc)}</span>`;
+    btn.addEventListener('click', () => chipInvoke(cmd));
+    row.appendChild(btn);
+    buffer.appendChild(row);
   });
+  scrollBottom();
 }
 
 const MAN = content.MAN;

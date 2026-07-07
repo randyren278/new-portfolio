@@ -173,6 +173,19 @@ async function main() {
   results.push(['mobile: tap #chrome-cmdk opens palette', !!paletteOpen]);
 
   if (paletteOpen) {
+    // #pal-input font-size must be ≥16px on touch — iOS Safari auto-
+    // zooms into any smaller input on focus and never zooms back on
+    // blur, leaving the whole viewport stuck at ~1.5× until the visitor
+    // pinches out manually. Locked as a regression check.
+    const palInputSize = await page.evaluate(() => {
+      const el = document.getElementById('pal-input');
+      return el ? parseFloat(getComputedStyle(el).fontSize) : 0;
+    });
+    results.push([
+      `mobile: #pal-input font-size ≥ 16px [n=${palInputSize}]`,
+      palInputSize >= 16,
+    ]);
+
     await page.tap('#palette', { position: { x: 10, y: 10 } });
     await page.waitForTimeout(600);
     const closed = await page.evaluate(
@@ -182,6 +195,74 @@ async function main() {
   } else {
     results.push(['mobile: tap outside palette dismisses (pointerdown) [skipped]', false]);
   }
+
+  // ---- Help menu as tappable grid rows ----
+  // The old cmd_help() printed rows as "<span class=nowrap>cmd</span>desc"
+  // which wrapped desc back to column 0 on narrow viewports, tangling
+  // into the next row. The new implementation renders each row as a
+  // <button class="help-row"> with a two-column grid and a click handler
+  // that invokes the command — the only way to reach bare-verb commands
+  // (pwd, history, theme) on mobile since typing is disabled.
+  //
+  // Route: reopen palette, type "help", click the first item.
+  await page.tap('#chrome-cmdk');
+  await page.waitForTimeout(300);
+  await page.evaluate(() => {
+    const p = document.getElementById('pal-input');
+    if (!p) return;
+    p.value = 'help';
+    p.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    const items = [...document.querySelectorAll('.pal-item')];
+    const help = items.find((i) => i.textContent.trim().startsWith('help'));
+    (help || items[0])?.click();
+  });
+  await page.waitForTimeout(600);
+  const helpRowCount = await page.evaluate(
+    () => document.querySelectorAll('.help-row').length,
+  );
+  results.push([
+    `mobile: help renders as .help-row buttons [n=${helpRowCount}]`,
+    helpRowCount >= 10,
+  ]);
+
+  // Descriptions must not wrap to column 0 — they wrap under themselves
+  // via the grid layout. Check the second column's left edge > first
+  // column's right edge, i.e. columns are separate.
+  const helpColumns = await page.evaluate(() => {
+    const row = document.querySelector('.help-row');
+    if (!row) return null;
+    const hc = row.querySelector('.hc');
+    const hd = row.querySelector('.hd');
+    if (!hc || !hd) return null;
+    return {
+      hcRight: hc.getBoundingClientRect().right,
+      hdLeft: hd.getBoundingClientRect().left,
+    };
+  });
+  results.push([
+    `mobile: help description column starts after command column`,
+    helpColumns && helpColumns.hdLeft > helpColumns.hcRight,
+  ]);
+
+  // Tap the pwd help row → prints "~" as its own row.
+  await page.evaluate(() => {
+    const rows = [...document.querySelectorAll('.help-row')];
+    const pwd = rows.find(
+      (r) => r.querySelector('.hc')?.textContent.trim() === 'pwd',
+    );
+    pwd?.click();
+  });
+  await page.waitForTimeout(400);
+  const bufAfterHelpPwd = await page.evaluate(
+    () => document.getElementById('buffer')?.innerText ?? '',
+  );
+  results.push([
+    `mobile: tapping help pwd row runs pwd (buffer ends with /randy)`,
+    bufAfterHelpPwd.trimEnd().endsWith('/randy'),
+  ]);
 
   // 5) Full plate blocked on mobile
   //    Navigate: cd into work/oryzo via chip. Then tap "Show the note" twice.
