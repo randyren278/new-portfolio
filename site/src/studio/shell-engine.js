@@ -127,27 +127,24 @@ function scrollBottom() {
   });
 }
 
-/* Keep the bottom of `el` at the bottom of #term (with a small breath).
-   Used during the reveal animation to follow the growing tail of a card
-   as each section types in. Ensures the currently-typing section is
-   always in view — critical on mobile where a full card is taller than
-   the 667px viewport, so the kicker/title scroll off the top (they were
-   the FIRST thing the visitor saw — that's fine) while the tail — where
-   the visitor's eye is now — stays at the visible bottom.
+/* Reserve an element's current rendered height as an inline min-height, then
+   return a disposer that removes it. Used to "pre-frame" a card before its
+   reveal starts: we measure each animated section while its final text is
+   populated, lock the box, then empty the section for type-in. The card's
+   OUTER dimensions are final from frame 1, so scrollBottom() on insert lands
+   the whole tail (card bottom + trailing prompt + #chips row) inside the
+   terminal viewport once and doesn't need to be chased as sections type in.
 
-   Fires once per section-complete callback in animateLabelCard (~6× per
-   reveal). Cheaper than per-character because rAF coalesces multiple
-   layouts into a single scroll write. On desktop the card fits in one
-   viewport, offsetTop + offsetHeight - clientHeight goes negative, and
-   the Math.max(0, …) clamps it — no visible scroll motion. */
-function followCardTail(el, breath) {
-  if (breath === undefined) breath = 12;
-  if (!el) return;
-  requestAnimationFrame(() => {
-    if (!el.offsetParent) return;
-    const target = el.offsetTop + el.offsetHeight - term.clientHeight + breath;
-    term.scrollTop = Math.max(0, target);
-  });
+   On desktop the whole card usually fits above the fold anyway — reserving
+   height is a no-op there. On mobile it's the difference between the chip
+   row landing in the viewport at rest vs. being scrolled off. */
+function reserveHeight(el) {
+  if (!el) return () => {};
+  const h = el.offsetHeight;
+  if (!h) return () => {};
+  const prev = el.style.minHeight;
+  el.style.minHeight = h + 'px';
+  return () => { el.style.minHeight = prev; };
 }
 
 function makePromptSpan(pwdText) {
@@ -1763,9 +1760,9 @@ function animateLabelCard(card, done) {
   wrap.className = 'row';
   wrap.appendChild(card);
   buffer.appendChild(wrap);
-  scrollBottom();
 
   if (REDUCED) {
+    scrollBottom();
     revealInProgress = false;
     done && done();
     return;
@@ -1797,6 +1794,24 @@ function animateLabelCard(card, done) {
       ddHtml: dd ? dd.innerHTML   : ''
     });
   }
+
+  // Pre-frame: with the card FULLY populated (as inserted above), measure each
+  // animated section and lock its height via min-height. That freezes the
+  // card's outer dimensions to their FINAL layout before we clear any text,
+  // so scrollBottom() below lands the whole card + trailing prompt + chips
+  // in view once — and the reveal that follows doesn't grow the box.
+  const dispose = [];
+  if (kickerEl) dispose.push(reserveHeight(kickerEl));
+  if (titleEl)  dispose.push(reserveHeight(titleEl));
+  if (metaEl)   dispose.push(reserveHeight(metaEl));
+  if (blurbEl)  dispose.push(reserveHeight(blurbEl));
+  if (hintEl)   dispose.push(reserveHeight(hintEl));
+
+  // Now that heights are locked, park the tail at the visible bottom.
+  // #chips is the last child of #term, so scrollHeight includes it —
+  // scrollBottom() brings the whole tail (card bottom + prompt + chips)
+  // into view. This is the ONE scroll for the whole reveal.
+  scrollBottom();
 
   // Card starts empty visually — hide each element until its type-in starts.
   const hide = (el) => { if (el) { el.style.opacity = '0'; } };
@@ -1891,26 +1906,25 @@ function animateLabelCard(card, done) {
     step();
   }
 
-  // Sequence — top to bottom. Each content-producing beat calls
-  // followCardTail(wrap) before handing off, so the growing card keeps
-  // its currently-typing section at the visible bottom on mobile. On
-  // desktop the card fits in one viewport and the scroll no-ops.
+  // Sequence — top to bottom. Because the card's outer height was locked
+  // via reserveHeight() above, sections type in place without changing
+  // layout, and no per-section scroll is needed.
   const seq = [];
   // Ceremony: wait until the frame is a little underway, then start content.
   seq.push((next) => T(next, Math.floor(FRAME_MS * 0.45)));
   seq.push((next) => {
-    typeInto(kickerEl, kickerText, 22, () => { followCardTail(wrap); next(); });
+    typeInto(kickerEl, kickerText, 22, next);
   });
   seq.push((next) => T(next, 90));
   seq.push((next) => {
-    typeInto(titleEl, titleText, 24, () => { followCardTail(wrap); next(); });
+    typeInto(titleEl, titleText, 24, next);
   });
   seq.push((next) => T(next, 120));
   seq.push((next) => {
     if (metaEl) metaEl.style.opacity = '1';
     let mi = 0;
     const doRow = () => {
-      if (mi >= metaSnaps.length) { followCardTail(wrap); next(); return; }
+      if (mi >= metaSnaps.length) { next(); return; }
       const m = metaSnaps[mi];
       typeInto(m.dt, m.dtText, 12, () => {
         typeHtmlInto(m.dd, m.ddHtml, 11, () => {
@@ -1931,14 +1945,20 @@ function animateLabelCard(card, done) {
     T(next, 260);
   });
   seq.push((next) => {
-    typeHtmlInto(blurbEl, blurbHtml, 14, () => { followCardTail(wrap); next(); });
+    typeHtmlInto(blurbEl, blurbHtml, 14, next);
   });
   seq.push((next) => T(next, 120));
   seq.push((next) => {
-    typeHtmlInto(hintEl, hintHtml, 12, () => { followCardTail(wrap); next(); });
+    typeHtmlInto(hintEl, hintHtml, 12, next);
   });
-  // Small settle beat at the end — no caret to park, so just hold before resolving.
-  seq.push((next) => T(next, 200));
+  // Small settle beat at the end — release the min-height locks so the
+  // card can flex to natural sizing on future reflows (theme flip, window
+  // resize). By this point the ink is set; the box was correctly sized;
+  // nothing visible changes when the locks come off.
+  seq.push((next) => {
+    dispose.forEach(fn => { try { fn(); } catch(e) {} });
+    T(next, 200);
+  });
 
   let idx = 0;
   const runNext = () => {
@@ -1956,6 +1976,9 @@ function animateLabelCard(card, done) {
   revealFinishers.push(() => {
     cancelled = true;
     timers.forEach(clearTimeout);
+    // Release any still-armed height locks — user aborted mid-reveal, so
+    // some sections may still have their inline min-height set.
+    dispose.forEach(fn => { try { fn(); } catch(e) {} });
     // Snap to final state.
     card.classList.remove('framing');
     if (frameSvg && frameSvg.parentNode) frameSvg.parentNode.removeChild(frameSvg);

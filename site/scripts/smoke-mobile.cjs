@@ -292,7 +292,7 @@ async function main() {
     },
     { timeout: 12000 },
   );
-  // Give the trailing settle beat a moment to fire followCardTail one last time.
+  // Give the trailing settle beat a moment to run.
   await page.waitForTimeout(400);
 
   const hintInFrame = await page.evaluate(() => {
@@ -312,6 +312,29 @@ async function main() {
     `mobile: about-card .label-hint is in terminal viewport after reveal` +
       (hintInFrame.ok ? '' : ` (hint b=${Math.round(hintInFrame.hb)}, term b=${Math.round(hintInFrame.tb)})`),
     hintInFrame.ok,
+  ]);
+
+  // The chip row is the entire navigation model on touch — after any
+  // card reveal it MUST be inside the terminal viewport at rest, or the
+  // visitor is stranded with no way out. This is the specific regression
+  // the pre-frame + single-scrollBottom pattern is preventing: the old
+  // followCardTail(wrap) targeted the card's bottom and pushed #chips
+  // past the fold.
+  const chipsInFrame = await page.evaluate(() => {
+    const term = document.getElementById('term');
+    const chips = document.getElementById('chips');
+    if (!term || !chips) return { ok: false, why: 'missing element' };
+    const t = term.getBoundingClientRect();
+    const c = chips.getBoundingClientRect();
+    return {
+      ok: c.bottom <= t.bottom + 4 && c.top >= t.top - 4,
+      cb: c.bottom, tb: t.bottom, ct: c.top, tt: t.top,
+    };
+  });
+  results.push([
+    `mobile: #chips is in terminal viewport after about-card reveal` +
+      (chipsInFrame.ok ? '' : ` (chips b=${Math.round(chipsInFrame.cb)}, term b=${Math.round(chipsInFrame.tb)})`),
+    chipsInFrame.ok,
   ]);
 
   // 7) viewport-fit=cover in meta
