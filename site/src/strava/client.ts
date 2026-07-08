@@ -114,10 +114,11 @@ export async function fetchLatestActivityWithGps(): Promise<StravaActivity | nul
   const token = await getAccessToken();
   const res = await fetch(`${API_BASE}/athlete/activities?per_page=30`, {
     headers: { Authorization: `Bearer ${token}` },
-    // Cache the raw Strava response for 15 min at the Next.js data-cache layer.
-    // This is what makes /api/strava/latest instant on repeat calls without
-    // us needing a KV store.
-    next: { revalidate: 900 },
+    // Hit Strava fresh on every page load — the portfolio is low-traffic
+    // enough to stay well under Strava's 100-req/15min rate limit, and
+    // the caller (page.tsx) is a server component so this only fires
+    // once per SSR pass, not once per client.
+    cache: 'no-store',
   });
   if (!res.ok) {
     throw new Error(`strava activities fetch failed: ${res.status} ${await res.text()}`);

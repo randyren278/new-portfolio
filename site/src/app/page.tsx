@@ -8,6 +8,11 @@ import { decodePolyline, projectToSvgPath } from '@/strava/polyline';
 // client bento. Strava is best-effort — any failure (no tokens, network,
 // 5xx, no GPS activities) collapses to `null` and StravaCell renders its
 // hand-drawn fallback polyline.
+//
+// force-dynamic + no-store on the strava fetch means every page load hits
+// Strava fresh, so a new activity shows up on the next refresh (no 15-min
+// cache to wait out).
+export const dynamic = 'force-dynamic';
 
 async function loadStrava(): Promise<StravaData | null> {
   try {
