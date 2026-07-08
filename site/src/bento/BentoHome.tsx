@@ -3,7 +3,6 @@
 import type { ShellContent } from '@/content/types';
 import { useEffect, useState } from 'react';
 import './bento.css';
-import { ThemeToggle } from './ThemeToggle';
 import { ContactCell } from './cells/ContactCell';
 import { HoursCell } from './cells/HoursCell';
 import { NameCell } from './cells/NameCell';
@@ -80,7 +79,6 @@ export function BentoHome({
     <div className="bento-page">
       <header className="bento-topbar">
         <div className="brand">RANDY REN · PORTFOLIO 2026</div>
-        <ThemeToggle />
       </header>
 
       <main className="bento-grid" data-photo-count={slots.length}>

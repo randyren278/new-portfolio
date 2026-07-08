@@ -2,15 +2,15 @@
    Bento home — palette API, grid geometry, cell chrome.
 
    Every color goes through the five palette roles below. NO hex
-   outside the two :root[data-theme] blocks. If you need a new
-   tint, use rgba(var(--*-rgb) / <alpha>).
+   outside the single :root block. If you need a new tint, use
+   rgba(var(--*-rgb) / <alpha>).
 
-   Palette + font stack are copied verbatim from the old
-   src/studio/shell.css so the visual language survives the
-   terminal → bento transition unchanged.
+   Light-only palette — dark mode was retired along with the theme
+   toggle. Split-var pairs (`--bg-rgb`, `--ink-rgb`, `--muted-rgb`)
+   remain so `rgba(var(--ink-rgb) / 0.03)`-style fades keep working.
    ============================================================ */
 
-:root[data-theme="light"] {
+:root {
   --bg: #fafaf7;
   --ink: #0f0f0f;
   --muted: #8a8a8a;
@@ -20,18 +20,6 @@
   --bg-rgb: 250 250 247;
   --ink-rgb: 15 15 15;
   --muted-rgb: 138 138 138;
-}
-
-:root[data-theme="dark"] {
-  --bg: #0a0908;
-  --ink: #ededed;
-  --muted: #6a6a6a;
-  --rule: #2a2a2a;
-  --accent: #7cb7ff; /* heritage prussian, lifted for dark contrast */
-
-  --bg-rgb: 10 9 8;
-  --ink-rgb: 237 237 237;
-  --muted-rgb: 106 106 106;
 }
 
 /* ----- Reset + base ----- */
@@ -89,30 +77,6 @@ body {
   color: var(--ink);
   letter-spacing: 0.14em;
   font-weight: 500;
-}
-
-/* ----- Theme toggle ----- */
-
-.theme-toggle {
-  background: transparent;
-  border: 0;
-  padding: 4px 6px;
-  font: inherit;
-  color: var(--muted);
-  letter-spacing: 0.06em;
-  text-transform: none;
-  font-size: 11px;
-  cursor: pointer;
-  transition: color 120ms ease;
-}
-.theme-toggle:hover,
-.theme-toggle:focus-visible {
-  color: var(--ink);
-  outline: none;
-}
-.theme-toggle:focus-visible {
-  outline: 1px dashed var(--muted);
-  outline-offset: 2px;
 }
 
 /* ----- Bento grid ----- */

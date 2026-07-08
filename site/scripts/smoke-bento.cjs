@@ -111,26 +111,7 @@ function assert(cond, label) {
   const listVisible = await page.$('.projects-list');
   assert(listVisible !== null, 'projects list returns after close');
 
-  // ---- 6. theme toggle flips + persists -------------------------------
-
-  const initialTheme = await page.getAttribute('html', 'data-theme');
-  await page.click('.theme-toggle');
-  const flippedTheme = await page.getAttribute('html', 'data-theme');
-  assert(
-    flippedTheme && flippedTheme !== initialTheme,
-    `theme flips (${initialTheme} → ${flippedTheme})`,
-  );
-
-  const storedTheme = await page.evaluate(() => localStorage.getItem('theme.2026'));
-  assert(storedTheme === flippedTheme, `localStorage.theme persists (got "${storedTheme}")`);
-
-  // ---- 7. reload preserves theme (pre-paint) --------------------------
-
-  await page.reload({ waitUntil: 'networkidle' });
-  const afterReload = await page.getAttribute('html', 'data-theme');
-  assert(afterReload === storedTheme, `theme survives reload (got "${afterReload}")`);
-
-  // ---- 8. exactly 2 photo cells with filename labels -----------------
+  // ---- 6. exactly 2 photo cells with filename labels -----------------
   // Middle column always renders 2 near-square photo cells (see
   // pickLayout in src/bento/photos.ts). Assert count + filename format.
 
@@ -148,7 +129,7 @@ function assert(cond, label) {
     `data-photo-count matches rendered count (${declaredCount} vs ${photoLabels.length})`,
   );
 
-  // ---- 9. strava svg with a <path> ------------------------------------
+  // ---- 7. strava svg with a <path> ------------------------------------
 
   const stravaPathD = await page.$eval('.cell-strava svg path', (el) => el.getAttribute('d'));
   assert(
@@ -156,7 +137,7 @@ function assert(cond, label) {
     `strava SVG path rendered (${stravaPathD?.slice(0, 32)}...)`,
   );
 
-  // ---- 10. mobile-specific checks -------------------------------------
+  // ---- 8. mobile-specific checks -------------------------------------
 
   if (IS_MOBILE) {
     const gridCols = await page.$eval(
@@ -212,7 +193,7 @@ function assert(cond, label) {
     );
   }
 
-  // ---- 11. only expected 404s (photo placeholders) ---------------------
+  // ---- 9. only expected 404s (photo placeholders) ---------------------
 
   const unexpected404s = badResponses.filter((r) => !/\/photos\/photo-\d+\.jpe?g$/i.test(r.url));
   assert(
@@ -221,7 +202,7 @@ function assert(cond, label) {
   );
   if (unexpected404s.length) unexpected404s.forEach((r) => console.error('    ', r.status, r.url));
 
-  // ---- 12. no console/page errors --------------------------------------
+  // ---- 10. no console/page errors --------------------------------------
 
   assert(errors.length === 0, `no page or console errors (found ${errors.length})`);
   if (errors.length) errors.forEach((e) => console.error('    ', e));
