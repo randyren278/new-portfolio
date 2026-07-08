@@ -142,6 +142,48 @@ body {
   grid-row: 5 / span 2;
 }
 
+/* ----- 2-column intermediate (laptop-narrow window / small tablets) -----
+   Between the desktop 3-col grid and the mobile 1-col stack the 3-col
+   layout gets tight enough that .projects-row's blurb column collapses
+   and the Name card's serif bio folds into a tall narrow strip. Snap to
+   2 columns at 1024px so content stays readable until we hit the 720px
+   mobile threshold. `min-width: 721px` keeps this block strictly above
+   the mobile media query below. */
+@media (max-width: 1024px) and (min-width: 721px) {
+  .bento-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(5, minmax(0, 1fr));
+  }
+  .cell-name {
+    grid-column: 1 / 2;
+    grid-row: 1 / span 1;
+  }
+  .cell-contact {
+    grid-column: 2 / 3;
+    grid-row: 1 / span 1;
+  }
+  .cell-projects {
+    grid-column: 1 / 2;
+    grid-row: 2 / span 4;
+  }
+  .cell-photo-a {
+    grid-column: 2 / 3;
+    grid-row: 2 / span 1;
+  }
+  .cell-strava {
+    grid-column: 2 / 3;
+    grid-row: 3 / span 1;
+  }
+  .cell-photo-b {
+    grid-column: 2 / 3;
+    grid-row: 4 / span 1;
+  }
+  .cell-colophon {
+    grid-column: 2 / 3;
+    grid-row: 5 / span 1;
+  }
+}
+
 /* ----- Kicker (§ SECTION) ----- */
 
 .kicker {
