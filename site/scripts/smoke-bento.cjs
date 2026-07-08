@@ -181,6 +181,35 @@ function assert(cond, label) {
       viewportMeta?.includes('viewport-fit=cover'),
       `viewport meta contains viewport-fit=cover (got "${viewportMeta}")`,
     );
+
+    // Cells stack top-to-bottom via CSS `order`. Read each cell's y
+    // position and derive the stack sequence. Rules under test:
+    //   1. .cell-name is first (§ INDEX anchored to the top).
+    //   2. photo-a and photo-b are never adjacent in the stack.
+    // We pick the LONGEST `cell-*` class so `cell-photo-a` wins over
+    // the shared `cell-photo` on the photo cells.
+    const stack = await page.$$eval('.bento-grid > .cell', (els) =>
+      els
+        .map((el) => ({
+          cls: [...el.classList]
+            .filter((c) => c.startsWith('cell-') && c !== 'cell')
+            .sort((a, b) => b.length - a.length)[0],
+          y: el.getBoundingClientRect().top,
+        }))
+        .sort((a, b) => a.y - b.y)
+        .map((e) => e.cls),
+    );
+    assert(stack[0] === 'cell-name', `Name card stacks first on mobile (got "${stack[0]}")`);
+    const photoAIdx = stack.indexOf('cell-photo-a');
+    const photoBIdx = stack.indexOf('cell-photo-b');
+    assert(
+      photoAIdx !== -1 && photoBIdx !== -1,
+      `both photo cells present in mobile stack (a:${photoAIdx}, b:${photoBIdx})`,
+    );
+    assert(
+      Math.abs(photoAIdx - photoBIdx) > 1,
+      `photos never back-to-back on mobile (a:${photoAIdx}, b:${photoBIdx}, stack:${stack.join(',')})`,
+    );
   }
 
   // ---- 11. only expected 404s (photo placeholders) ---------------------

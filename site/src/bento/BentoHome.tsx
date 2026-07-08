@@ -31,6 +31,13 @@ import { INITIAL_SLOTS, type PhotoSlot, pickLayout } from './photos';
  * Hydration story: SSR + first client paint render `INITIAL_SLOTS`
  * (deterministic, first 2 photos from the manifest). A useEffect swaps
  * in the seeded selection. One-frame swap, imperceptible in practice.
+ *
+ * Mobile stack order: Name (§ INDEX / about-me) is anchored at the
+ * top; the six cells below it — Contact, Projects, Strava, Photo-A,
+ * Photo-B, Hours — shuffle randomly per visit, with one rule: the two
+ * photo cells never land back-to-back. Implemented on client mount by
+ * injecting a <style> element whose rules live inside the mobile
+ * media query. bento.css keeps a fixed order as the JS-off fallback.
  */
 export function BentoHome({
   content,
@@ -43,6 +50,30 @@ export function BentoHome({
 
   useEffect(() => {
     setSlots(pickLayout());
+
+    // Rejection-sample a permutation of the six non-Name cells until
+    // the two photo cells are not adjacent. For 2 photos among 6
+    // positions, ~2/3 of permutations satisfy the constraint — a
+    // handful of rerolls at most.
+    const items = ['contact', 'projects', 'strava', 'photo-a', 'photo-b', 'hours'];
+    let order: string[];
+    do {
+      order = [...items];
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [order[i], order[j]] = [order[j], order[i]];
+      }
+    } while (Math.abs(order.indexOf('photo-a') - order.indexOf('photo-b')) === 1);
+
+    // Name stays at order:1 (from bento.css); everyone else gets 2..7.
+    const rules = order.map((k, i) => `  .cell-${k} { order: ${i + 2}; }`).join('\n');
+    const styleEl = document.createElement('style');
+    styleEl.setAttribute('data-mobile-shuffle', '');
+    styleEl.textContent = `@media (max-width: 720px) {\n${rules}\n}\n`;
+    document.head.appendChild(styleEl);
+    return () => {
+      styleEl.remove();
+    };
   }, []);
 
   return (

@@ -482,10 +482,12 @@ body {
     grid-template-rows: repeat(7, minmax(180px, auto));
     grid-auto-flow: row;
   }
-  /* Single-column stack in narrative order: Name, Contact, Projects,
-     Strava, Photos (always 2), Hours. Every cell is full-width.
-     `grid-row: auto !important` overrides desktop grid-row placement
-     so mobile stacks by CSS `order` instead. */
+  /* Single-column stack. Name (§ INDEX) is always first; the six cells
+     below it shuffle per visit via a client-injected <style> block (see
+     BentoHome.tsx). Rule below is the JS-off fallback: Contact, Projects,
+     Strava, Photo-A, Hours, Photo-B — reasonable narrative order with
+     photos not adjacent. `grid-row: auto !important` overrides desktop
+     grid-row placement so mobile stacks by CSS `order` instead. */
   .bento-grid > .cell {
     grid-column: 1 !important;
     grid-row: auto !important;
@@ -505,11 +507,11 @@ body {
   .cell-photo-a {
     order: 5;
   }
-  .cell-photo-b {
-    order: 5;
-  }
   .cell-hours {
     order: 6;
+  }
+  .cell-photo-b {
+    order: 7;
   }
   /* Photo cells become portrait-shaped on mobile so 3:4 photos fit
      with essentially no crop, and 4:3 landscapes only crop mildly.
