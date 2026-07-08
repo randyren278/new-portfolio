@@ -11,6 +11,5 @@
     "indentWidth": 2,
     "lineWidth": 100
   },
-  "javascript": { "formatter": { "quoteStyle": "single", "semicolons": "always" } },
-  "files": { "ignore": ["src/studio/shell-engine.js"] }
+  "javascript": { "formatter": { "quoteStyle": "single", "semicolons": "always" } }
 }

@@ -1,11 +1,10 @@
 /**
- * Theme resolver — dark ⇄ light selection for the studio shell.
+ * Theme resolver — dark ⇄ light selection for the bento home.
  *
  * The system is a `data-theme="light" | "dark"` attribute on <html>. All CSS
- * lives under `:root[data-theme="…"]` selectors in shell.css; the engine's
- * SVG code reads live values from CSS custom properties via `palette()`.
+ * lives under `:root[data-theme="…"]` selectors in bento.css.
  *
- * Three call sites use this module:
+ * Two call sites use this module:
  *
  *   1. `layout.tsx` renders `HEAD_SCRIPT` inline in <head>. This runs
  *      synchronously before body, sets `data-theme` from
@@ -13,10 +12,8 @@
  *      matchMedia listener so `auto` follows the system live. Pre-paint —
  *      no cream flash.
  *
- *   2. `StudioShell.tsx` uses `apply()` on toggle click.
- *
- *   3. `shell-engine.js` uses `apply()` for the `theme` command; and
- *      listens for the `themechange` CustomEvent to redraw motifs.
+ *   2. `ThemeToggle.tsx` uses `apply()` on toggle click and reads
+ *      `current()` / `getStored()` for UI state.
  *
  * The head script is authored as a raw string (not a compiled TS export)
  * because it must run before any bundle — Next.js will inline it as-is.
@@ -98,8 +95,9 @@ export function resolve(choice: ThemeChoice): Theme {
 /**
  * Set the theme. `dark`/`light` persist to localStorage; `auto` clears the
  * stored value so the system-pref listener in HEAD_SCRIPT takes over again.
- * Always writes the attribute AND fires `themechange` so engine listeners
- * (motif redraw, etc.) can react.
+ * Always writes the attribute AND fires `themechange` so any listeners can
+ * react (currently none — kept for parity with the old engine's motif
+ * redraw pattern, in case a future cell needs it).
  */
 export function apply(choice: ThemeChoice): void {
   const t = resolve(choice);

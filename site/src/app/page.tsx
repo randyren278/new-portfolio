@@ -1,11 +1,33 @@
+import { BentoHome } from '@/bento/BentoHome';
+import type { StravaData } from '@/bento/cells/StravaCell';
 import { loadShellContent } from '@/content/loader';
-import { StudioShell } from '@/studio/StudioShell';
+import { fetchLatestActivityWithGps } from '@/strava/client';
+import { decodePolyline, projectToSvgPath } from '@/strava/polyline';
 
-// Server component: fetches all shell content (Phase 1: static snapshot,
-// Phase 2: Postgres) and hands it to the client wrapper. The wrapper does
-// not fetch anything at runtime — everything is hydrated from these props.
+// Server component: loads content + strava in parallel, hands them to the
+// client bento. Strava is best-effort — any failure (no tokens, network,
+// 5xx, no GPS activities) collapses to `null` and StravaCell renders its
+// hand-drawn fallback polyline.
+
+async function loadStrava(): Promise<StravaData | null> {
+  try {
+    const activity = await fetchLatestActivityWithGps();
+    if (!activity?.map?.summary_polyline) return null;
+    const points = decodePolyline(activity.map.summary_polyline);
+    const polylinePath = projectToSvgPath(points, 360, 200, 12);
+    return {
+      name: activity.name,
+      distanceM: activity.distance,
+      movingTimeS: activity.moving_time,
+      activityType: activity.type,
+      polylinePath,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export default async function Page() {
-  const content = await loadShellContent();
-  return <StudioShell content={content} />;
+  const [content, strava] = await Promise.all([loadShellContent(), loadStrava()]);
+  return <BentoHome content={content} strava={strava} />;
 }

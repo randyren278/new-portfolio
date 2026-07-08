@@ -1,0 +1,546 @@
+/* ============================================================
+   Bento home — palette API, grid geometry, cell chrome.
+
+   Every color goes through the five palette roles below. NO hex
+   outside the two :root[data-theme] blocks. If you need a new
+   tint, use rgba(var(--*-rgb) / <alpha>).
+
+   Palette + font stack are copied verbatim from the old
+   src/studio/shell.css so the visual language survives the
+   terminal → bento transition unchanged.
+   ============================================================ */
+
+:root[data-theme="light"] {
+  --bg: #fafaf7;
+  --ink: #0f0f0f;
+  --muted: #8a8a8a;
+  --rule: #d8d8d5;
+  --accent: #a8100a; /* heritage vermillion */
+
+  --bg-rgb: 250 250 247;
+  --ink-rgb: 15 15 15;
+  --muted-rgb: 138 138 138;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a0908;
+  --ink: #ededed;
+  --muted: #6a6a6a;
+  --rule: #2a2a2a;
+  --accent: #7cb7ff; /* heritage prussian, lifted for dark contrast */
+
+  --bg-rgb: 10 9 8;
+  --ink-rgb: 237 237 237;
+  --muted-rgb: 106 106 106;
+}
+
+/* ----- Reset + base ----- */
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+html {
+  background: var(--bg);
+  color: var(--ink);
+  /* Kill iOS rubber-band that would otherwise expose address-bar chrome. */
+  overscroll-behavior: none;
+}
+body {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden; /* single-viewport target on desktop */
+}
+
+/* ----- Page frame ----- */
+
+.bento-page {
+  height: 100vh;
+  min-height: 640px;
+  padding: max(28px, env(safe-area-inset-top, 0px)) max(44px, env(safe-area-inset-right, 0px))
+    max(28px, env(safe-area-inset-bottom, 0px)) max(44px, env(safe-area-inset-left, 0px));
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 20px;
+}
+
+/* ----- Top bar: brand + theme toggle ----- */
+
+.bento-topbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.bento-topbar .brand {
+  color: var(--ink);
+  letter-spacing: 0.14em;
+  font-weight: 500;
+}
+
+/* ----- Theme toggle ----- */
+
+.theme-toggle {
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  font: inherit;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: none;
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  color: var(--ink);
+  outline: none;
+}
+.theme-toggle:focus-visible {
+  outline: 1px dashed var(--muted);
+  outline-offset: 2px;
+}
+
+/* ----- Bento grid ----- */
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 14px;
+  min-height: 0; /* let children shrink */
+}
+
+.cell {
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 26px 28px;
+  background: var(--bg);
+  transition: border-color 120ms ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+}
+.cell:hover {
+  border-color: var(--muted);
+}
+
+/* Cell positions — the asymmetric move. Projects spans two rows. */
+.cell-name {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+}
+.cell-photo-a {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+}
+.cell-contact {
+  grid-column: 3 / 4;
+  grid-row: 1 / 2;
+}
+.cell-projects {
+  grid-column: 1 / 2;
+  grid-row: 2 / 4;
+} /* spans 2 rows */
+.cell-photo-b {
+  grid-column: 2 / 3;
+  grid-row: 2 / 3;
+}
+.cell-strava {
+  grid-column: 3 / 4;
+  grid-row: 2 / 3;
+}
+.cell-photo-c {
+  grid-column: 2 / 3;
+  grid-row: 3 / 4;
+}
+.cell-hours {
+  grid-column: 3 / 4;
+  grid-row: 3 / 4;
+}
+
+/* ----- Kicker (§ SECTION) ----- */
+
+.kicker {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+  flex: 0 0 auto;
+}
+
+/* ----- Name card ----- */
+
+.name-wordmark {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.name-bio {
+  font-family: "Instrument Serif", "IBM Plex Serif", ui-serif, Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.3;
+  color: var(--ink);
+  margin: 0 0 auto 0;
+  max-width: 26ch;
+}
+.name-meta {
+  margin-top: 16px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ----- Contact card ----- */
+
+.contact-rows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 14px;
+  font-size: 13px;
+  align-content: start;
+}
+.contact-lab {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  align-self: center;
+}
+.contact-val {
+  color: var(--ink);
+}
+.contact-val a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--muted);
+  padding-bottom: 1px;
+  transition: border-color 120ms ease;
+}
+.contact-val a:hover {
+  border-bottom-color: var(--ink);
+}
+
+/* ----- Hours card ----- */
+
+.hours-rows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(5, auto);
+  grid-auto-flow: column;
+  gap: 6px 24px;
+  align-content: start;
+  font-size: 13px;
+}
+.hours-row {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  align-items: baseline;
+}
+.hours-day {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  align-self: center;
+}
+.hours-val {
+  color: var(--ink);
+}
+
+/* ----- Projects card ----- */
+
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+.projects-row {
+  display: grid;
+  grid-template-columns: 28px 140px 1fr;
+  align-items: baseline;
+  gap: 14px;
+  padding: 12px 6px;
+  border: 0;
+  border-bottom: 1px solid rgba(var(--muted-rgb) / 0.32);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+  text-align: left;
+  color: var(--ink);
+  font: inherit;
+  width: 100%;
+}
+.projects-row:first-child {
+  border-top: 1px solid rgba(var(--muted-rgb) / 0.32);
+}
+.projects-row:hover,
+.projects-row:focus-visible {
+  background: rgba(var(--ink-rgb) / 0.03);
+  border-bottom-color: var(--ink);
+  outline: none;
+}
+.projects-num {
+  font-weight: 500;
+  color: var(--ink);
+  font-size: 12px;
+}
+.projects-ttl {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.projects-blb {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* Expanded plate view inside the Projects cell. */
+.projects-plate {
+  position: absolute;
+  inset: 0;
+  padding: 26px 28px;
+  background: var(--bg);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  animation: plate-fade-in 220ms ease;
+}
+@keyframes plate-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.projects-plate-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  font: 500 11px / 1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+.projects-plate-close:hover,
+.projects-plate-close:focus-visible {
+  color: var(--ink);
+  outline: none;
+}
+.projects-plate-number {
+  font-family: "Instrument Serif", "IBM Plex Serif", ui-serif, Georgia, serif;
+  font-size: 56px;
+  line-height: 1;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.projects-plate-title {
+  font-family: "Instrument Serif", "IBM Plex Serif", ui-serif, Georgia, serif;
+  font-style: italic;
+  font-size: 28px;
+  line-height: 1.15;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.projects-plate-meta {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+  line-height: 1.7;
+}
+.projects-plate-essay {
+  font-family: "Instrument Serif", "IBM Plex Serif", ui-serif, Georgia, serif;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 0 0 12px 0;
+  max-width: 52ch;
+}
+.projects-plate-cap {
+  margin-top: auto;
+  padding-top: 16px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ----- Photo cells ----- */
+
+.cell-photo {
+  background: rgba(var(--muted-rgb) / 0.08);
+  padding: 22px 24px;
+  justify-content: flex-start;
+}
+.photo-fname {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  position: relative;
+  z-index: 1;
+}
+.photo-img {
+  /* If /photos/<file>.jpg 404s (default until Randy adds files), onError
+     hides the <img>. Nothing else stands in — the muted rectangle IS the
+     placeholder. */
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* ----- Strava cell ----- */
+
+.strava-body {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.strava-body svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.strava-cap {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.strava-sub {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  opacity: 0.65;
+  margin-top: 4px;
+}
+
+/* ----- Mobile: 2-column stack ----- */
+
+@media (max-width: 720px) {
+  body {
+    overflow: auto;
+  }
+  .bento-page {
+    height: auto;
+    min-height: 100vh;
+    padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px))
+      max(40px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+  }
+  .bento-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(6, minmax(180px, auto));
+  }
+  /* Narrative reorder: Name, Contact, Projects (full width), Photo-A,
+     Strava, Photo-B, Photo-C, Hours (full width). */
+  .cell-name {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+  }
+  .cell-contact {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+  }
+  .cell-projects {
+    grid-column: 1 / 3;
+    grid-row: 2 / 3;
+  }
+  .cell-photo-a {
+    grid-column: 1 / 2;
+    grid-row: 3 / 4;
+  }
+  .cell-strava {
+    grid-column: 2 / 3;
+    grid-row: 3 / 4;
+  }
+  .cell-photo-b {
+    grid-column: 1 / 2;
+    grid-row: 4 / 5;
+  }
+  .cell-photo-c {
+    grid-column: 2 / 3;
+    grid-row: 4 / 5;
+  }
+  .cell-hours {
+    grid-column: 1 / 3;
+    grid-row: 5 / 6;
+  }
+  .name-bio {
+    max-width: 100%;
+  }
+  .projects-plate-essay {
+    max-width: 100%;
+  }
+  /* Full-width mobile cells (Hours + Projects) contain rows-grids that
+     otherwise hug the left. Cells are flex-column, so use align-self
+     (cross-axis) to center the inner grid horizontally. */
+  .cell-hours .hours-rows,
+  .cell-projects .projects-list {
+    align-self: center;
+    width: 100%;
+    max-width: 420px;
+  }
+  /* Collapse Hours back to a single column on narrow screens — Sat/Sun
+     don't fit as a second column when the cell is only half the viewport. */
+  .cell-hours .hours-rows {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-auto-flow: row;
+  }
+  /* Also center the kicker above the centered content so nothing looks
+     orphaned in the top-left corner. */
+  .cell-hours .kicker,
+  .cell-projects .kicker {
+    align-self: center;
+    width: 100%;
+    max-width: 420px;
+  }
+}

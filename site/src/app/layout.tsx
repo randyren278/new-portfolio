@@ -1,6 +1,6 @@
+import { HEAD_SCRIPT } from '@/bento/theme';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { HEAD_SCRIPT } from '@/studio/theme';
 
 // Fonts come from Google via a raw <link> tag because the shell CSS
 // references named families by string; using next/font would require
@@ -72,11 +72,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         */}
         <script dangerouslySetInnerHTML={{ __html: HEAD_SCRIPT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital@1&family=Instrument+Serif:ital@0;1&display=swap"
           rel="stylesheet"

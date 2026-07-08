@@ -36,7 +36,7 @@ linkedin  /in/randyren
 location  SAN FRANCISCO, PT/GMT-7`;
 
 export const HOURS_TEXT =
-`monday      quiet hours (writing)
+`monday      quiet hours
 tuesday     10:00–19:00
 wednesday   10:00–19:00
 thursday    10:00–19:00
