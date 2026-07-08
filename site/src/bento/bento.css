@@ -142,14 +142,16 @@ body {
   border-color: var(--muted);
 }
 
-/* Cell positions — the asymmetric move. Projects spans two rows. */
+/* Cell positions — the asymmetric move. Projects spans two rows.
+   Photo cells only pin their column; grid-row is set inline by
+   PhotoCell (from pickLayout in photos.ts) so 2-row portrait cells
+   share the same component as 1-row cells. */
 .cell-name {
   grid-column: 1 / 2;
   grid-row: 1 / 2;
 }
 .cell-photo-a {
   grid-column: 2 / 3;
-  grid-row: 1 / 2;
 }
 .cell-contact {
   grid-column: 3 / 4;
@@ -161,7 +163,6 @@ body {
 } /* spans 2 rows */
 .cell-photo-b {
   grid-column: 2 / 3;
-  grid-row: 2 / 3;
 }
 .cell-strava {
   grid-column: 3 / 4;
@@ -169,7 +170,6 @@ body {
 }
 .cell-photo-c {
   grid-column: 2 / 3;
-  grid-row: 3 / 4;
 }
 .cell-hours {
   grid-column: 3 / 4;
@@ -478,41 +478,27 @@ body {
   .bento-grid {
     grid-template-columns: 1fr;
     grid-template-rows: repeat(8, minmax(180px, auto));
+    grid-auto-flow: row;
   }
   /* Single-column stack in narrative order: Name, Contact, Projects,
-     Photo-A, Strava, Photo-B, Photo-C, Hours. Every cell is full-width. */
-  .cell-name {
-    grid-column: 1;
-    grid-row: 1;
+     Strava, Photos (2 or 3), Hours. Every cell is full-width.
+     `grid-row: auto !important` overrides PhotoCell's inline gridRow
+     (which pins desktop row placement) so mobile stacks by CSS `order`
+     instead of source position. Photo count varies (2 or 3) so photos
+     use one shared `order` bucket — the browser flows them in source
+     order within the bucket. */
+  .bento-grid > .cell {
+    grid-column: 1 !important;
+    grid-row: auto !important;
   }
-  .cell-contact {
-    grid-column: 1;
-    grid-row: 2;
-  }
-  .cell-projects {
-    grid-column: 1;
-    grid-row: 3;
-  }
-  .cell-photo-a {
-    grid-column: 1;
-    grid-row: 4;
-  }
-  .cell-strava {
-    grid-column: 1;
-    grid-row: 5;
-  }
-  .cell-photo-b {
-    grid-column: 1;
-    grid-row: 6;
-  }
-  .cell-photo-c {
-    grid-column: 1;
-    grid-row: 7;
-  }
-  .cell-hours {
-    grid-column: 1;
-    grid-row: 8;
-  }
+  .cell-name     { order: 1; }
+  .cell-contact  { order: 2; }
+  .cell-projects { order: 3; }
+  .cell-strava   { order: 4; }
+  .cell-photo-a  { order: 5; }
+  .cell-photo-b  { order: 5; }
+  .cell-photo-c  { order: 5; }
+  .cell-hours    { order: 6; }
   .name-bio {
     max-width: 100%;
   }

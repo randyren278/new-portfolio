@@ -130,14 +130,27 @@ function assert(cond, label) {
   const afterReload = await page.getAttribute('html', 'data-theme');
   assert(afterReload === storedTheme, `theme survives reload (got "${afterReload}")`);
 
-  // ---- 8. three photo cells with filename labels ----------------------
+  // ---- 8. photo cells (2 or 3, depending on aspect-aware layout) -----
+  // pickLayout in src/bento/photos.ts returns 3 slots when the picked
+  // color band contains a landscape, or 2 slots when it's all portraits.
+  // Both are valid; assert the range and validate filenames.
 
   const photoLabels = await page.$$eval('.photo-fname', (els) =>
     els.map((e) => e.textContent?.trim()),
   );
-  assert(photoLabels.length === 3, `three photo cells rendered (got ${photoLabels.length})`);
+  assert(
+    photoLabels.length === 2 || photoLabels.length === 3,
+    `photo cell count is 2 or 3 (got ${photoLabels.length})`,
+  );
   const hasValidFilenames = photoLabels.every((l) => /^PHOTO-\d{2}\.JPG$/i.test(l ?? ''));
   assert(hasValidFilenames, `photo labels look like PHOTO-NN.JPG (${photoLabels.join(', ')})`);
+
+  // Sanity check: bento-grid carries data-photo-count matching what we see.
+  const declaredCount = await page.getAttribute('.bento-grid', 'data-photo-count');
+  assert(
+    String(photoLabels.length) === declaredCount,
+    `data-photo-count matches rendered count (${declaredCount} vs ${photoLabels.length})`,
+  );
 
   // ---- 9. strava svg with a <path> ------------------------------------
 
