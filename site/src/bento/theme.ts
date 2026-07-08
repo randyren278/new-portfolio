@@ -22,7 +22,11 @@
 export type Theme = 'light' | 'dark';
 export type ThemeChoice = Theme | 'auto';
 
-const KEY = 'theme';
+// Namespaced key: bumped from 'theme' to 'theme.2026' on the bento launch
+// so pre-relaunch stored values (from the retired terminal engine) no
+// longer override the system preference. First visit after the bump →
+// no stored value → HEAD_SCRIPT falls through to prefers-color-scheme.
+const KEY = 'theme.2026';
 
 /**
  * Inline pre-paint script rendered into <head>. Keep it defensive:

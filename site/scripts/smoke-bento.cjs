@@ -121,7 +121,7 @@ function assert(cond, label) {
     `theme flips (${initialTheme} → ${flippedTheme})`,
   );
 
-  const storedTheme = await page.evaluate(() => localStorage.getItem('theme'));
+  const storedTheme = await page.evaluate(() => localStorage.getItem('theme.2026'));
   assert(storedTheme === flippedTheme, `localStorage.theme persists (got "${storedTheme}")`);
 
   // ---- 7. reload preserves theme (pre-paint) --------------------------

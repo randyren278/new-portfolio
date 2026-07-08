@@ -1,13 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Randy Ren specimen tag">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Randy Ren">
   <!--
-    Adaptive favicon. Dark palette by default (matches the site's default
-    first-impression); flips to light palette when the browser is in
-    light-mode via prefers-color-scheme. Modern tab renderers (Chrome,
-    Safari, Firefox) honor <style> inside SVG favicons.
+    Adaptive favicon. Dark palette by default; flips to light palette
+    via prefers-color-scheme. Modern tab renderers (Chrome, Safari,
+    Firefox) honor a style block inside SVG favicons.
 
-    Palette matches shell.css :root[data-theme].
-      light: --bg #fafaf7   --ink #0f0f0f
-      dark:  --bg #0a0908   --ink #ededed
+    Palette copies the two :root[data-theme] blocks in bento.css.
+      light: bg #fafaf7   ink #0f0f0f
+      dark:  bg #0a0908   ink #ededed
+
+    Mark: hairline square with a serif italic R, a fragment of the
+    Randy Ren. wordmark that opens the bento.
   -->
   <style>
     :root { --bg: #0a0908; --ink: #ededed; }
@@ -15,15 +17,11 @@
       :root { --bg: #fafaf7; --ink: #0f0f0f; }
     }
     .bg     { fill: var(--bg); }
-    .stroke { stroke: var(--ink); fill: none; stroke-width: 2; }
-    .dot    { fill: var(--ink); }
-    .label  { fill: var(--ink); font: 500 14px 'IBM Plex Mono', ui-monospace, Menlo, monospace; }
+    .box    { stroke: var(--ink); fill: none; stroke-width: 2; }
+    .letter { fill: var(--ink);
+              font: italic 400 44px "Instrument Serif", "IBM Plex Serif", ui-serif, Georgia, serif; }
   </style>
   <rect class="bg" width="64" height="64"/>
-  <!-- specimen tag outline with notched corner -->
-  <path class="stroke" d="M8 22 L44 22 L56 34 L56 54 L8 54 Z"/>
-  <!-- eyelet -->
-  <circle class="dot" cx="14" cy="28" r="2.2"/>
-  <!-- initials -->
-  <text class="label" x="30" y="47">RR</text>
+  <rect class="box" x="8" y="8" width="48" height="48"/>
+  <text class="letter" x="20" y="48">R</text>
 </svg>
