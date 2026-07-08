@@ -1,27 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Randy Ren">
   <!--
-    Adaptive favicon. Dark palette by default; flips to light palette
-    via prefers-color-scheme. Modern tab renderers (Chrome, Safari,
-    Firefox) honor a style block inside SVG favicons.
+    Light-only favicon. Dark mode was retired along with the theme
+    toggle; the site is a single cream palette site-wide.
 
-    Palette copies the two :root[data-theme] blocks in bento.css.
-      light: bg #fafaf7   ink #0f0f0f
-      dark:  bg #0a0908   ink #ededed
+    Palette copies the sole :root block in bento.css:
+      bg #fafaf7   ink #0f0f0f
 
     Mark: hairline square with a serif italic R, a fragment of the
     Randy Ren. wordmark that opens the bento.
   -->
-  <style>
-    :root { --bg: #0a0908; --ink: #ededed; }
-    @media (prefers-color-scheme: light) {
-      :root { --bg: #fafaf7; --ink: #0f0f0f; }
-    }
-    .bg     { fill: var(--bg); }
-    .box    { stroke: var(--ink); fill: none; stroke-width: 2; }
-    .letter { fill: var(--ink);
-              font: italic 400 44px "Instrument Serif", "IBM Plex Serif", ui-serif, Georgia, serif; }
-  </style>
-  <rect class="bg" width="64" height="64"/>
-  <rect class="box" x="8" y="8" width="48" height="48"/>
-  <text class="letter" x="20" y="48">R</text>
+  <rect width="64" height="64" fill="#fafaf7"/>
+  <rect x="8" y="8" width="48" height="48" stroke="#0f0f0f" fill="none" stroke-width="2"/>
+  <text x="20" y="48" fill="#0f0f0f" font-family="'Instrument Serif', 'IBM Plex Serif', ui-serif, Georgia, serif" font-style="italic" font-weight="400" font-size="44">R</text>
 </svg>
