@@ -10,16 +10,10 @@
  * <img> via onError so only the muted rectangle + filename label render.
  */
 
-export const PHOTO_POOL: readonly string[] = [
-  'photo-01.jpg',
-  'photo-02.jpg',
-  'photo-03.jpg',
-  'photo-04.jpg',
-  'photo-05.jpg',
-  'photo-06.jpg',
-  'photo-07.jpg',
-  'photo-08.jpg',
-];
+export const PHOTO_POOL: readonly string[] = Array.from(
+  { length: 40 },
+  (_, i) => `photo-${String(i + 1).padStart(2, '0')}.jpg`,
+);
 
 /**
  * Fisher-Yates on a copy of the pool. Not seedable — visitors get a fresh

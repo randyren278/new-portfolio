@@ -136,7 +136,7 @@ function assert(cond, label) {
     els.map((e) => e.textContent?.trim()),
   );
   assert(photoLabels.length === 3, `three photo cells rendered (got ${photoLabels.length})`);
-  const hasValidFilenames = photoLabels.every((l) => /^PHOTO-0[1-8]\.JPG$/i.test(l ?? ''));
+  const hasValidFilenames = photoLabels.every((l) => /^PHOTO-\d{2}\.JPG$/i.test(l ?? ''));
   assert(hasValidFilenames, `photo labels look like PHOTO-NN.JPG (${photoLabels.join(', ')})`);
 
   // ---- 9. strava svg with a <path> ------------------------------------
