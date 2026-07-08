@@ -137,7 +137,7 @@ body {
   grid-column: 3 / 4;
   grid-row: 3 / span 2;
 }
-.cell-hours {
+.cell-colophon {
   grid-column: 3 / 4;
   grid-row: 5 / span 2;
 }
@@ -172,7 +172,9 @@ body {
   line-height: 1.3;
   color: var(--ink);
   margin: 0 0 auto 0;
-  max-width: 26ch;
+  /* No max-width — let the bio fill the cell's full width so the
+     three-sentence blurb can breathe laterally instead of stacking
+     into a tall narrow column. */
 }
 .name-meta {
   margin-top: 16px;
@@ -213,31 +215,26 @@ body {
   border-bottom-color: var(--ink);
 }
 
-/* ----- Hours card ----- */
+/* ----- Colophon card ----- */
 
-.hours-rows {
+.colophon-rows {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: repeat(5, auto);
-  grid-auto-flow: column;
-  gap: 6px 24px;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 14px;
   align-content: start;
   font-size: 13px;
 }
-.hours-row {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 6px 16px;
-  align-items: baseline;
+.colophon-row {
+  display: contents;
 }
-.hours-day {
+.colophon-lab {
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
   align-self: center;
 }
-.hours-val {
+.colophon-val {
   color: var(--ink);
 }
 
@@ -471,7 +468,7 @@ body {
   .cell-photo-a {
     order: 5;
   }
-  .cell-hours {
+  .cell-colophon {
     order: 6;
   }
   .cell-photo-b {
@@ -488,12 +485,5 @@ body {
   }
   .projects-plate-essay {
     max-width: 100%;
-  }
-  /* Collapse Hours back to a single column on narrow screens — Sat/Sun
-     don't fit as a second column when the cell is only half the viewport. */
-  .cell-hours .hours-rows {
-    grid-template-columns: 1fr;
-    grid-template-rows: none;
-    grid-auto-flow: row;
   }
 }

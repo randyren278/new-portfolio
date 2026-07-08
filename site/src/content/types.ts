@@ -37,7 +37,6 @@ export type ShellContent = {
   ORDER: string[];
   ABOUT_TEXT: string;
   CONTACT_TEXT: string;
-  HOURS_TEXT: string;
   COLOPHON_TEXT: string;
   MAN: Record<string, ManEntry>;
   PLATE_DATA: Record<string, PlateEntry>;

@@ -68,26 +68,17 @@ export const MEDIUMS = {
 
 export const ORDER = ['oryzo', 'halcyon', 'aperture', 'fieldnote', 'signal-garden', 'loom'];
 
-export const ABOUT_TEXT = `Randy is a designer-engineer working at the seam between AI systems and human interfaces. Previously shipped consumer products used by millions; now focused on making agents feel like real collaborators — the kind you'd want in the room, not the kind that eats your afternoon. Believes the best interfaces disappear until you need them, then arrive already knowing why. Currently open to select client work and staff+ roles starting fall 2026.`;
+export const ABOUT_TEXT = `Randy is a designer-engineer studying at the University of British Columbia. Currently focused on making agents feel like real collaborators; the kind you'd want in the room, not the kind that eats your afternoon. Open to roles starting spring 2027.`;
 
-export const CONTACT_TEXT = `hey@randy.sh
-twitter   @randyren
-github    randyren
-linkedin  /in/randyren
-location  SAN FRANCISCO, PT/GMT-7`;
-
-export const HOURS_TEXT = `monday      quiet hours
-tuesday     10:00–19:00
-wednesday   10:00–19:00
-thursday    10:00–19:00
-friday      10:00–15:00
-saturday    by appointment
-sunday      closed`;
+export const CONTACT_TEXT = `email     randyren278@gmail.com
+github    randyren278
+linkedin  /in/randyren278
+location  VANCOUVER, BC, PT/GMT-8`;
 
 export const COLOPHON_TEXT = `fonts     IBM Plex Mono, IBM Plex Serif (italic)
 palette   cream, ink, prussian, warm umber
 stack     raw HTML, raw CSS, raw JS. no libraries.
-built     by hand, in San Francisco, 2026.
+built     by hand, in Vancouver.
 thanks    to the friends who reviewed this early.`;
 
 export const MAN = {
@@ -277,11 +268,10 @@ export const PLATE_DATA = {
     marker: 'COLOPHON',
     meta: [
       { lab: 'NAME', val: 'RANDY REN' },
-      { lab: 'BASED', val: 'SAN FRANCISCO, CA' },
+      { lab: 'BASED', val: 'VANCOUVER, BC' },
       { lab: 'FOCUS', val: 'AI × INTERFACE' },
-      { lab: 'STATUS', val: 'OPEN FALL 2026' },
     ],
-    plateCap: 'COLOPHON · RANDY REN · SF',
+    plateCap: 'COLOPHON · RANDY REN · YVR',
     motifKind: 'about',
     essay: [
       "Randy is a designer-engineer working at the seam between AI systems and human interfaces. Previously shipped consumer products used by millions; now focused on making agents feel like real collaborators — the kind you'd want in the room, not the kind that eats your afternoon.",
@@ -295,15 +285,14 @@ export const PLATE_DATA = {
     year: null,
     marker: 'CORRESPONDENCE',
     meta: [
-      { lab: 'EMAIL', val: 'hey@randy.sh' },
-      { lab: 'TWITTER', val: '@randyren' },
-      { lab: 'GITHUB', val: 'randyren' },
-      { lab: 'LINKEDIN', val: '/in/randyren' },
+      { lab: 'EMAIL', val: 'randyren278@gmail.com' },
+      { lab: 'GITHUB', val: 'randyren278' },
+      { lab: 'LINKEDIN', val: '/in/randyren278' },
     ],
-    plateCap: 'CORRESPONDENCE · HEY@RANDY.SH',
+    plateCap: 'CORRESPONDENCE · RANDYREN278@GMAIL.COM',
     motifKind: 'contact',
     essay: [
-      'Open to select client work and staff-plus roles starting fall 2026. Based in San Francisco but comfortable across time zones. Best reached by email; replies within a day.',
+      'Open to select client work and staff-plus roles. Based in Vancouver but comfortable across time zones. Best reached by email; replies within a day.',
       "I like problems where the interface is doing more than displaying — where the interaction itself changes the shape of the work. If that sounds like what you're building, write.",
     ],
   },

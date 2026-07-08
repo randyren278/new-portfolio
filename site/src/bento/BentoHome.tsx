@@ -3,8 +3,8 @@
 import type { ShellContent } from '@/content/types';
 import { useEffect, useState } from 'react';
 import './bento.css';
+import { ColophonCell } from './cells/ColophonCell';
 import { ContactCell } from './cells/ContactCell';
-import { HoursCell } from './cells/HoursCell';
 import { NameCell } from './cells/NameCell';
 import { PhotoCell } from './cells/PhotoCell';
 import { ProjectsCell } from './cells/ProjectsCell';
@@ -16,7 +16,7 @@ import { INITIAL_SLOTS, type PhotoSlot, pickLayout } from './photos';
  *
  *   Row band 1: [Name        ] [Photo A     ] [Contact     ]
  *   Row band 2: [Projects    ] [ (Photo A)  ] [Strava      ]
- *   Row band 3: [ (Projects) ] [Photo B     ] [Hours       ]
+ *   Row band 3: [ (Projects) ] [Photo B     ] [Colophon    ]
  *
  * The grid actually uses 6 equal rows so photo cells span 3 rows each
  * (near-square) while left/right column cells span 2 rows each — see
@@ -33,9 +33,9 @@ import { INITIAL_SLOTS, type PhotoSlot, pickLayout } from './photos';
  *
  * Mobile stack order: Name (§ INDEX / about-me) is anchored at the
  * top; the six cells below it — Contact, Projects, Strava, Photo-A,
- * Photo-B, Hours — shuffle randomly per visit, with one rule: the two
- * photo cells never land back-to-back. Implemented on client mount by
- * injecting a <style> element whose rules live inside the mobile
+ * Photo-B, Colophon — shuffle randomly per visit, with one rule: the
+ * two photo cells never land back-to-back. Implemented on client mount
+ * by injecting a <style> element whose rules live inside the mobile
  * media query. bento.css keeps a fixed order as the JS-off fallback.
  */
 export function BentoHome({
@@ -54,7 +54,7 @@ export function BentoHome({
     // the two photo cells are not adjacent. For 2 photos among 6
     // positions, ~2/3 of permutations satisfy the constraint — a
     // handful of rerolls at most.
-    const items = ['contact', 'projects', 'strava', 'photo-a', 'photo-b', 'hours'];
+    const items = ['contact', 'projects', 'strava', 'photo-a', 'photo-b', 'colophon'];
     let order: string[];
     do {
       order = [...items];
@@ -78,7 +78,7 @@ export function BentoHome({
   return (
     <div className="bento-page">
       <header className="bento-topbar">
-        <div className="brand">RANDY REN · PORTFOLIO 2026</div>
+        <div className="brand">RANDY REN · PORTFOLIO</div>
       </header>
 
       <main className="bento-grid" data-photo-count={slots.length}>
@@ -94,11 +94,11 @@ export function BentoHome({
         )}
         <StravaCell strava={strava} />
 
-        <HoursCell hoursText={content.HOURS_TEXT} />
+        <ColophonCell colophonText={content.COLOPHON_TEXT} />
       </main>
 
       <footer className="bento-topbar" aria-hidden="true">
-        <div>randyren.org · 2026</div>
+        <div>randyren.org</div>
         <div>NO SERVERS PRESIDING</div>
       </footer>
     </div>

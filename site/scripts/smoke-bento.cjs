@@ -71,7 +71,7 @@ function assert(cond, label) {
     kickers.some((k) => k?.startsWith('§ INDEX / SIX PLATES')),
     'Projects card kicker rendered',
   );
-  assert(kickers.includes('§ HOURS'), 'Hours card kicker rendered');
+  assert(kickers.includes('§ COLOPHON'), 'Colophon card kicker rendered');
   assert(kickers.includes('§ LATEST ACTIVITY'), 'Strava card kicker rendered');
 
   // ---- 3. all six PLATE rows in Projects ------------------------------
