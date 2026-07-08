@@ -83,18 +83,36 @@ export function BentoHome({
 
       <main className="bento-grid" data-photo-count={slots.length}>
         <NameCell aboutText={content.ABOUT_TEXT} />
-        {slots[0] && (
-          <PhotoCell key={`a-${slots[0].file}`} filename={slots[0].file} areaClass="cell-photo-a" />
-        )}
         <ContactCell contactText={content.CONTACT_TEXT} />
 
         <ProjectsCell order={content.ORDER} mediums={content.MEDIUMS} plates={content.PLATE_DATA} />
-        {slots[1] && (
-          <PhotoCell key={`b-${slots[1].file}`} filename={slots[1].file} areaClass="cell-photo-b" />
-        )}
         <StravaCell strava={strava} />
 
         <ColophonCell colophonText={content.COLOPHON_TEXT} />
+
+        {/* On wide desktop the two photos live in a middle-column
+            flex wrapper so each can size to its own aspect ratio.
+            On the 2-col intermediate and mobile the wrapper collapses
+            (display: contents) and the photo cells become direct grid
+            children with their own placements. */}
+        <div className="photo-column">
+          {slots[0] && (
+            <PhotoCell
+              key={`a-${slots[0].file}`}
+              filename={slots[0].file}
+              aspect={slots[0].aspect}
+              areaClass="cell-photo-a"
+            />
+          )}
+          {slots[1] && (
+            <PhotoCell
+              key={`b-${slots[1].file}`}
+              filename={slots[1].file}
+              aspect={slots[1].aspect}
+              areaClass="cell-photo-b"
+            />
+          )}
+        </div>
       </main>
 
       <footer className="bento-topbar" aria-hidden="true">

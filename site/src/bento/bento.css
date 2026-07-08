@@ -110,17 +110,23 @@ body {
   border-color: var(--muted);
 }
 
-/* Cell positions on desktop. Grid has 6 equal rows; the middle
-   column's two photo cells each span 3 rows (near-square shape).
-   Left column: Name (2 rows) + Projects (4 rows). Right column:
-   Contact + Strava + Hours (2 rows each). Every column sums to 6. */
+/* Cell positions on desktop. Six rows carve the outer columns; the
+   middle column is a flex wrapper (.photo-column) whose two photo
+   cells size to each photo's own aspect ratio (see PhotoCell). At
+   this breakpoint the middle column can end at a different height
+   than the outer columns — the bento is intentionally asymmetric
+   so photos never crop or squash. */
 .cell-name {
   grid-column: 1 / 2;
   grid-row: 1 / span 2;
 }
-.cell-photo-a {
+.photo-column {
   grid-column: 2 / 3;
-  grid-row: 1 / span 3;
+  grid-row: 1 / span 6;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
 }
 .cell-contact {
   grid-column: 3 / 4;
@@ -129,10 +135,6 @@ body {
 .cell-projects {
   grid-column: 1 / 2;
   grid-row: 3 / span 4;
-}
-.cell-photo-b {
-  grid-column: 2 / 3;
-  grid-row: 4 / span 3;
 }
 .cell-strava {
   grid-column: 3 / 4;
@@ -154,6 +156,11 @@ body {
   .bento-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: repeat(5, minmax(0, auto));
+  }
+  /* Collapse the middle-column wrapper so photo cells become direct
+     grid children and pick up the 2-col placements below. */
+  .photo-column {
+    display: contents;
   }
   .cell-name {
     grid-column: 1 / 2;
@@ -417,6 +424,10 @@ body {
   background: rgba(var(--muted-rgb) / 0.08);
   padding: 22px 24px;
   justify-content: flex-start;
+  /* --photo-aspect is set inline by PhotoCell from the manifest so
+     the cell reshapes to its photo (no crop, no squash). Falls back
+     to 3/4 if the var is missing. */
+  aspect-ratio: var(--photo-aspect, 3 / 4);
 }
 .photo-fname {
   font-size: 10px;
@@ -486,6 +497,12 @@ body {
     grid-template-rows: repeat(7, minmax(180px, auto));
     grid-auto-flow: row;
   }
+  /* Collapse the desktop middle-column wrapper so photo cells become
+     direct grid children on mobile — same reason as the 2-col block
+     above. */
+  .photo-column {
+    display: contents;
+  }
   /* Single-column stack. Name (§ INDEX) is always first; the six cells
      below it shuffle per visit via a client-injected <style> block (see
      BentoHome.tsx). Rule below is the JS-off fallback: Contact, Projects,
@@ -517,12 +534,10 @@ body {
   .cell-photo-b {
     order: 7;
   }
-  /* Photo cells become portrait-shaped on mobile so 3:4 photos fit
-     with essentially no crop, and 4:3 landscapes only crop mildly.
-     aspect-ratio wins over the row template's minmax(180px, auto). */
-  .cell-photo {
-    aspect-ratio: 4 / 5;
-  }
+  /* Photo cells inherit their per-photo aspect ratio from the CSS
+     var set inline by PhotoCell — same reshape-to-photo rule as
+     desktop. No override needed here; keeping the block for the
+     name-bio and plate-essay adjustments below. */
   .name-bio {
     max-width: 100%;
   }

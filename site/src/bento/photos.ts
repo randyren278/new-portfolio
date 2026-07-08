@@ -37,11 +37,11 @@ export type PhotoMeta = {
 export const PHOTO_MANIFEST: readonly PhotoMeta[] = manifest as PhotoMeta[];
 
 /**
- * A single photo cell's assignment: just which file. Row placement
- * is fixed in CSS (photo cells always span half of a 6-row grid on
- * desktop; aspect-ratio: 4/5 on mobile) — see bento.css.
+ * A single photo cell's assignment: which file and its natural aspect
+ * ratio. PhotoCell applies the aspect as a CSS var so the cell reshapes
+ * to match the image and no crop is needed.
  */
-export type PhotoSlot = { file: string };
+export type PhotoSlot = { file: string; aspect: number };
 
 /**
  * Seeded PRNG. Small, deterministic, good enough for shuffle picks.
@@ -90,7 +90,7 @@ export function pickColorBand(n: number, seed?: number): PhotoMeta[] {
 export function pickLayout(seed?: number): PhotoSlot[] {
   const s = seed ?? Math.floor(Math.random() * 2 ** 32);
   const two = pickColorBand(2, s);
-  return two.map((p) => ({ file: p.file }));
+  return two.map((p) => ({ file: p.file, aspect: p.aspect }));
 }
 
 /**
@@ -101,4 +101,5 @@ export function pickLayout(seed?: number): PhotoSlot[] {
  */
 export const INITIAL_SLOTS: readonly PhotoSlot[] = PHOTO_MANIFEST.slice(0, 2).map((p) => ({
   file: p.file,
+  aspect: p.aspect,
 }));

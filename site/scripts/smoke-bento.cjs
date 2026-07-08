@@ -169,7 +169,7 @@ function assert(cond, label) {
     //   2. photo-a and photo-b are never adjacent in the stack.
     // We pick the LONGEST `cell-*` class so `cell-photo-a` wins over
     // the shared `cell-photo` on the photo cells.
-    const stack = await page.$$eval('.bento-grid > .cell', (els) =>
+    const stack = await page.$$eval('.bento-grid .cell', (els) =>
       els
         .map((el) => ({
           cls: [...el.classList]
