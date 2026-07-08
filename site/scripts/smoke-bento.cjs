@@ -130,18 +130,14 @@ function assert(cond, label) {
   const afterReload = await page.getAttribute('html', 'data-theme');
   assert(afterReload === storedTheme, `theme survives reload (got "${afterReload}")`);
 
-  // ---- 8. photo cells (2 or 3, depending on aspect-aware layout) -----
-  // pickLayout in src/bento/photos.ts returns 3 slots when the picked
-  // color band contains a landscape, or 2 slots when it's all portraits.
-  // Both are valid; assert the range and validate filenames.
+  // ---- 8. exactly 2 photo cells with filename labels -----------------
+  // Middle column always renders 2 near-square photo cells (see
+  // pickLayout in src/bento/photos.ts). Assert count + filename format.
 
   const photoLabels = await page.$$eval('.photo-fname', (els) =>
     els.map((e) => e.textContent?.trim()),
   );
-  assert(
-    photoLabels.length === 2 || photoLabels.length === 3,
-    `photo cell count is 2 or 3 (got ${photoLabels.length})`,
-  );
+  assert(photoLabels.length === 2, `two photo cells rendered (got ${photoLabels.length})`);
   const hasValidFilenames = photoLabels.every((l) => /^PHOTO-\d{2}\.JPG$/i.test(l ?? ''));
   assert(hasValidFilenames, `photo labels look like PHOTO-NN.JPG (${photoLabels.join(', ')})`);
 

@@ -42,7 +42,7 @@ function formatSpeed(meters: number, seconds: number, activityType: string): str
     const s = Math.round(secPerKm % 60);
     return `${m}:${s.toString().padStart(2, '0')} /KM`;
   }
-  const kmh = (meters / 1000) / (seconds / 3600);
+  const kmh = meters / 1000 / (seconds / 3600);
   return `${kmh.toFixed(1)} KM/H`;
 }
 

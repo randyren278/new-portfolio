@@ -46,11 +46,7 @@ export async function readTokens(): Promise<StravaTokens | null> {
 
 export async function writeTokens(tokens: StravaTokens): Promise<void> {
   if (backend() === 'local') {
-    await writeFile(
-      process.env.STRAVA_TOKEN_FILE!,
-      JSON.stringify(tokens, null, 2),
-      'utf8',
-    );
+    await writeFile(process.env.STRAVA_TOKEN_FILE!, JSON.stringify(tokens, null, 2), 'utf8');
     return;
   }
 
@@ -59,14 +55,10 @@ export async function writeTokens(tokens: StravaTokens): Promise<void> {
   const vercelToken = process.env.VERCEL_TOKEN;
   const teamId = process.env.VERCEL_TEAM_ID; // optional
   if (!edgeConfigId || !vercelToken) {
-    throw new Error(
-      'edge-config write requires EDGE_CONFIG_ID and VERCEL_TOKEN env vars',
-    );
+    throw new Error('edge-config write requires EDGE_CONFIG_ID and VERCEL_TOKEN env vars');
   }
 
-  const url = new URL(
-    `https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`,
-  );
+  const url = new URL(`https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`);
   if (teamId) url.searchParams.set('teamId', teamId);
 
   const res = await fetch(url, {

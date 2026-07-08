@@ -120,7 +120,10 @@ body {
 .bento-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
+  /* Six equal rows so photo cells span exactly half (3 rows) each,
+     landing near-square. Info cells span 2 rows (Contact, Strava,
+     Hours) or 4 rows (Projects, filling below Name). */
+  grid-template-rows: repeat(6, 1fr);
   gap: 14px;
   min-height: 0; /* let children shrink */
 }
@@ -142,38 +145,37 @@ body {
   border-color: var(--muted);
 }
 
-/* Cell positions — the asymmetric move. Projects spans two rows.
-   Photo cells only pin their column; grid-row is set inline by
-   PhotoCell (from pickLayout in photos.ts) so 2-row portrait cells
-   share the same component as 1-row cells. */
+/* Cell positions on desktop. Grid has 6 equal rows; the middle
+   column's two photo cells each span 3 rows (near-square shape).
+   Left column: Name (2 rows) + Projects (4 rows). Right column:
+   Contact + Strava + Hours (2 rows each). Every column sums to 6. */
 .cell-name {
   grid-column: 1 / 2;
-  grid-row: 1 / 2;
+  grid-row: 1 / span 2;
 }
 .cell-photo-a {
   grid-column: 2 / 3;
+  grid-row: 1 / span 3;
 }
 .cell-contact {
   grid-column: 3 / 4;
-  grid-row: 1 / 2;
+  grid-row: 1 / span 2;
 }
 .cell-projects {
   grid-column: 1 / 2;
-  grid-row: 2 / 4;
-} /* spans 2 rows */
+  grid-row: 3 / span 4;
+}
 .cell-photo-b {
   grid-column: 2 / 3;
+  grid-row: 4 / span 3;
 }
 .cell-strava {
   grid-column: 3 / 4;
-  grid-row: 2 / 3;
-}
-.cell-photo-c {
-  grid-column: 2 / 3;
+  grid-row: 3 / span 2;
 }
 .cell-hours {
   grid-column: 3 / 4;
-  grid-row: 3 / 4;
+  grid-row: 5 / span 2;
 }
 
 /* ----- Kicker (§ SECTION) ----- */
@@ -477,28 +479,44 @@ body {
   }
   .bento-grid {
     grid-template-columns: 1fr;
-    grid-template-rows: repeat(8, minmax(180px, auto));
+    grid-template-rows: repeat(7, minmax(180px, auto));
     grid-auto-flow: row;
   }
   /* Single-column stack in narrative order: Name, Contact, Projects,
-     Strava, Photos (2 or 3), Hours. Every cell is full-width.
-     `grid-row: auto !important` overrides PhotoCell's inline gridRow
-     (which pins desktop row placement) so mobile stacks by CSS `order`
-     instead of source position. Photo count varies (2 or 3) so photos
-     use one shared `order` bucket — the browser flows them in source
-     order within the bucket. */
+     Strava, Photos (always 2), Hours. Every cell is full-width.
+     `grid-row: auto !important` overrides desktop grid-row placement
+     so mobile stacks by CSS `order` instead. */
   .bento-grid > .cell {
     grid-column: 1 !important;
     grid-row: auto !important;
   }
-  .cell-name     { order: 1; }
-  .cell-contact  { order: 2; }
-  .cell-projects { order: 3; }
-  .cell-strava   { order: 4; }
-  .cell-photo-a  { order: 5; }
-  .cell-photo-b  { order: 5; }
-  .cell-photo-c  { order: 5; }
-  .cell-hours    { order: 6; }
+  .cell-name {
+    order: 1;
+  }
+  .cell-contact {
+    order: 2;
+  }
+  .cell-projects {
+    order: 3;
+  }
+  .cell-strava {
+    order: 4;
+  }
+  .cell-photo-a {
+    order: 5;
+  }
+  .cell-photo-b {
+    order: 5;
+  }
+  .cell-hours {
+    order: 6;
+  }
+  /* Photo cells become portrait-shaped on mobile so 3:4 photos fit
+     with essentially no crop, and 4:3 landscapes only crop mildly.
+     aspect-ratio wins over the row template's minmax(180px, auto). */
+  .cell-photo {
+    aspect-ratio: 4 / 5;
+  }
   .name-bio {
     max-width: 100%;
   }

@@ -13,25 +13,24 @@ import { StravaCell, type StravaData } from './cells/StravaCell';
 import { INITIAL_SLOTS, type PhotoSlot, pickLayout } from './photos';
 
 /**
- * Top-level bento home. Composes the 3×3 asymmetric grid:
+ * Top-level bento home. Composes the asymmetric grid:
  *
- *   Row 1: [Name        ] [Photo A     ] [Contact     ]
- *   Row 2: [Projects    ] [Photo B     ] [Strava      ]
- *   Row 3: [ (spans)    ] [Photo C     ] [Hours       ]
+ *   Row band 1: [Name        ] [Photo A     ] [Contact     ]
+ *   Row band 2: [Projects    ] [ (Photo A)  ] [Strava      ]
+ *   Row band 3: [ (Projects) ] [Photo B     ] [Hours       ]
  *
- * Projects spans two rows down the left. Middle column is a vertical
- * photo strip whose count (2 or 3) and per-cell row-span is picked at
- * mount time by `pickLayout()` — see src/bento/photos.ts. Photos in a
- * given visit share a hue band; the band is randomly-positioned so
- * the palette differs between visits.
+ * The grid actually uses 6 equal rows so photo cells span 3 rows each
+ * (near-square) while left/right column cells span 2 rows each — see
+ * bento.css. Photos are always 2 per visit; the color-band shuffle
+ * picks which two from the manifest.
  *
  * JSX source order matters on mobile — the media query stacks cells
- * with auto-flow, so order here IS the vertical order there. Desktop
- * ignores source order and uses grid-column + inline grid-row.
+ * with auto-flow using CSS `order:`, so JSX order feeds into that
+ * ordering. Desktop ignores JSX order and uses grid-column + grid-row.
  *
  * Hydration story: SSR + first client paint render `INITIAL_SLOTS`
- * (deterministic, from the top of the manifest). A useEffect swaps in
- * the seeded selection. One-frame swap, imperceptible in practice.
+ * (deterministic, first 2 photos from the manifest). A useEffect swaps
+ * in the seeded selection. One-frame swap, imperceptible in practice.
  */
 export function BentoHome({
   content,
@@ -56,34 +55,16 @@ export function BentoHome({
       <main className="bento-grid" data-photo-count={slots.length}>
         <NameCell aboutText={content.ABOUT_TEXT} />
         {slots[0] && (
-          <PhotoCell
-            key={`a-${slots[0].file}`}
-            filename={slots[0].file}
-            gridRow={slots[0].gridRow}
-            areaClass="cell-photo-a"
-          />
+          <PhotoCell key={`a-${slots[0].file}`} filename={slots[0].file} areaClass="cell-photo-a" />
         )}
         <ContactCell contactText={content.CONTACT_TEXT} />
 
         <ProjectsCell order={content.ORDER} mediums={content.MEDIUMS} plates={content.PLATE_DATA} />
         {slots[1] && (
-          <PhotoCell
-            key={`b-${slots[1].file}`}
-            filename={slots[1].file}
-            gridRow={slots[1].gridRow}
-            areaClass="cell-photo-b"
-          />
+          <PhotoCell key={`b-${slots[1].file}`} filename={slots[1].file} areaClass="cell-photo-b" />
         )}
         <StravaCell strava={strava} />
 
-        {slots[2] && (
-          <PhotoCell
-            key={`c-${slots[2].file}`}
-            filename={slots[2].file}
-            gridRow={slots[2].gridRow}
-            areaClass="cell-photo-c"
-          />
-        )}
         <HoursCell hoursText={content.HOURS_TEXT} />
       </main>
 

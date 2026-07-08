@@ -37,12 +37,11 @@ export type PhotoMeta = {
 export const PHOTO_MANIFEST: readonly PhotoMeta[] = manifest as PhotoMeta[];
 
 /**
- * A single photo cell's assignment: which file, and its exact grid-row
- * placement (as a CSS `grid-row` value like "1 / span 2" or "3").
- * PhotoCell applies this as an inline style so the grid doesn't need
- * conditional classes for every layout variant.
+ * A single photo cell's assignment: just which file. Row placement
+ * is fixed in CSS (photo cells always span half of a 6-row grid on
+ * desktop; aspect-ratio: 4/5 on mobile) — see bento.css.
  */
-export type PhotoSlot = { file: string; gridRow: string };
+export type PhotoSlot = { file: string };
 
 /**
  * Seeded PRNG. Small, deterministic, good enough for shuffle picks.
@@ -57,11 +56,6 @@ function mulberry32(seed: number): () => number {
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
-}
-
-/** Portrait if aspect < 0.87 (skinny); everything else uses 1-row cells. */
-function isPortrait(p: PhotoMeta): boolean {
-  return p.aspect < 0.87;
 }
 
 /**
@@ -84,45 +78,27 @@ export function pickColorBand(n: number, seed?: number): PhotoMeta[] {
 }
 
 /**
- * Decide layout for the middle column of the desktop 3-row grid:
+ * Decide layout for the middle column. Always 2 photos, near-square
+ * cells (~441×430 at 1440x900 desktop) so both portraits and
+ * landscapes fit with only ~12% crop on the long axis. Cell shape
+ * is fixed in CSS; this picker just chooses which two files to show.
  *
- *   - If the initial 3-photo band is ALL portraits → drop to 2 photos.
- *     One takes rows 1-2 (tall), the other row 3 (short) — flipped per
- *     visit so the rhythm doesn't ossify.
- *   - Otherwise → keep 3 photos, each 1 row.
- *
- * The returned `gridRow` strings work as-is in the CSS Grid — desktop
- * has 3 rows in the middle column, mobile stacks everything, and the
- * mobile media query overrides `grid-row` to `auto` so this data is
- * inert there (see bento.css @media (max-width: 720px)).
+ * Kept as a separate function (rather than inlining `pickColorBand(2)`
+ * at the call site) so future refinements — aspect-matched pairing,
+ * saturation-weighted picks, etc. — have a single home.
  */
 export function pickLayout(seed?: number): PhotoSlot[] {
   const s = seed ?? Math.floor(Math.random() * 2 ** 32);
-  const three = pickColorBand(3, s);
-  const allPortrait = three.every(isPortrait);
-  if (!allPortrait) {
-    return three.map((p, i) => ({ file: p.file, gridRow: `${i + 1}` }));
-  }
-  const two = pickColorBand(2, s ^ 0xdeadbeef);
-  const tallFirst = mulberry32(s)() < 0.5;
-  return tallFirst
-    ? [
-        { file: two[0].file, gridRow: '1 / span 2' },
-        { file: two[1].file, gridRow: '3' },
-      ]
-    : [
-        { file: two[0].file, gridRow: '1' },
-        { file: two[1].file, gridRow: '2 / span 2' },
-      ];
+  const two = pickColorBand(2, s);
+  return two.map((p) => ({ file: p.file }));
 }
 
 /**
- * Initial (pre-hydration) slots — first 3 photos from the manifest,
- * each 1 row tall. Renders on the server and on first client paint so
- * hydration matches; a client-side useEffect then swaps in the seeded
- * selection. Same one-frame swap pattern the old shuffle used.
+ * Initial (pre-hydration) slots — first 2 photos from the manifest.
+ * Renders on the server and on first client paint so hydration
+ * matches; a client-side useEffect then swaps in the seeded selection.
+ * Same one-frame swap pattern the old shuffle used.
  */
-export const INITIAL_SLOTS: readonly PhotoSlot[] = PHOTO_MANIFEST.slice(0, 3).map((p, i) => ({
+export const INITIAL_SLOTS: readonly PhotoSlot[] = PHOTO_MANIFEST.slice(0, 2).map((p) => ({
   file: p.file,
-  gridRow: `${i + 1}`,
 }));
