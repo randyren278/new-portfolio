@@ -154,9 +154,9 @@ function assert(cond, label) {
       '.bento-grid',
       (el) => getComputedStyle(el).gridTemplateColumns,
     );
-    // Should be two tracks on mobile; count via " " separators.
+    // Should be a single track on mobile; count via " " separators.
     const trackCount = gridCols.trim().split(/\s+/).length;
-    assert(trackCount === 2, `mobile grid has 2 columns (got ${trackCount}: "${gridCols}")`);
+    assert(trackCount === 1, `mobile grid is single-column (got ${trackCount}: "${gridCols}")`);
 
     const bodyScrollWidth = await page.evaluate(() => document.body.scrollWidth);
     const viewportWidth = await page.evaluate(() => window.innerWidth);

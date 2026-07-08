@@ -99,15 +99,20 @@ export type StravaActivity = {
   type: string;
   start_date: string; // ISO
   map: { summary_polyline: string | null };
+  // Strava emits 'everyone' | 'followers_only' | 'only_me' on newer
+  // activities. Older ones may omit the field entirely — default to
+  // 'everyone' so we don't silently hide a legit public activity.
+  visibility?: 'everyone' | 'followers_only' | 'only_me';
 };
 
 /**
- * Fetch the most recent activity with a GPS polyline. Indoor / treadmill /
- * manual entries return `map.summary_polyline: null` and are skipped.
+ * Fetch the most recent PUBLIC activity with a GPS polyline. Indoor /
+ * treadmill / manual entries return `map.summary_polyline: null` and are
+ * skipped, as are activities set to Followers Only or Only Me on Strava.
  */
 export async function fetchLatestActivityWithGps(): Promise<StravaActivity | null> {
   const token = await getAccessToken();
-  const res = await fetch(`${API_BASE}/athlete/activities?per_page=10`, {
+  const res = await fetch(`${API_BASE}/athlete/activities?per_page=30`, {
     headers: { Authorization: `Bearer ${token}` },
     // Cache the raw Strava response for 15 min at the Next.js data-cache layer.
     // This is what makes /api/strava/latest instant on repeat calls without
@@ -118,5 +123,9 @@ export async function fetchLatestActivityWithGps(): Promise<StravaActivity | nul
     throw new Error(`strava activities fetch failed: ${res.status} ${await res.text()}`);
   }
   const activities = (await res.json()) as StravaActivity[];
-  return activities.find((a) => !!a.map?.summary_polyline) ?? null;
+  return (
+    activities.find(
+      (a) => !!a.map?.summary_polyline && (a.visibility ?? 'everyone') === 'everyone',
+    ) ?? null
+  );
 }
