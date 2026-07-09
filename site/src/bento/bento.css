@@ -110,23 +110,20 @@ body {
   border-color: var(--muted);
 }
 
-/* Cell positions on desktop. Six rows carve the outer columns; the
-   middle column is a flex wrapper (.photo-column) whose two photo
-   cells size to each photo's own aspect ratio (see PhotoCell). At
-   this breakpoint the middle column can end at a different height
-   than the outer columns — the bento is intentionally asymmetric
-   so photos never crop or squash. */
+/* Cell positions on desktop. Grid has 6 equal rows; the middle
+   column's two photo cells each span 3 rows (near-square shape).
+   Left column: Name (2 rows) + Projects (4 rows). Right column:
+   Contact + Strava + Colophon (2 rows each). Every column sums to 6.
+   Portraits get cropped top+bottom via object-fit: cover to fit the
+   near-square cell — intentional (OPTION 4 pick, keeps every cell in
+   the same grid rhythm). */
 .cell-name {
   grid-column: 1 / 2;
   grid-row: 1 / span 2;
 }
-.photo-column {
+.cell-photo-a {
   grid-column: 2 / 3;
-  grid-row: 1 / span 6;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-height: 0;
+  grid-row: 1 / span 3;
 }
 .cell-contact {
   grid-column: 3 / 4;
@@ -136,6 +133,10 @@ body {
   grid-column: 1 / 2;
   grid-row: 3 / span 4;
 }
+.cell-photo-b {
+  grid-column: 2 / 3;
+  grid-row: 4 / span 3;
+}
 .cell-strava {
   grid-column: 3 / 4;
   grid-row: 3 / span 2;
@@ -143,21 +144,6 @@ body {
 .cell-colophon {
   grid-column: 3 / 4;
   grid-row: 5 / span 2;
-}
-
-/* ----- Wide desktop: cap photos so the page fits in one viewport -----
-   At the 3-col breakpoint photos own the middle column alone (no
-   siblings sharing vertical space). Without a cap, a portrait photo
-   at column-width × 1/aspect can push the middle column past the
-   viewport, forcing scroll. Cap width so derived height (via
-   aspect-ratio) is at most half of the available viewport (100vh
-   minus chrome ≈ 160px: topbar + footer + page padding + gap).
-   min(100%, ...) keeps the natural column-width when the viewport
-   is tall enough that the cap doesn't bite. */
-@media (min-width: 1025px) {
-  .cell-photo {
-    width: min(100%, calc((100vh - 160px) / 2 * var(--photo-aspect, 0.75)));
-  }
 }
 
 /* ----- 2-column intermediate (laptop-narrow window / small tablets) -----
@@ -171,11 +157,6 @@ body {
   .bento-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: repeat(5, minmax(0, auto));
-  }
-  /* Collapse the middle-column wrapper so photo cells become direct
-     grid children and pick up the 2-col placements below. */
-  .photo-column {
-    display: contents;
   }
   .cell-name {
     grid-column: 1 / 2;
@@ -204,15 +185,6 @@ body {
   .cell-colophon {
     grid-column: 2 / 3;
     grid-row: 5 / span 1;
-  }
-  /* At this breakpoint photos share the right column with Contact,
-     Strava, and Colophon. Whole-page fit isn't achievable (those
-     three already sum past most short viewports), but capping
-     photo width keeps them from dominating. Height derived via
-     aspect-ratio; 40vh × aspect gives roughly a 320px-tall photo
-     on an 800-tall viewport. */
-  .cell-photo {
-    width: min(100%, calc(40vh * var(--photo-aspect, 0.75)));
   }
 }
 
@@ -448,17 +420,6 @@ body {
   background: rgba(var(--muted-rgb) / 0.08);
   padding: 22px 24px;
   justify-content: flex-start;
-  /* --photo-aspect is set inline by PhotoCell from the manifest as a
-     decimal (e.g. 0.75). Falls back to 0.75 (= 3/4) if the var is
-     missing. Height is aspect-driven; width is capped per-breakpoint
-     via min() in the media queries below so the derived height never
-     exceeds a fraction of the viewport (see each media query). */
-  aspect-ratio: var(--photo-aspect, 0.75);
-  /* Center the cell when it's narrower than the column/grid track (as
-     the width cap engages on short viewports). Flex axis (desktop) and
-     grid axes (2-col + mobile via display: contents) are both covered
-     by place-self. */
-  place-self: center;
 }
 .photo-fname {
   font-size: 10px;
@@ -528,16 +489,10 @@ body {
     grid-template-rows: repeat(7, minmax(180px, auto));
     grid-auto-flow: row;
   }
-  /* Collapse the desktop middle-column wrapper so photo cells become
-     direct grid children on mobile — same reason as the 2-col block
-     above. */
-  .photo-column {
-    display: contents;
-  }
   /* Single-column stack. Name (§ INDEX) is always first; the six cells
      below it shuffle per visit via a client-injected <style> block (see
      BentoHome.tsx). Rule below is the JS-off fallback: Contact, Projects,
-     Strava, Photo-A, Hours, Photo-B — reasonable narrative order with
+     Strava, Photo-A, Colophon, Photo-B — reasonable narrative order with
      photos not adjacent. `grid-row: auto !important` overrides desktop
      grid-row placement so mobile stacks by CSS `order` instead. */
   .bento-grid > .cell {
@@ -565,12 +520,11 @@ body {
   .cell-photo-b {
     order: 7;
   }
-  /* Photo cells inherit their per-photo aspect ratio from the CSS
-     var set inline by PhotoCell — same reshape-to-photo rule as
-     desktop. Cap width so derived height stays around half a
-     screen; a single photo shouldn't dominate the stack. */
+  /* Photo cells become portrait-shaped on mobile so 3:4 photos crop
+     mildly on the long axis (object-fit: cover). aspect-ratio wins
+     over the row template's minmax(180px, auto). */
   .cell-photo {
-    width: min(100%, calc(55vh * var(--photo-aspect, 0.75)));
+    aspect-ratio: 4 / 5;
   }
   .name-bio {
     max-width: 100%;

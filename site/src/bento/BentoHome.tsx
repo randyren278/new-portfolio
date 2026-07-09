@@ -18,10 +18,12 @@ import { INITIAL_SLOTS, type PhotoSlot, pickLayout } from './photos';
  *   Row band 2: [Projects    ] [ (Photo A)  ] [Strava      ]
  *   Row band 3: [ (Projects) ] [Photo B     ] [Colophon    ]
  *
- * The grid actually uses 6 equal rows so photo cells span 3 rows each
+ * The grid uses 6 equal rows so photo cells span 3 rows each
  * (near-square) while left/right column cells span 2 rows each — see
- * bento.css. Photos are always 2 per visit; the color-band shuffle
- * picks which two from the manifest.
+ * bento.css. Portraits get cropped top+bottom via object-fit: cover to
+ * fit the near-square cell; that's intentional (see the OPTION 4 pick
+ * in the photo-fit review). Photos are 2 per visit; the color-band
+ * shuffle picks which two from the manifest.
  *
  * JSX source order matters on mobile — the media query stacks cells
  * with auto-flow using CSS `order:`, so JSX order feeds into that
@@ -83,36 +85,18 @@ export function BentoHome({
 
       <main className="bento-grid" data-photo-count={slots.length}>
         <NameCell aboutText={content.ABOUT_TEXT} />
+        {slots[0] && (
+          <PhotoCell key={`a-${slots[0].file}`} filename={slots[0].file} areaClass="cell-photo-a" />
+        )}
         <ContactCell contactText={content.CONTACT_TEXT} />
 
         <ProjectsCell order={content.ORDER} mediums={content.MEDIUMS} plates={content.PLATE_DATA} />
+        {slots[1] && (
+          <PhotoCell key={`b-${slots[1].file}`} filename={slots[1].file} areaClass="cell-photo-b" />
+        )}
         <StravaCell strava={strava} />
 
         <ColophonCell colophonText={content.COLOPHON_TEXT} />
-
-        {/* On wide desktop the two photos live in a middle-column
-            flex wrapper so each can size to its own aspect ratio.
-            On the 2-col intermediate and mobile the wrapper collapses
-            (display: contents) and the photo cells become direct grid
-            children with their own placements. */}
-        <div className="photo-column">
-          {slots[0] && (
-            <PhotoCell
-              key={`a-${slots[0].file}`}
-              filename={slots[0].file}
-              aspect={slots[0].aspect}
-              areaClass="cell-photo-a"
-            />
-          )}
-          {slots[1] && (
-            <PhotoCell
-              key={`b-${slots[1].file}`}
-              filename={slots[1].file}
-              aspect={slots[1].aspect}
-              areaClass="cell-photo-b"
-            />
-          )}
-        </div>
       </main>
 
       <footer className="bento-topbar" aria-hidden="true">

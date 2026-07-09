@@ -1,6 +1,5 @@
 'use client';
 
-import type { CSSProperties } from 'react';
 import { useState } from 'react';
 
 /**
@@ -9,28 +8,24 @@ import { useState } from 'react';
  * the file 404s, onError hides the image so the placeholder rectangle
  * stays clean — no broken-image icon.
  *
- * The cell's aspect ratio comes from the photo itself (via a
- * --photo-aspect CSS var set from the manifest). The cell reshapes to
- * match the image so nothing gets cropped or squashed at any viewport.
- * See .cell-photo in bento.css for how the var is consumed.
+ * Cell placement (grid-row / grid-column / aspect-ratio) lives in
+ * bento.css. Photo cells are near-square on desktop (~1:1 aspect via a
+ * 6-row grid where photos span 3 rows) and portrait on mobile
+ * (aspect-ratio: 4/5). Portraits are center-cropped via object-fit: cover
+ * to fit the cell — matches the outer bento cells' rhythm.
  */
 type Props = {
   filename: string;
-  aspect: number;
   /** Which grid area class to apply, e.g. 'cell-photo-a'. */
   areaClass: string;
 };
 
-export function PhotoCell({ filename, aspect, areaClass }: Props) {
+export function PhotoCell({ filename, areaClass }: Props) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   return (
-    <section
-      className={`cell cell-photo ${areaClass}`}
-      style={{ '--photo-aspect': String(aspect) } as CSSProperties}
-      aria-label={`Photograph ${filename}`}
-    >
+    <section className={`cell cell-photo ${areaClass}`} aria-label={`Photograph ${filename}`}>
       <div className="photo-fname">{filename.toUpperCase()}</div>
       {!failed && (
         <img
