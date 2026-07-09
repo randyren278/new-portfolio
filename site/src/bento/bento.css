@@ -145,6 +145,21 @@ body {
   grid-row: 5 / span 2;
 }
 
+/* ----- Wide desktop: cap photos so the page fits in one viewport -----
+   At the 3-col breakpoint photos own the middle column alone (no
+   siblings sharing vertical space). Without a cap, a portrait photo
+   at column-width × 1/aspect can push the middle column past the
+   viewport, forcing scroll. Cap width so derived height (via
+   aspect-ratio) is at most half of the available viewport (100vh
+   minus chrome ≈ 160px: topbar + footer + page padding + gap).
+   min(100%, ...) keeps the natural column-width when the viewport
+   is tall enough that the cap doesn't bite. */
+@media (min-width: 1025px) {
+  .cell-photo {
+    width: min(100%, calc((100vh - 160px) / 2 * var(--photo-aspect, 0.75)));
+  }
+}
+
 /* ----- 2-column intermediate (laptop-narrow window / small tablets) -----
    Between the desktop 3-col grid and the mobile 1-col stack the 3-col
    layout gets tight enough that .projects-row's blurb column collapses
@@ -189,6 +204,15 @@ body {
   .cell-colophon {
     grid-column: 2 / 3;
     grid-row: 5 / span 1;
+  }
+  /* At this breakpoint photos share the right column with Contact,
+     Strava, and Colophon. Whole-page fit isn't achievable (those
+     three already sum past most short viewports), but capping
+     photo width keeps them from dominating. Height derived via
+     aspect-ratio; 40vh × aspect gives roughly a 320px-tall photo
+     on an 800-tall viewport. */
+  .cell-photo {
+    width: min(100%, calc(40vh * var(--photo-aspect, 0.75)));
   }
 }
 
@@ -424,10 +448,17 @@ body {
   background: rgba(var(--muted-rgb) / 0.08);
   padding: 22px 24px;
   justify-content: flex-start;
-  /* --photo-aspect is set inline by PhotoCell from the manifest so
-     the cell reshapes to its photo (no crop, no squash). Falls back
-     to 3/4 if the var is missing. */
-  aspect-ratio: var(--photo-aspect, 3 / 4);
+  /* --photo-aspect is set inline by PhotoCell from the manifest as a
+     decimal (e.g. 0.75). Falls back to 0.75 (= 3/4) if the var is
+     missing. Height is aspect-driven; width is capped per-breakpoint
+     via min() in the media queries below so the derived height never
+     exceeds a fraction of the viewport (see each media query). */
+  aspect-ratio: var(--photo-aspect, 0.75);
+  /* Center the cell when it's narrower than the column/grid track (as
+     the width cap engages on short viewports). Flex axis (desktop) and
+     grid axes (2-col + mobile via display: contents) are both covered
+     by place-self. */
+  place-self: center;
 }
 .photo-fname {
   font-size: 10px;
@@ -536,8 +567,11 @@ body {
   }
   /* Photo cells inherit their per-photo aspect ratio from the CSS
      var set inline by PhotoCell — same reshape-to-photo rule as
-     desktop. No override needed here; keeping the block for the
-     name-bio and plate-essay adjustments below. */
+     desktop. Cap width so derived height stays around half a
+     screen; a single photo shouldn't dominate the stack. */
+  .cell-photo {
+    width: min(100%, calc(55vh * var(--photo-aspect, 0.75)));
+  }
   .name-bio {
     max-width: 100%;
   }
