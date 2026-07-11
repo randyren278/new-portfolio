@@ -68,7 +68,7 @@ export const MEDIUMS = {
 
 export const ORDER = ['oryzo', 'halcyon', 'aperture', 'fieldnote', 'signal-garden', 'loom'];
 
-export const ABOUT_TEXT = `Randy is a designer-engineer studying at the University of British Columbia. Currently focused on making agents feel like real collaborators; the kind you'd want in the room, not the kind that eats your afternoon. Open to roles starting spring 2027.`;
+export const ABOUT_TEXT = `Randy is a design oriented engineer studying at the University of British Columbia. Currently focused on making agents feel like real collaborators; the kind you'd actually want to work with, not the kind that eats your afternoon. Open to roles starting spring 2027.`;
 
 export const CONTACT_TEXT = `email     randyren278@gmail.com
 github    randyren278

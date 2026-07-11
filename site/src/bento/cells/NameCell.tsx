@@ -9,7 +9,10 @@ export function NameCell({ aboutText }: { aboutText: string }) {
   // Drop the trailing "Open to roles…" sentence — the meta strip below
   // carries location; a status line is intentionally omitted (hard
   // dates only live in the projects section).
-  const bio = aboutText.split(/(?<=\.)\s/).slice(0, 3).join(' ');
+  const bio = aboutText
+    .split(/(?<=\.)\s/)
+    .slice(0, 3)
+    .join(' ');
 
   return (
     <section className="cell cell-name" aria-label="Randy Ren — index">
