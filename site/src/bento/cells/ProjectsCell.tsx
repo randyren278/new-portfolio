@@ -117,9 +117,28 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
   const prevId = idx > 0 ? order[idx - 1] : null;
   const nextId = idx >= 0 && idx < order.length - 1 ? order[idx + 1] : null;
 
+  // Spell the plate count so the kicker reads "§ INDEX / SEVEN PLATES" and
+  // never goes stale when projects are added or removed from ORDER.
+  const NUM_WORDS = [
+    'ZERO',
+    'ONE',
+    'TWO',
+    'THREE',
+    'FOUR',
+    'FIVE',
+    'SIX',
+    'SEVEN',
+    'EIGHT',
+    'NINE',
+    'TEN',
+    'ELEVEN',
+    'TWELVE',
+  ];
+  const countWord = NUM_WORDS[order.length] ?? String(order.length);
+
   return (
     <section className="cell cell-projects" aria-label="Projects">
-      <div className="kicker">§ INDEX / SIX PLATES</div>
+      <div className="kicker">§ INDEX / {countWord} PLATES</div>
 
       <div className="projects-list">
         {order.map((id, i) => {
@@ -171,12 +190,20 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
               × close
             </button>
             <div className="projects-plate-body">
-              {expanded.number && <div className="projects-plate-number">{expanded.number}</div>}
+              {(() => {
+                // Derive the plate number from ORDER position so it always
+                // matches the list row (both 1-indexed, zero-padded). Falls
+                // back to the stored number for plates not in ORDER.
+                const displayNum =
+                  idx >= 0 ? String(idx + 1).padStart(2, '0') : expanded.number;
+                return displayNum ? (
+                  <div className="projects-plate-number">{displayNum}</div>
+                ) : null;
+              })()}
               <div className="projects-plate-title">{expanded.title}</div>
 
               <div className="projects-plate-cols">
                 <div className="projects-plate-rail">
-                  <div className="projects-plate-railhead">Particulars</div>
                   <div className="projects-plate-meta">
                     {expanded.meta?.map((m: { lab: string; val: string }) => (
                       <div key={m.lab}>
@@ -184,6 +211,21 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
                       </div>
                     ))}
                   </div>
+                  {Array.isArray(expanded.links) && expanded.links.length > 0 && (
+                    <div className="projects-plate-links">
+                      {expanded.links.map((l: { lab: string; href: string }) => (
+                        <a
+                          key={l.href}
+                          className="projects-plate-link"
+                          href={l.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {l.lab} ↗
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="projects-plate-essaycol">
                   {Array.isArray(expanded.essay) &&
@@ -195,8 +237,6 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
                     ))}
                 </div>
               </div>
-
-              {expanded.plateCap && <div className="projects-plate-cap">{expanded.plateCap}</div>}
 
               <div className="projects-plate-nav">
                 <button type="button" disabled={!prevId} onClick={() => prevId && navTo(prevId)}>

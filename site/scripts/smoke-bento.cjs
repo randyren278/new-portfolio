@@ -68,38 +68,47 @@ function assert(cond, label) {
   assert(kickers.includes('§ INDEX'), 'Name card kicker rendered');
   assert(kickers.includes('§ CORRESPONDENCE'), 'Contact card kicker rendered');
   assert(
-    kickers.some((k) => k?.startsWith('§ INDEX / SIX PLATES')),
+    kickers.some((k) => /^§ INDEX \/ \w+ PLATES$/.test(k ?? '')),
     'Projects card kicker rendered',
   );
   assert(kickers.includes('§ COLOPHON'), 'Colophon card kicker rendered');
   assert(kickers.includes('§ LATEST ACTIVITY'), 'Strava card kicker rendered');
 
-  // ---- 3. all six PLATE rows in Projects ------------------------------
+  // ---- 3. all seven PLATE rows in Projects ------------------------------
 
   const projectNums = await page.$$eval('.projects-num', (els) =>
     els.map((e) => e.textContent?.trim()),
   );
-  ['01', '02', '03', '04', '05', '06'].forEach((n) => {
+  ['01', '02', '03', '04', '05', '06', '07'].forEach((n) => {
     assert(projectNums.includes(n), `PLATE ${n} row rendered`);
   });
 
   const projectTitles = await page.$$eval('.projects-ttl', (els) =>
     els.map((e) => e.textContent?.trim()),
   );
-  ['ORYZO', 'HALCYON', 'APERTURE', 'FIELDNOTE', 'SIGNAL GARDEN', 'LOOM'].forEach((t) => {
+  ['SILL', 'ORYZO', 'HALCYON', 'APERTURE', 'FIELDNOTE', 'SIGNAL GARDEN', 'LOOM'].forEach((t) => {
     assert(projectTitles.includes(t), `project title "${t}" rendered`);
   });
 
   // ---- 4. clicking a project row expands the plate in-place ------------
 
-  await page.click('.projects-row:has(.projects-ttl:text("ORYZO"))');
+  await page.click('.projects-row:has(.projects-ttl:text("SILL"))');
   await page.waitForSelector('.projects-plate', { state: 'visible' });
   const plateTitle = await page.$eval('.projects-plate-title', (el) => el.textContent?.trim());
-  assert(plateTitle === 'Oryzo', `Oryzo plate title rendered (got "${plateTitle}")`);
+  assert(plateTitle === 'Sill', `Sill plate title rendered (got "${plateTitle}")`);
   const plateEssayCount = await page.$$eval('.projects-plate-essay', (els) => els.length);
   assert(plateEssayCount >= 1, `plate essay paragraphs rendered (${plateEssayCount})`);
+  // Sill is the template plate with external links — assert the LIVE/CODE row.
+  const plateLinks = await page.$$eval('.projects-plate-link', (els) =>
+    els.map((e) => e.getAttribute('href')),
+  );
+  assert(
+    plateLinks.includes('https://pleasepleasepleasewater.me') &&
+      plateLinks.includes('https://github.com/randyren278/sill'),
+    `plate LIVE + CODE links rendered (${plateLinks.join(', ')})`,
+  );
   const ariaExpanded = await page.getAttribute(
-    '.projects-row:has(.projects-ttl:text("ORYZO"))',
+    '.projects-row:has(.projects-ttl:text("SILL"))',
     'aria-expanded',
   );
   assert(ariaExpanded === 'true', `row aria-expanded flips to true (got "${ariaExpanded}")`);

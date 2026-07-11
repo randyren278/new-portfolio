@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sill-plate-mockup — draft copy for PLATE 01</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    /* Standalone draft of the Sill plate — the F2 expanding-tile interior
+       exactly as it renders live (chrome copied from bento.css). No JS;
+       this is a static render of the open card so the copy can be read
+       and approved before it goes into data.ts. */
+    :root {
+      --bg: #fafaf7; --ink: #0f0f0f; --muted: #8a8a8a; --rule: #d8d8d5; --accent: #a8100a;
+      --bg-rgb: 250 250 247; --ink-rgb: 15 15 15; --muted-rgb: 138 138 138;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: #e8e8e3; color: var(--ink);
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; font-size: 13px; line-height: 1.55;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px;
+    }
+    .caption { position: fixed; top: 12px; left: 16px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #999; }
+
+    .projects-plate {
+      width: min(1040px, 92vw); background: var(--bg); border: 1px solid var(--rule);
+      border-radius: 3px; box-shadow: 0 30px 80px -30px rgba(var(--ink-rgb) / 0.5); overflow: hidden; position: relative;
+    }
+    .projects-plate-body { padding: 30px 34px; }
+    .projects-plate-close {
+      position: absolute; top: 16px; right: 18px; background: transparent; border: 0; padding: 4px 6px;
+      font: 500 11px/1 "IBM Plex Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); cursor: pointer;
+    }
+    .projects-plate-number { font-family: "Instrument Serif", serif; font-size: 56px; line-height: 1; color: var(--accent); margin-bottom: 4px; }
+    .projects-plate-title { font-family: "Instrument Serif", serif; font-style: italic; font-size: 40px; line-height: 1.05; margin-bottom: 18px; }
+    .projects-plate-cols { display: grid; grid-template-columns: 200px 1fr; gap: 32px; }
+    .projects-plate-railhead { font-family: "Instrument Serif", serif; font-style: italic; font-size: 15px; color: var(--muted); margin-bottom: 10px; }
+    .projects-plate-meta { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); line-height: 1.9; }
+    .projects-plate-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .projects-plate-link {
+      font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); text-decoration: none;
+      border: 1px solid var(--rule); padding: 8px 13px; border-radius: 2px; transition: border-color 120ms ease, background-color 120ms ease;
+    }
+    .projects-plate-link:hover { border-color: var(--ink); background: rgba(var(--ink-rgb) / 0.04); }
+    .projects-plate-essay { font-family: "Instrument Serif", serif; font-size: 18px; line-height: 1.55; margin: 0 0 14px; max-width: 60ch; }
+    .projects-plate-cap { padding-top: 18px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    @media (max-width: 720px) {
+      .projects-plate-body { padding: 22px 20px; }
+      .projects-plate-number { font-size: 44px; }
+      .projects-plate-title { font-size: 30px; }
+      .projects-plate-cols { grid-template-columns: 1fr; gap: 18px; }
+      .projects-plate-essay { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="caption">draft · PLATE 01 · SILL — for approval</div>
+  <section class="projects-plate">
+    <div class="projects-plate-body">
+      <button class="projects-plate-close">× close</button>
+      <div class="projects-plate-number">01</div>
+      <div class="projects-plate-title">Sill</div>
+      <div class="projects-plate-cols">
+        <div>
+          <div class="projects-plate-meta">
+            YEAR · 2025<br>
+            ROLE · EVERYTHING<br>
+            CLIENT · SELF<br>
+            DISCIPLINE · WEB · HARDWARE · ML
+          </div>
+          <div class="projects-plate-links">
+            <a class="projects-plate-link" href="https://pleasepleasepleasewater.me" target="_blank" rel="noopener">LIVE ↗</a>
+            <a class="projects-plate-link" href="https://github.com/randyren278/sill" target="_blank" rel="noopener">CODE ↗</a>
+          </div>
+        </div>
+        <div>
+          <p class="projects-plate-essay">A windowsill that emails you. There&rsquo;s one shared collection of plants. I water, edit, and add them; everyone else gets a read-only view and can sign up for a single daily email that says what&rsquo;s thirsty. I built all of it: React and Vite on the front, Supabase for the data, and scheduled functions that assemble the digest and send it through Resend each morning.</p>
+          <p class="projects-plate-essay">There&rsquo;s a feedback loop under the reminder. A humidity sensor on the sill sends readings to a Mac mini I keep running at home as a server, and a machine-learning model I trained on that history sets how often each plant actually needs water. The timing follows the room instead of a fixed schedule, so it shifts on its own when the air dries out or the days get longer.</p>
+          <p class="projects-plate-essay">The interface is small on purpose. No accounts, no dashboard, just pixel-art plants that wilt when they&rsquo;re overdue and one email a day. Most of the work is underneath it: unsubscribe links signed with HMAC tokens, row-level security so nobody&rsquo;s email gets read when the page loads, and a test that scans the built site for leaked addresses. I wanted watering to feel like something you barely have to think about.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

@@ -6,6 +6,7 @@
 /* eslint-disable */
 
 export const NOTES = {
+  sill: 'A windowsill that emails you. One shared collection of plants, a humidity sensor reporting to a home server, and a model that learns how often each plant actually needs water. One quiet email a day tells you what is thirsty.',
   oryzo:
     "A room for the awkward pause between a spoken command and a machine's decision to act. What was silence becomes shape — voices scheduled, interruptions honored, latency turned into breath. The 300ms isn't hidden; it's composed.",
   halcyon:
@@ -20,6 +21,13 @@ export const NOTES = {
 };
 
 export const MEDIUMS = {
+  sill: {
+    title: 'SILL',
+    year: 2025,
+    medium: 'react, supabase, sensor + ml',
+    dim: 'one windowsill, many inboxes',
+    blurb: 'A windowsill that emails you. A sensor and a learned model decide when to water.',
+  },
   oryzo: {
     title: 'ORYZO',
     year: 2025,
@@ -66,7 +74,7 @@ export const MEDIUMS = {
   },
 };
 
-export const ORDER = ['oryzo', 'halcyon', 'aperture', 'fieldnote', 'signal-garden', 'loom'];
+export const ORDER = ['sill', 'oryzo', 'halcyon', 'aperture', 'fieldnote', 'signal-garden', 'loom'];
 
 export const ABOUT_TEXT = `Randy is a design oriented engineer studying at the University of British Columbia. Currently focused on making agents feel like real collaborators; the kind you'd actually want to work with, not the kind that eats your afternoon. Open to roles starting spring 2027.`;
 
@@ -159,6 +167,27 @@ export const MAN = {
 };
 
 export const PLATE_DATA = {
+  sill: {
+    number: '01',
+    title: 'Sill',
+    year: 2025,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2025' },
+      { lab: 'ROLE', val: 'EVERYTHING' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'WEB · HARDWARE · ML' },
+    ],
+    links: [
+      { lab: 'LIVE', href: 'https://pleasepleasepleasewater.me' },
+      { lab: 'CODE', href: 'https://github.com/randyren278/sill' },
+    ],
+    essay: [
+      "A windowsill that emails you. There's one shared collection of plants. I water, edit, and add them; everyone else gets a read-only view and can sign up for a single daily email that says what's thirsty. I built all of it: React and Vite on the front, Supabase for the data, and scheduled functions that assemble the digest and send it through Resend each morning.",
+      "There's a feedback loop under the reminder. A humidity sensor on the sill sends readings to a Mac mini I keep running at home as a server, and a machine-learning model I trained on that history sets how often each plant actually needs water. The timing follows the room instead of a fixed schedule, so it shifts on its own when the air dries out or the days get longer.",
+      "The interface is small on purpose. No accounts, no dashboard, just pixel-art plants that wilt when they're overdue and one email a day. Most of the work is underneath it: unsubscribe links signed with HMAC tokens, row-level security so nobody's email gets read when the page loads, and a test that scans the built site for leaked addresses. I wanted watering to feel like something you barely have to think about.",
+    ],
+  },
   oryzo: {
     number: '01',
     title: 'Oryzo',

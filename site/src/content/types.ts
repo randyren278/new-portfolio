@@ -19,6 +19,8 @@ export type ManEntry = {
 
 export type PlateMetaCell = { lab: string; val: string };
 
+export type PlateLink = { lab: string; href: string };
+
 export type PlateEntry = {
   // About/contact plates use null for number/year; the engine handles this.
   number: string | null;
@@ -26,6 +28,9 @@ export type PlateEntry = {
   year: number | null;
   marker: string;
   meta: PlateMetaCell[];
+  // Optional external links (LIVE / CODE / …) shown as a button row in the
+  // plate rail. Omitted plates render no links row.
+  links?: PlateLink[];
   // The remaining fields (essay, seams, marginalia, etc.) vary per plate;
   // shell-engine.js reads them structurally so we keep this loose.
   [key: string]: any;
