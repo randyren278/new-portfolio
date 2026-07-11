@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>project-detail-mockup — eight ways to open a plate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================================
+       project-detail-mockup
+
+       Eight live, clickable ways to open a project's detail view.
+       Each "stage" is a self-contained bordered box that mimics the
+       bento home; clicking a project row opens the detail in that
+       stage's pattern. Every pattern closes on Esc + backdrop click
+       (the close-behavior fix, demonstrated everywhere) and pages
+       through projects with prev/next.
+
+       Palette + type copied from src/bento/bento.css so fidelity is
+       close to what would ship. Real plate content + real /photos.
+       ============================================================ */
+
+    :root {
+      --bg: #fafaf7;
+      --ink: #0f0f0f;
+      --muted: #8a8a8a;
+      --rule: #d8d8d5;
+      --accent: #a8100a;
+      --bg-rgb: 250 250 247;
+      --ink-rgb: 15 15 15;
+      --muted-rgb: 138 138 138;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: #e8e8e3;
+      color: var(--ink);
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ---- page frame ---- */
+    .doc { max-width: 1180px; margin: 0 auto; padding: 48px 32px 120px; }
+    .doc-head { margin-bottom: 40px; }
+    .doc-head h1 {
+      font-family: "Instrument Serif", serif; font-style: italic; font-weight: 400;
+      font-size: 40px; line-height: 1.05; margin: 0 0 12px; color: var(--ink);
+    }
+    .doc-head p { margin: 0 0 6px; max-width: 74ch; color: #4a4a4a; }
+    .doc-head .hint {
+      margin-top: 14px; font-size: 11px; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted);
+    }
+
+    /* ---- per-option section ---- */
+    .opt { margin-bottom: 56px; }
+    .opt-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 4px; }
+    .opt-tag {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--bg); background: var(--ink); padding: 3px 9px; border-radius: 2px;
+    }
+    .opt-name {
+      font-family: "Instrument Serif", serif; font-style: italic;
+      font-size: 26px; color: var(--ink);
+    }
+    .opt-desc { margin: 0 0 4px; color: #4a4a4a; max-width: 78ch; }
+    .opt-trade { margin: 0 0 16px; font-size: 12px; color: var(--muted); max-width: 78ch; }
+    .opt-trade b { color: #6a6a6a; font-weight: 500; }
+
+    /* ---- the stage: a mini bento window ---- */
+    .stage {
+      position: relative;
+      height: 620px;
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      background: var(--bg);
+      overflow: hidden;
+      box-shadow: 0 22px 50px -34px rgba(0,0,0,0.4);
+    }
+    /* the faux bento behind — a simplified grid so the reveal has context */
+    .mini {
+      position: absolute; inset: 0; padding: 22px;
+      display: grid; grid-template-columns: 1.1fr 1fr 1fr; grid-template-rows: repeat(6, 1fr);
+      gap: 12px; transition: filter 220ms ease, opacity 220ms ease;
+    }
+    .mini.dim { filter: blur(2px) saturate(0.9); opacity: 0.5; }
+    .mcell {
+      border: 1px solid var(--rule); border-radius: 2px; padding: 14px 16px;
+      background: var(--bg); overflow: hidden; min-height: 0;
+    }
+    .mcell .kick {
+      font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .m-name { grid-column: 1; grid-row: 1 / span 2; }
+    .m-photoa { grid-column: 2; grid-row: 1 / span 3; padding: 0; position: relative; }
+    .m-contact { grid-column: 3; grid-row: 1 / span 2; }
+    .m-projects { grid-column: 1; grid-row: 3 / span 4; display: flex; flex-direction: column; }
+    .m-photob { grid-column: 2; grid-row: 4 / span 3; padding: 0; position: relative; }
+    .m-strava { grid-column: 3; grid-row: 3 / span 2; }
+    .m-colophon { grid-column: 3; grid-row: 5 / span 2; }
+    .m-photoa img, .m-photob img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .m-photoa .fname, .m-photob .fname {
+      position: absolute; top: 12px; left: 14px; z-index: 1;
+      font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    }
+    .name-word { font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+    .name-bio {
+      font-family: "Instrument Serif", serif; font-style: italic; font-size: 14px;
+      line-height: 1.3; margin-top: 8px; color: var(--ink);
+    }
+
+    /* project rows inside the mini bento */
+    .plist { display: flex; flex-direction: column; margin-top: 2px; overflow: hidden; }
+    .prow {
+      display: grid; grid-template-columns: 22px 1fr; align-items: baseline; gap: 10px;
+      padding: 7px 4px; border: 0; border-bottom: 1px solid rgba(var(--muted-rgb) / 0.32);
+      background: transparent; cursor: pointer; text-align: left; color: var(--ink);
+      font: inherit; width: 100%; transition: background-color 120ms ease;
+    }
+    .prow:first-child { border-top: 1px solid rgba(var(--muted-rgb) / 0.32); }
+    .prow:hover { background: rgba(var(--ink-rgb) / 0.04); }
+    .prow .pn { font-weight: 500; font-size: 11px; }
+    .prow .pt { text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; font-weight: 500; }
+
+    /* generic detail chrome shared across patterns */
+    .d-kicker { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .d-number {
+      font-family: "Instrument Serif", serif; font-size: 46px; line-height: 1;
+      color: var(--accent); margin-bottom: 4px;
+    }
+    .d-title {
+      font-family: "Instrument Serif", serif; font-style: italic; font-size: 30px;
+      line-height: 1.1; color: var(--ink); margin-bottom: 12px;
+    }
+    .d-meta {
+      font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+      line-height: 1.8; margin-bottom: 16px;
+    }
+    .d-essay {
+      font-family: "Instrument Serif", serif; font-size: 16px; line-height: 1.5;
+      color: var(--ink); margin: 0 0 12px; max-width: 56ch;
+    }
+    .d-quote {
+      font-family: "Instrument Serif", serif; font-style: italic; font-size: 21px;
+      line-height: 1.3; color: var(--ink); border-left: 2px solid var(--accent);
+      padding-left: 16px; margin: 18px 0; max-width: 40ch;
+    }
+    .d-links { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+    .d-link {
+      font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink);
+      text-decoration: none; border: 1px solid var(--rule); padding: 7px 12px; border-radius: 2px;
+      transition: border-color 120ms ease, background-color 120ms ease;
+    }
+    .d-link:hover { border-color: var(--ink); background: rgba(var(--ink-rgb) / 0.04); }
+    .d-cap {
+      font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); margin-top: 14px;
+    }
+    .d-close {
+      position: absolute; top: 14px; right: 16px; z-index: 5;
+      background: transparent; border: 0; padding: 4px 6px; cursor: pointer;
+      font: 500 11px/1 "IBM Plex Mono", monospace; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); transition: color 120ms ease;
+    }
+    .d-close:hover { color: var(--ink); }
+    .d-nav {
+      display: flex; justify-content: space-between; gap: 10px;
+      border-top: 1px solid var(--rule); padding-top: 12px; margin-top: 16px;
+    }
+    .d-nav button {
+      background: transparent; border: 0; cursor: pointer; color: var(--muted);
+      font: 500 10px/1.5 "IBM Plex Mono", monospace; letter-spacing: 0.08em;
+      text-transform: uppercase; text-align: left; transition: color 120ms ease; padding: 0;
+    }
+    .d-nav button:last-child { text-align: right; }
+    .d-nav button:hover:not(:disabled) { color: var(--ink); }
+    .d-nav button:disabled { opacity: 0.3; cursor: default; }
+    .d-nav .np { font-family: "Instrument Serif", serif; font-style: italic; font-size: 15px; text-transform: none; letter-spacing: 0; color: inherit; }
+
+    /* gallery grids / strips */
+    .gal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 8px; }
+    .gal-grid img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 2px; display: block; }
+    .strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+    .strip img { height: 130px; width: auto; aspect-ratio: 3/4; object-fit: cover; border-radius: 2px; flex: 0 0 auto; }
+    .hero { width: 100%; border-radius: 2px; object-fit: cover; display: block; }
+
+    /* backdrop shared */
+    .scrim {
+      position: absolute; inset: 0; background: rgba(var(--ink-rgb) / 0.28);
+      z-index: 3; animation: fade 200ms ease; cursor: pointer;
+    }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes slideleft { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    @keyframes grow { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+
+    /* A — centered modal */
+    .modal {
+      position: absolute; z-index: 4; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: min(88%, 720px); max-height: 86%; background: var(--bg); border: 1px solid var(--rule);
+      border-radius: 3px; box-shadow: 0 30px 80px -30px rgba(0,0,0,0.5); overflow: auto;
+      display: grid; grid-template-columns: 44% 1fr; animation: grow 200ms ease;
+    }
+    .modal .m-media { background: rgba(var(--muted-rgb) / 0.1); padding: 16px; }
+    .modal .m-media .hero { aspect-ratio: 3/4; margin-bottom: 8px; }
+    .modal .m-body { padding: 20px 22px; }
+
+    /* B — right drawer */
+    .drawer {
+      position: absolute; z-index: 4; top: 0; right: 0; height: 100%; width: min(78%, 380px);
+      background: var(--bg); border-left: 1px solid var(--rule); overflow: auto;
+      padding: 20px 22px; animation: slideleft 240ms ease;
+      box-shadow: -20px 0 50px -30px rgba(0,0,0,0.4);
+    }
+    .drawer .hero { aspect-ratio: 16/10; margin-bottom: 12px; }
+
+    /* C — bottom sheet */
+    .sheet {
+      position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; height: 80%;
+      background: var(--bg); border-top: 1px solid var(--rule); border-radius: 10px 10px 0 0;
+      overflow: auto; padding: 12px 22px 22px; animation: slideup 260ms ease;
+      box-shadow: 0 -20px 50px -30px rgba(0,0,0,0.4);
+    }
+    .sheet .grab { width: 40px; height: 4px; border-radius: 2px; background: var(--rule); margin: 2px auto 14px; }
+
+    /* D — full-page takeover */
+    .takeover {
+      position: absolute; inset: 0; z-index: 6; background: var(--bg); overflow: auto;
+      padding: 40px 48px; animation: fade 200ms ease;
+    }
+    .takeover .hero { aspect-ratio: 21/9; margin: 14px 0 20px; }
+    .takeover .d-number { font-size: 64px; }
+    .takeover .d-title { font-size: 44px; }
+    .takeover .d-essay { font-size: 18px; max-width: 62ch; }
+    .takeover .back {
+      background: transparent; border: 0; cursor: pointer; color: var(--muted);
+      font: 500 11px/1 "IBM Plex Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0; margin-bottom: 8px; transition: color 120ms ease;
+    }
+    .takeover .back:hover { color: var(--ink); }
+
+    /* E — split screen */
+    .split {
+      position: absolute; inset: 0; z-index: 6; background: var(--bg);
+      display: grid; grid-template-columns: 1fr 1fr; animation: fade 200ms ease;
+    }
+    .split .s-media {
+      background: rgba(var(--muted-rgb) / 0.1); padding: 22px; overflow: hidden;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .split .s-media .hero { flex: 1 1 auto; min-height: 0; }
+    .split .s-media .rail { display: flex; gap: 8px; }
+    .split .s-media .rail img { height: 60px; width: 46px; object-fit: cover; border-radius: 2px; }
+    .split .s-text { padding: 30px 32px; overflow: auto; }
+
+    /* F — expanding tile */
+    .tile {
+      position: absolute; z-index: 4; background: var(--bg); border: 1px solid var(--rule);
+      border-radius: 3px; overflow: auto; padding: 22px 24px;
+      box-shadow: 0 30px 80px -30px rgba(0,0,0,0.5);
+      transition: top 300ms cubic-bezier(.2,.7,.2,1), left 300ms cubic-bezier(.2,.7,.2,1),
+                  width 300ms cubic-bezier(.2,.7,.2,1), height 300ms cubic-bezier(.2,.7,.2,1);
+    }
+    .tile .hero { aspect-ratio: 16/9; margin-bottom: 12px; }
+
+    /* G — lightbox gallery-first */
+    .lightbox {
+      position: absolute; inset: 0; z-index: 6; background: #17130f;
+      display: grid; grid-template-columns: 1fr 300px; animation: fade 200ms ease;
+    }
+    .lightbox .lb-stage {
+      position: relative; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 24px; gap: 12px; min-height: 0;
+    }
+    .lightbox .lb-main { max-width: 100%; max-height: 74%; object-fit: contain; border-radius: 2px; }
+    .lightbox .lb-thumbs { display: flex; gap: 8px; }
+    .lightbox .lb-thumbs img { height: 54px; width: 42px; object-fit: cover; border-radius: 2px; opacity: 0.5; cursor: pointer; transition: opacity 120ms ease; }
+    .lightbox .lb-thumbs img.on { opacity: 1; outline: 1px solid rgba(255,255,255,0.8); }
+    .lightbox .lb-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+      background: rgba(255,255,255,0.1); border: 0; color: #fff; cursor: pointer;
+      width: 34px; height: 34px; border-radius: 50%; font-size: 16px;
+    }
+    .lightbox .lb-arrow.prev { left: 16px; }
+    .lightbox .lb-arrow.next { right: 16px; }
+    .lightbox .lb-rail { background: var(--bg); padding: 22px; overflow: auto; }
+
+    /* H — horizontal deck */
+    .deck {
+      position: absolute; inset: 0; z-index: 6; background: var(--bg);
+      display: flex; overflow-x: auto; scroll-snap-type: x mandatory; animation: fade 200ms ease;
+    }
+    .deck .panel {
+      flex: 0 0 72%; scroll-snap-align: start; border-right: 1px solid var(--rule);
+      padding: 36px 40px; overflow: auto; display: flex; flex-direction: column; justify-content: center;
+    }
+    .deck .panel.cover { background: rgba(var(--muted-rgb) / 0.07); }
+    .deck .panel .hero { aspect-ratio: 16/10; margin-top: 12px; }
+    .deck .deck-hint {
+      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 2;
+      font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+      background: var(--bg); padding: 4px 10px; border: 1px solid var(--rule); border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="doc">
+    <div class="doc-head">
+      <h1>Eight ways to open a plate</h1>
+      <p>Right now the project detail expands only to the size of the Projects cell — a boxed third of the grid. Each stage below is a mini bento; click any <b>numbered project row</b> to open its detail in a different pattern. Every one closes on <b>Esc</b> or a <b>click outside</b>, and pages through projects with prev / next.</p>
+      <p class="hint">Real plate copy · real photos · your palette + type. Point at the one you mean.</p>
+    </div>
+    <div id="options"></div>
+  </div>
+
+  <script>
+    /* ---- real plate content (from src/content/data.ts) + invented rich fields ---- */
+    const P = (n, title, meta, essay, quote) => ({
+      n, title, meta, essay, quote,
+      links: ['LIVE', 'REPO', 'CASE STUDY'],
+    });
+    const PLATES = [
+      P('01', 'Oryzo',
+        [['YEAR','2025'],['ROLE','DESIGN + ENG LEAD'],['CLIENT','STEALTH · SEED'],['DISCIPLINE','AI · INTERFACE · WEB']],
+        ['Voice orchestration layer for autonomous agents. Turned three hundred milliseconds of latency into a feature — the pause the agent takes before answering became the moment you trust it. We stopped hiding the wait. We staged it. A hairline appears; a caret ticks; an intent surfaces.',
+         'Shipped as a drop-in orchestration primitive. A press mark, not a rewrite. The result was quieter than we expected — the loudest feedback came from the silence between turns.'],
+        'The 300ms isn’t hidden; it’s composed.'),
+      P('02', 'Halcyon',
+        [['YEAR','2025'],['ROLE','PRODUCT + DESIGN'],['CLIENT','INTERNAL'],['DISCIPLINE','PRODUCT · WEBGL · DESIGN']],
+        ['A realtime collaborative canvas for design teams. Multiplayer cursors, but softer. We treated presence as a design material — where people were, how they moved, what they hovered — and let those shapes suggest new tools rather than replace old ones.',
+         'Half a million cursors and counting. The canvas got smaller as more people joined; the friction went the other way.'],
+        'Craft, not crowd.'),
+      P('03', 'Aperture',
+        [['YEAR','2024'],['ROLE','CONCEPT LEAD'],['CLIENT','SELF'],['DISCIPLINE','MOBILE · SYSTEM · CONCEPT']],
+        ['A camera-first mobile OS. The lens is the app launcher. If you point the phone at something the phone knows what you want; the launcher was the least interesting screen on the device, so we removed it.',
+         'Concept work. Never shipped as an OS, but the pattern went on to inform how camera-first apps are now built.'],
+        'The camera isn’t a feature; it is the launcher.'),
+      P('06', 'Loom',
+        [['YEAR','2023'],['ROLE','DESIGN + ENG'],['CLIENT','SELF'],['DISCIPLINE','WEB3 · AUDIO · EXPERIMENT']],
+        ['A peer-to-peer music mesh. No servers, no ads, just rooms. Anyone can host a listening room; anyone can join with a link. The songs live on the seeds.',
+         'An experiment in what a discovery layer looks like when the discovery is another person’s ears, not an algorithm.'],
+        'No servers presiding.'),
+    ];
+    // deterministic photo picks so each plate has a stable hero + gallery
+    const photo = (i) => `/photos/photo-${String(((i) % 40) + 1).padStart(2, '0')}.jpg`;
+    PLATES.forEach((p, i) => {
+      p.hero = photo(i * 7 + 3);
+      p.gallery = [photo(i*7+3), photo(i*7+11), photo(i*7+18), photo(i*7+24), photo(i*7+31), photo(i*7+37)];
+    });
+
+    const metaHTML = (p) => p.meta.map(([l,v]) => `${l} · ${v}`).join('<br>');
+    const essayHTML = (p) => p.essay.map(t => `<p class="d-essay">${t}</p>`).join('');
+    const linksHTML = (p) => `<div class="d-links">${p.links.map(l => `<a class="d-link" href="#" onclick="return false">${l} ↗</a>`).join('')}</div>`;
+
+    /* ---- the mini bento markup behind every stage ---- */
+    function miniBento(stageId) {
+      const rows = PLATES.map((p, i) =>
+        `<button class="prow" data-idx="${i}"><span class="pn">${p.n}</span><span class="pt">${p.title}</span></button>`
+      ).join('');
+      return `
+        <div class="mini" data-mini>
+          <div class="mcell m-name">
+            <div class="name-word">RANDY REN</div>
+            <div class="name-bio">Design-oriented engineer working at the seam between AI and interface.</div>
+          </div>
+          <div class="mcell m-photoa"><span class="fname">PHOTO-A</span><img src="${photo(2)}" alt=""></div>
+          <div class="mcell m-contact"><div class="kick">§ CORRESPONDENCE</div><div style="font-size:11px">randyren278@gmail.com</div></div>
+          <div class="mcell m-projects">
+            <div class="kick">§ INDEX / SIX PLATES</div>
+            <div class="plist">${rows}</div>
+          </div>
+          <div class="mcell m-photob"><span class="fname">PHOTO-B</span><img src="${photo(19)}" alt=""></div>
+          <div class="mcell m-strava"><div class="kick">§ LATEST ACTIVITY</div></div>
+          <div class="mcell m-colophon"><div class="kick">§ COLOPHON</div></div>
+        </div>`;
+    }
+
+    /* ---- option registry: id, tag, name, desc, trade, and an open(stage, idx) fn ---- */
+    const OPTIONS = [];
+    function def(o) { OPTIONS.push(o); }
+
+    // shared helpers
+    function navHTML(idx) {
+      const prev = PLATES[idx - 1], next = PLATES[idx + 1];
+      return `<div class="d-nav">
+        <button ${prev?'':'disabled'} data-nav="${idx-1}">${prev?`← PREV<div class="np">${prev.title}</div>`:'← PREV'}</button>
+        <button ${next?'':'disabled'} data-nav="${idx+1}">${next?`NEXT →<div class="np">${next.title}</div>`:'NEXT →'}</button>
+      </div>`;
+    }
+    function galleryGrid(p) {
+      return `<div class="gal-grid">${p.gallery.map(s=>`<img src="${s}" alt="" loading="lazy">`).join('')}</div>`;
+    }
+    function stripHTML(p) {
+      return `<div class="strip">${p.gallery.map(s=>`<img src="${s}" alt="" loading="lazy">`).join('')}</div>`;
+    }
+
+    // A — centered modal
+    def({ id:'A', tag:'A', name:'Centered modal', dim:true,
+      desc:'A wide card floats over a dimmed bento. Media on the left, reading column on the right.',
+      trade:'<b>Affords</b> horizontal room, image beside text. <b>Trade</b> covers the whole grid.',
+      open(stage, idx) {
+        const p = PLATES[idx];
+        return `<div class="modal" data-panel>
+          <div class="m-media">
+            <img class="hero" src="${p.hero}" alt="">
+            ${stripHTML(p)}
+          </div>
+          <div class="m-body">
+            <button class="d-close" data-close>× close</button>
+            <div class="d-number">${p.n}</div>
+            <div class="d-title">${p.title}</div>
+            <div class="d-meta">${metaHTML(p)}</div>
+            ${essayHTML(p)}
+            ${linksHTML(p)}
+            ${navHTML(idx)}
+          </div>
+        </div>`;
+      }
+    });
+
+    // B — right drawer
+    def({ id:'B', tag:'B', name:'Right-side drawer', dim:true,
+      desc:'A panel slides in from the right; the list stays visible so you can jump project to project without closing.',
+      trade:'<b>Affords</b> fast browsing, keeps grid context. <b>Trade</b> a narrower reading measure.',
+      open(stage, idx) {
+        const p = PLATES[idx];
+        return `<div class="drawer" data-panel>
+          <button class="d-close" data-close>× close</button>
+          <img class="hero" src="${p.hero}" alt="">
+          <div class="d-number">${p.n}</div>
+          <div class="d-title">${p.title}</div>
+          <div class="d-meta">${metaHTML(p)}</div>
+          ${essayHTML(p)}
+          ${galleryGrid(p)}
+          ${linksHTML(p)}
+          ${navHTML(idx)}
+        </div>`;
+      }
+    });
+
+    // C — bottom sheet
+    def({ id:'C', tag:'C', name:'Bottom sheet', dim:true,
+      desc:'Rises from the bottom with a grab handle; a big photo filmstrip up top, essay and links below.',
+      trade:'<b>Affords</b> a mobile-native feel and large media strip. <b>Trade</b> less vertical room for long essays.',
+      open(stage, idx) {
+        const p = PLATES[idx];
+        return `<div class="sheet" data-panel>
+          <div class="grab"></div>
+          <button class="d-close" data-close>× close</button>
+          <div class="d-kicker">PLATE ${p.n}</div>
+          <div class="d-title">${p.title}</div>
+          ${stripHTML(p)}
+          <div class="d-meta" style="margin-top:12px">${metaHTML(p)}</div>
+          ${essayHTML(p)}
+          ${linksHTML(p)}
+          ${navHTML(idx)}
+        </div>`;
+      }
+    });
+
+    // D — full-page takeover
+    def({ id:'D', tag:'D', name:'Full-page editorial takeover', dim:false,
+      desc:'The whole stage becomes an immersive case study — oversized title, wide hero, gallery grid, prev/next footer.',
+      trade:'<b>Affords</b> maximum depth. <b>Trade</b> the biggest departure — it leaves the bento entirely.',
+      open(stage, idx) {
+        const p = PLATES[idx];
+        return `<div class="takeover" data-panel data-noscrim>
+          <button class="back" data-close>← back to index</button>
+          <div class="d-number">${p.n}</div>
+          <div class="d-title">${p.title}</div>
+          <div class="d-meta">${metaHTML(p)}</div>
+          <img class="hero" src="${p.hero}" alt="">
+          ${essayHTML(p)}
+          <div class="d-quote">${p.quote}</div>
+          ${galleryGrid(p)}
+          ${linksHTML(p)}
+          ${navHTML(idx)}
+        </div>`;
+      }
+    });
+
+    // E — split screen
+    def({ id:'E', tag:'E', name:'Split-screen reader', dim:false,
+      desc:'Stage splits in half: a sticky media column on one side, scrolling text on the other. Prev/next swaps both.',
+      trade:'<b>Affords</b> media and text both first-class, no scroll-jank between them. <b>Trade</b> needs width.',
+      open(stage, idx) {
+        const p = PLATES[idx];
+        return `<div class="split" data-panel data-noscrim>
+          <div class="s-media">
+            <img class="hero" src="${p.hero}" alt="">
+            <div class="rail">${p.gallery.slice(1,5).map(s=>`<img src="${s}" alt="">`).join('')}</div>
+          </div>
+          <div class="s-text">
+            <button class="d-close" data-close>× close</button>
+            <div class="d-number">${p.n}</div>
+            <div class="d-title">${p.title}</div>
+            <div class="d-meta">${metaHTML(p)}</div>
+            ${essayHTML(p)}
+            <div class="d-quote">${p.quote}</div>
+            ${linksHTML(p)}
+            ${navHTML(idx)}
+          </div>
+        </div>`;
+      }
+    });
+
+    // F — expanding tile (shared element)
+    def({ id:'F', tag:'F', name:'Expanding tile', dim:true,
+      desc:'The clicked row grows out of its place in the list into a large card, rather than a modal appearing from nowhere.',
+      trade:'<b>Affords</b> a strong sense of continuity — it feels physical. <b>Trade</b> more motion; the fanciest to build.',
+      open(stage, idx, rowEl) {
+        const p = PLATES[idx];
+        const sb = stage.getBoundingClientRect();
+        const rb = rowEl.getBoundingClientRect();
+        const tile = document.createElement('div');
+        tile.className = 'tile'; tile.setAttribute('data-panel','');
+        // start at the row's position, then animate to near-full-stage
+        tile.style.top = (rb.top - sb.top) + 'px';
+        tile.style.left = (rb.left - sb.left) + 'px';
+        tile.style.width = rb.width + 'px';
+        tile.style.height = rb.height + 'px';
+        tile.style.padding = '0';
+        tile.innerHTML = `<button class="d-close" data-close>× close</button>
+          <img class="hero" src="${p.hero}" alt="">
+          <div class="d-number">${p.n}</div>
+          <div class="d-title">${p.title}</div>
+          <div class="d-meta">${metaHTML(p)}</div>
+          ${essayHTML(p)}
+          ${linksHTML(p)}
+          ${navHTML(idx)}`;
+        stage.appendChild(tile);
+        requestAnimationFrame(() => {
+          tile.style.top = '32px'; tile.style.left = '32px';
+          tile.style.width = (sb.width - 64) + 'px';
+          tile.style.height = (sb.height - 64) + 'px';
+          tile.style.padding = '22px 24px';
+        });
+        return null; // we appended directly
+      }
+    });
+
+    // G — lightbox gallery-first
+    def({ id:'G', tag:'G', name:'Lightbox, gallery-first', dim:false,
+      desc:'Opens straight into a large image viewer with arrow paging; essay, meta and links dock in a side rail.',
+      trade:'<b>Affords</b> portfolios where the work images lead and text supports. <b>Trade</b> text becomes secondary.',
+      open(stage, idx) {
+        const p = PLATES[idx];
+        const thumbs = p.gallery.map((s,i)=>`<img src="${s}" data-g="${i}" class="${i===0?'on':''}" alt="">`).join('');
+        return `<div class="lightbox" data-panel data-noscrim data-dark>
+          <div class="lb-stage">
+            <button class="lb-arrow prev" data-gnav="-1">‹</button>
+            <img class="lb-main" src="${p.gallery[0]}" alt="">
+            <button class="lb-arrow next" data-gnav="1">›</button>
+            <div class="lb-thumbs">${thumbs}</div>
+          </div>
+          <div class="lb-rail">
+            <button class="d-close" data-close>× close</button>
+            <div class="d-number">${p.n}</div>
+            <div class="d-title">${p.title}</div>
+            <div class="d-meta">${metaHTML(p)}</div>
+            ${essayHTML(p)}
+            ${linksHTML(p)}
+            ${navHTML(idx)}
+          </div>
+        </div>`;
+      },
+      after(stage) {
+        const lb = stage.querySelector('.lightbox'); if (!lb) return;
+        const p = PLATES[+stage.dataset.idx];
+        const main = lb.querySelector('.lb-main');
+        let g = 0;
+        const set = (ng) => {
+          g = (ng + p.gallery.length) % p.gallery.length;
+          main.src = p.gallery[g];
+          lb.querySelectorAll('.lb-thumbs img').forEach((t,i)=>t.classList.toggle('on', i===g));
+        };
+        lb.querySelectorAll('[data-gnav]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); set(g + (+b.dataset.gnav)); }));
+        lb.querySelectorAll('.lb-thumbs img').forEach(t => t.addEventListener('click', e => { e.stopPropagation(); set(+t.dataset.g); }));
+      }
+    });
+
+    // H — horizontal deck
+    def({ id:'H', tag:'H', name:'Horizontal deck', dim:false,
+      desc:'Detail is a sequence of full-height panels you scroll sideways: cover → essay → gallery → links.',
+      trade:'<b>Affords</b> cinematic, deliberate pacing. <b>Trade</b> horizontal scroll is unusual on desktop.',
+      open(stage, idx) {
+        const p = PLATES[idx];
+        return `<div class="deck" data-panel data-noscrim>
+          <div class="panel cover">
+            <button class="d-close" data-close>× close</button>
+            <div class="d-number">${p.n}</div>
+            <div class="d-title">${p.title}</div>
+            <div class="d-meta">${metaHTML(p)}</div>
+            <img class="hero" src="${p.hero}" alt="">
+          </div>
+          <div class="panel">
+            <div class="d-kicker">THE WORK</div>
+            ${essayHTML(p)}
+            <div class="d-quote">${p.quote}</div>
+          </div>
+          <div class="panel">
+            <div class="d-kicker">GALLERY</div>
+            ${galleryGrid(p)}
+          </div>
+          <div class="panel">
+            <div class="d-kicker">ELSEWHERE</div>
+            ${linksHTML(p)}
+            ${navHTML(idx)}
+          </div>
+          <div class="deck-hint">scroll →</div>
+        </div>`;
+      }
+    });
+
+    /* ---- wire up every stage ---- */
+    const root = document.getElementById('options');
+    OPTIONS.forEach(opt => {
+      const sec = document.createElement('div');
+      sec.className = 'opt';
+      sec.innerHTML = `
+        <div class="opt-head"><span class="opt-tag">Option ${opt.tag}</span><span class="opt-name">${opt.name}</span></div>
+        <p class="opt-desc">${opt.desc}</p>
+        <p class="opt-trade">${opt.trade}</p>
+        <div class="stage" data-stage="${opt.id}">${miniBento(opt.id)}</div>`;
+      root.appendChild(sec);
+
+      const stage = sec.querySelector('.stage');
+      const mini = stage.querySelector('[data-mini]');
+
+      function close() {
+        stage.querySelectorAll('[data-panel],.scrim').forEach(el => el.remove());
+        mini.classList.remove('dim');
+        delete stage.dataset.idx;
+      }
+      function openIdx(idx, rowEl) {
+        // clear any existing detail first (for prev/next + reopen)
+        stage.querySelectorAll('[data-panel],.scrim').forEach(el => el.remove());
+        stage.dataset.idx = idx;
+        const html = opt.open(stage, idx, rowEl || stage.querySelector(`.prow[data-idx="${idx}"]`));
+        if (html) {
+          const wrap = document.createElement('div');
+          wrap.innerHTML = html;
+          const panel = wrap.firstElementChild;
+          const noScrim = panel.hasAttribute('data-noscrim');
+          if (!noScrim) {
+            const scrim = document.createElement('div');
+            scrim.className = 'scrim';
+            scrim.addEventListener('click', close);
+            stage.appendChild(scrim);
+          }
+          stage.appendChild(panel);
+        }
+        if (opt.dim) mini.classList.add('dim');
+        if (opt.after) opt.after(stage);
+        // bind close + nav on whatever is now in the stage
+        stage.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
+        stage.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => openIdx(+b.dataset.nav)));
+      }
+
+      mini.querySelectorAll('.prow').forEach(row => {
+        row.addEventListener('click', () => openIdx(+row.dataset.idx, row));
+      });
+      stage.__close = close;
+    });
+
+    // global Esc closes whatever is open in every stage
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') document.querySelectorAll('.stage').forEach(s => s.__close && s.__close());
+    });
+  </script>
+</body>
+</html>

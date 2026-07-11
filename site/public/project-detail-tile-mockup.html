@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>tile-mockup — expanding tile, no photo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================================
+       Expanding tile — no photo.
+
+       The chosen pattern (Option F) with imagery removed. Clicking a
+       project row grows that row's tile out of its place in the list
+       into a large in-stage card (FLIP-style). Content is text only:
+       plate number, title, meta, essay, a pull quote, external links,
+       and prev/next. Closes on Esc + click outside.
+
+       Two stages so you can compare interior layouts:
+         F1 — single reading column, centered measure.
+         F2 — two columns: meta rail left, essay right.
+
+       Palette + type copied from src/bento/bento.css.
+       ============================================================ */
+
+    :root {
+      --bg: #fafaf7;
+      --ink: #0f0f0f;
+      --muted: #8a8a8a;
+      --rule: #d8d8d5;
+      --accent: #a8100a;
+      --bg-rgb: 250 250 247;
+      --ink-rgb: 15 15 15;
+      --muted-rgb: 138 138 138;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: #e8e8e3; color: var(--ink);
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 13px; line-height: 1.55;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    }
+    .doc { max-width: 1180px; margin: 0 auto; padding: 48px 32px 120px; }
+    .doc-head h1 {
+      font-family: "Instrument Serif", serif; font-style: italic; font-weight: 400;
+      font-size: 40px; line-height: 1.05; margin: 0 0 12px;
+    }
+    .doc-head p { margin: 0 0 6px; max-width: 74ch; color: #4a4a4a; }
+    .doc-head .hint { margin-top: 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+    .opt { margin-top: 48px; }
+    .opt-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 4px; }
+    .opt-tag { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bg); background: var(--ink); padding: 3px 9px; border-radius: 2px; }
+    .opt-name { font-family: "Instrument Serif", serif; font-style: italic; font-size: 26px; }
+    .opt-desc { margin: 0 0 16px; color: #4a4a4a; max-width: 78ch; }
+
+    /* stage = mini bento */
+    .stage {
+      position: relative; height: 600px; border: 1px solid var(--rule); border-radius: 3px;
+      background: var(--bg); overflow: hidden; box-shadow: 0 22px 50px -34px rgba(0,0,0,0.4);
+    }
+    .mini {
+      position: absolute; inset: 0; padding: 22px; display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr; grid-template-rows: repeat(6, 1fr); gap: 12px;
+      transition: filter 220ms ease, opacity 220ms ease;
+    }
+    .mini.dim { filter: blur(2px) saturate(0.9); opacity: 0.45; }
+    .mcell { border: 1px solid var(--rule); border-radius: 2px; padding: 14px 16px; background: var(--bg); overflow: hidden; min-height: 0; }
+    .kick { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .m-name { grid-column: 1; grid-row: 1 / span 2; }
+    .m-empty1 { grid-column: 2; grid-row: 1 / span 3; background: rgba(var(--muted-rgb) / 0.08); }
+    .m-contact { grid-column: 3; grid-row: 1 / span 2; }
+    .m-projects { grid-column: 1; grid-row: 3 / span 4; display: flex; flex-direction: column; }
+    .m-empty2 { grid-column: 2; grid-row: 4 / span 3; background: rgba(var(--muted-rgb) / 0.08); }
+    .m-strava { grid-column: 3; grid-row: 3 / span 2; }
+    .m-colophon { grid-column: 3; grid-row: 5 / span 2; }
+    .name-word { font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+    .name-bio { font-family: "Instrument Serif", serif; font-style: italic; font-size: 14px; line-height: 1.3; margin-top: 8px; }
+
+    .plist { display: flex; flex-direction: column; margin-top: 2px; overflow: hidden; }
+    .prow {
+      display: grid; grid-template-columns: 22px 1fr; align-items: baseline; gap: 10px; padding: 7px 4px;
+      border: 0; border-bottom: 1px solid rgba(var(--muted-rgb) / 0.32); background: transparent; cursor: pointer;
+      text-align: left; color: var(--ink); font: inherit; width: 100%; transition: background-color 120ms ease;
+    }
+    .prow:first-child { border-top: 1px solid rgba(var(--muted-rgb) / 0.32); }
+    .prow:hover { background: rgba(var(--ink-rgb) / 0.04); }
+    .prow .pn { font-weight: 500; font-size: 11px; }
+    .prow .pt { text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; font-weight: 500; }
+    .prow.hidden { visibility: hidden; }
+
+    /* the expanding tile */
+    .tile {
+      position: absolute; z-index: 4; background: var(--bg); border: 1px solid var(--rule);
+      border-radius: 3px; overflow: auto; box-shadow: 0 30px 80px -30px rgba(0,0,0,0.5);
+      transition: top 320ms cubic-bezier(.2,.7,.2,1), left 320ms cubic-bezier(.2,.7,.2,1),
+                  width 320ms cubic-bezier(.2,.7,.2,1), height 320ms cubic-bezier(.2,.7,.2,1);
+    }
+    .tile-inner { padding: 30px 34px; opacity: 0; transition: opacity 200ms ease 140ms; }
+    .tile.open .tile-inner { opacity: 1; }
+
+    .d-close {
+      position: absolute; top: 16px; right: 18px; z-index: 5; background: transparent; border: 0;
+      padding: 4px 6px; cursor: pointer; font: 500 11px/1 "IBM Plex Mono", monospace; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); transition: color 120ms ease;
+    }
+    .d-close:hover { color: var(--ink); }
+    .d-number { font-family: "Instrument Serif", serif; font-size: 56px; line-height: 1; color: var(--accent); margin-bottom: 4px; }
+    .d-title { font-family: "Instrument Serif", serif; font-style: italic; font-size: 40px; line-height: 1.05; margin-bottom: 16px; }
+    .d-meta { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); line-height: 1.9; }
+    .d-essay { font-family: "Instrument Serif", serif; font-size: 18px; line-height: 1.55; margin: 0 0 14px; max-width: 60ch; }
+    .d-quote {
+      font-family: "Instrument Serif", serif; font-style: italic; font-size: 24px; line-height: 1.3;
+      border-left: 2px solid var(--accent); padding-left: 18px; margin: 22px 0; max-width: 42ch;
+    }
+    .d-links { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0 4px; }
+    .d-link {
+      font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); text-decoration: none;
+      border: 1px solid var(--rule); padding: 8px 13px; border-radius: 2px; transition: border-color 120ms ease, background-color 120ms ease;
+    }
+    .d-link:hover { border-color: var(--ink); background: rgba(var(--ink-rgb) / 0.04); }
+    .d-nav { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--rule); padding-top: 14px; margin-top: 22px; }
+    .d-nav button {
+      background: transparent; border: 0; cursor: pointer; color: var(--muted);
+      font: 500 10px/1.5 "IBM Plex Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase; text-align: left; padding: 0; transition: color 120ms ease;
+    }
+    .d-nav button:last-child { text-align: right; }
+    .d-nav button:hover:not(:disabled) { color: var(--ink); }
+    .d-nav button:disabled { opacity: 0.3; cursor: default; }
+    .d-nav .np { font-family: "Instrument Serif", serif; font-style: italic; font-size: 16px; text-transform: none; letter-spacing: 0; }
+
+    /* F2 two-column interior */
+    .cols { display: grid; grid-template-columns: 200px 1fr; gap: 32px; }
+    .cols .railhead { font-family: "Instrument Serif", serif; font-style: italic; font-size: 15px; color: var(--muted); margin-bottom: 10px; }
+
+    .scrim { position: absolute; inset: 0; background: rgba(var(--ink-rgb) / 0.18); z-index: 3; cursor: pointer; animation: fade 200ms ease; }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div class="doc">
+    <div class="doc-head">
+      <h1>Expanding tile — no photo</h1>
+      <p>Your pick, imagery removed. Click a <b>numbered project row</b>: that row's tile grows out of its place in the list into a large card, then the text fades in. The rest of the bento dims behind. Closes on <b>Esc</b> or a <b>click outside</b>; prev / next page through projects.</p>
+      <p class="hint">Two interior layouts to compare — single column vs. meta-rail + essay.</p>
+    </div>
+    <div id="options"></div>
+  </div>
+
+  <script>
+    const P = (n, title, meta, essay, quote) => ({ n, title, meta, essay, quote, links: ['LIVE','REPO','CASE STUDY'] });
+    const PLATES = [
+      P('01','Oryzo',
+        [['YEAR','2025'],['ROLE','DESIGN + ENG LEAD'],['CLIENT','STEALTH · SEED'],['DISCIPLINE','AI · INTERFACE · WEB']],
+        ['Voice orchestration layer for autonomous agents. Turned three hundred milliseconds of latency into a feature — the pause the agent takes before answering became the moment you trust it. We stopped hiding the wait. We staged it. A hairline appears; a caret ticks; an intent surfaces.',
+         'Shipped as a drop-in orchestration primitive. A press mark, not a rewrite. The result was quieter than we expected — the loudest feedback came from the silence between turns.'],
+        'The 300ms isn’t hidden; it’s composed.'),
+      P('02','Halcyon',
+        [['YEAR','2025'],['ROLE','PRODUCT + DESIGN'],['CLIENT','INTERNAL'],['DISCIPLINE','PRODUCT · WEBGL · DESIGN']],
+        ['A realtime collaborative canvas for design teams. Multiplayer cursors, but softer. We treated presence as a design material — where people were, how they moved, what they hovered — and let those shapes suggest new tools rather than replace old ones.',
+         'Half a million cursors and counting. The canvas got smaller as more people joined; the friction went the other way.'],
+        'Craft, not crowd.'),
+      P('03','Aperture',
+        [['YEAR','2024'],['ROLE','CONCEPT LEAD'],['CLIENT','SELF'],['DISCIPLINE','MOBILE · SYSTEM · CONCEPT']],
+        ['A camera-first mobile OS. The lens is the app launcher. If you point the phone at something the phone knows what you want; the launcher was the least interesting screen on the device, so we removed it.',
+         'Concept work. Never shipped as an OS, but the pattern went on to inform how camera-first apps are now built.'],
+        'The camera isn’t a feature; it is the launcher.'),
+      P('06','Loom',
+        [['YEAR','2023'],['ROLE','DESIGN + ENG'],['CLIENT','SELF'],['DISCIPLINE','WEB3 · AUDIO · EXPERIMENT']],
+        ['A peer-to-peer music mesh. No servers, no ads, just rooms. Anyone can host a listening room; anyone can join with a link. The songs live on the seeds.',
+         'An experiment in what a discovery layer looks like when the discovery is another person’s ears, not an algorithm.'],
+        'No servers presiding.'),
+    ];
+    const metaHTML = (p) => p.meta.map(([l,v]) => `${l} · ${v}`).join('<br>');
+    const essayHTML = (p) => p.essay.map(t => `<p class="d-essay">${t}</p>`).join('');
+    const linksHTML = (p) => `<div class="d-links">${p.links.map(l => `<a class="d-link" href="#" onclick="return false">${l} ↗</a>`).join('')}</div>`;
+    function navHTML(idx) {
+      const prev = PLATES[idx-1], next = PLATES[idx+1];
+      return `<div class="d-nav">
+        <button ${prev?'':'disabled'} data-nav="${idx-1}">${prev?`← PREV<div class="np">${prev.title}</div>`:'← PREV'}</button>
+        <button ${next?'':'disabled'} data-nav="${idx+1}">${next?`NEXT →<div class="np">${next.title}</div>`:'NEXT →'}</button>
+      </div>`;
+    }
+
+    // interior variants
+    function bodySingle(p, idx) {
+      return `<div class="d-number">${p.n}</div><div class="d-title">${p.title}</div>
+        <div class="d-meta" style="margin-bottom:18px">${metaHTML(p)}</div>
+        ${essayHTML(p)}<div class="d-quote">${p.quote}</div>${linksHTML(p)}${navHTML(idx)}`;
+    }
+    function bodyCols(p, idx) {
+      return `<div class="d-number">${p.n}</div><div class="d-title">${p.title}</div>
+        <div class="cols">
+          <div>
+            <div class="railhead">Particulars</div>
+            <div class="d-meta">${metaHTML(p)}</div>
+            ${linksHTML(p)}
+          </div>
+          <div>${essayHTML(p)}<div class="d-quote">${p.quote}</div></div>
+        </div>
+        ${navHTML(idx)}`;
+    }
+
+    const OPTIONS = [
+      { id:'F1', tag:'F1', name:'Single column', desc:'Tile expands; one centered reading column — number, title, meta, essay, pull quote, links, prev/next.', body: bodySingle },
+      { id:'F2', tag:'F2', name:'Meta rail + essay', desc:'Tile expands into two columns: particulars and links pinned left, essay + quote right. Uses the extra width the missing photo frees up.', body: bodyCols },
+    ];
+
+    function miniBento() {
+      const rows = PLATES.map((p,i) => `<button class="prow" data-idx="${i}"><span class="pn">${p.n}</span><span class="pt">${p.title}</span></button>`).join('');
+      return `<div class="mini" data-mini>
+        <div class="mcell m-name"><div class="name-word">RANDY REN</div><div class="name-bio">Design-oriented engineer working at the seam between AI and interface.</div></div>
+        <div class="mcell m-empty1"></div>
+        <div class="mcell m-contact"><div class="kick">§ CORRESPONDENCE</div><div style="font-size:11px">randyren278@gmail.com</div></div>
+        <div class="mcell m-projects"><div class="kick">§ INDEX / SIX PLATES</div><div class="plist">${rows}</div></div>
+        <div class="mcell m-empty2"></div>
+        <div class="mcell m-strava"><div class="kick">§ LATEST ACTIVITY</div></div>
+        <div class="mcell m-colophon"><div class="kick">§ COLOPHON</div></div>
+      </div>`;
+    }
+
+    const root = document.getElementById('options');
+    OPTIONS.forEach(opt => {
+      const sec = document.createElement('div');
+      sec.className = 'opt';
+      sec.innerHTML = `
+        <div class="opt-head"><span class="opt-tag">Option ${opt.tag}</span><span class="opt-name">${opt.name}</span></div>
+        <p class="opt-desc">${opt.desc}</p>
+        <div class="stage">${miniBento()}</div>`;
+      root.appendChild(sec);
+
+      const stage = sec.querySelector('.stage');
+      const mini = stage.querySelector('[data-mini]');
+      let openRow = null;
+
+      function close() {
+        const tile = stage.querySelector('.tile');
+        if (tile && openRow) {
+          // reverse the FLIP back into the row, then remove
+          const sb = stage.getBoundingClientRect();
+          const rb = openRow.getBoundingClientRect();
+          tile.classList.remove('open');
+          tile.style.top = (rb.top - sb.top) + 'px';
+          tile.style.left = (rb.left - sb.left) + 'px';
+          tile.style.width = rb.width + 'px';
+          tile.style.height = rb.height + 'px';
+          const t = tile;
+          setTimeout(() => t.remove(), 300);
+        } else if (tile) { tile.remove(); }
+        stage.querySelectorAll('.scrim').forEach(s => s.remove());
+        mini.classList.remove('dim');
+        mini.querySelectorAll('.prow').forEach(r => r.classList.remove('hidden'));
+        openRow = null;
+      }
+
+      function openIdx(idx) {
+        // if a tile is already open (prev/next), just swap contents
+        let tile = stage.querySelector('.tile');
+        const p = PLATES[idx];
+        if (tile) {
+          tile.querySelector('.tile-inner').innerHTML = opt.body(p, idx);
+          bindControls();
+          return;
+        }
+        const row = mini.querySelector(`.prow[data-idx="${idx}"]`);
+        openRow = row;
+        const sb = stage.getBoundingClientRect();
+        const rb = row.getBoundingClientRect();
+
+        const scrim = document.createElement('div');
+        scrim.className = 'scrim';
+        scrim.addEventListener('click', close);
+        stage.appendChild(scrim);
+
+        tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.style.top = (rb.top - sb.top) + 'px';
+        tile.style.left = (rb.left - sb.left) + 'px';
+        tile.style.width = rb.width + 'px';
+        tile.style.height = rb.height + 'px';
+        tile.innerHTML = `<button class="d-close" data-close>× close</button><div class="tile-inner">${opt.body(p, idx)}</div>`;
+        stage.appendChild(tile);
+        row.classList.add('hidden');
+        mini.classList.add('dim');
+
+        requestAnimationFrame(() => {
+          tile.style.top = '30px'; tile.style.left = '30px';
+          tile.style.width = (sb.width - 60) + 'px';
+          tile.style.height = (sb.height - 60) + 'px';
+          tile.classList.add('open');
+        });
+        bindControls();
+      }
+
+      function bindControls() {
+        stage.querySelectorAll('[data-close]').forEach(b => { b.onclick = close; });
+        stage.querySelectorAll('[data-nav]').forEach(b => { b.onclick = () => openIdx(+b.dataset.nav); });
+      }
+
+      mini.querySelectorAll('.prow').forEach(row => row.addEventListener('click', () => openIdx(+row.dataset.idx)));
+      stage.__close = close;
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') document.querySelectorAll('.stage').forEach(s => s.__close && s.__close());
+    });
+  </script>
+</body>
+</html>
