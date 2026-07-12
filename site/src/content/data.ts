@@ -183,9 +183,8 @@ export const PLATE_DATA = {
       { lab: 'CODE', href: 'https://github.com/randyren278/sill' },
     ],
     essay: [
-      "A windowsill that emails you. There's one shared collection of plants. I water, edit, and add them; everyone else gets a read-only view and can sign up for a single daily email that says what's thirsty. I built all of it: React and Vite on the front, Supabase for the data, and scheduled functions that assemble the digest and send it through Resend each morning.",
+      "A dynamic and proactive app to track the status of my plants. I water, edit, and add them; everyone else gets a read-only view and can sign up for a single daily email that says what's thirsty. The stack is made up of the following: React and Vite on the front, Supabase for the data, and scheduled functions that assemble the digest and send it through Resend each morning.",
       "There's a feedback loop under the reminder. A humidity sensor on the sill sends readings to a Mac mini I keep running at home as a server, and a machine-learning model I trained on that history sets how often each plant actually needs water. The timing follows the room instead of a fixed schedule, so it shifts on its own when the air dries out or the days get longer.",
-      "The interface is small on purpose. No accounts, no dashboard, just pixel-art plants that wilt when they're overdue and one email a day. Most of the work is underneath it: unsubscribe links signed with HMAC tokens, row-level security so nobody's email gets read when the page loads, and a test that scans the built site for leaked addresses. I wanted watering to feel like something you barely have to think about.",
     ],
   },
   oryzo: {
