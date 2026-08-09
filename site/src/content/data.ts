@@ -208,10 +208,13 @@ export const PLATE_DATA = {
       { lab: 'CLIENT', val: 'SELF' },
       { lab: 'DISCIPLINE', val: 'DATA · GEO · WEB' },
     ],
-    links: [{ lab: 'CODE', href: 'https://github.com/randyren278/tanker-tracker' }],
+    links: [
+      { lab: 'LIVE', href: 'https://straits.randyren.org' },
+      { lab: 'CODE', href: 'https://github.com/randyren278/straits' },
+    ],
     essay: [
-      'I built this during the 2026 Middle East tensions to follow oil tankers through the Persian Gulf, Strait of Hormuz, Red Sea, and Suez Canal. One dashboard: live vessel positions, sanctions flags, route anomalies. Posted it to Reddit when the news cycle picked up and a few thousand people showed up. It ran for about a month before the TimescaleDB hosting and AIS streaming costs got too steep to justify keeping it alive.',
-      "The map is WebGL: MapLibre with deck.gl overlays, Bloomberg terminal aesthetic, true black and amber monospace. Each vessel accumulates a dark fleet risk score from six anomaly signals: AIS going dark, loitering off anchorage, speed outliers, route deviation from a declared destination, repeat going-dark history, and ship-to-ship transfers. Sanctions matching runs against OpenSanctions IMO data. The ingester is a separate Node.js WebSocket process on Railway, since Vercel can't hold a persistent connection. Both services share a production database; the ingester writes whether the app is open or not.",
+      'I built this during the 2026 Middle East tensions to follow oil tankers through the Persian Gulf, Strait of Hormuz, Red Sea, and Suez Canal. One dashboard: live vessel positions, sanctions flags, route anomalies. I posted it to Reddit when the news cycle picked up and peaked with a few thousand users. It ran for about a month before the always-on hosting got too expensive to justify. Rather than pull it down, I rebuilt it to run for almost nothing, and it is still live.',
+      'The live feed comes from a Mac at home. Every ten minutes a launchd process fires to hold a socket open. It streams about ninety seconds of AIS, keeps the latest fix per vessel, writes it to the database, scores the anomalies, drops anything older than a week, and quits. Essentially turning my Mac into a server.',
     ],
   },
   oryzo: {
