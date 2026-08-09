@@ -9,6 +9,7 @@ export const NOTES = {
   sill: 'A windowsill that emails you. One shared collection of plants, a humidity sensor reporting to a home server, and a model that learns how often each plant actually needs water. One quiet email a day tells you what is thirsty.',
   straits:
     'A geopolitical oil dashboard I ran during the 2026 Middle East tensions. Live tanker positions across the Persian Gulf and Suez corridors, cross-referenced against sanctions lists, each vessel scored for dark fleet behavior. Posted to Reddit, ran for a month, shut down when the hosting bill arrived.',
+  bode: 'A tool that draws the Bode plot asymptotic approximation for you. Built out of frustration in Circuits II, where hand-deriving the straight-line gain and phase approximation kept going wrong — feed in a transfer function, get the plots instantly.',
 };
 
 export const MEDIUMS = {
@@ -27,9 +28,16 @@ export const MEDIUMS = {
     blurb:
       'Geopolitical oil dashboard. Live tanker positions, sanctions flags, and dark fleet scoring. Posted to Reddit, ran for a month.',
   },
+  bode: {
+    title: 'BODE',
+    year: 2026,
+    medium: 'typescript, react, control theory',
+    dim: 'one transfer function, two asymptotic plots',
+    blurb: 'Bode plot asymptotic approximation tool. Feed in a transfer function, get the straight-line gain and phase plots.',
+  },
 };
 
-export const ORDER = ['sill', 'straits'];
+export const ORDER = ['sill', 'straits', 'bode'];
 
 // Optional per-photo captions, keyed by filename. Sparse on purpose — a
 // photo with no entry here still shows its palette, dimensions and paired
@@ -165,6 +173,26 @@ export const PLATE_DATA = {
     essay: [
       'I built this during the 2026 Middle East tensions to follow oil tankers through the Persian Gulf, Strait of Hormuz, Red Sea, and Suez Canal. One dashboard: live vessel positions, sanctions flags, route anomalies. I posted it to Reddit when the news cycle picked up and peaked with a few thousand users. It ran for about a month before the always-on hosting got too expensive to justify. Rather than pull it down, I rebuilt it to run for almost nothing, and it is still live.',
       'The live feed comes from a Mac at home. Every ten minutes a launchd process fires to hold a socket open. It streams about ninety seconds of AIS, keeps the latest fix per vessel, writes it to the database, scores the anomalies, drops anything older than a week, and quits. Essentially turning my Mac into a server.',
+    ],
+  },
+  bode: {
+    number: '03',
+    title: 'Bode',
+    year: 2026,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2026' },
+      { lab: 'ROLE', val: 'EVERYTHING' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'CONTROL THEORY · WEB' },
+    ],
+    links: [
+      { lab: 'LIVE', href: 'https://bode.randyren.org' },
+      { lab: 'CODE', href: 'https://github.com/randyren278/bodeplotapprox' },
+    ],
+    essay: [
+      "I kept getting Bode plot asymptotic approximations wrong in Circuits II. The gain and phase sketches are mechanical once you see the pattern in a transfer function's poles and zeros, but I could not figure it out to save my life. So instead I built a program that does it for me.",
+      "It started as a MATLAB script leaning on the Symbolic Math and Control System toolboxes, then I ported it line-for-line into a TypeScript and React app so anyone can open it in a browser. Now you can estimate bode plots to your heart's content!",
     ],
   },
   about: {
