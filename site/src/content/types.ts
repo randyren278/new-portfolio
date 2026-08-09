@@ -45,4 +45,6 @@ export type ShellContent = {
   COLOPHON_TEXT: string;
   MAN: Record<string, ManEntry>;
   PLATE_DATA: Record<string, PlateEntry>;
+  // Optional photo captions keyed by filename; missing keys are normal.
+  PHOTO_CAPTIONS: Record<string, string>;
 };

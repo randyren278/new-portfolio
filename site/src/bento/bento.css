@@ -536,18 +536,62 @@ body {
 
 /* ----- Photo cells ----- */
 
+/* Photo cells are flip cards. The cell itself owns the perspective and
+   drops its own padding — each face paints edge to edge. */
 .cell-photo {
   background: rgba(var(--muted-rgb) / 0.08);
-  padding: 22px 24px;
-  justify-content: flex-start;
+  padding: 0;
+  overflow: hidden;
+  perspective: 1400px;
 }
-.photo-fname {
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
+.photo-inner {
   position: relative;
-  z-index: 1;
+  width: 100%;
+  height: 100%;
+  /* .cell is a column flex container; claim the whole track so the
+     absolutely-positioned faces have a definite box to fill. */
+  flex: 1 1 auto;
+  transform-style: preserve-3d;
+  /* Symmetric ease-in-out: the card crosses 90deg at the halfway mark, so
+     the turn actually reads. An ease-out curve here front-loads the
+     rotation (past edge-on within ~80ms) and the flip looks like nothing
+     happened at all. */
+  transition: transform 620ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.cell-photo.flipped .photo-inner {
+  transform: rotateY(180deg);
+}
+.photo-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  background: var(--bg);
+}
+.photo-back {
+  transform: rotateY(180deg);
+}
+/* Backface culling alone isn't enough — any filter/blend inside a face can
+   defeat it and paint the front through as mirrored text. Hard-hide the
+   outgoing face at the flip midpoint (310ms of the 620ms turn), where it's
+   edge-on and invisible anyway. */
+.photo-front,
+.photo-back {
+  transition: visibility 0s linear 310ms;
+}
+.photo-back {
+  visibility: hidden;
+}
+.cell-photo.flipped .photo-front {
+  visibility: hidden;
+}
+.cell-photo.flipped .photo-back {
+  visibility: visible;
+}
+
+.photo-front {
+  background: rgba(var(--muted-rgb) / 0.08);
 }
 .photo-img {
   /* If /photos/<file>.jpg 404s (default until Randy adds files), onError
@@ -561,6 +605,234 @@ body {
   position: absolute;
   inset: 0;
   z-index: 0;
+}
+.photo-fname {
+  position: absolute;
+  top: 22px;
+  left: 24px;
+  z-index: 2;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bg);
+  /* Not mix-blend-mode: it creates a compositing context that breaks
+     backface-visibility on the parent face. */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+/* Full-bleed hit target with a quiet corner mark as the only affordance. */
+.photo-flip {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 22px;
+}
+.photo-mark {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--bg-rgb) / 0.75);
+  opacity: 0.55;
+  transition: opacity 160ms ease, background-color 160ms ease;
+}
+.photo-mark::before,
+.photo-mark::after {
+  content: "";
+  position: absolute;
+  background: var(--bg);
+}
+.photo-mark::before {
+  left: 5px;
+  right: 5px;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.photo-mark::after {
+  top: 5px;
+  bottom: 5px;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+}
+.photo-flip:hover .photo-mark,
+.photo-flip:focus-visible .photo-mark {
+  opacity: 1;
+  background: rgba(var(--ink-rgb) / 0.25);
+}
+.photo-flip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+}
+
+/* ----- Photo verso ----- */
+
+.photo-verso {
+  position: absolute;
+  inset: 0;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+}
+.photo-verso-top {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.photo-verso-top .kicker {
+  margin-bottom: 0;
+}
+.photo-prov {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.photo-caption {
+  font-family: "Newsreader", "IBM Plex Serif", ui-serif, Georgia, serif;
+  font-style: italic;
+  font-size: 15.5px;
+  line-height: 1.32;
+  color: var(--ink);
+  margin: 0 0 12px 0;
+}
+.photo-lab {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.photo-palrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.photo-verso-rule {
+  height: 1px;
+  background: var(--rule);
+  margin-bottom: 14px;
+}
+/* flex:none by default — inside the column-flex pair block a growable
+   ribbon would stretch down the whole card instead of staying a band. */
+.photo-rib {
+  display: flex;
+  height: 14px;
+  flex: 0 0 14px;
+  width: 100%;
+  border-radius: 1px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(var(--ink-rgb) / 0.1);
+}
+.photo-rib span {
+  display: block;
+  flex: 1;
+}
+.photo-rib-sm {
+  height: 9px;
+  flex: 0 0 9px;
+}
+.photo-palrow .photo-rib {
+  flex: 1 1 auto;
+  width: auto;
+}
+.photo-pair {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+/* Most photos have no caption (PHOTO_CAPTIONS is sparse by design), which
+   would otherwise leave a tall gap between the pair block and the footer.
+   Auto margins on both sides center it in the leftover space instead. */
+.photo-verso-nocap .photo-pair {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+.photo-thumb {
+  flex: 0 0 86px;
+  height: 110px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(var(--ink-rgb) / 0.12);
+  background: rgba(var(--muted-rgb) / 0.12);
+}
+.photo-pairmeta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  justify-content: center;
+}
+.photo-pairmeta .kicker {
+  margin-bottom: 0;
+}
+.photo-pairname {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+}
+.photo-foot {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.photo-verso-tail {
+  margin-top: auto;
+}
+.photo-return {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 4;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 6px 8px;
+  transition: color 120ms ease;
+}
+.photo-return:hover,
+.photo-return:focus-visible {
+  color: var(--ink);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-inner {
+    transition: none;
+    transform: none !important;
+  }
+  .photo-face {
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+    visibility: visible !important;
+    transition: opacity 200ms ease;
+  }
+  .photo-back {
+    transform: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .cell-photo.flipped .photo-front {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .cell-photo.flipped .photo-back {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 /* ----- Strava cell ----- */

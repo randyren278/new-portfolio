@@ -9,7 +9,29 @@
     "b": 65,
     "hue": 21,
     "sat": 13,
-    "lig": 29
+    "lig": 29,
+    "palette": [
+      {
+        "hex": "#524A46",
+        "share": 36
+      },
+      {
+        "hex": "#665D58",
+        "share": 34
+      },
+      {
+        "hex": "#4A2920",
+        "share": 16
+      },
+      {
+        "hex": "#1D0D0B",
+        "share": 10
+      },
+      {
+        "hex": "#AA9060",
+        "share": 3
+      }
+    ]
   },
   {
     "file": "photo-02.jpg",
@@ -21,7 +43,29 @@
     "b": 89,
     "hue": 42,
     "sat": 10,
-    "lig": 39
+    "lig": 39,
+    "palette": [
+      {
+        "hex": "#9E702A",
+        "share": 26
+      },
+      {
+        "hex": "#17160A",
+        "share": 23
+      },
+      {
+        "hex": "#8EB8EA",
+        "share": 23
+      },
+      {
+        "hex": "#50412B",
+        "share": 18
+      },
+      {
+        "hex": "#938D80",
+        "share": 11
+      }
+    ]
   },
   {
     "file": "photo-03.jpg",
@@ -33,7 +77,29 @@
     "b": 96,
     "hue": 27,
     "sat": 20,
-    "lig": 47
+    "lig": 47,
+    "palette": [
+      {
+        "hex": "#AD9E92",
+        "share": 29
+      },
+      {
+        "hex": "#20170E",
+        "share": 29
+      },
+      {
+        "hex": "#C8A188",
+        "share": 21
+      },
+      {
+        "hex": "#EAAB76",
+        "share": 16
+      },
+      {
+        "hex": "#4E3E2D",
+        "share": 6
+      }
+    ]
   },
   {
     "file": "photo-04.jpg",
@@ -45,7 +111,29 @@
     "b": 106,
     "hue": 17,
     "sat": 3,
-    "lig": 43
+    "lig": 43,
+    "palette": [
+      {
+        "hex": "#C2C2BF",
+        "share": 38
+      },
+      {
+        "hex": "#504841",
+        "share": 23
+      },
+      {
+        "hex": "#2F2C2F",
+        "share": 17
+      },
+      {
+        "hex": "#181313",
+        "share": 15
+      },
+      {
+        "hex": "#7D6C69",
+        "share": 6
+      }
+    ]
   },
   {
     "file": "photo-05.jpg",
@@ -57,7 +145,29 @@
     "b": 102,
     "hue": 168,
     "sat": 2,
-    "lig": 39
+    "lig": 39,
+    "palette": [
+      {
+        "hex": "#19160E",
+        "share": 27
+      },
+      {
+        "hex": "#54422F",
+        "share": 24
+      },
+      {
+        "hex": "#6688B1",
+        "share": 23
+      },
+      {
+        "hex": "#B1CBD9",
+        "share": 17
+      },
+      {
+        "hex": "#BF9F5E",
+        "share": 9
+      }
+    ]
   },
   {
     "file": "photo-06.jpg",
@@ -69,7 +179,29 @@
     "b": 103,
     "hue": 212,
     "sat": 7,
-    "lig": 38
+    "lig": 38,
+    "palette": [
+      {
+        "hex": "#3B598E",
+        "share": 27
+      },
+      {
+        "hex": "#2E2B24",
+        "share": 21
+      },
+      {
+        "hex": "#58554D",
+        "share": 20
+      },
+      {
+        "hex": "#828073",
+        "share": 20
+      },
+      {
+        "hex": "#AEAA9C",
+        "share": 13
+      }
+    ]
   },
   {
     "file": "photo-07.jpg",
@@ -81,7 +213,29 @@
     "b": 81,
     "hue": 32,
     "sat": 10,
-    "lig": 35
+    "lig": 35,
+    "palette": [
+      {
+        "hex": "#171514",
+        "share": 25
+      },
+      {
+        "hex": "#A0927A",
+        "share": 22
+      },
+      {
+        "hex": "#443D37",
+        "share": 22
+      },
+      {
+        "hex": "#706355",
+        "share": 21
+      },
+      {
+        "hex": "#C4C2B7",
+        "share": 10
+      }
+    ]
   },
   {
     "file": "photo-08.jpg",
@@ -93,7 +247,29 @@
     "b": 123,
     "hue": 215,
     "sat": 8,
-    "lig": 45
+    "lig": 45,
+    "palette": [
+      {
+        "hex": "#375A94",
+        "share": 26
+      },
+      {
+        "hex": "#CFCDC3",
+        "share": 20
+      },
+      {
+        "hex": "#2C2520",
+        "share": 20
+      },
+      {
+        "hex": "#5F5E59",
+        "share": 19
+      },
+      {
+        "hex": "#8B9396",
+        "share": 14
+      }
+    ]
   },
   {
     "file": "photo-09.jpg",
@@ -105,7 +281,29 @@
     "b": 126,
     "hue": 210,
     "sat": 14,
-    "lig": 44
+    "lig": 44,
+    "palette": [
+      {
+        "hex": "#2B2C23",
+        "share": 22
+      },
+      {
+        "hex": "#525754",
+        "share": 21
+      },
+      {
+        "hex": "#577FC1",
+        "share": 20
+      },
+      {
+        "hex": "#808688",
+        "share": 20
+      },
+      {
+        "hex": "#9BB2CE",
+        "share": 16
+      }
+    ]
   },
   {
     "file": "photo-10.jpg",
@@ -117,7 +315,29 @@
     "b": 51,
     "hue": 26,
     "sat": 23,
-    "lig": 26
+    "lig": 26,
+    "palette": [
+      {
+        "hex": "#34281F",
+        "share": 28
+      },
+      {
+        "hex": "#4E423A",
+        "share": 23
+      },
+      {
+        "hex": "#7D5A44",
+        "share": 17
+      },
+      {
+        "hex": "#100E09",
+        "share": 17
+      },
+      {
+        "hex": "#9E8065",
+        "share": 15
+      }
+    ]
   },
   {
     "file": "photo-11.jpg",
@@ -129,7 +349,29 @@
     "b": 29,
     "hue": 24,
     "sat": 15,
-    "lig": 13
+    "lig": 13,
+    "palette": [
+      {
+        "hex": "#040406",
+        "share": 47
+      },
+      {
+        "hex": "#3E3632",
+        "share": 19
+      },
+      {
+        "hex": "#271819",
+        "share": 18
+      },
+      {
+        "hex": "#5D5937",
+        "share": 13
+      },
+      {
+        "hex": "#8F776C",
+        "share": 4
+      }
+    ]
   },
   {
     "file": "photo-12.jpg",
@@ -141,7 +383,29 @@
     "b": 133,
     "hue": 29,
     "sat": 10,
-    "lig": 57
+    "lig": 57,
+    "palette": [
+      {
+        "hex": "#987F62",
+        "share": 32
+      },
+      {
+        "hex": "#C2BEBF",
+        "share": 20
+      },
+      {
+        "hex": "#413623",
+        "share": 19
+      },
+      {
+        "hex": "#DDD5D1",
+        "share": 15
+      },
+      {
+        "hex": "#A4A4B2",
+        "share": 14
+      }
+    ]
   },
   {
     "file": "photo-13.jpg",
@@ -153,7 +417,29 @@
     "b": 145,
     "hue": 224,
     "sat": 9,
-    "lig": 52
+    "lig": 52,
+    "palette": [
+      {
+        "hex": "#92A1B6",
+        "share": 34
+      },
+      {
+        "hex": "#AAC3E1",
+        "share": 27
+      },
+      {
+        "hex": "#46272C",
+        "share": 14
+      },
+      {
+        "hex": "#170E10",
+        "share": 13
+      },
+      {
+        "hex": "#6B6C73",
+        "share": 12
+      }
+    ]
   },
   {
     "file": "photo-14.jpg",
@@ -165,7 +451,29 @@
     "b": 140,
     "hue": 218,
     "sat": 15,
-    "lig": 48
+    "lig": 48,
+    "palette": [
+      {
+        "hex": "#7B7B83",
+        "share": 27
+      },
+      {
+        "hex": "#3C6BB7",
+        "share": 26
+      },
+      {
+        "hex": "#51555A",
+        "share": 22
+      },
+      {
+        "hex": "#DBDBD5",
+        "share": 14
+      },
+      {
+        "hex": "#2F2F32",
+        "share": 10
+      }
+    ]
   },
   {
     "file": "photo-15.jpg",
@@ -177,7 +485,29 @@
     "b": 135,
     "hue": 26,
     "sat": 10,
-    "lig": 57
+    "lig": 57,
+    "palette": [
+      {
+        "hex": "#AAA18D",
+        "share": 31
+      },
+      {
+        "hex": "#D3CCB7",
+        "share": 24
+      },
+      {
+        "hex": "#421311",
+        "share": 19
+      },
+      {
+        "hex": "#ACCAE9",
+        "share": 14
+      },
+      {
+        "hex": "#7A6757",
+        "share": 12
+      }
+    ]
   },
   {
     "file": "photo-16.jpg",
@@ -189,7 +519,29 @@
     "b": 150,
     "hue": 221,
     "sat": 20,
-    "lig": 49
+    "lig": 49,
+    "palette": [
+      {
+        "hex": "#618CD8",
+        "share": 27
+      },
+      {
+        "hex": "#565257",
+        "share": 25
+      },
+      {
+        "hex": "#84AFF1",
+        "share": 21
+      },
+      {
+        "hex": "#232127",
+        "share": 15
+      },
+      {
+        "hex": "#A0866C",
+        "share": 12
+      }
+    ]
   },
   {
     "file": "photo-17.jpg",
@@ -201,7 +553,29 @@
     "b": 178,
     "hue": 209,
     "sat": 26,
-    "lig": 59
+    "lig": 59,
+    "palette": [
+      {
+        "hex": "#ADC4DD",
+        "share": 30
+      },
+      {
+        "hex": "#94B3DC",
+        "share": 26
+      },
+      {
+        "hex": "#49677D",
+        "share": 21
+      },
+      {
+        "hex": "#224655",
+        "share": 13
+      },
+      {
+        "hex": "#6C8397",
+        "share": 10
+      }
+    ]
   },
   {
     "file": "photo-18.jpg",
@@ -213,7 +587,29 @@
     "b": 95,
     "hue": 29,
     "sat": 19,
-    "lig": 46
+    "lig": 46,
+    "palette": [
+      {
+        "hex": "#6F4427",
+        "share": 26
+      },
+      {
+        "hex": "#795F52",
+        "share": 24
+      },
+      {
+        "hex": "#A29D8F",
+        "share": 23
+      },
+      {
+        "hex": "#7F7D7B",
+        "share": 15
+      },
+      {
+        "hex": "#D5B36F",
+        "share": 11
+      }
+    ]
   },
   {
     "file": "photo-19.jpg",
@@ -225,7 +621,29 @@
     "b": 68,
     "hue": 24,
     "sat": 36,
-    "lig": 42
+    "lig": 42,
+    "palette": [
+      {
+        "hex": "#777064",
+        "share": 32
+      },
+      {
+        "hex": "#953D1D",
+        "share": 23
+      },
+      {
+        "hex": "#D37823",
+        "share": 20
+      },
+      {
+        "hex": "#3B2F28",
+        "share": 14
+      },
+      {
+        "hex": "#BDA698",
+        "share": 11
+      }
+    ]
   },
   {
     "file": "photo-20.jpg",
@@ -237,7 +655,29 @@
     "b": 113,
     "hue": 45,
     "sat": 3,
-    "lig": 46
+    "lig": 46,
+    "palette": [
+      {
+        "hex": "#23211B",
+        "share": 24
+      },
+      {
+        "hex": "#E6E4E3",
+        "share": 22
+      },
+      {
+        "hex": "#797773",
+        "share": 22
+      },
+      {
+        "hex": "#4F4D3D",
+        "share": 21
+      },
+      {
+        "hex": "#ADACAC",
+        "share": 11
+      }
+    ]
   },
   {
     "file": "photo-21.jpg",
@@ -249,7 +689,29 @@
     "b": 113,
     "hue": 20,
     "sat": 3,
-    "lig": 45
+    "lig": 45,
+    "palette": [
+      {
+        "hex": "#59524E",
+        "share": 31
+      },
+      {
+        "hex": "#AFB0AC",
+        "share": 23
+      },
+      {
+        "hex": "#919493",
+        "share": 18
+      },
+      {
+        "hex": "#7C6B6B",
+        "share": 16
+      },
+      {
+        "hex": "#2A2A24",
+        "share": 12
+      }
+    ]
   },
   {
     "file": "photo-22.jpg",
@@ -261,7 +723,29 @@
     "b": 132,
     "hue": 200,
     "sat": 16,
-    "lig": 45
+    "lig": 45,
+    "palette": [
+      {
+        "hex": "#8CAEDB",
+        "share": 26
+      },
+      {
+        "hex": "#2A545C",
+        "share": 23
+      },
+      {
+        "hex": "#607375",
+        "share": 21
+      },
+      {
+        "hex": "#1F2F2A",
+        "share": 15
+      },
+      {
+        "hex": "#A6A598",
+        "share": 15
+      }
+    ]
   },
   {
     "file": "photo-23.jpg",
@@ -273,7 +757,29 @@
     "b": 96,
     "hue": 90,
     "sat": 1,
-    "lig": 38
+    "lig": 38,
+    "palette": [
+      {
+        "hex": "#666A6D",
+        "share": 38
+      },
+      {
+        "hex": "#4F4940",
+        "share": 25
+      },
+      {
+        "hex": "#22211E",
+        "share": 18
+      },
+      {
+        "hex": "#9A9489",
+        "share": 12
+      },
+      {
+        "hex": "#C4D8ED",
+        "share": 7
+      }
+    ]
   },
   {
     "file": "photo-24.jpg",
@@ -285,7 +791,29 @@
     "b": 170,
     "hue": 213,
     "sat": 24,
-    "lig": 56
+    "lig": 56,
+    "palette": [
+      {
+        "hex": "#6F818A",
+        "share": 22
+      },
+      {
+        "hex": "#3F484C",
+        "share": 21
+      },
+      {
+        "hex": "#87AADC",
+        "share": 20
+      },
+      {
+        "hex": "#AEC6E0",
+        "share": 19
+      },
+      {
+        "hex": "#658DCF",
+        "share": 18
+      }
+    ]
   },
   {
     "file": "photo-25.jpg",
@@ -297,7 +825,29 @@
     "b": 115,
     "hue": 60,
     "sat": 3,
-    "lig": 47
+    "lig": 47,
+    "palette": [
+      {
+        "hex": "#6B6B69",
+        "share": 39
+      },
+      {
+        "hex": "#93948C",
+        "share": 24
+      },
+      {
+        "hex": "#352F2C",
+        "share": 18
+      },
+      {
+        "hex": "#BBD1DC",
+        "share": 11
+      },
+      {
+        "hex": "#C0A966",
+        "share": 8
+      }
+    ]
   },
   {
     "file": "photo-26.jpg",
@@ -309,7 +859,29 @@
     "b": 131,
     "hue": 32,
     "sat": 12,
-    "lig": 56
+    "lig": 56,
+    "palette": [
+      {
+        "hex": "#C6B7A6",
+        "share": 42
+      },
+      {
+        "hex": "#8F877A",
+        "share": 17
+      },
+      {
+        "hex": "#BAA796",
+        "share": 16
+      },
+      {
+        "hex": "#3A352E",
+        "share": 14
+      },
+      {
+        "hex": "#656156",
+        "share": 10
+      }
+    ]
   },
   {
     "file": "photo-27.jpg",
@@ -321,7 +893,29 @@
     "b": 104,
     "hue": 31,
     "sat": 10,
-    "lig": 45
+    "lig": 45,
+    "palette": [
+      {
+        "hex": "#74706F",
+        "share": 28
+      },
+      {
+        "hex": "#9E958E",
+        "share": 21
+      },
+      {
+        "hex": "#D8BA92",
+        "share": 18
+      },
+      {
+        "hex": "#594E41",
+        "share": 18
+      },
+      {
+        "hex": "#2C2825",
+        "share": 16
+      }
+    ]
   },
   {
     "file": "photo-28.jpg",
@@ -333,7 +927,29 @@
     "b": 144,
     "hue": 215,
     "sat": 18,
-    "lig": 48
+    "lig": 48,
+    "palette": [
+      {
+        "hex": "#5B85D7",
+        "share": 36
+      },
+      {
+        "hex": "#5F6052",
+        "share": 21
+      },
+      {
+        "hex": "#828883",
+        "share": 17
+      },
+      {
+        "hex": "#333325",
+        "share": 16
+      },
+      {
+        "hex": "#B0C0D0",
+        "share": 10
+      }
+    ]
   },
   {
     "file": "photo-29.jpg",
@@ -345,7 +961,29 @@
     "b": 182,
     "hue": 211,
     "sat": 26,
-    "lig": 62
+    "lig": 62,
+    "palette": [
+      {
+        "hex": "#B1D1F3",
+        "share": 33
+      },
+      {
+        "hex": "#8AABDA",
+        "share": 24
+      },
+      {
+        "hex": "#5D6C73",
+        "share": 21
+      },
+      {
+        "hex": "#3F4B52",
+        "share": 13
+      },
+      {
+        "hex": "#8A9195",
+        "share": 9
+      }
+    ]
   },
   {
     "file": "photo-30.jpg",
@@ -357,7 +995,29 @@
     "b": 117,
     "hue": 44,
     "sat": 6,
-    "lig": 49
+    "lig": 49,
+    "palette": [
+      {
+        "hex": "#A89F95",
+        "share": 37
+      },
+      {
+        "hex": "#CACBD1",
+        "share": 20
+      },
+      {
+        "hex": "#444229",
+        "share": 16
+      },
+      {
+        "hex": "#17180F",
+        "share": 14
+      },
+      {
+        "hex": "#756E57",
+        "share": 13
+      }
+    ]
   },
   {
     "file": "photo-31.jpg",
@@ -369,7 +1029,29 @@
     "b": 133,
     "hue": 208,
     "sat": 6,
-    "lig": 49
+    "lig": 49,
+    "palette": [
+      {
+        "hex": "#A4B6D2",
+        "share": 38
+      },
+      {
+        "hex": "#828584",
+        "share": 28
+      },
+      {
+        "hex": "#373B30",
+        "share": 16
+      },
+      {
+        "hex": "#1D2018",
+        "share": 10
+      },
+      {
+        "hex": "#58574C",
+        "share": 8
+      }
+    ]
   },
   {
     "file": "photo-32.jpg",
@@ -381,7 +1063,29 @@
     "b": 202,
     "hue": 212,
     "sat": 46,
-    "lig": 61
+    "lig": 61,
+    "palette": [
+      {
+        "hex": "#6286A4",
+        "share": 38
+      },
+      {
+        "hex": "#7FB0F3",
+        "share": 23
+      },
+      {
+        "hex": "#5694EA",
+        "share": 19
+      },
+      {
+        "hex": "#A8CEEF",
+        "share": 16
+      },
+      {
+        "hex": "#283333",
+        "share": 4
+      }
+    ]
   },
   {
     "file": "photo-33.jpg",
@@ -393,7 +1097,29 @@
     "b": 132,
     "hue": 208,
     "sat": 11,
-    "lig": 47
+    "lig": 47,
+    "palette": [
+      {
+        "hex": "#7AB8ED",
+        "share": 31
+      },
+      {
+        "hex": "#7A7A77",
+        "share": 25
+      },
+      {
+        "hex": "#5C4940",
+        "share": 19
+      },
+      {
+        "hex": "#251E17",
+        "share": 17
+      },
+      {
+        "hex": "#A7AEA9",
+        "share": 8
+      }
+    ]
   },
   {
     "file": "photo-34.jpg",
@@ -405,7 +1131,29 @@
     "b": 145,
     "hue": 212,
     "sat": 24,
-    "lig": 46
+    "lig": 46,
+    "palette": [
+      {
+        "hex": "#50749F",
+        "share": 27
+      },
+      {
+        "hex": "#395069",
+        "share": 27
+      },
+      {
+        "hex": "#71A0CC",
+        "share": 23
+      },
+      {
+        "hex": "#8D8B8F",
+        "share": 17
+      },
+      {
+        "hex": "#0C1929",
+        "share": 6
+      }
+    ]
   },
   {
     "file": "photo-35.jpg",
@@ -417,7 +1165,29 @@
     "b": 143,
     "hue": 217,
     "sat": 9,
-    "lig": 52
+    "lig": 52,
+    "palette": [
+      {
+        "hex": "#5E6269",
+        "share": 33
+      },
+      {
+        "hex": "#95ACD8",
+        "share": 22
+      },
+      {
+        "hex": "#B8C6DF",
+        "share": 16
+      },
+      {
+        "hex": "#383A32",
+        "share": 16
+      },
+      {
+        "hex": "#888B89",
+        "share": 13
+      }
+    ]
   },
   {
     "file": "photo-36.jpg",
@@ -429,7 +1199,29 @@
     "b": 128,
     "hue": 92,
     "sat": 6,
-    "lig": 53
+    "lig": 53,
+    "palette": [
+      {
+        "hex": "#B9D2E1",
+        "share": 24
+      },
+      {
+        "hex": "#2C313B",
+        "share": 23
+      },
+      {
+        "hex": "#E9E7C8",
+        "share": 19
+      },
+      {
+        "hex": "#546A1C",
+        "share": 19
+      },
+      {
+        "hex": "#857670",
+        "share": 15
+      }
+    ]
   },
   {
     "file": "photo-37.jpg",
@@ -441,7 +1233,29 @@
     "b": 105,
     "hue": 37,
     "sat": 20,
-    "lig": 51
+    "lig": 51,
+    "palette": [
+      {
+        "hex": "#7C6035",
+        "share": 23
+      },
+      {
+        "hex": "#D8D1C2",
+        "share": 22
+      },
+      {
+        "hex": "#9E8B64",
+        "share": 20
+      },
+      {
+        "hex": "#4D2C14",
+        "share": 18
+      },
+      {
+        "hex": "#BCAE95",
+        "share": 17
+      }
+    ]
   },
   {
     "file": "photo-38.jpg",
@@ -453,7 +1267,29 @@
     "b": 110,
     "hue": 23,
     "sat": 6,
-    "lig": 46
+    "lig": 46,
+    "palette": [
+      {
+        "hex": "#181511",
+        "share": 25
+      },
+      {
+        "hex": "#E3CCB8",
+        "share": 21
+      },
+      {
+        "hex": "#4E4741",
+        "share": 21
+      },
+      {
+        "hex": "#AAABC2",
+        "share": 20
+      },
+      {
+        "hex": "#908071",
+        "share": 13
+      }
+    ]
   },
   {
     "file": "photo-39.jpg",
@@ -465,7 +1301,29 @@
     "b": 63,
     "hue": 42,
     "sat": 7,
-    "lig": 27
+    "lig": 27,
+    "palette": [
+      {
+        "hex": "#867664",
+        "share": 34
+      },
+      {
+        "hex": "#0D0F0B",
+        "share": 28
+      },
+      {
+        "hex": "#2C2A20",
+        "share": 18
+      },
+      {
+        "hex": "#514C35",
+        "share": 14
+      },
+      {
+        "hex": "#477CC8",
+        "share": 6
+      }
+    ]
   },
   {
     "file": "photo-40.jpg",
@@ -477,6 +1335,28 @@
     "b": 130,
     "hue": 184,
     "sat": 7,
-    "lig": 48
+    "lig": 48,
+    "palette": [
+      {
+        "hex": "#645F30",
+        "share": 30
+      },
+      {
+        "hex": "#85ADD8",
+        "share": 25
+      },
+      {
+        "hex": "#B8D4EA",
+        "share": 21
+      },
+      {
+        "hex": "#191D1A",
+        "share": 13
+      },
+      {
+        "hex": "#394448",
+        "share": 10
+      }
+    ]
   }
 ]

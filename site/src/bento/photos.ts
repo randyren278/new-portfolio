@@ -21,6 +21,9 @@
 
 import manifest from './photos.manifest.json';
 
+/** One of the five dominant tones, with the share of the frame it covers. */
+export type PaletteTone = { hex: string; share: number };
+
 export type PhotoMeta = {
   file: string;
   w: number;
@@ -32,16 +35,38 @@ export type PhotoMeta = {
   hue: number;
   sat: number;
   lig: number;
+  palette: PaletteTone[];
 };
 
 export const PHOTO_MANIFEST: readonly PhotoMeta[] = manifest as PhotoMeta[];
 
+export const POOL_SIZE = PHOTO_MANIFEST.length;
+
+/** Hue-sorted order — the sequence pickColorBand slices its window from. */
+const BY_HUE: readonly PhotoMeta[] = [...PHOTO_MANIFEST].sort((a, b) => a.hue - b.hue);
+
+/** 1-indexed position in the hue sort, so a card can say "33 of 40". */
+function hueRank(file: string): number {
+  return BY_HUE.findIndex((p) => p.file === file) + 1;
+}
+
 /**
- * A single photo cell's assignment: which file to render. Cell shape
- * comes from grid placement in bento.css; the image inside is
- * center-cropped via object-fit: cover to fit that shape.
+ * A single photo cell's assignment. Carries the full metadata rather than
+ * just a filename because the card's verso shows this frame's palette and
+ * the frame it was paired with — `partner` is the other cell's photo, which
+ * is the whole point of the color-band pick.
  */
-export type PhotoSlot = { file: string };
+export type PhotoSlot = { photo: PhotoMeta; partner: PhotoMeta; rank: number };
+
+/** Both cells from one picked pair, each pointing at the other. */
+function toSlots(pair: PhotoMeta[]): PhotoSlot[] {
+  const [first, second] = pair;
+  if (!first || !second) return [];
+  return [
+    { photo: first, partner: second, rank: hueRank(first.file) },
+    { photo: second, partner: first, rank: hueRank(second.file) },
+  ];
+}
 
 /**
  * Seeded PRNG. Small, deterministic, good enough for shuffle picks.
@@ -66,7 +91,7 @@ function mulberry32(seed: number): () => number {
  */
 export function pickColorBand(n: number, seed?: number): PhotoMeta[] {
   const rng = mulberry32(seed ?? Math.floor(Math.random() * 2 ** 32));
-  const sorted = [...PHOTO_MANIFEST].sort((a, b) => a.hue - b.hue);
+  const sorted = BY_HUE;
   const maxStart = Math.max(0, sorted.length - n);
   const start = Math.floor(rng() * (maxStart + 1));
   const band = sorted.slice(start, start + n);
@@ -89,8 +114,7 @@ export function pickColorBand(n: number, seed?: number): PhotoMeta[] {
  */
 export function pickLayout(seed?: number): PhotoSlot[] {
   const s = seed ?? Math.floor(Math.random() * 2 ** 32);
-  const two = pickColorBand(2, s);
-  return two.map((p) => ({ file: p.file }));
+  return toSlots(pickColorBand(2, s));
 }
 
 /**
@@ -99,6 +123,4 @@ export function pickLayout(seed?: number): PhotoSlot[] {
  * matches; a client-side useEffect then swaps in the seeded selection.
  * Same one-frame swap pattern the old shuffle used.
  */
-export const INITIAL_SLOTS: readonly PhotoSlot[] = PHOTO_MANIFEST.slice(0, 2).map((p) => ({
-  file: p.file,
-}));
+export const INITIAL_SLOTS: readonly PhotoSlot[] = toSlots([...PHOTO_MANIFEST.slice(0, 2)]);

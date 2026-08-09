@@ -31,6 +31,10 @@ export const MEDIUMS = {
 
 export const ORDER = ['sill', 'straits'];
 
+// Optional per-photo captions, keyed by filename. Sparse on purpose — a
+// photo with no entry here still shows its palette, dimensions and paired
+// frame on the card verso, so there's no obligation to write all forty.
+export const PHOTO_CAPTIONS: Record<string, string> = {};
 
 export const ABOUT_TEXT = `Randy is a design oriented engineer studying at the University of British Columbia. Currently focused on making agents feel like real collaborators; the kind you'd actually want to work with, not the kind that eats your afternoon. Open to roles starting spring 2027.`;
 

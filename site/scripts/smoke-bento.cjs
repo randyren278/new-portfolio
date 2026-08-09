@@ -74,21 +74,33 @@ function assert(cond, label) {
   assert(kickers.includes('§ COLOPHON'), 'Colophon card kicker rendered');
   assert(kickers.includes('§ LATEST ACTIVITY'), 'Strava card kicker rendered');
 
-  // ---- 3. all seven PLATE rows in Projects ------------------------------
+  // ---- 3. PLATE rows in Projects ---------------------------------------
+  // Derived from what ORDER actually renders rather than a fixed list, so
+  // adding or removing a project doesn't require editing this file. What
+  // must hold: numbering is a contiguous 1..N run, zero-padded and in
+  // order, and every row carries a title.
 
   const projectNums = await page.$$eval('.projects-num', (els) =>
     els.map((e) => e.textContent?.trim()),
   );
-  ['01', '02', '03', '04', '05', '06', '07'].forEach((n) => {
-    assert(projectNums.includes(n), `PLATE ${n} row rendered`);
-  });
-
   const projectTitles = await page.$$eval('.projects-ttl', (els) =>
     els.map((e) => e.textContent?.trim()),
   );
-  ['SILL', 'ORYZO', 'HALCYON', 'APERTURE', 'FIELDNOTE', 'SIGNAL GARDEN', 'LOOM'].forEach((t) => {
-    assert(projectTitles.includes(t), `project title "${t}" rendered`);
-  });
+
+  assert(projectNums.length > 0, `at least one plate row rendered (got ${projectNums.length})`);
+  const expectedNums = projectNums.map((_, i) => String(i + 1).padStart(2, '0'));
+  assert(
+    projectNums.join(',') === expectedNums.join(','),
+    `plate numbers are a contiguous run (got ${projectNums.join(', ')})`,
+  );
+  assert(
+    projectTitles.length === projectNums.length,
+    `every plate row has a title (${projectTitles.length} titles / ${projectNums.length} rows)`,
+  );
+  assert(
+    projectTitles.every((t) => (t ?? '').length > 0),
+    `no blank plate titles (got ${projectTitles.join(', ')})`,
+  );
 
   // ---- 4. clicking a project row expands the plate in-place ------------
 
@@ -136,6 +148,68 @@ function assert(cond, label) {
   assert(
     String(photoLabels.length) === declaredCount,
     `data-photo-count matches rendered count (${declaredCount} vs ${photoLabels.length})`,
+  );
+
+  // ---- 6b. photo cards flip to a verso face ---------------------------
+  // Each photo cell is a flip card: front is the image, back is the
+  // "verso" (provenance, palette, the paired frame). Independent flips —
+  // opening one must not open the other.
+
+  const flipButtons = await page.$$('.photo-flip');
+  assert(flipButtons.length === 2, `two photo flip buttons (got ${flipButtons.length})`);
+
+  const cardA = '.cell-photo-a';
+  assert(
+    (await page.getAttribute(`${cardA} .photo-flip`, 'aria-expanded')) === 'false',
+    'photo card starts unflipped',
+  );
+
+  await page.click(`${cardA} .photo-flip`);
+  await page.waitForTimeout(500);
+
+  assert(
+    (await page.getAttribute(`${cardA} .photo-flip`, 'aria-expanded')) === 'true',
+    'clicking a photo flips it',
+  );
+  assert(
+    (await page.getAttribute('.cell-photo-b .photo-flip', 'aria-expanded')) === 'false',
+    'flipping one photo leaves the other alone',
+  );
+
+  // Front face must be fully hidden once flipped, or its text paints
+  // mirrored through the card (mix-blend-mode / backface bug).
+  const frontHidden = await page.$eval(
+    `${cardA} .photo-front`,
+    (el) => getComputedStyle(el).visibility,
+  );
+  assert(frontHidden === 'hidden', `front face hidden when flipped (got ${frontHidden})`);
+
+  // Verso content: provenance, this frame's palette, the paired frame.
+  const versoProv = await page.textContent(`${cardA} .photo-prov`);
+  assert(/RANDY REN/i.test(versoProv ?? ''), `verso carries provenance (got "${versoProv}")`);
+
+  const paletteChips = await page.$$eval(
+    `${cardA} .photo-rib-self span`,
+    (els) => els.length,
+  );
+  assert(paletteChips === 5, `verso shows a 5-tone palette (got ${paletteChips})`);
+
+  const pairName = await page.textContent(`${cardA} .photo-pairname`);
+  assert(
+    /^PHOTO-\d{2}$/i.test((pairName ?? '').trim()),
+    `verso names the paired frame (got "${pairName}")`,
+  );
+  assert(
+    (await page.$(`${cardA} .photo-thumb`)) !== null,
+    'verso shows the paired photograph as a thumbnail',
+  );
+
+  // Esc returns the card to the photograph.
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(500);
+  assert(
+    (await page.getAttribute(`${cardA} .photo-flip`, 'aria-expanded')) === 'false',
+    'Esc flips the card back',
   );
 
   // ---- 7. strava svg with a <path> ------------------------------------

@@ -86,13 +86,23 @@ export function BentoHome({
       <main className="bento-grid" data-photo-count={slots.length}>
         <NameCell aboutText={content.ABOUT_TEXT} />
         {slots[0] && (
-          <PhotoCell key={`a-${slots[0].file}`} filename={slots[0].file} areaClass="cell-photo-a" />
+          <PhotoCell
+            key={`a-${slots[0].photo.file}`}
+            slot={slots[0]}
+            areaClass="cell-photo-a"
+            caption={content.PHOTO_CAPTIONS[slots[0].photo.file]}
+          />
         )}
         <ContactCell contactText={content.CONTACT_TEXT} />
 
         <ProjectsCell order={content.ORDER} mediums={content.MEDIUMS} plates={content.PLATE_DATA} />
         {slots[1] && (
-          <PhotoCell key={`b-${slots[1].file}`} filename={slots[1].file} areaClass="cell-photo-b" />
+          <PhotoCell
+            key={`b-${slots[1].photo.file}`}
+            slot={slots[1]}
+            areaClass="cell-photo-b"
+            caption={content.PHOTO_CAPTIONS[slots[1].photo.file]}
+          />
         )}
         <StravaCell strava={strava} />
 

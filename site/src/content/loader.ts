@@ -12,6 +12,7 @@ import {
   MEDIUMS,
   NOTES,
   ORDER,
+  PHOTO_CAPTIONS,
   PLATE_DATA,
 } from './data';
 
@@ -25,5 +26,6 @@ export async function loadShellContent(): Promise<ShellContent> {
     COLOPHON_TEXT,
     MAN,
     PLATE_DATA,
+    PHOTO_CAPTIONS,
   };
 }

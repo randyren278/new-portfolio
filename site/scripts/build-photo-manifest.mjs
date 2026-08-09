@@ -53,6 +53,64 @@ function rgbToHsl(r, g, b) {
   };
 }
 
+const hex = (r, g, b) =>
+  `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+
+/**
+ * k-means over a downsampled pixel set → the N most-occupied colors, each
+ * with the share of the frame it covers. The average color (above) answers
+ * "what hue is this photo"; this answers "what is its palette", which is
+ * what the photo card's verso actually shows.
+ *
+ * Seeds are spread evenly through the sample rather than picked at random
+ * so the output is deterministic — the manifest is checked in, and a
+ * re-run that reshuffles every palette would be pure diff noise.
+ */
+function kmeans(pixels, k, iterations) {
+  const centroids = [];
+  for (let i = 0; i < k; i++) {
+    centroids.push(pixels[Math.floor((i * (pixels.length - 1)) / (k - 1))].slice());
+  }
+  const assignment = new Array(pixels.length).fill(0);
+  for (let step = 0; step < iterations; step++) {
+    for (let i = 0; i < pixels.length; i++) {
+      let best = 0;
+      let bestDist = Infinity;
+      for (let c = 0; c < k; c++) {
+        const dr = pixels[i][0] - centroids[c][0];
+        const dg = pixels[i][1] - centroids[c][1];
+        const db = pixels[i][2] - centroids[c][2];
+        const d = dr * dr + dg * dg + db * db;
+        if (d < bestDist) {
+          bestDist = d;
+          best = c;
+        }
+      }
+      assignment[i] = best;
+    }
+    const sums = Array.from({ length: k }, () => [0, 0, 0, 0]);
+    for (let i = 0; i < pixels.length; i++) {
+      const a = assignment[i];
+      sums[a][0] += pixels[i][0];
+      sums[a][1] += pixels[i][1];
+      sums[a][2] += pixels[i][2];
+      sums[a][3]++;
+    }
+    for (let c = 0; c < k; c++) {
+      if (sums[c][3] === 0) continue;
+      centroids[c] = [sums[c][0] / sums[c][3], sums[c][1] / sums[c][3], sums[c][2] / sums[c][3]];
+    }
+  }
+  const counts = new Array(k).fill(0);
+  for (const a of assignment) counts[a]++;
+  return centroids
+    .map((c, i) => ({
+      hex: hex(Math.round(c[0]), Math.round(c[1]), Math.round(c[2])),
+      share: Math.round((counts[i] / pixels.length) * 100),
+    }))
+    .sort((a, b) => b.share - a.share);
+}
+
 async function analyze(file) {
   const path = join(PHOTOS_DIR, file);
   const img = sharp(path);
@@ -64,6 +122,18 @@ async function analyze(file) {
   const raw = await sharp(path).resize(1, 1, { fit: 'cover' }).raw().toBuffer();
   const [r, g, b] = raw;
   const hsl = rgbToHsl(r, g, b);
+
+  // 60x80 is enough signal for a 5-way split and keeps the whole 40-photo
+  // run under a couple of seconds.
+  const { data, info } = await sharp(path)
+    .resize(60, 80, { fit: 'fill' })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const pixels = [];
+  for (let i = 0; i < data.length; i += info.channels) {
+    pixels.push([data[i], data[i + 1], data[i + 2]]);
+  }
+
   return {
     file,
     w: width,
@@ -75,6 +145,7 @@ async function analyze(file) {
     hue: hsl.h,
     sat: hsl.s,
     lig: hsl.l,
+    palette: kmeans(pixels, 5, 24),
   };
 }
 
