@@ -1,8 +1,8 @@
 /**
  * Name card — top-left corner of the bento.
  *
- * Wordmark in mono, one-line bio in Instrument Serif italic (the one and
- * only serif moment in the bento chrome, aside from the plate essay),
+ * Wordmark in mono, bio in Newsreader italic (a text-optical serif, unlike
+ * the display-cut Instrument Serif used elsewhere in the plate essay),
  * meta strip in mono uppercase for location.
  */
 export function NameCell({ aboutText }: { aboutText: string }) {
