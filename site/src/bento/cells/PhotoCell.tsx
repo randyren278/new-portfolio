@@ -146,7 +146,7 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
             onClick={flipBack}
             aria-label="Back to photograph"
           >
-            ↩
+            {'↩︎'}
           </button>
         </div>
       </div>

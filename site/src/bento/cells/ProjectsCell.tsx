@@ -194,8 +194,7 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
                 // Derive the plate number from ORDER position so it always
                 // matches the list row (both 1-indexed, zero-padded). Falls
                 // back to the stored number for plates not in ORDER.
-                const displayNum =
-                  idx >= 0 ? String(idx + 1).padStart(2, '0') : expanded.number;
+                const displayNum = idx >= 0 ? String(idx + 1).padStart(2, '0') : expanded.number;
                 return displayNum ? (
                   <div className="projects-plate-number">{displayNum}</div>
                 ) : null;
@@ -221,7 +220,7 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          {l.lab} ↗
+                          {l.lab} {'↗︎'}
                         </a>
                       ))}
                     </div>
@@ -242,20 +241,21 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
                 <button type="button" disabled={!prevId} onClick={() => prevId && navTo(prevId)}>
                   {prevId ? (
                     <>
-                      ← PREV
+                      {'←︎'} PREV
                       <span className="np">{plates[prevId]?.title}</span>
                     </>
                   ) : (
-                    '← PREV'
+                    '←︎ PREV'
                   )}
                 </button>
                 <button type="button" disabled={!nextId} onClick={() => nextId && navTo(nextId)}>
                   {nextId ? (
                     <>
-                      NEXT →<span className="np">{plates[nextId]?.title}</span>
+                      NEXT {'→︎'}
+                      <span className="np">{plates[nextId]?.title}</span>
                     </>
                   ) : (
-                    'NEXT →'
+                    'NEXT →︎'
                   )}
                 </button>
               </div>
