@@ -10,6 +10,7 @@ export const NOTES = {
   straits:
     'A geopolitical oil dashboard I ran during the 2026 Middle East tensions. Live tanker positions across the Persian Gulf and Suez corridors, cross-referenced against sanctions lists, each vessel scored for dark fleet behavior. Posted to Reddit, ran for a month, shut down when the hosting bill arrived.',
   bode: 'A tool that draws the Bode plot asymptotic approximation for you. Built out of frustration in Circuits II, where hand-deriving the straight-line gain and phase approximation kept going wrong — feed in a transfer function, get the plots instantly.',
+  hera: 'A second brain that sits underneath my Claude Code sessions. It reads itself into context before the model answers, and writes back what the session worked out once it ends. Pages that earn citations rise; pages that never do age out. I never file anything, so working is what curates it.',
 };
 
 export const MEDIUMS = {
@@ -35,9 +36,17 @@ export const MEDIUMS = {
     dim: 'one transfer function, two asymptotic plots',
     blurb: 'Bode plot asymptotic approximation tool. Feed in a transfer function, get the straight-line gain and phase plots.',
   },
+  hera: {
+    title: 'HERA',
+    year: 2026,
+    medium: 'python, sqlite fts5 + vec, ollama',
+    dim: 'one vault, a hundred eyes',
+    blurb:
+      'A second brain for Claude Code. It reads itself into every session, and citations decide what it keeps.',
+  },
 };
 
-export const ORDER = ['sill', 'straits', 'bode'];
+export const ORDER = ['sill', 'straits', 'bode', 'hera'];
 
 // Optional per-photo captions, keyed by filename. Sparse on purpose — a
 // photo with no entry here still shows its palette, dimensions and paired
@@ -193,6 +202,23 @@ export const PLATE_DATA = {
     essay: [
       "I kept getting Bode plot asymptotic approximations wrong in Circuits II. The gain and phase sketches are mechanical once you see the pattern in a transfer function's poles and zeros, but I could not figure it out to save my life. So instead I built a program that does it for me.",
       "It started as a MATLAB script leaning on the Symbolic Math and Control System toolboxes, then I ported it line-for-line into a TypeScript and React app so anyone can open it in a browser. Now you can estimate bode plots to your heart's content!",
+    ],
+  },
+  hera: {
+    number: '04',
+    title: 'Hera',
+    year: 2026,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2026' },
+      { lab: 'ROLE', val: 'EVERYTHING' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'AGENTS · MEMORY · RETRIEVAL' },
+    ],
+    links: [{ lab: 'CODE', href: 'https://github.com/randyren278/hera' }],
+    essay: [
+      'A second brain that reads itself back to you. Hera sits underneath every Claude Code session I run, in any directory. When I type a question the vault searches itself against the prompt and puts the three most relevant pages in front of the model before the answer starts. When the session ends it distills what we worked out back into pages, and flags anything that contradicts what it already believed instead of quietly overwriting it. I never file anything. It closes the loop end to end, agentically.',
+      'The intelligence comes from a few things. Every page an answer cites gets recorded, so the vault learns which of its own pages are load-bearing; the ones that keep earning citations rise to the top of future searches and the ones that never do age out to an archive. Underneath is one SQLite file, keyword search and local embeddings fused into a single ranking, and plain Markdown on disk. Nothing leaves the machine.',
     ],
   },
   about: {
