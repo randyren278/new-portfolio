@@ -67,10 +67,7 @@ function assert(cond, label) {
   const kickers = await page.$$eval('.kicker', (els) => els.map((e) => e.textContent?.trim()));
   assert(kickers.includes('§ INDEX'), 'Name card kicker rendered');
   assert(kickers.includes('§ CORRESPONDENCE'), 'Contact card kicker rendered');
-  assert(
-    kickers.some((k) => /^§ INDEX \/ \w+ PLATES$/.test(k ?? '')),
-    'Projects card kicker rendered',
-  );
+  assert(kickers.includes('§ PROJECTS'), 'Projects card kicker rendered');
   assert(kickers.includes('§ COLOPHON'), 'Colophon card kicker rendered');
   assert(kickers.includes('§ LATEST ACTIVITY'), 'Strava card kicker rendered');
 
