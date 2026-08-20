@@ -1,15 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Randy Ren">
-  <!--
-    Light-only favicon. Dark mode was retired along with the theme
-    toggle; the site is a single cream palette site-wide.
-
-    Palette copies the sole :root block in bento.css:
-      bg #fafaf7   ink #0f0f0f
-
-    Mark: hairline square with a serif italic R, a fragment of the
-    Randy Ren. wordmark that opens the bento.
-  -->
-  <rect width="64" height="64" fill="#fafaf7"/>
-  <rect x="8" y="8" width="48" height="48" stroke="#0f0f0f" fill="none" stroke-width="2"/>
-  <text x="20" y="48" fill="#0f0f0f" font-family="'Instrument Serif', 'IBM Plex Serif', ui-serif, Georgia, serif" font-style="italic" font-weight="400" font-size="44">R</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Randy Ren">
+  <circle cx="50" cy="50" r="49" fill="#fafaf7"/>
+  <circle cx="50" cy="50" r="31"
+          fill="none"
+          stroke="#0f0f0f"
+          stroke-width="8"
+          stroke-linecap="round"
+          stroke-dasharray="132 63"
+          transform="rotate(-28 50 50)"/>
+  <circle cx="50" cy="50" r="17"
+          fill="none"
+          stroke="#0f0f0f"
+          stroke-width="7"
+          stroke-linecap="round"
+          stroke-dasharray="48 60"
+          transform="rotate(72 50 50)"/>
 </svg>
