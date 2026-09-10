@@ -476,6 +476,27 @@ function assert(cond, label) {
     );
   }
 
+  // ---- 7b. the page has a heading outline ------------------------------
+  // Every cell was headingless: the wordmark was a div and the section
+  // kickers were divs, so the page offered no outline to a screen reader
+  // and no H1 to a crawler. Exactly one H1, and no level is skipped.
+
+  const headings = await page.$$eval('h1, h2, h3, h4, h5, h6', (els) =>
+    els.map((el) => ({ level: Number(el.tagName[1]), text: el.textContent?.trim() ?? '' })),
+  );
+  const h1s = headings.filter((h) => h.level === 1);
+  assert(h1s.length === 1, `exactly one H1 (got ${h1s.length})`);
+  assert(h1s[0]?.text === 'RANDY REN', `the H1 is the wordmark (got "${h1s[0]?.text}")`);
+  assert(
+    headings.filter((h) => h.level === 2).length === 4,
+    `the four labelled cells carry H2s (got ${headings.filter((h) => h.level === 2).length})`,
+  );
+  const skipped = headings
+    .slice(1)
+    .map((h, i) => (h.level > headings[i].level + 1 ? `${headings[i].level}->${h.level}` : null))
+    .filter(Boolean);
+  assert(skipped.length === 0, `no heading level is skipped (${skipped.join(', ') || 'none'})`);
+
   // ---- 8a. every control shows a keyboard focus ring -------------------
   // Interactive elements used to fold :focus-visible into :hover and then
   // set `outline: none`, so tabbing through the page showed a mouse-hover

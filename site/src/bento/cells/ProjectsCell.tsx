@@ -119,7 +119,7 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
 
   return (
     <section className="cell cell-projects" aria-label="Projects">
-      <div className="kicker">§ PROJECTS</div>
+      <h2 className="kicker">§ PROJECTS</h2>
 
       <div className="projects-list">
         {order.map((id, i) => {

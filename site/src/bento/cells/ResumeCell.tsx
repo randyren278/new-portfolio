@@ -10,7 +10,7 @@ import type { ResumeContent } from '@/content/types';
 export function ResumeCell({ resume }: { resume: ResumeContent }) {
   return (
     <section className="cell cell-resume" aria-label="Résumé">
-      <div className="kicker">§ RÉSUMÉ / ONE PAGE</div>
+      <h2 className="kicker">§ RÉSUMÉ / ONE PAGE</h2>
 
       <div className="resume-layout">
         <div className="resume-preview" aria-hidden="true">

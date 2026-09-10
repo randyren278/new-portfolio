@@ -16,8 +16,11 @@ export function NameCell({ aboutText }: { aboutText: string }) {
 
   return (
     <section className="cell cell-name" aria-label="Randy Ren — index">
+      {/* Stays a plain div: as an <h2> it would sit ahead of the page's
+          <h1> in the outline and contribute nothing a reader can use.
+          The section's aria-label already names this cell. */}
       <div className="kicker">§ INDEX</div>
-      <div className="name-wordmark">RANDY REN</div>
+      <h1 className="name-wordmark">RANDY REN</h1>
       <p className="name-bio">{bio}</p>
       <div className="name-meta">VANCOUVER, BC · PT/GMT-8</div>
     </section>

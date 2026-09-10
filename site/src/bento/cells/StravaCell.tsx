@@ -71,7 +71,7 @@ export function StravaCell({ strava }: { strava: StravaData | null }) {
 
   return (
     <section className="cell cell-strava" aria-label="Latest activity">
-      <div className="kicker">§ LATEST ACTIVITY</div>
+      <h2 className="kicker">§ LATEST ACTIVITY</h2>
       <div className="strava-body">
         <svg
           viewBox="0 0 360 200"

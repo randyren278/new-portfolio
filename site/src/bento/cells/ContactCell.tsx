@@ -39,7 +39,7 @@ export function ContactCell({ contactText }: { contactText: string }) {
   const rows = parseContact(contactText);
   return (
     <section className="cell cell-contact" aria-label="Contact">
-      <div className="kicker">§ CORRESPONDENCE</div>
+      <h2 className="kicker">§ CORRESPONDENCE</h2>
       <div className="contact-rows">
         {rows.map((r) => (
           <div key={r.lab} style={{ display: 'contents' }}>

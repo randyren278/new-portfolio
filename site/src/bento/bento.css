@@ -225,17 +225,21 @@ body {
 
 /* ----- Kicker (§ SECTION) ----- */
 
+/* Section kickers are <h2> in the four labelled cells, so the weight and
+   margins are pinned here rather than inherited from the UA sheet. */
 .kicker {
   font-size: 10px;
+  font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 14px;
+  margin: 0 0 14px;
   flex: 0 0 auto;
 }
 
 /* ----- Name card ----- */
 
+/* The page's <h1>. Same reason as .kicker for the explicit margin. */
 .name-wordmark {
   font-family: "IBM Plex Mono", monospace;
   font-size: 14px;
@@ -243,7 +247,7 @@ body {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ink);
-  margin-bottom: 14px;
+  margin: 0 0 14px;
 }
 .name-bio {
   font-family: "Newsreader", "IBM Plex Serif", ui-serif, Georgia, serif;
