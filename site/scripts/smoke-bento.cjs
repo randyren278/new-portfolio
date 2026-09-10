@@ -485,6 +485,70 @@ function assert(cond, label) {
     );
   }
 
+  // ---- 8b. every visible text run clears WCAG AA -----------------------
+  // --muted carries the section labels, captions, and metadata lines. It
+  // was #8a8a8a (3.30:1) and failed AA on seven text roles at once. This
+  // walks every text-bearing element, composites the foreground alpha
+  // over its nearest opaque ancestor background, and demands 4.5:1
+  // (3:1 for large text) so a palette tweak can never quietly regress it.
+
+  const contrastFailures = await page.evaluate(() => {
+    const channel = (v) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    const luminance = ([r, g, b]) =>
+      0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+    const parse = (value) => {
+      const n = (value.match(/[\d.]+/g) ?? []).map(Number);
+      return { rgb: n.slice(0, 3), alpha: n.length > 3 ? n[3] : 1 };
+    };
+    const opaqueBackdrop = (node) => {
+      for (let el = node; el; el = el.parentElement) {
+        const bg = getComputedStyle(el).backgroundColor;
+        if (bg && !/,\s*0\)$/.test(bg)) return parse(bg).rgb;
+      }
+      return parse(getComputedStyle(document.documentElement).backgroundColor).rgb;
+    };
+
+    const failures = [];
+    for (const el of document.querySelectorAll('body *')) {
+      const own = [...el.childNodes]
+        .filter((n) => n.nodeType === Node.TEXT_NODE)
+        .map((n) => n.textContent?.trim())
+        .join(' ')
+        .trim();
+      if (!own) continue;
+
+      const style = getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      if (!rect.width || !rect.height) continue;
+      if (style.visibility === 'hidden' || style.opacity === '0') continue;
+
+      const fg = parse(style.color);
+      const bg = opaqueBackdrop(el);
+      const composited = fg.rgb.map((v, i) => v * fg.alpha + bg[i] * (1 - fg.alpha));
+      const a = luminance(composited);
+      const b = luminance(bg);
+      const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+      const px = Number.parseFloat(style.fontSize);
+      const isLarge = px >= 24 || (px >= 18.66 && Number(style.fontWeight) >= 700);
+      const required = isLarge ? 3 : 4.5;
+      if (ratio + 0.005 < required) {
+        failures.push(
+          `${own.slice(0, 24)} [${el.className || el.tagName}] ${ratio.toFixed(2)}:1 < ${required}`,
+        );
+      }
+    }
+    return failures;
+  });
+  assert(
+    contrastFailures.length === 0,
+    `all visible text clears WCAG AA contrast (${contrastFailures.length} failing)`,
+  );
+  if (contrastFailures.length) contrastFailures.forEach((f) => console.error('    ', f));
+
   // ---- 9. only expected 404s (photo placeholders) ---------------------
 
   const unexpected404s = badResponses.filter((r) => !/\/photos\/photo-\d+\.jpe?g$/i.test(r.url));
