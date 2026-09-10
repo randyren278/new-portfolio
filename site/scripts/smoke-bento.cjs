@@ -346,7 +346,18 @@ function assert(cond, label) {
     'verso shows the paired photograph as a thumbnail',
   );
 
+  // Any point on the verso returns to the photograph, not just the corner
+  // arrow. Click authored content well away from that button to prove it.
+  await page.click(`${cardA} .photo-verso-tail`);
+  await page.waitForTimeout(500);
+  assert(
+    (await page.getAttribute(`${cardA} .photo-flip`, 'aria-expanded')) === 'false',
+    'clicking the verso flips the card back',
+  );
+
   // Esc returns the card to the photograph.
+  await page.click(`${cardA} .photo-flip`);
+  await page.waitForTimeout(500);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(500);
   assert(

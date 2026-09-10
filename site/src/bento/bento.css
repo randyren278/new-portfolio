@@ -656,6 +656,7 @@ body {
 }
 .photo-back {
   transform: rotateY(180deg);
+  cursor: pointer;
 }
 /* Backface culling alone isn't enough — any filter/blend inside a face can
    defeat it and paint the front through as mirrored text. Hard-hide the

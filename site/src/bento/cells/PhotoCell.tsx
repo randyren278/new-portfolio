@@ -13,7 +13,9 @@ import { POOL_SIZE, type PhotoSlot } from '../photos';
  * paired photograph as a thumbnail with its own ribbon underneath — the
  * match reads at a glance instead of needing a diagram.
  *
- * Cards flip independently. Esc turns any open card back.
+ * Cards flip independently. Clicking anywhere on the verso or pressing Esc
+ * turns an open card back; the corner return button remains as the visible
+ * and keyboard-accessible affordance.
  *
  * Front/back both carry `backface-visibility: hidden`, but bento.css also
  * hard-hides the outgoing face at the flip midpoint: a blend mode or filter
@@ -99,7 +101,8 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
           </button>
         </div>
 
-        <div className="photo-face photo-back">
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: the full verso is a redundant pointer target; the nested return button provides the keyboard action. */}
+        <div className="photo-face photo-back" onClick={flipBack}>
           <div className={`photo-verso ${caption ? '' : 'photo-verso-nocap'}`}>
             <div className="photo-verso-top">
               <span className="kicker">
