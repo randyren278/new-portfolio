@@ -499,25 +499,53 @@ function assert(cond, label) {
 
   // ---- 7a. touch targets are big enough to hit -------------------------
   // Mobile only: the contact links were 19px tall and the verso return
-  // 30x26, both under the 44px minimum. Measure each target the way a
-  // thumb finds it — scroll it into view, then hit-test the four corners
-  // of a 44x44 box centred on it and require the control to answer.
+  // 30x26, both under the 44px minimum.
+  //
+  // This measures via hit-testing rather than trusting
+  // getBoundingClientRect for size, because a control's real tappable
+  // footprint can be larger than its own layout box — .photo-return's fix
+  // is exactly that: an invisible ::after pseudo-element carries the
+  // 44x44 target while the button itself stays 30x26. A pure rect-size
+  // check would fail that control despite it being genuinely tappable.
+  //
+  // The probe distance (21.5px, not 22) is deliberately short of the
+  // mathematical 44px half-extent: a probe run exactly on that edge is at
+  // the mercy of sub-pixel border rendering and can fail a control that
+  // measures a real, reported 44.0px height — measured empirically at
+  // 20/20 clean passes for a genuine 44px button, where 21.75 (a smaller
+  // margin) still flaked 7/20. A control at exactly 43px is an edge case
+  // this cannot reliably resolve either way at this precision, but no
+  // real defect on this page has ever been that close — 19px, 26px, and
+  // 30px controls all fail this trivially. Edge midpoints, not corners:
+  // every button on this page has border-radius, and a rounded corner
+  // does not paint at its own mathematical corner point by design.
+  //
+  // The same probe catches occlusion too — a neighbour overlapping a
+  // control's live area answers the hit-test instead of the control. This
+  // is what caught the contact links: padding-block on an inline <a>
+  // doesn't reserve line-box space, so adjacent links' padding physically
+  // overlapped and a probe here landed on the wrong <a>.
+  //
   // Card A is flipped first so the verso return is genuinely exposed;
   // controls that are occluded right now cannot be tapped either way and
   // are skipped rather than reported.
 
   if (IS_MOBILE) {
     await page.click(`${cardA} .photo-flip`);
-    await page.waitForTimeout(500);
+    // .photo-inner's flip transition runs 620ms (bento.css ~656); waiting
+    // less than that lands mid-turn, where the verso return is briefly
+    // un-hit-testable and silently skipped rather than measured.
+    await page.waitForTimeout(700);
 
     const smallTargets = [];
+    let skipped = 0;
     const touchControls = await page.$$('a[href], button');
     for (const control of touchControls) {
       if (!(await control.isVisible())) continue;
       if (!(await control.evaluate((el) => el.getRootNode() === document))) continue;
       await control.scrollIntoViewIfNeeded();
       const verdict = await control.evaluate((el) => {
-        const MIN = 44;
+        const HALF = 21.5;
         const r = el.getBoundingClientRect();
         const cx = r.left + r.width / 2;
         const cy = r.top + r.height / 2;
@@ -526,12 +554,11 @@ function assert(cond, label) {
           return hit === el || el.contains(hit);
         };
         if (!owns(cx, cy)) return { skip: true };
-        const half = MIN / 2 - 1;
         const covered = [
-          [cx - half, cy - half],
-          [cx + half, cy - half],
-          [cx - half, cy + half],
-          [cx + half, cy + half],
+          [cx, cy - HALF],
+          [cx, cy + HALF],
+          [cx - HALF, cy],
+          [cx + HALF, cy],
         ].every(([x, y]) => owns(x, y));
         return {
           skip: false,
@@ -539,16 +566,29 @@ function assert(cond, label) {
           label: `${el.getAttribute('aria-label') || el.textContent?.trim().slice(0, 18)} (${Math.round(r.width)}x${Math.round(r.height)})`,
         };
       });
-      if (!verdict.skip && !verdict.covered) smallTargets.push(verdict.label);
+      if (verdict.skip) {
+        skipped++;
+        continue;
+      }
+      if (!verdict.covered) smallTargets.push(verdict.label);
     }
     assert(
       smallTargets.length === 0,
-      `tappable controls own a 44x44 touch target (${smallTargets.length} too small)`,
+      `tappable controls own a 44x44 touch target (${smallTargets.length} too small, ${skipped} skipped)`,
     );
     if (smallTargets.length) smallTargets.forEach((t) => console.error('    ', t));
+    // A control can only be legitimately unmeasurable here (mid-transition,
+    // behind an overlay) because .photo-flip already got 700ms to settle
+    // and nothing else on the page animates on load. Any skip is a probe
+    // that silently reported nothing rather than a real exemption.
+    assert(skipped === 0, `no control was skipped by the touch-target probe (${skipped} skipped)`);
 
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(500);
+    // Same 620ms flip transition as the wait above (bento.css ~656).
+    // 500ms here left the card mid-turn when 8a started tabbing through
+    // controls right after, producing an intermittent, spurious "ring
+    // clipped by .cell-photo-a" from a 3D-transformed box mid-animation.
+    await page.waitForTimeout(700);
   }
 
   // ---- 7b. the page has a heading outline ------------------------------
@@ -562,6 +602,14 @@ function assert(cond, label) {
   const h1s = headings.filter((h) => h.level === 1);
   assert(h1s.length === 1, `exactly one H1 (got ${h1s.length})`);
   assert(h1s[0]?.text === 'RANDY REN', `the H1 is the wordmark (got "${h1s[0]?.text}")`);
+  // The skip check below only catches an INCREASE of more than one level;
+  // an H1 arriving anywhere but first (e.g. after all four H2s) passed it
+  // silently. DOM order is reading order for a screen reader's outline,
+  // so the page's one H1 has to lead.
+  assert(
+    headings[0]?.level === 1,
+    `the H1 leads the document order (first heading is H${headings[0]?.level})`,
+  );
   assert(
     headings.filter((h) => h.level === 2).length === 4,
     `the four labelled cells carry H2s (got ${headings.filter((h) => h.level === 2).length})`,
@@ -588,22 +636,73 @@ function assert(cond, label) {
     await control.focus();
     const ring = await control.evaluate((el) => {
       const style = getComputedStyle(el);
-      return {
-        style: style.outlineStyle,
-        width: Number.parseFloat(style.outlineWidth),
-        label:
-          (el.textContent ?? '').trim().slice(0, 20) ||
-          el.getAttribute('aria-label') ||
-          `${el.tagName.toLowerCase()}.${el.className}`,
+      const label =
+        (el.textContent ?? '').trim().slice(0, 20) ||
+        el.getAttribute('aria-label') ||
+        `${el.tagName.toLowerCase()}.${el.className}`;
+
+      const width = Number.parseFloat(style.outlineWidth);
+      // outlineStyle/outlineWidth alone pass a ring nobody can see:
+      // outline-color: transparent reports solid 2px right up until you
+      // look at the pixel. Parse the alpha channel of the resolved color.
+      const colorMatch = style.outlineColor.match(/[\d.]+/g) ?? [];
+      const alpha = colorMatch.length > 3 ? Number(colorMatch[3]) : 1;
+
+      // A ring with a positive offset is drawn OUTSIDE the element's own
+      // box, so an ancestor's `overflow` can crop it even though the
+      // element itself renders fine. Walk up from the element and check
+      // the ring's bounding box against every ancestor whose overflow is
+      // not `visible`.
+      const offset = Number.parseFloat(style.outlineOffset) || 0;
+      const rect = el.getBoundingClientRect();
+      const pad = width + Math.max(offset, 0);
+      const shrink = offset < 0 ? Math.abs(offset) : 0;
+      const ringBox = {
+        left: rect.left - pad + shrink,
+        top: rect.top - pad + shrink,
+        right: rect.right + pad - shrink,
+        bottom: rect.bottom + pad - shrink,
       };
+      let clippedBy = null;
+      // Stop before <body>/<html>: on mobile body is the page's own
+      // scroll container (overflow: auto), which is not a clipping
+      // hazard — the browser scrolls a focused control into view inside
+      // it. What matters is a NESTED overflow region that stays clipped
+      // regardless of where the page is scrolled.
+      for (
+        let node = el.parentElement;
+        node && node !== document.body && node !== document.documentElement;
+        node = node.parentElement
+      ) {
+        const nodeStyle = getComputedStyle(node);
+        if (nodeStyle.overflow === 'visible' && nodeStyle.overflowX === 'visible' && nodeStyle.overflowY === 'visible') {
+          continue;
+        }
+        const clip = node.getBoundingClientRect();
+        const fits =
+          ringBox.left >= clip.left - 0.5 &&
+          ringBox.top >= clip.top - 0.5 &&
+          ringBox.right <= clip.right + 0.5 &&
+          ringBox.bottom <= clip.bottom + 0.5;
+        if (!fits) {
+          clippedBy = node.className || node.tagName;
+          break;
+        }
+      }
+
+      return { style: style.outlineStyle, width, alpha, label, clippedBy };
     });
     if (ring.style === 'none' || !(ring.width >= 2)) {
       ringless.push(`${ring.label} (${ring.style} ${ring.width}px)`);
+    } else if (ring.alpha === 0) {
+      ringless.push(`${ring.label} (outline-color alpha 0 — invisible)`);
+    } else if (ring.clippedBy) {
+      ringless.push(`${ring.label} (clipped by .${ring.clippedBy})`);
     }
   }
   assert(
     ringless.length === 0,
-    `every control has a >=2px focus ring (${ringless.length} without one)`,
+    `every control has a real, unclipped, >=2px focus ring (${ringless.length} without one)`,
   );
   if (ringless.length) ringless.forEach((r) => console.error('    ', r));
 
@@ -613,8 +712,13 @@ function assert(cond, label) {
   // walks every text-bearing element, composites the foreground alpha
   // over its nearest opaque ancestor background, and demands 4.5:1
   // (3:1 for large text) so a palette tweak can never quietly regress it.
+  //
+  // It only ever ran with the plate unmounted, so .projects-plate-meta,
+  // .projects-plate-close, and .projects-plate-link — all --muted text —
+  // were never in the queried set. runContrastSweep() is called a second
+  // time below with a plate open so that surface is covered too.
 
-  const contrastFailures = await page.evaluate(() => {
+  const runContrastSweep = () => page.evaluate(() => {
     const channel = (v) => {
       const c = v / 255;
       return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
@@ -665,10 +769,25 @@ function assert(cond, label) {
       // ratio against the cell's background measures nothing real here,
       // so it is exempt — and therefore NOT covered by this sweep.
       if (el.classList.contains('photo-fname')) continue;
+      // WCAG 1.4.3 exempts disabled controls by spec (incidental text).
+      // The plate's PREV/NEXT dim to --muted at opacity .3 when disabled,
+      // which is a legitimate design signal ("nothing further this way"),
+      // not a contrast bug — so it is exempt for the same reason the spec
+      // is, not because this sweep cannot see it.
+      if (el.closest('button')?.disabled) continue;
 
+      // `opacity` dims the painted result independently of the colour's own
+      // alpha, and it inherits down the ancestor chain. Reading style.color
+      // alone rated .strava-sub (--muted at opacity .65) as 4.81:1 when it
+      // actually paints rgb(160,160,159) for 2.52:1.
+      let cumulativeOpacity = 1;
+      for (let node = el; node && node !== document.documentElement; node = node.parentElement) {
+        cumulativeOpacity *= Number(getComputedStyle(node).opacity);
+      }
       const fg = parse(style.color);
       const bg = opaqueBackdrop(el);
-      const composited = fg.rgb.map((v, i) => v * fg.alpha + bg[i] * (1 - fg.alpha));
+      const effectiveAlpha = fg.alpha * cumulativeOpacity;
+      const composited = fg.rgb.map((v, i) => v * effectiveAlpha + bg[i] * (1 - effectiveAlpha));
       const a = luminance(composited);
       const b = luminance(bg);
       const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
@@ -684,11 +803,29 @@ function assert(cond, label) {
     }
     return failures;
   });
+  const contrastFailures = await runContrastSweep();
   assert(
     contrastFailures.length === 0,
     `all visible text clears WCAG AA contrast (${contrastFailures.length} failing)`,
   );
   if (contrastFailures.length) contrastFailures.forEach((f) => console.error('    ', f));
+
+  await page.click('.projects-row:first-child');
+  await page.waitForSelector('.projects-plate', { state: 'visible' });
+  // .projects-plate-body fades in with a 130ms delay plus a 200ms
+  // transition (330ms total) on top of the plate's own 320ms grow. `state:
+  // 'visible'` only checks display/visibility, not that either animation
+  // has settled, so a sweep run too early samples a partial-opacity frame
+  // and reads real text as near-invisible against its own backdrop.
+  await page.waitForTimeout(500);
+  const plateContrastFailures = await runContrastSweep();
+  assert(
+    plateContrastFailures.length === 0,
+    `the expanded plate's text also clears WCAG AA (${plateContrastFailures.length} failing)`,
+  );
+  if (plateContrastFailures.length) plateContrastFailures.forEach((f) => console.error('    ', f));
+  await page.click('.projects-plate-close');
+  await page.waitForSelector('.projects-plate', { state: 'detached' });
 
   // ---- 9. only expected 404s (photo placeholders) ---------------------
 
