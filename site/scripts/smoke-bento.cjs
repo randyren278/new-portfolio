@@ -164,10 +164,9 @@ function assert(cond, label) {
   );
 
   // ---- 3. PLATE rows in Projects ---------------------------------------
-  // Derived from what ORDER actually renders rather than a fixed list, so
-  // adding or removing a project doesn't require editing this file. What
-  // must hold: numbering is a contiguous 1..N run, zero-padded and in
-  // order, and every row carries a title.
+  // The complete catalog must be visible in stable order. This intentionally
+  // names the expected projects so hiding entries behind random sampling
+  // cannot pass the smoke test.
 
   const projectNums = await page.$$eval('.projects-num', (els) =>
     els.map((e) => e.textContent?.trim()),
@@ -175,52 +174,106 @@ function assert(cond, label) {
   const projectTitles = await page.$$eval('.projects-ttl', (els) =>
     els.map((e) => e.textContent?.trim()),
   );
+  const expectedProjectTitles = [
+    'SILL',
+    'STRAITS',
+    'BODE',
+    'HERA',
+    'IRIS',
+    'LIMINAL',
+    'HEPHAESTUS',
+    'IDIOLECT',
+  ];
 
-  assert(projectNums.length > 0, `at least one plate row rendered (got ${projectNums.length})`);
+  assert(
+    projectNums.length === expectedProjectTitles.length,
+    `all ${expectedProjectTitles.length} plate rows rendered (got ${projectNums.length})`,
+  );
   const expectedNums = projectNums.map((_, i) => String(i + 1).padStart(2, '0'));
   assert(
     projectNums.join(',') === expectedNums.join(','),
     `plate numbers are a contiguous run (got ${projectNums.join(', ')})`,
   );
   assert(
-    projectTitles.length === projectNums.length,
-    `every plate row has a title (${projectTitles.length} titles / ${projectNums.length} rows)`,
-  );
-  assert(
-    projectTitles.every((t) => (t ?? '').length > 0),
-    `no blank plate titles (got ${projectTitles.join(', ')})`,
+    projectTitles.join(',') === expectedProjectTitles.join(','),
+    `complete project catalog is in stable order (got ${projectTitles.join(', ')})`,
   );
 
-  // ---- 4. clicking a project row expands the plate in-place ------------
-  // The Projects cell shows a random 4-of-N slice of the catalog per visit
-  // (see BentoHome's pickVisibleProjects), so this can't assert a specific
-  // project by name — it opens whichever row rendered first and checks the
-  // plate structurally against what that row itself displayed.
+  const projectListMetrics = await page.$eval('.projects-list', (list) => {
+    const viewport = list.getBoundingClientRect();
+    const fullyVisibleRows = [...list.querySelectorAll('.projects-row')].filter((row) => {
+      const rect = row.getBoundingClientRect();
+      return rect.top >= viewport.top && rect.bottom <= viewport.bottom + 1;
+    }).length;
+    return {
+      clientHeight: list.clientHeight,
+      scrollHeight: list.scrollHeight,
+      fullyVisibleRows,
+    };
+  });
+  if (IS_MOBILE) {
+    assert(
+      projectListMetrics.scrollHeight > projectListMetrics.clientHeight,
+      `mobile Projects cell scrolls when the catalog exceeds its adaptive height (${projectListMetrics.clientHeight}/${projectListMetrics.scrollHeight}px)`,
+    );
+    assert(
+      projectListMetrics.fullyVisibleRows >= 4 &&
+        projectListMetrics.fullyVisibleRows < expectedProjectTitles.length,
+      `mobile Projects cell fills with as many complete rows as fit (${projectListMetrics.fullyVisibleRows}/${expectedProjectTitles.length})`,
+    );
+  } else {
+    assert(
+      projectListMetrics.scrollHeight <= projectListMetrics.clientHeight + 1,
+      `desktop Projects cell fits the full catalog without scrolling (${projectListMetrics.clientHeight}/${projectListMetrics.scrollHeight}px)`,
+    );
+    assert(
+      projectListMetrics.fullyVisibleRows === expectedProjectTitles.length,
+      `all projects are visible together on desktop (${projectListMetrics.fullyVisibleRows}/${expectedProjectTitles.length})`,
+    );
+  }
 
-  const firstRowTitle = projectTitles[0];
-  await page.click('.projects-row:first-child');
-  await page.waitForSelector('.projects-plate', { state: 'visible' });
-  const plateTitle = await page.$eval('.projects-plate-title', (el) => el.textContent?.trim());
-  assert(
-    plateTitle?.toUpperCase() === firstRowTitle,
-    `plate title matches the opened row (row "${firstRowTitle}", plate "${plateTitle}")`,
-  );
-  const plateEssayCount = await page.$$eval('.projects-plate-essay', (els) => els.length);
-  assert(plateEssayCount >= 1, `plate essay paragraphs rendered (${plateEssayCount})`);
-  const plateLinks = await page.$$eval('.projects-plate-link', (els) =>
-    els.map((e) => e.getAttribute('href')),
-  );
-  assert(
-    plateLinks.every((href) => (href ?? '').startsWith('http')),
-    `plate links are absolute URLs (${plateLinks.join(', ') || 'none'})`,
-  );
-  const ariaExpanded = await page.getAttribute('.projects-row:first-child', 'aria-expanded');
-  assert(ariaExpanded === 'true', `row aria-expanded flips to true (got "${ariaExpanded}")`);
+  // ---- 4. every project row opens the matching plate -------------------
+
+  for (let i = 0; i < expectedProjectTitles.length; i++) {
+    const row = `.projects-row:nth-child(${i + 1})`;
+    await page.click(row);
+    await page.waitForSelector('.projects-plate', { state: 'visible' });
+
+    const plateTitle = await page.$eval('.projects-plate-title', (el) => el.textContent?.trim());
+    const plateNumber = await page.$eval('.projects-plate-number', (el) => el.textContent?.trim());
+    const plateEssayCount = await page.$$eval('.projects-plate-essay', (els) => els.length);
+    const plateLinks = await page.$$eval('.projects-plate-link', (els) =>
+      els.map((e) => e.getAttribute('href')),
+    );
+    const ariaExpanded = await page.getAttribute(row, 'aria-expanded');
+
+    assert(
+      plateTitle?.toUpperCase() === expectedProjectTitles[i],
+      `plate ${expectedNums[i]} matches ${expectedProjectTitles[i]} (got "${plateTitle}")`,
+    );
+    assert(
+      plateNumber === expectedNums[i],
+      `plate ${expectedProjectTitles[i]} keeps number ${expectedNums[i]} (got "${plateNumber}")`,
+    );
+    assert(
+      plateEssayCount >= 1,
+      `plate ${expectedProjectTitles[i]} renders essay content (${plateEssayCount} paragraphs)`,
+    );
+    assert(
+      plateLinks.length > 0 && plateLinks.every((href) => (href ?? '').startsWith('https://')),
+      `plate ${expectedProjectTitles[i]} renders secure external links (${plateLinks.join(', ')})`,
+    );
+    assert(
+      ariaExpanded === 'true',
+      `row ${expectedProjectTitles[i]} exposes its expanded state (got "${ariaExpanded}")`,
+    );
+
+    await page.click('.projects-plate-close');
+    await page.waitForSelector('.projects-plate', { state: 'detached' });
+  }
 
   // ---- 5. close returns to the list -----------------------------------
 
-  await page.click('.projects-plate-close');
-  await page.waitForSelector('.projects-plate', { state: 'detached' });
   const listVisible = await page.$('.projects-list');
   assert(listVisible !== null, 'projects list returns after close');
 

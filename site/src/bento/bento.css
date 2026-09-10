@@ -402,7 +402,9 @@ body {
   flex-direction: column;
   margin-top: 4px;
   flex: 1 1 auto;
-  overflow: hidden;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .projects-row {
   display: grid;
@@ -985,6 +987,20 @@ body {
   }
   .cell-projects {
     order: 3;
+    max-height: 70dvh;
+  }
+  .projects-row {
+    grid-template-columns: 28px 1fr;
+    align-items: start;
+    column-gap: 12px;
+    row-gap: 2px;
+    padding-block: 10px;
+  }
+  .projects-num {
+    grid-row: 1 / span 2;
+  }
+  .projects-blb {
+    grid-column: 2;
   }
   .cell-strava {
     order: 4;
