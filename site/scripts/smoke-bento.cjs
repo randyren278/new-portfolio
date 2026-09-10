@@ -485,6 +485,41 @@ function assert(cond, label) {
     );
   }
 
+  // ---- 8a. every control shows a keyboard focus ring -------------------
+  // Interactive elements used to fold :focus-visible into :hover and then
+  // set `outline: none`, so tabbing through the page showed a mouse-hover
+  // tint or, on .projects-row, nothing. Focus each control for real and
+  // demand a ring of at least 2px.
+
+  const ringless = [];
+  const controls = await page.$$('a[href], button, [tabindex]:not([tabindex="-1"])');
+  for (const control of controls) {
+    if (!(await control.isVisible())) continue;
+    // $$ pierces shadow DOM, which in `pnpm dev` drags in the Next.js
+    // dev-tools button. Only audit controls in the real document.
+    if (!(await control.evaluate((el) => el.getRootNode() === document))) continue;
+    await control.focus();
+    const ring = await control.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return {
+        style: style.outlineStyle,
+        width: Number.parseFloat(style.outlineWidth),
+        label:
+          (el.textContent ?? '').trim().slice(0, 20) ||
+          el.getAttribute('aria-label') ||
+          `${el.tagName.toLowerCase()}.${el.className}`,
+      };
+    });
+    if (ring.style === 'none' || !(ring.width >= 2)) {
+      ringless.push(`${ring.label} (${ring.style} ${ring.width}px)`);
+    }
+  }
+  assert(
+    ringless.length === 0,
+    `every control has a >=2px focus ring (${ringless.length} without one)`,
+  );
+  if (ringless.length) ringless.forEach((r) => console.error('    ', r));
+
   // ---- 8b. every visible text run clears WCAG AA -----------------------
   // --muted carries the section labels, captions, and metadata lines. It
   // was #8a8a8a (3.30:1) and failed AA on seven text roles at once. This

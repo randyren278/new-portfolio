@@ -377,9 +377,25 @@ body {
   background: var(--accent);
   color: var(--bg);
 }
-.resume-action:focus-visible {
+/* One keyboard focus ring for the whole page. Every interactive element
+   used to fold :focus-visible into its :hover rule and then set
+   `outline: none`, so a keyboard user got the same 3%-tint as a mouse
+   hover — and on .projects-row, the site's primary control, nothing
+   legible at all. Hover keeps its tint; focus always gets the ring. */
+.resume-action:focus-visible,
+.contact-val a:focus-visible,
+.projects-plate-link:focus-visible,
+.projects-plate-close:focus-visible,
+.projects-plate-nav button:focus-visible:not(:disabled) {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
+}
+/* Rows and the verso return sit flush inside a clipping parent, so their
+   ring is drawn inward or it gets cropped by the overflow. */
+.projects-row:focus-visible,
+.photo-return:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 /* ----- Projects card ----- */
@@ -416,7 +432,6 @@ body {
 .projects-row:focus-visible {
   background: rgba(var(--ink-rgb) / 0.03);
   border-bottom-color: var(--ink);
-  outline: none;
 }
 .projects-num {
   font-weight: 500;
@@ -501,7 +516,6 @@ body {
 .projects-plate-close:hover,
 .projects-plate-close:focus-visible {
   color: var(--ink);
-  outline: none;
 }
 .projects-plate-number {
   font-family: "Instrument Serif", "IBM Plex Serif", ui-serif, Georgia, serif;
@@ -554,7 +568,6 @@ body {
 .projects-plate-link:focus-visible {
   border-color: var(--ink);
   background: rgba(var(--ink-rgb) / 0.04);
-  outline: none;
 }
 .projects-plate-essay {
   font-family: "Instrument Serif", "IBM Plex Serif", ui-serif, Georgia, serif;
@@ -590,7 +603,6 @@ body {
 .projects-plate-nav button:hover:not(:disabled),
 .projects-plate-nav button:focus-visible:not(:disabled) {
   color: var(--ink);
-  outline: none;
 }
 .projects-plate-nav button:disabled {
   opacity: 0.3;
@@ -879,7 +891,6 @@ body {
 .photo-return:hover,
 .photo-return:focus-visible {
   color: var(--ink);
-  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
