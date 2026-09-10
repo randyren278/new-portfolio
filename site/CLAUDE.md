@@ -8,8 +8,8 @@ Guidance for Claude Code working in this repo. Read this first.
 
 `randyren.org` — a single-page portfolio built as a **Next.js 15 App Router
 site rendering a flat editorial bento grid**. Every cell is a React
-component; content is server-loaded from `src/content/data.ts`; theme is a
-`data-theme` attribute on `<html>` set by a pre-paint script.
+component; content is server-loaded from `src/content/data.ts`; the
+palette is a single light theme declared once at the top of `bento.css`.
 
 The site's previous incarnation was a ~2,800-line vanilla-JS terminal
 engine at `src/studio/`. It was retired in favor of the bento in the
@@ -28,14 +28,12 @@ it back. **Do not resurrect it unless the user explicitly asks.**
 site/
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx              — root metadata + viewport (viewport-fit=cover) + pre-paint theme script
+│   │   ├── layout.tsx              — root metadata + viewport (viewport-fit=cover) + font links
 │   │   ├── page.tsx                — server component; loads content + strava, renders <BentoHome>
 │   │   └── api/strava/{connect,callback,latest}/route.ts
 │   ├── bento/                      — the home page (replaces the old src/studio)
 │   │   ├── BentoHome.tsx           — client wrapper, composes the 3×3 asymmetric grid
 │   │   ├── bento.css               — palette API + grid geometry + cell chrome
-│   │   ├── theme.ts                — pre-paint HEAD_SCRIPT + client-side apply/current/getStored
-│   │   ├── ThemeToggle.tsx         — top-right theme toggle
 │   │   ├── photos.ts               — photo pool + Fisher-Yates shuffle
 │   │   └── cells/
 │   │       ├── NameCell.tsx        — top-left corner (wordmark + one-line bio + status)
@@ -82,7 +80,10 @@ photo strip. Strava sits between Contact and Résumé on the right.
 
 - **Mobile (`@media (max-width: 720px)`):** stacks to one column. Index stays
   first; Contact, Projects, Strava, Photo-A, Photo-B, and Résumé shuffle per
-  visit, with the two photographs never adjacent.
+  visit, with the two photographs never adjacent. **No cell caps its own
+  height.** `.cell-projects` used to sit at `max-height: 70dvh`, which made
+  `.projects-list` a nested scroller and hid the last three projects; cells
+  grow to their content and the page does the scrolling.
 - **Cell chrome:** 1px hairline border in `var(--rule)`, 2px radius, 26px
   padding, `transition: border-color 120ms ease` on hover. Zero fills,
   zero glow, zero motion beyond the border darken and the plate-expand
@@ -93,36 +94,27 @@ photo strip. Strava sits between Contact and Résumé on the right.
   scrolls internally if the essay overflows; the rest of the bento does
   not resize.
 
-## The palette API (unchanged from the terminal era)
+## The palette API
 
-Five roles selected by `data-theme` on `<html>`:
+**Light-only.** Dark mode and the theme toggle were retired with the
+terminal engine — there is no `theme.ts`, no `ThemeToggle.tsx`, and no
+`data-theme` attribute. `:root` declares `color-scheme: light` so a
+visitor whose OS is dark does not get dark UA surfaces on paper.
 
-- **Light:** `--bg #fafaf7`, `--ink #0f0f0f`, `--muted #8a8a8a`,
+Five roles, one `:root` block at the top of `src/bento/bento.css`:
+
+- `--bg #fafaf7`, `--ink #0f0f0f`, `--muted #6f6f6f`,
   `--rule #d8d8d5`, `--accent #a8100a` (heritage vermillion)
-- **Dark:** `--bg #0a0908`, `--ink #ededed`, `--muted #6a6a6a`,
-  `--rule #2a2a2a`, `--accent #7cb7ff` (heritage prussian)
 - **Split-var pairs:** `--bg-rgb`, `--ink-rgb`, `--muted-rgb` (space-
   separated triplets so `rgba(var(--ink-rgb) / 0.03)` works)
 
-**Never add a hardcoded color literal outside the two `:root[data-theme]`
-blocks.** Every hex/rgba elsewhere is a bug. The two blocks live at the
-top of `src/bento/bento.css` and are copied verbatim from the retired
-`src/studio/shell.css` so the visual language survives the transition.
+**Never add a hardcoded color literal outside that `:root` block.** Every
+hex/rgba elsewhere is a bug.
 
-## The pre-paint theme script
-
-`src/bento/theme.ts` exports `HEAD_SCRIPT` — a self-contained IIFE that
-`layout.tsx` inlines in `<head>` via `dangerouslySetInnerHTML`. It:
-
-1. Reads `localStorage.theme` (falling back to `matchMedia('(prefers-
-   color-scheme: dark)')`).
-2. Sets `data-theme` on `<html>` **before body renders**.
-3. Starts a `matchMedia` listener that keeps `auto` (no stored value) in
-   sync with the system and fires a `themechange` `CustomEvent` on
-   `document` when the system flips.
-
-`ThemeToggle.tsx` listens for `themechange` and imports
-`apply / current / getStored` from `theme.ts` for click handling.
+**`--muted` is pinned to WCAG AA.** It carries every section label,
+caption, and metadata line on the page. At its old `#8a8a8a` it was
+3.30:1 against `--bg` and failed AA on 21 text runs at once. `#6f6f6f` is
+4.65:1. Do not lighten it; the smoke's contrast sweep will reject it.
 
 ## Content flow
 
@@ -184,6 +176,12 @@ pnpm lint                             # biome check
 pnpm format                           # biome format --write
 ```
 
+The smoke also enforces four page-wide invariants, so a change can break
+it from a long way off: every visible text run clears WCAG AA contrast,
+every control has a >=2px focus ring, the heading outline is one H1 plus
+four H2s, and (mobile) every tappable control owns a 44x44 target. If one
+of those goes red, fix the page — do not relax the assertion.
+
 Smoke assumes dev on **:3877**:
 
 ```sh
@@ -230,7 +228,7 @@ Repo-specific:
 2. `node scripts/smoke-bento.cjs` — all assertions green.
 3. `DEVICE=mobile node scripts/smoke-bento.cjs` — all assertions green.
 4. Manually: hard-refresh `randyren.org` on an actual iOS device (or the
-   iOS simulator) and verify no horizontal scroll, theme toggle works,
-   and the grid reflows to 2 columns.
+   iOS simulator) and verify no horizontal scroll, all eight projects are
+   reachable, and the grid reflows to one column.
 5. Commit with a short conventional-commit subject
    (`feat(bento): ...`, `fix(cell): ...`, `chore(css): ...`).
