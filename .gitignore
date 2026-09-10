@@ -31,3 +31,6 @@ Thumbs.db
 *.log
 .vercel
 .env*
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo

@@ -105,6 +105,26 @@ function assert(cond, label) {
     `résumé download purpose is explicit (got "${resumeDownloadAccessibleName}")`,
   );
 
+  // The card must not restate what the page already says. The wordmark
+  // lives in the Name cell; a page-count badge on the thumbnail duplicates
+  // the "1 PAGE" spec line. Both were removed — assert they stay gone.
+  const resumeCardText = await page.$eval('.cell-resume', (el) => el.textContent ?? '');
+  assert(
+    !/Randy\s+Ren/i.test(resumeCardText),
+    'résumé card does not repeat the name already carried by the Name cell',
+  );
+  assert(
+    (await page.$('.resume-preview span')) === null,
+    'résumé preview carries no page-count badge',
+  );
+  const resumeSpec = await page.$$eval('.resume-spec', (els) =>
+    els.map((e) => e.textContent?.trim()),
+  );
+  assert(
+    resumeSpec.length === 1 && resumeSpec[0] === 'PDF · 1 PAGE',
+    `résumé spec is a single format line (got ${JSON.stringify(resumeSpec)})`,
+  );
+
   const resumeActionHeights = await page.$$eval('.resume-action', (links) =>
     links.map((link) => link.getBoundingClientRect().height),
   );

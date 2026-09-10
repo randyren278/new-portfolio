@@ -314,33 +314,16 @@ body {
   width: 100%;
   height: auto;
 }
-.resume-preview span {
-  position: absolute;
-  right: 6px;
-  bottom: 5px;
-  padding: 1px 4px;
-  color: var(--muted);
-  background: rgba(var(--bg-rgb) / 0.9);
-  font-size: 8px;
-  letter-spacing: 0.08em;
-}
 .resume-copy {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-.resume-name {
-  margin-bottom: 7px;
-  font-family: "Newsreader", "IBM Plex Serif", ui-serif, Georgia, serif;
-  font-size: 27px;
-  font-style: italic;
-  line-height: 1;
-}
 .resume-summary {
   margin: 0;
   color: var(--ink);
-  font-size: 11px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.6;
   text-wrap: pretty;
 }
 .resume-spec {
@@ -1075,13 +1058,9 @@ body {
     height: 112px;
     box-shadow: 5px 6px 0 rgba(var(--ink-rgb) / 0.045);
   }
-  .cell-resume .resume-name {
-    margin-bottom: 5px;
-    font-size: 24px;
-  }
   .cell-resume .resume-summary {
-    font-size: 10px;
-    line-height: 1.45;
+    font-size: 11.5px;
+    line-height: 1.5;
   }
   .cell-resume .resume-spec {
     font-size: 8px;

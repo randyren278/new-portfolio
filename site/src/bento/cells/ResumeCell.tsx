@@ -15,17 +15,11 @@ export function ResumeCell({ resume }: { resume: ResumeContent }) {
       <div className="resume-layout">
         <div className="resume-preview" aria-hidden="true">
           <img src={resume.previewSrc} alt="" width="935" height="1210" />
-          <span>1 / 1</span>
         </div>
 
         <div className="resume-copy">
-          <div className="resume-name">{resume.name}</div>
           <p className="resume-summary">{resume.summary}</p>
-          <div className="resume-spec">
-            PDF · 1 PAGE
-            <br />
-            {resume.updated}
-          </div>
+          <div className="resume-spec">PDF · 1 PAGE</div>
         </div>
       </div>
 
