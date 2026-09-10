@@ -892,6 +892,18 @@ body {
   padding: 6px 8px;
   transition: color 120ms ease;
 }
+/* The glyph is 30x26. Rather than pad the button and drag it off the
+   corner it is pinned to, an invisible 44x44 overlay carries the touch
+   target, centred on the glyph. Layout and optics are untouched. */
+.photo-return::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: 44px;
+  height: 44px;
+}
 .photo-return:hover,
 .photo-return:focus-visible {
   color: var(--ink);
@@ -993,6 +1005,25 @@ body {
      three projects sat below its internal fold with no affordance saying
      so — a third of the catalogue, invisible. The cell grows to its
      content instead and the page does the scrolling. */
+  /* 13px of block padding takes the 19px link to a 45px touch target.
+     Inline padding does not grow the line box, so the rows only need
+     enough row-gap that adjacent targets stop overlapping. The rule
+     moves from border-bottom to a text underline: a border sits on the
+     padding edge and would float 13px under the word. */
+  .contact-rows {
+    row-gap: 24px;
+  }
+  .contact-val a {
+    padding-block: 13px;
+    border-bottom: 0;
+    text-decoration: underline;
+    text-decoration-color: var(--muted);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+  .contact-val a:hover {
+    text-decoration-color: var(--ink);
+  }
   .cell-projects {
     order: 3;
   }

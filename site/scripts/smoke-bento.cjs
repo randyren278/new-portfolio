@@ -476,6 +476,60 @@ function assert(cond, label) {
     );
   }
 
+  // ---- 7a. touch targets are big enough to hit -------------------------
+  // Mobile only: the contact links were 19px tall and the verso return
+  // 30x26, both under the 44px minimum. Measure each target the way a
+  // thumb finds it — scroll it into view, then hit-test the four corners
+  // of a 44x44 box centred on it and require the control to answer.
+  // Card A is flipped first so the verso return is genuinely exposed;
+  // controls that are occluded right now cannot be tapped either way and
+  // are skipped rather than reported.
+
+  if (IS_MOBILE) {
+    await page.click(`${cardA} .photo-flip`);
+    await page.waitForTimeout(500);
+
+    const smallTargets = [];
+    const touchControls = await page.$$('a[href], button');
+    for (const control of touchControls) {
+      if (!(await control.isVisible())) continue;
+      if (!(await control.evaluate((el) => el.getRootNode() === document))) continue;
+      await control.scrollIntoViewIfNeeded();
+      const verdict = await control.evaluate((el) => {
+        const MIN = 44;
+        const r = el.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const owns = (x, y) => {
+          const hit = document.elementFromPoint(x, y);
+          return hit === el || el.contains(hit);
+        };
+        if (!owns(cx, cy)) return { skip: true };
+        const half = MIN / 2 - 1;
+        const covered = [
+          [cx - half, cy - half],
+          [cx + half, cy - half],
+          [cx - half, cy + half],
+          [cx + half, cy + half],
+        ].every(([x, y]) => owns(x, y));
+        return {
+          skip: false,
+          covered,
+          label: `${el.getAttribute('aria-label') || el.textContent?.trim().slice(0, 18)} (${Math.round(r.width)}x${Math.round(r.height)})`,
+        };
+      });
+      if (!verdict.skip && !verdict.covered) smallTargets.push(verdict.label);
+    }
+    assert(
+      smallTargets.length === 0,
+      `tappable controls own a 44x44 touch target (${smallTargets.length} too small)`,
+    );
+    if (smallTargets.length) smallTargets.forEach((t) => console.error('    ', t));
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+  }
+
   // ---- 7b. the page has a heading outline ------------------------------
   // Every cell was headingless: the wordmark was a div and the section
   // kickers were divs, so the page offered no outline to a screen reader
