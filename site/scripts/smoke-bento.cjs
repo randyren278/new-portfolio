@@ -192,26 +192,29 @@ function assert(cond, label) {
   );
 
   // ---- 4. clicking a project row expands the plate in-place ------------
+  // The Projects cell shows a random 4-of-N slice of the catalog per visit
+  // (see BentoHome's pickVisibleProjects), so this can't assert a specific
+  // project by name — it opens whichever row rendered first and checks the
+  // plate structurally against what that row itself displayed.
 
-  await page.click('.projects-row:has(.projects-ttl:text("SILL"))');
+  const firstRowTitle = projectTitles[0];
+  await page.click('.projects-row:first-child');
   await page.waitForSelector('.projects-plate', { state: 'visible' });
   const plateTitle = await page.$eval('.projects-plate-title', (el) => el.textContent?.trim());
-  assert(plateTitle === 'Sill', `Sill plate title rendered (got "${plateTitle}")`);
+  assert(
+    plateTitle?.toUpperCase() === firstRowTitle,
+    `plate title matches the opened row (row "${firstRowTitle}", plate "${plateTitle}")`,
+  );
   const plateEssayCount = await page.$$eval('.projects-plate-essay', (els) => els.length);
   assert(plateEssayCount >= 1, `plate essay paragraphs rendered (${plateEssayCount})`);
-  // Sill is the template plate with external links — assert the LIVE/CODE row.
   const plateLinks = await page.$$eval('.projects-plate-link', (els) =>
     els.map((e) => e.getAttribute('href')),
   );
   assert(
-    plateLinks.includes('https://pleasepleasepleasewater.me') &&
-      plateLinks.includes('https://github.com/randyren278/sill'),
-    `plate LIVE + CODE links rendered (${plateLinks.join(', ')})`,
+    plateLinks.every((href) => (href ?? '').startsWith('http')),
+    `plate links are absolute URLs (${plateLinks.join(', ') || 'none'})`,
   );
-  const ariaExpanded = await page.getAttribute(
-    '.projects-row:has(.projects-ttl:text("SILL"))',
-    'aria-expanded',
-  );
+  const ariaExpanded = await page.getAttribute('.projects-row:first-child', 'aria-expanded');
   assert(ariaExpanded === 'true', `row aria-expanded flips to true (got "${ariaExpanded}")`);
 
   // ---- 5. close returns to the list -----------------------------------

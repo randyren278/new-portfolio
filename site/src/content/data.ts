@@ -45,9 +45,49 @@ export const MEDIUMS = {
     blurb:
       'A second brain for Claude Code. It reads itself into every session, and citations decide what it keeps.',
   },
+  iris: {
+    title: 'IRIS',
+    year: 2026,
+    medium: 'python, slack socket mode, macos launchd',
+    dim: 'one dm thread, one approval gate',
+    blurb:
+      'A Slack assistant that lives on my Mac. It researches on its own, and only acts once I approve it in the same thread.',
+  },
+  liminal: {
+    title: 'LIMINAL',
+    year: 2026,
+    medium: 'rust, swift, sqlite',
+    dim: 'four sensors, one occupancy belief',
+    blurb:
+      'Turns a Mac into a sensorium. Camera, mic, wifi, and bluetooth become signals, never raw footage.',
+  },
+  hephaestus: {
+    title: 'HEPHAESTUS',
+    year: 2026,
+    medium: 'rust, git worktrees, macos sandboxing',
+    dim: 'one genome, one arena, one promotion',
+    blurb:
+      'An evolutionary control plane for AI agents. Every change runs an arena match against the incumbent before it ships.',
+  },
+  idiolect: {
+    title: 'IDIOLECT',
+    year: 2026,
+    medium: 'python, mlx, qwen3 lora',
+    dim: '655,538 texts, one voice',
+    blurb: 'A model fine-tuned on five years of my iMessages, so it texts the way I actually do.',
+  },
 };
 
-export const ORDER = ['sill', 'straits', 'bode', 'hera'];
+export const ORDER = [
+  'sill',
+  'straits',
+  'bode',
+  'hera',
+  'iris',
+  'liminal',
+  'hephaestus',
+  'idiolect',
+];
 
 // Optional per-photo captions, keyed by filename. Sparse on purpose — a
 // photo with no entry here still shows its palette, dimensions and paired
@@ -224,6 +264,74 @@ export const PLATE_DATA = {
     essay: [
       'A second brain that reads itself back to you. Hera sits underneath every Claude Code session I run, in any directory. When I type a question the vault searches itself against the prompt and puts the three most relevant pages in front of the model before the answer starts. When the session ends it distills what we worked out back into pages, and flags anything that contradicts what it already believed instead of quietly overwriting it. I never file anything. It closes the loop end to end, agentically.',
       'The intelligence comes from a few things. Every page an answer cites gets recorded, so the vault learns which of its own pages are load-bearing; the ones that keep earning citations rise to the top of future searches and the ones that never do age out to an archive. Underneath is one SQLite file, keyword search and local embeddings fused into a single ranking, and plain Markdown on disk. Nothing leaves the machine.',
+    ],
+  },
+  iris: {
+    number: '05',
+    title: 'Iris',
+    year: 2026,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2026' },
+      { lab: 'ROLE', val: 'EVERYTHING' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'AGENTS · SLACK · AUTOMATION' },
+    ],
+    links: [{ lab: 'CODE', href: 'https://github.com/randyren278/iris' }],
+    essay: [
+      "Iris is a private Slack DM to an assistant that runs on my Mac. It holds a normal conversation, does bounded read-only research when asked, and remembers only the claims I've explicitly confirmed. When a coding task comes up in plain English, it proposes the exact project and task, then waits for me to approve it in the same thread before anything starts.",
+      "Everything runs local-first through launchd and Slack's Socket Mode, so there's no public endpoint to secure. The approval boundary is the whole point: the general agent can think and draft as much as it wants, but a session only spawns after I say go, in the thread where I said it.",
+    ],
+  },
+  liminal: {
+    number: '06',
+    title: 'Liminal',
+    year: 2026,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2026' },
+      { lab: 'ROLE', val: 'EVERYTHING' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'SYSTEMS · SENSING · PRIVACY' },
+    ],
+    links: [{ lab: 'CODE', href: 'https://github.com/randyren278/liminal' }],
+    essay: [
+      "Liminal reads a Mac's camera, microphone, Wi-Fi structure, and Bluetooth proximity and turns them into derived observations: pose, not pixels; audio features, not recordings. Those observations feed a transparent occupancy belief and a readable memory timeline you can page through in the terminal.",
+      "Raw video and audio never touch the ledger. Only what's derived from them gets written to SQLite. The sensing pipeline is Rust; the macOS camera and audio capture is Swift. Splitting it that way makes the line between 'sensor read' and 'derived fact' a real process boundary, not just a promise in the code.",
+    ],
+  },
+  hephaestus: {
+    number: '07',
+    title: 'Hephaestus',
+    year: 2026,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2026' },
+      { lab: 'ROLE', val: 'EVERYTHING' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'AGENTS · EVALUATION · RUST' },
+    ],
+    links: [{ lab: 'CODE', href: 'https://github.com/randyren278/hephaestus' }],
+    essay: [
+      "Hephaestus treats an agent like a genome: every change is a candidate that has to earn its way past an incumbent inside a protected arena before it's promoted. An authority layer of executable rules decides what's even allowed to run, a ledger records every event as evidence, and the evaluator that scores a match is itself pinned and hashed so a candidate can't quietly change what counts as winning.",
+      'Each evaluation runs both genomes through separately supervised processes in private, pinned Git worktrees with hard wall-clock and output limits, then returns only the aggregate the world is allowed to see. One Rust workspace, one crate per responsibility: authority and laws, the canonical event ledger, immutable genome identities, the daemon and CLI, and the sandboxed runtime.',
+    ],
+  },
+  idiolect: {
+    number: '08',
+    title: 'Idiolect',
+    year: 2026,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2026' },
+      { lab: 'ROLE', val: 'EVERYTHING' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'ML · FINE-TUNING · LOCAL-FIRST' },
+    ],
+    links: [{ lab: 'CODE', href: 'https://github.com/randyren278/idiolect' }],
+    essay: [
+      "Every text I've ever sent sits in a SQLite database on my Mac: 655,538 of them, going back to 2020. Idiolect pulls them out, turns them into a training corpus, and fine-tunes a model on the result: not a chatbot with a personality prompt bolted on, but a model that learned, from a quarter million examples, that I answer in 17 characters and almost never use a period.",
+      "Extraction, the corpus, and evaluation all run locally through MLX. Training ran there too, until a full pass would have taken about fifty hours. The fine-tune itself now runs as a cloud job over a scrubbed corpus, and the weights come straight back. They're never published.",
     ],
   },
   about: {
