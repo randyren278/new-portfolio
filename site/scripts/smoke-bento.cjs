@@ -625,12 +625,26 @@ function assert(cond, label) {
       const n = (value.match(/[\d.]+/g) ?? []).map(Number);
       return { rgb: n.slice(0, 3), alpha: n.length > 3 ? n[3] : 1 };
     };
+    // Composite every translucent layer between the text and the first
+    // opaque one. Treating a layer as opaque the moment it is not fully
+    // transparent reads a 3% hover tint as solid --ink and reports a
+    // false 1.00:1 on whichever row the pointer happens to rest over.
     const opaqueBackdrop = (node) => {
+      const layers = [];
       for (let el = node; el; el = el.parentElement) {
-        const bg = getComputedStyle(el).backgroundColor;
-        if (bg && !/,\s*0\)$/.test(bg)) return parse(bg).rgb;
+        const { rgb, alpha } = parse(getComputedStyle(el).backgroundColor);
+        if (alpha === 0) continue;
+        layers.push({ rgb, alpha });
+        if (alpha === 1) break;
       }
-      return parse(getComputedStyle(document.documentElement).backgroundColor).rgb;
+      let base =
+        layers.length && layers[layers.length - 1].alpha === 1
+          ? layers.pop().rgb
+          : parse(getComputedStyle(document.documentElement).backgroundColor).rgb;
+      for (let i = layers.length - 1; i >= 0; i--) {
+        base = layers[i].rgb.map((v, k) => v * layers[i].alpha + base[k] * (1 - layers[i].alpha));
+      }
+      return base;
     };
 
     const failures = [];
@@ -646,6 +660,11 @@ function assert(cond, label) {
       const rect = el.getBoundingClientRect();
       if (!rect.width || !rect.height) continue;
       if (style.visibility === 'hidden' || style.opacity === '0') continue;
+      // .photo-fname is white type laid over a photograph, and its
+      // legibility comes from a text-shadow, not from a colour pair. A
+      // ratio against the cell's background measures nothing real here,
+      // so it is exempt — and therefore NOT covered by this sweep.
+      if (el.classList.contains('photo-fname')) continue;
 
       const fg = parse(style.color);
       const bg = opaqueBackdrop(el);
