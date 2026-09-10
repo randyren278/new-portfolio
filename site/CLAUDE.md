@@ -41,9 +41,9 @@ site/
 │   │       ├── NameCell.tsx        — top-left corner (wordmark + one-line bio + status)
 │   │       ├── ContactCell.tsx     — top-right corner (parses CONTACT_TEXT into rows)
 │   │       ├── ProjectsCell.tsx    — spans 2 rows down the left, expand-in-place plate reveal
-│   │       ├── HoursCell.tsx       — bottom-right corner
+│   │       ├── ResumeCell.tsx      — bottom-right PDF preview + view/download actions
 │   │       ├── StravaCell.tsx      — middle-right, renders SVG polyline (or fallback)
-│   │       └── PhotoCell.tsx       — three photo placeholders on the middle spine
+│   │       └── PhotoCell.tsx       — two shuffled photographs on the middle spine
 │   ├── content/
 │   │   ├── types.ts                — ShellContent shape
 │   │   ├── data.ts                 — static content snapshot (Phase 1)
@@ -73,16 +73,16 @@ The 3×3 asymmetric grid:
 
 ```
 Row 1: [Name         ] [Photo A      ] [Contact      ]
-Row 2: [Projects     ] [Photo B      ] [Strava       ]
-Row 3: [ (spans row) ] [Photo C      ] [Hours        ]
+Row 2: [Projects     ] [ (Photo A)   ] [Strava       ]
+Row 3: [ (Projects)  ] [Photo B      ] [Résumé       ]
 ```
 
 Projects spans rows 2–3 on the left. The middle column is a vertical
-photo strip. Strava sits between Contact and Hours on the right.
+photo strip. Strava sits between Contact and Résumé on the right.
 
-- **Mobile (`@media (max-width: 720px)`):** stacks to 2 columns × ~5 rows
-  with a narrative order: Name, Contact, Projects (full width), Photo-A,
-  Strava, Photo-B, Photo-C, Hours (full width).
+- **Mobile (`@media (max-width: 720px)`):** stacks to one column. Index stays
+  first; Contact, Projects, Strava, Photo-A, Photo-B, and Résumé shuffle per
+  visit, with the two photographs never adjacent.
 - **Cell chrome:** 1px hairline border in `var(--rule)`, 2px radius, 26px
   padding, `transition: border-color 120ms ease` on hover. Zero fills,
   zero glow, zero motion beyond the border darken and the plate-expand
@@ -127,7 +127,7 @@ top of `src/bento/bento.css` and are copied verbatim from the retired
 ## Content flow
 
 - `src/content/data.ts` — the source of truth (NOTES, MEDIUMS, ORDER,
-  ABOUT_TEXT, CONTACT_TEXT, HOURS_TEXT, COLOPHON_TEXT, MAN, PLATE_DATA).
+  ABOUT_TEXT, CONTACT_TEXT, RESUME, MAN, PLATE_DATA).
 - `src/content/loader.ts` — `loadShellContent()` returns the whole shape.
   Signature is stable; rewrite the body for Postgres in Phase 2 without
   touching callers.

@@ -12,7 +12,7 @@
 
 const { chromium, devices } = require('playwright');
 
-const URL = 'http://localhost:3877/';
+const BASE_URL = 'http://localhost:3877/';
 const IS_MOBILE = process.env.DEVICE === 'mobile';
 
 function assert(cond, label) {
@@ -55,7 +55,7 @@ function assert(cond, label) {
 
   console.log(`\n== smoke-bento (${IS_MOBILE ? 'mobile / iPhone 13' : 'desktop'}) ==`);
 
-  await page.goto(URL, { waitUntil: 'networkidle' });
+  await page.goto(BASE_URL, { waitUntil: 'networkidle' });
 
   // ---- 1. page + title ---------------------------------------------------
 
@@ -68,8 +68,100 @@ function assert(cond, label) {
   assert(kickers.includes('§ INDEX'), 'Name card kicker rendered');
   assert(kickers.includes('§ CORRESPONDENCE'), 'Contact card kicker rendered');
   assert(kickers.includes('§ PROJECTS'), 'Projects card kicker rendered');
-  assert(kickers.includes('§ COLOPHON'), 'Colophon card kicker rendered');
+  assert(kickers.includes('§ RÉSUMÉ / ONE PAGE'), 'Résumé card kicker rendered');
   assert(kickers.includes('§ LATEST ACTIVITY'), 'Strava card kicker rendered');
+
+  // ---- 2b. résumé card exposes the real one-page document ------------
+
+  const resumeViewHref = await page.getAttribute('.resume-view', 'href');
+  const resumeViewTarget = await page.getAttribute('.resume-view', 'target');
+  const resumeDownloadHref = await page.getAttribute('.resume-download', 'href');
+  const resumeDownloadName = await page.getAttribute('.resume-download', 'download');
+  const resumeViewName = await page.getAttribute('.resume-view', 'aria-label');
+  const resumeDownloadAccessibleName = await page.getAttribute('.resume-download', 'aria-label');
+  assert(
+    resumeViewHref === '/resume/Randy_Ren_Resume.pdf',
+    `résumé view link targets the public PDF (got "${resumeViewHref}")`,
+  );
+  assert(
+    resumeViewTarget === '_blank',
+    `résumé view link opens a new tab (got "${resumeViewTarget}")`,
+  );
+  assert(
+    resumeDownloadHref === resumeViewHref,
+    `résumé download points at the same PDF (got "${resumeDownloadHref}")`,
+  );
+  assert(
+    resumeDownloadName === 'Randy_Ren_Resume.pdf',
+    `résumé download filename is stable (got "${resumeDownloadName}")`,
+  );
+  assert(
+    resumeViewName === 'View Randy Ren résumé (PDF, opens in a new tab)',
+    `résumé view purpose is explicit (got "${resumeViewName}")`,
+  );
+  assert(
+    resumeDownloadAccessibleName === 'Download Randy Ren résumé (PDF)',
+    `résumé download purpose is explicit (got "${resumeDownloadAccessibleName}")`,
+  );
+
+  const resumeActionHeights = await page.$$eval('.resume-action', (links) =>
+    links.map((link) => link.getBoundingClientRect().height),
+  );
+  assert(
+    resumeActionHeights.every((height) => height >= 44),
+    `résumé actions meet the 44px target minimum (${resumeActionHeights.join(', ')})`,
+  );
+
+  await page.focus('.resume-view');
+  const resumeFocus = await page.$eval('.resume-view', (link) => {
+    const style = getComputedStyle(link);
+    return `${style.outlineStyle} ${style.outlineWidth}`;
+  });
+  assert(resumeFocus === 'solid 2px', `résumé keyboard focus is visible (${resumeFocus})`);
+
+  const [openedResume] = await Promise.all([
+    context.waitForEvent('page'),
+    page.keyboard.press('Enter'),
+  ]);
+  assert(
+    (await openedResume.opener()) === page,
+    'résumé view action opens from the portfolio page',
+  );
+  await openedResume.close();
+
+  await page.focus('.resume-download');
+  const [resumeDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.keyboard.press('Enter'),
+  ]);
+  assert(
+    resumeDownload.suggestedFilename() === 'Randy_Ren_Resume.pdf',
+    `résumé download activates with the stable filename (${resumeDownload.suggestedFilename()})`,
+  );
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const resumeTransitionDuration = await page.$eval(
+    '.resume-view',
+    (link) => getComputedStyle(link).transitionDuration,
+  );
+  assert(
+    resumeTransitionDuration === '0s',
+    `résumé actions suppress motion when requested (${resumeTransitionDuration})`,
+  );
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+
+  const resumePreviewLoaded = await page.$eval(
+    '.resume-preview img',
+    (img) => img.complete && img.naturalWidth > 0,
+  );
+  assert(resumePreviewLoaded, 'résumé preview image loaded');
+
+  const resumeResponse = await page.request.get(new URL(resumeViewHref, BASE_URL).toString());
+  assert(resumeResponse.ok(), `résumé PDF responds successfully (${resumeResponse.status()})`);
+  assert(
+    resumeResponse.headers()['content-type']?.includes('application/pdf'),
+    `résumé response is application/pdf (${resumeResponse.headers()['content-type']})`,
+  );
 
   // ---- 3. PLATE rows in Projects ---------------------------------------
   // Derived from what ORDER actually renders rather than a fixed list, so
@@ -185,10 +277,7 @@ function assert(cond, label) {
   const versoProv = await page.textContent(`${cardA} .photo-prov`);
   assert(/RANDY REN/i.test(versoProv ?? ''), `verso carries provenance (got "${versoProv}")`);
 
-  const paletteChips = await page.$$eval(
-    `${cardA} .photo-rib-self span`,
-    (els) => els.length,
-  );
+  const paletteChips = await page.$$eval(`${cardA} .photo-rib-self span`, (els) => els.length);
   assert(paletteChips === 5, `verso shows a 5-tone palette (got ${paletteChips})`);
 
   const pairName = await page.textContent(`${cardA} .photo-pairname`);

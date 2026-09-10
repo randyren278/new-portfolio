@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Résumé card directions — Randy Ren</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /*
+        Assumptions
+        - This is a design-review artifact, not a production page.
+        - The card replaces the current bottom-right colophon at the same size.
+        - The actual one-page PDF remains the source of truth.
+        - "View" opens the PDF in a new tab; "Download" saves the same file.
+
+        Design reasoning
+        - A complete résumé is illegible at bento-card scale, so each direction
+          creates an invitation to the document instead of shrinking its text.
+        - The three options preserve the portfolio's editorial system and vary
+          only the hierarchy: index, document object, or statement.
+      */
+
+      :root {
+        --bg: #fafaf7;
+        --ink: #0f0f0f;
+        --muted: #8a8a8a;
+        --rule: #d8d8d5;
+        --accent: #a8100a;
+        --canvas: #e9e9e4;
+        --paper: #ffffff;
+        --bg-rgb: 250 250 247;
+        --ink-rgb: 15 15 15;
+        --muted-rgb: 138 138 138;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: var(--canvas);
+        color: var(--ink);
+      }
+
+      body {
+        margin: 0;
+        font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+        font-size: 13px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      a,
+      button {
+        font: inherit;
+      }
+
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+
+      .review-shell {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 44px 34px 80px;
+      }
+
+      .review-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 520px);
+        gap: 48px;
+        align-items: end;
+        margin-bottom: 30px;
+      }
+
+      .eyebrow,
+      .direction-id,
+      .kicker,
+      .meta-label,
+      .action,
+      .review-note {
+        font-size: 10px;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        color: var(--accent);
+        margin-bottom: 10px;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 15ch;
+        font-family: "Newsreader", Georgia, serif;
+        font-size: clamp(42px, 5vw, 72px);
+        font-style: italic;
+        font-weight: 400;
+        line-height: 0.98;
+        letter-spacing: -0.025em;
+        text-wrap: balance;
+      }
+
+      .review-intro {
+        margin: 0;
+        color: #454542;
+        font-size: 13px;
+        line-height: 1.7;
+        text-wrap: pretty;
+      }
+
+      .review-note {
+        margin-top: 14px;
+        color: var(--muted);
+      }
+
+      .directions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .direction {
+        min-width: 0;
+      }
+
+      .direction-head {
+        min-height: 92px;
+        padding: 14px 4px 12px;
+        border-top: 1px solid var(--ink);
+      }
+
+      .direction-title-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .direction-id {
+        color: var(--muted);
+      }
+
+      .recommended {
+        color: var(--accent);
+      }
+
+      h2 {
+        margin: 2px 0 6px;
+        font-family: "Newsreader", Georgia, serif;
+        font-size: 24px;
+        font-style: italic;
+        font-weight: 400;
+        line-height: 1.1;
+      }
+
+      .direction-copy {
+        max-width: 48ch;
+        margin: 0;
+        color: #5f5f5b;
+        font-size: 11px;
+        line-height: 1.55;
+        text-wrap: pretty;
+      }
+
+      .stage {
+        position: relative;
+        min-height: 440px;
+        display: grid;
+        place-items: center;
+        padding: 44px 22px;
+        overflow: hidden;
+        border: 1px solid #d1d1cc;
+        background-color: var(--bg);
+        background-image:
+          linear-gradient(var(--rule) 1px, transparent 1px),
+          linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+        background-size: 38px 38px;
+      }
+
+      .stage::before {
+        content: "BOTTOM-RIGHT CELL · DESKTOP";
+        position: absolute;
+        top: 14px;
+        left: 16px;
+        color: var(--muted);
+        font-size: 9px;
+        letter-spacing: 0.08em;
+      }
+
+      .resume-card {
+        position: relative;
+        width: min(100%, 420px);
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        background: var(--bg);
+        padding: 25px 27px;
+        transition: border-color 120ms ease;
+      }
+
+      .resume-card:hover {
+        border-color: var(--muted);
+      }
+
+      .kicker {
+        flex: 0 0 auto;
+        margin-bottom: 15px;
+        color: var(--muted);
+      }
+
+      .card-actions {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: auto;
+        padding-top: 18px;
+      }
+
+      .action {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        padding: 0 13px;
+        color: var(--ink);
+        background: transparent;
+        text-decoration: none;
+        transition:
+          color 120ms ease,
+          border-color 120ms ease,
+          background-color 120ms ease;
+      }
+
+      .action-primary {
+        border-color: var(--ink);
+        background: var(--ink);
+        color: var(--bg);
+      }
+
+      .action:hover {
+        border-color: var(--ink);
+        background: rgba(var(--ink-rgb) / 0.04);
+      }
+
+      .action-primary:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--bg);
+      }
+
+      /* Direction A: structured index */
+      .index-title {
+        margin: -2px 0 13px;
+        font-family: "Newsreader", Georgia, serif;
+        font-size: 32px;
+        font-style: italic;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .index-rows {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 6px 15px;
+      }
+
+      .meta-label {
+        align-self: baseline;
+        color: var(--muted);
+      }
+
+      .meta-value {
+        min-width: 0;
+        color: var(--ink);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      /* Direction B: the document as an object */
+      .document-layout {
+        min-height: 156px;
+        display: grid;
+        grid-template-columns: 118px 1fr;
+        gap: 21px;
+      }
+
+      .page-window {
+        position: relative;
+        height: 156px;
+        overflow: hidden;
+        border: 1px solid var(--rule);
+        background: var(--paper);
+        box-shadow: 8px 9px 0 rgba(var(--ink-rgb) / 0.045);
+      }
+
+      .page-window img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .page-window::after {
+        content: "1 / 1";
+        position: absolute;
+        right: 6px;
+        bottom: 5px;
+        padding: 1px 4px;
+        color: var(--muted);
+        background: rgba(var(--bg-rgb) / 0.9);
+        font-size: 8px;
+        letter-spacing: 0.08em;
+      }
+
+      .document-copy {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      .document-name {
+        margin-bottom: 7px;
+        font-family: "Newsreader", Georgia, serif;
+        font-size: 27px;
+        font-style: italic;
+        line-height: 1;
+      }
+
+      .document-summary {
+        margin: 0;
+        color: #53534f;
+        font-size: 11px;
+        line-height: 1.55;
+        text-wrap: pretty;
+      }
+
+      .document-spec {
+        margin-top: auto;
+        color: var(--muted);
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        line-height: 1.65;
+        text-transform: uppercase;
+      }
+
+      /* Direction C: editorial invitation */
+      .statement-mark {
+        position: absolute;
+        top: 14px;
+        right: 20px;
+        color: rgba(var(--ink-rgb) / 0.06);
+        font-family: "Newsreader", Georgia, serif;
+        font-size: 96px;
+        font-style: italic;
+        line-height: 1;
+        pointer-events: none;
+      }
+
+      .statement-title {
+        position: relative;
+        z-index: 1;
+        max-width: 9ch;
+        margin: -3px 0 12px;
+        font-family: "Newsreader", Georgia, serif;
+        font-size: 33px;
+        font-style: italic;
+        font-weight: 400;
+        line-height: 0.98;
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+      }
+
+      .statement-copy {
+        position: relative;
+        z-index: 1;
+        max-width: 34ch;
+        margin: 0;
+        color: #53534f;
+        font-size: 11px;
+        line-height: 1.55;
+        text-wrap: pretty;
+      }
+
+      .employer-line {
+        position: relative;
+        z-index: 1;
+        margin-top: 13px;
+        color: var(--muted);
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .mobile-note {
+        display: none;
+      }
+
+      @media (max-width: 1120px) {
+        .directions {
+          grid-template-columns: 1fr;
+          gap: 34px;
+        }
+
+        .direction-head {
+          min-height: 0;
+        }
+
+        .stage {
+          min-height: 390px;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .review-shell {
+          padding: 26px 16px 60px;
+        }
+
+        .review-head {
+          grid-template-columns: 1fr;
+          gap: 22px;
+        }
+
+        h1 {
+          font-size: 46px;
+        }
+
+        .stage {
+          min-height: 0;
+          padding: 46px 10px 18px;
+          background-image: none;
+        }
+
+        .stage::before {
+          content: "BENTO CELL · MOBILE WIDTH";
+        }
+
+        .resume-card {
+          width: 100%;
+          height: 322px;
+          padding: 24px 22px;
+        }
+
+        .document-layout {
+          grid-template-columns: 100px 1fr;
+          gap: 17px;
+        }
+
+        .card-actions {
+          gap: 7px;
+        }
+
+        .action {
+          flex: 1 1 auto;
+          padding-inline: 8px;
+          font-size: 9px;
+        }
+
+        .mobile-note {
+          display: block;
+          margin-top: 12px;
+          color: var(--muted);
+          font-size: 9px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="review-shell">
+      <header class="review-head">
+        <div>
+          <div class="eyebrow">Randy Ren · Portfolio study 01</div>
+          <h1>Three ways into the résumé.</h1>
+        </div>
+        <div>
+          <p class="review-intro">
+            The card should introduce the document, not miniaturize it. All three directions occupy
+            the current colophon footprint and open the same one-page PDF at full reading size.
+          </p>
+          <div class="review-note">Click either action to test the real file.</div>
+        </div>
+      </header>
+
+      <div class="directions">
+        <article class="direction">
+          <header class="direction-head">
+            <div class="direction-title-row">
+              <div class="direction-id">Direction A</div>
+              <div class="direction-id recommended">Recommended</div>
+            </div>
+            <h2>Career index</h2>
+            <p class="direction-copy">Most native to the site: useful facts, restrained hierarchy, no fake preview.</p>
+          </header>
+          <div class="stage">
+            <section class="resume-card" aria-label="Résumé card, career index direction">
+              <div class="kicker">§ RÉSUMÉ</div>
+              <div class="index-title">Selected experience</div>
+              <div class="index-rows">
+                <div class="meta-label">Latest</div>
+                <div class="meta-value">Technical Project Coordinator · SAP</div>
+                <div class="meta-label">Practice</div>
+                <div class="meta-value">AI systems, ML, product engineering</div>
+                <div class="meta-label">Study</div>
+                <div class="meta-value">UBC Electrical Engineering · 2028</div>
+              </div>
+              <div class="card-actions">
+                <a
+                  class="action action-primary"
+                  href="public/resume/Randy_Ren_Resume.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >View résumé ↗</a>
+                <a class="action" href="public/resume/Randy_Ren_Resume.pdf" download="Randy_Ren_Resume.pdf"
+                  >Download ↓</a
+                >
+              </div>
+            </section>
+          </div>
+        </article>
+
+        <article class="direction">
+          <header class="direction-head">
+            <div class="direction-title-row">
+              <div class="direction-id">Direction B</div>
+            </div>
+            <h2>Document preview</h2>
+            <p class="direction-copy">Makes the résumé tangible, with the real page as the visual object.</p>
+          </header>
+          <div class="stage">
+            <section class="resume-card" aria-label="Résumé card, document preview direction">
+              <div class="kicker">§ RÉSUMÉ / ONE PAGE</div>
+              <div class="document-layout">
+                <div class="page-window" aria-hidden="true">
+                  <img
+                    src="public/resume/Randy_Ren_Resume-preview.jpg"
+                    alt=""
+                    width="935"
+                    height="1210"
+                  />
+                </div>
+                <div class="document-copy">
+                  <div class="document-name">Randy Ren</div>
+                  <p class="document-summary">
+                    Experience across agent systems, machine learning, infrastructure, and project delivery.
+                  </p>
+                  <div class="document-spec">PDF · 1 page<br />Updated September 2026</div>
+                </div>
+              </div>
+              <div class="card-actions">
+                <a
+                  class="action action-primary"
+                  href="public/resume/Randy_Ren_Resume.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >View résumé ↗</a>
+                <a class="action" href="public/resume/Randy_Ren_Resume.pdf" download="Randy_Ren_Resume.pdf"
+                  >Download ↓</a
+                >
+              </div>
+            </section>
+          </div>
+        </article>
+
+        <article class="direction">
+          <header class="direction-head">
+            <div class="direction-title-row">
+              <div class="direction-id">Direction C</div>
+            </div>
+            <h2>Editorial statement</h2>
+            <p class="direction-copy">The most expressive option: a quiet invitation rather than a data table.</p>
+          </header>
+          <div class="stage">
+            <section class="resume-card" aria-label="Résumé card, editorial statement direction">
+              <div class="statement-mark" aria-hidden="true">R</div>
+              <div class="kicker">§ RÉSUMÉ</div>
+              <div class="statement-title">The work, on one page.</div>
+              <p class="statement-copy">
+                Engineering experience from payment systems to local-first agents, with the projects and
+                tools behind the work.
+              </p>
+              <div class="employer-line">SAP · Ledcor · Visa · UBC</div>
+              <div class="card-actions">
+                <a
+                  class="action action-primary"
+                  href="public/resume/Randy_Ren_Resume.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >View résumé ↗</a>
+                <a class="action" href="public/resume/Randy_Ren_Resume.pdf" download="Randy_Ren_Resume.pdf"
+                  >Download ↓</a
+                >
+              </div>
+            </section>
+          </div>
+        </article>
+      </div>
+
+      <div class="mobile-note">On the live site this card joins the existing randomized mobile stack.</div>
+    </main>
+  </body>
+</html>

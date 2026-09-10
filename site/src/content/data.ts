@@ -34,7 +34,8 @@ export const MEDIUMS = {
     year: 2026,
     medium: 'typescript, react, control theory',
     dim: 'one transfer function, two asymptotic plots',
-    blurb: 'Bode plot asymptotic approximation tool. Feed in a transfer function, get the straight-line gain and phase plots.',
+    blurb:
+      'Bode plot asymptotic approximation tool. Feed in a transfer function, get the straight-line gain and phase plots.',
   },
   hera: {
     title: 'HERA',
@@ -60,11 +61,15 @@ github    randyren278
 linkedin  /in/randyren278
 location  VANCOUVER, BC, PT/GMT-8`;
 
-export const COLOPHON_TEXT = `fonts     IBM Plex Mono, IBM Plex Serif (italic)
-palette   cream, ink, prussian, warm umber
-stack     raw HTML, raw CSS, raw JS. no libraries.
-built     by hand, in Vancouver.
-thanks    to the friends who reviewed this early.`;
+export const RESUME = {
+  name: 'Randy Ren',
+  summary:
+    'Experience across agent systems, machine learning, infrastructure, and project delivery.',
+  pdfHref: '/resume/Randy_Ren_Resume.pdf',
+  previewSrc: '/resume/Randy_Ren_Resume-preview.jpg',
+  updated: 'UPDATED SEPTEMBER 2026',
+  downloadName: 'Randy_Ren_Resume.pdf',
+};
 
 export const MAN = {
   pwd: {

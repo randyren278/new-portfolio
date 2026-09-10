@@ -3,10 +3,8 @@
 // The signature (async function returning a ShellContent) stays stable so
 // page.tsx never has to change.
 
-import type { ShellContent } from './types';
 import {
   ABOUT_TEXT,
-  COLOPHON_TEXT,
   CONTACT_TEXT,
   MAN,
   MEDIUMS,
@@ -14,7 +12,9 @@ import {
   ORDER,
   PHOTO_CAPTIONS,
   PLATE_DATA,
+  RESUME,
 } from './data';
+import type { ShellContent } from './types';
 
 export async function loadShellContent(): Promise<ShellContent> {
   return {
@@ -23,7 +23,7 @@ export async function loadShellContent(): Promise<ShellContent> {
     ORDER,
     ABOUT_TEXT,
     CONTACT_TEXT,
-    COLOPHON_TEXT,
+    RESUME,
     MAN,
     PLATE_DATA,
     PHOTO_CAPTIONS,

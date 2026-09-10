@@ -21,6 +21,15 @@ export type PlateMetaCell = { lab: string; val: string };
 
 export type PlateLink = { lab: string; href: string };
 
+export type ResumeContent = {
+  name: string;
+  summary: string;
+  pdfHref: string;
+  previewSrc: string;
+  updated: string;
+  downloadName: string;
+};
+
 export type PlateEntry = {
   // About/contact plates use null for number/year; the engine handles this.
   number: string | null;
@@ -42,7 +51,7 @@ export type ShellContent = {
   ORDER: string[];
   ABOUT_TEXT: string;
   CONTACT_TEXT: string;
-  COLOPHON_TEXT: string;
+  RESUME: ResumeContent;
   MAN: Record<string, ManEntry>;
   PLATE_DATA: Record<string, PlateEntry>;
   // Optional photo captions keyed by filename; missing keys are normal.

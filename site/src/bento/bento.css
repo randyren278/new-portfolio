@@ -113,7 +113,7 @@ body {
 /* Cell positions on desktop. Grid has 6 equal rows; the middle
    column's two photo cells each span 3 rows (near-square shape).
    Left column: Name (2 rows) + Projects (4 rows). Right column:
-   Contact + Strava + Colophon (2 rows each). Every column sums to 6.
+   Contact + Strava + Résumé (2 rows each). Every column sums to 6.
    Portraits get cropped top+bottom via object-fit: cover to fit the
    near-square cell — intentional (OPTION 4 pick, keeps every cell in
    the same grid rhythm). */
@@ -141,7 +141,7 @@ body {
   grid-column: 3 / 4;
   grid-row: 3 / span 2;
 }
-.cell-colophon {
+.cell-resume {
   grid-column: 3 / 4;
   grid-row: 5 / span 2;
 }
@@ -182,7 +182,7 @@ body {
     grid-column: 2 / 3;
     grid-row: 4 / span 1;
   }
-  .cell-colophon {
+  .cell-resume {
     grid-column: 2 / 3;
     grid-row: 5 / span 1;
   }
@@ -213,6 +213,9 @@ body {
   }
   .cell {
     padding: 18px 24px;
+  }
+  .cell-resume {
+    padding-block: 14px;
   }
 }
 
@@ -289,27 +292,107 @@ body {
   border-bottom-color: var(--ink);
 }
 
-/* ----- Colophon card ----- */
+/* ----- Résumé card ----- */
 
-.colophon-rows {
+.resume-layout {
   display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 6px 14px;
-  align-content: start;
-  font-size: 13px;
+  grid-template-columns: minmax(82px, 118px) minmax(0, 1fr);
+  gap: 20px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
-.colophon-row {
-  display: contents;
+.resume-preview {
+  position: relative;
+  height: 156px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: var(--bg);
+  box-shadow: 8px 9px 0 rgba(var(--ink-rgb) / 0.045);
 }
-.colophon-lab {
+.resume-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.resume-preview span {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  padding: 1px 4px;
+  color: var(--muted);
+  background: rgba(var(--bg-rgb) / 0.9);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+.resume-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.resume-name {
+  margin-bottom: 7px;
+  font-family: "Newsreader", "IBM Plex Serif", ui-serif, Georgia, serif;
+  font-size: 27px;
+  font-style: italic;
+  line-height: 1;
+}
+.resume-summary {
+  margin: 0;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+.resume-spec {
+  margin-top: auto;
+  color: rgba(var(--ink-rgb) / 0.65);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  line-height: 1.65;
+  text-transform: uppercase;
+}
+.cell-resume .kicker {
+  color: rgba(var(--ink-rgb) / 0.65);
+}
+.resume-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+}
+.resume-action {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0 13px;
+  color: var(--ink);
+  background: transparent;
   font-size: 10px;
   letter-spacing: 0.08em;
+  text-decoration: none;
   text-transform: uppercase;
-  color: var(--muted);
-  align-self: center;
+  transition: color 120ms ease, border-color 120ms ease, background-color 120ms ease;
 }
-.colophon-val {
-  color: var(--ink);
+.resume-action-primary {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+.resume-action:hover {
+  border-color: var(--ink);
+  background: rgba(var(--ink-rgb) / 0.04);
+}
+.resume-action-primary:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+}
+.resume-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 /* ----- Projects card ----- */
@@ -810,6 +893,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .resume-action {
+    transition: none;
+  }
   .photo-inner {
     transition: none;
     transform: none !important;
@@ -884,7 +970,7 @@ body {
   /* Single-column stack. Name (§ INDEX) is always first; the six cells
      below it shuffle per visit via a client-injected <style> block (see
      BentoHome.tsx). Rule below is the JS-off fallback: Contact, Projects,
-     Strava, Photo-A, Colophon, Photo-B — reasonable narrative order with
+     Strava, Photo-A, Résumé, Photo-B — reasonable narrative order with
      photos not adjacent. `grid-row: auto !important` overrides desktop
      grid-row placement so mobile stacks by CSS `order` instead. */
   .bento-grid > .cell {
@@ -906,7 +992,7 @@ body {
   .cell-photo-a {
     order: 5;
   }
-  .cell-colophon {
+  .cell-resume {
     order: 6;
   }
   .cell-photo-b {
@@ -917,6 +1003,21 @@ body {
      over the row template's minmax(180px, auto). */
   .cell-photo {
     aspect-ratio: 4 / 5;
+  }
+  .cell-resume {
+    min-height: 322px;
+  }
+  .resume-layout {
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 17px;
+  }
+  .resume-actions {
+    gap: 7px;
+  }
+  .resume-action {
+    flex: 1 1 auto;
+    padding-inline: 8px;
+    font-size: 9px;
   }
   .name-bio {
     max-width: 100%;
@@ -940,5 +1041,36 @@ body {
   .projects-plate-essay {
     font-size: 17px;
     max-width: 100%;
+  }
+}
+
+/* Résumé-specific short-desktop compaction lives after the base card
+   rules so its measurements win the cascade at the 1440×900 target. */
+@media (min-width: 1025px) and (max-height: 940px) {
+  .cell-resume .kicker {
+    margin-bottom: 8px;
+  }
+  .cell-resume .resume-layout {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .cell-resume .resume-preview {
+    height: 112px;
+    box-shadow: 5px 6px 0 rgba(var(--ink-rgb) / 0.045);
+  }
+  .cell-resume .resume-name {
+    margin-bottom: 5px;
+    font-size: 24px;
+  }
+  .cell-resume .resume-summary {
+    font-size: 10px;
+    line-height: 1.45;
+  }
+  .cell-resume .resume-spec {
+    font-size: 8px;
+    line-height: 1.5;
+  }
+  .cell-resume .resume-actions {
+    margin-top: 10px;
   }
 }

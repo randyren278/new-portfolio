@@ -55,8 +55,7 @@ sections. Each cell has one job:
 - **Contact.** The small set of places worth reaching me.
 - **Photography.** Two images are selected per visit from the photo manifest.
 - **Strava.** The most recent GPS activity becomes a projected SVG polyline.
-- **Colophon.** The implementation and design footnotes that would otherwise
-  end up in a footer nobody reads.
+- **Résumé.** A one-page document preview with direct view and download actions.
 
 The content layer stays separate from the cells themselves. Project order,
 copy, captions, and plate data are loaded through `src/content/`; the bento
@@ -77,7 +76,7 @@ spine; the left and right columns carry the catalogue around it.
 │                  │                  │ Strava           │
 │ Projects         ├──────────────────┤                  │
 │                  │                  ├──────────────────┤
-│                  │ Photograph B     │ Colophon         │
+│                  │ Photograph B     │ Résumé           │
 │                  │                  │                  │
 └──────────────────┴──────────────────┴──────────────────┘
 ```
@@ -142,7 +141,7 @@ flowchart LR
     strava["Strava latest activity"] --> page
     page --> bento["BentoHome"]
     photos["photo manifest"] --> bento
-    bento --> cells["Index · Projects · Contact · Photos · Strava · Colophon"]
+    bento --> cells["Index · Projects · Contact · Photos · Strava · Résumé"]
     cells --> web["randyren.org"]
 ```
 
