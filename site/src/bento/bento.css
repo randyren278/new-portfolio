@@ -15,6 +15,11 @@
    ============================================================ */
 
 :root {
+  /* The palette is light-only by choice. Without this, a visitor whose OS
+     is in dark mode gets dark UA surfaces — scrollbars, form controls,
+     the tap-highlight — against the paper background. */
+  color-scheme: light;
+
   --bg: #fafaf7;
   --ink: #0f0f0f;
   --muted: #6f6f6f;

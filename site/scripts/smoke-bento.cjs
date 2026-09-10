@@ -476,6 +476,27 @@ function assert(cond, label) {
     );
   }
 
+  // ---- 6c. the light-only palette is declared to the UA ----------------
+  // Light-only is a deliberate choice, but without `color-scheme: light`
+  // an OS-dark visitor gets dark scrollbars and UA surfaces against the
+  // paper background. Assert it under an emulated dark preference, which
+  // is the only condition where its absence shows.
+
+  await page.emulateMedia({ colorScheme: 'dark' });
+  const declaredScheme = await page.evaluate(
+    () => getComputedStyle(document.documentElement).colorScheme,
+  );
+  assert(
+    declaredScheme === 'light',
+    `page declares its light-only scheme to the UA (got "${declaredScheme}")`,
+  );
+  const bodyInDark = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  assert(
+    bodyInDark === 'rgba(0, 0, 0, 0)' || /250, 250, 247/.test(bodyInDark),
+    `page keeps its paper background under OS dark mode (got "${bodyInDark}")`,
+  );
+  await page.emulateMedia({ colorScheme: 'light' });
+
   // ---- 7a. touch targets are big enough to hit -------------------------
   // Mobile only: the contact links were 19px tall and the verso return
   // 30x26, both under the 44px minimum. Measure each target the way a
