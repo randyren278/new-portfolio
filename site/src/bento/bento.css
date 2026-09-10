@@ -984,9 +984,16 @@ body {
   .cell-contact {
     order: 2;
   }
+  /* No max-height. Capping the cell at 70dvh turned .projects-list into a
+     nested scroll region inside an already-scrolling page, and the last
+     three projects sat below its internal fold with no affordance saying
+     so — a third of the catalogue, invisible. The cell grows to its
+     content instead and the page does the scrolling. */
   .cell-projects {
     order: 3;
-    max-height: 70dvh;
+  }
+  .cell-projects .projects-list {
+    overflow-y: visible;
   }
   .projects-row {
     grid-template-columns: 28px 1fr;

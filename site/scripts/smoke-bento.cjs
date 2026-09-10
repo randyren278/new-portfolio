@@ -253,26 +253,17 @@ function assert(cond, label) {
       fullyVisibleRows,
     };
   });
-  if (IS_MOBILE) {
-    assert(
-      projectListMetrics.scrollHeight > projectListMetrics.clientHeight,
-      `mobile Projects cell scrolls when the catalog exceeds its adaptive height (${projectListMetrics.clientHeight}/${projectListMetrics.scrollHeight}px)`,
-    );
-    assert(
-      projectListMetrics.fullyVisibleRows >= 4 &&
-        projectListMetrics.fullyVisibleRows < expectedProjectTitles.length,
-      `mobile Projects cell fills with as many complete rows as fit (${projectListMetrics.fullyVisibleRows}/${expectedProjectTitles.length})`,
-    );
-  } else {
-    assert(
-      projectListMetrics.scrollHeight <= projectListMetrics.clientHeight + 1,
-      `desktop Projects cell fits the full catalog without scrolling (${projectListMetrics.clientHeight}/${projectListMetrics.scrollHeight}px)`,
-    );
-    assert(
-      projectListMetrics.fullyVisibleRows === expectedProjectTitles.length,
-      `all projects are visible together on desktop (${projectListMetrics.fullyVisibleRows}/${expectedProjectTitles.length})`,
-    );
-  }
+  // Every project is reachable by scrolling the page alone, in both modes.
+  // Mobile used to cap the cell at 70dvh, which hid the last three
+  // projects inside a nested scroller with no affordance.
+  assert(
+    projectListMetrics.scrollHeight <= projectListMetrics.clientHeight + 1,
+    `Projects list is not a nested scroller (${projectListMetrics.clientHeight}/${projectListMetrics.scrollHeight}px)`,
+  );
+  assert(
+    projectListMetrics.fullyVisibleRows === expectedProjectTitles.length,
+    `the whole catalog is laid out at once (${projectListMetrics.fullyVisibleRows}/${expectedProjectTitles.length})`,
+  );
 
   // ---- 4. every project row opens the matching plate -------------------
 
