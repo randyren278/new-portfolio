@@ -5,6 +5,7 @@
  *
  *   node scripts/smoke-bento.cjs                    # desktop, 1440x900
  *   DEVICE=mobile node scripts/smoke-bento.cjs      # iPhone 13
+ *   BASE_URL=https://www.randyren.org/ node scripts/smoke-bento.cjs
  *
  * Requires the dev server on http://localhost:3877 (see CLAUDE.md).
  * Exits 0 on success, 1 on any assertion or page error.
@@ -12,7 +13,7 @@
 
 const { chromium, devices } = require('playwright');
 
-const BASE_URL = 'http://localhost:3877/';
+const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3877/';
 const IS_MOBILE = process.env.DEVICE === 'mobile';
 
 function assert(cond, label) {
@@ -88,8 +89,8 @@ function assert(cond, label) {
     `résumé view link opens a new tab (got "${resumeViewTarget}")`,
   );
   assert(
-    resumeDownloadHref === resumeViewHref,
-    `résumé download points at the same PDF (got "${resumeDownloadHref}")`,
+    resumeDownloadHref === '/api/resume/download',
+    `résumé download uses the attachment endpoint (got "${resumeDownloadHref}")`,
   );
   assert(
     resumeDownloadName === 'Randy_Ren_Resume.pdf',
@@ -161,6 +162,27 @@ function assert(cond, label) {
   assert(
     resumeResponse.headers()['content-type']?.includes('application/pdf'),
     `résumé response is application/pdf (${resumeResponse.headers()['content-type']})`,
+  );
+  assert(
+    !resumeResponse.headers()['content-disposition']?.includes('attachment'),
+    'résumé view response remains inline',
+  );
+
+  const resumeDownloadResponse = await page.request.get(
+    new URL(resumeDownloadHref, BASE_URL).toString(),
+  );
+  assert(
+    resumeDownloadResponse.ok(),
+    `résumé download responds successfully (${resumeDownloadResponse.status()})`,
+  );
+  assert(
+    resumeDownloadResponse.headers()['content-type']?.includes('application/pdf'),
+    `résumé download response is application/pdf (${resumeDownloadResponse.headers()['content-type']})`,
+  );
+  assert(
+    resumeDownloadResponse.headers()['content-disposition'] ===
+      'attachment; filename="Randy_Ren_Resume.pdf"',
+    `résumé download is an attachment (${resumeDownloadResponse.headers()['content-disposition']})`,
   );
 
   // ---- 3. PLATE rows in Projects ---------------------------------------
@@ -332,6 +354,11 @@ function assert(cond, label) {
   // Verso content: provenance, this frame's palette, the paired frame.
   const versoProv = await page.textContent(`${cardA} .photo-prov`);
   assert(/RANDY REN/i.test(versoProv ?? ''), `verso carries provenance (got "${versoProv}")`);
+  const versoKicker = await page.textContent(`${cardA} .photo-verso-top .kicker`);
+  assert(
+    /\/42 BY HUE/.test(versoKicker ?? ''),
+    `verso reports the complete 42-photo pool (got "${versoKicker?.trim()}")`,
+  );
 
   const paletteChips = await page.$$eval(`${cardA} .photo-rib-self span`, (els) => els.length);
   assert(paletteChips === 5, `verso shows a 5-tone palette (got ${paletteChips})`);
@@ -345,6 +372,15 @@ function assert(cond, label) {
     (await page.$(`${cardA} .photo-thumb`)) !== null,
     'verso shows the paired photograph as a thumbnail',
   );
+
+  for (const file of ['photo-41.jpg', 'photo-42.jpg']) {
+    const response = await page.request.get(new URL(`/photos/${file}`, BASE_URL).toString());
+    assert(response.ok(), `${file} responds successfully (${response.status()})`);
+    assert(
+      response.headers()['content-type']?.includes('image/jpeg'),
+      `${file} responds as image/jpeg (${response.headers()['content-type']})`,
+    );
+  }
 
   // Any point on the verso returns to the photograph, not just the corner
   // arrow. Click authored content well away from that button to prove it.

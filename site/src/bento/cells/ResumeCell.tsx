@@ -41,7 +41,7 @@ export function ResumeCell({ resume }: { resume: ResumeContent }) {
         </a>
         <a
           className="resume-action resume-download"
-          href={resume.pdfHref}
+          href="/api/resume/download"
           download={resume.downloadName}
           aria-label={`Download ${resume.name} résumé (PDF)`}
         >

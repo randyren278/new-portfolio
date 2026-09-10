@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
- * Scans public/photos/ for JPG/JPEG files, extracts width, height, and
- * the average color (via sharp resize-to-1x1), converts sRGB → HSL,
- * and writes src/bento/photos.manifest.json.
+ * Validates canonical public/photos/photo-NN.jpg derivatives, extracts width,
+ * height, average color, and a five-tone palette, then writes
+ * src/bento/photos.manifest.json.
  *
  * Run manually after adding/removing/replacing photos:
  *   pnpm build:photos
  *
  * The manifest is checked into the repo — this script is not part of
  * `pnpm build` because photo drops are infrequent and the manifest is
- * small enough (~5KB) that regenerating on every CI build would burn
- * more time than it saves.
+ * small enough that regenerating on every CI build would burn more time than
+ * it saves.
  */
 
 import { readdirSync, writeFileSync } from 'node:fs';
@@ -117,6 +117,15 @@ async function analyze(file) {
   const meta = await img.metadata();
   const width = meta.width ?? 0;
   const height = meta.height ?? 0;
+  if (!width || !height) {
+    throw new Error(`${file}: could not read image dimensions`);
+  }
+  if (Math.max(width, height) > 1600) {
+    throw new Error(`${file}: ${width}x${height} exceeds the 1600px long-edge limit`);
+  }
+  if (meta.exif || meta.xmp || meta.iptc) {
+    throw new Error(`${file}: embedded metadata must be stripped before publication`);
+  }
   // Resize to 1x1 and pull the single RGB pixel — that's sharp's fast
   // path for "average color of this image."
   const raw = await sharp(path).resize(1, 1, { fit: 'cover' }).raw().toBuffer();
@@ -149,9 +158,16 @@ async function analyze(file) {
   };
 }
 
-const files = readdirSync(PHOTOS_DIR)
+const jpegFiles = readdirSync(PHOTOS_DIR)
   .filter((f) => /\.jpe?g$/i.test(f))
   .sort();
+const invalidNames = jpegFiles.filter((f) => !/^photo-\d{2}\.jpg$/.test(f));
+if (invalidNames.length > 0) {
+  throw new Error(
+    `non-canonical photo filenames: ${invalidNames.join(', ')}; expected photo-NN.jpg`,
+  );
+}
+const files = jpegFiles;
 
 console.log(`analyzing ${files.length} photos in ${PHOTOS_DIR}`);
 
