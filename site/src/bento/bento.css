@@ -425,7 +425,10 @@ body {
   gap: 14px;
   padding: 12px 6px;
   border: 0;
-  border-bottom: 1px solid rgba(var(--muted-rgb) / 0.32);
+  /* --rule, not a --muted alpha: these hairlines are meant to match the
+     cell frame they sit inside, and tying them to --muted made them drift
+     10 levels darker than it when --muted was darkened for contrast. */
+  border-bottom: 1px solid var(--rule);
   background: transparent;
   cursor: pointer;
   transition: background-color 120ms ease, border-color 120ms ease;
@@ -435,7 +438,7 @@ body {
   width: 100%;
 }
 .projects-row:first-child {
-  border-top: 1px solid rgba(var(--muted-rgb) / 0.32);
+  border-top: 1px solid var(--rule);
 }
 .projects-row:hover,
 .projects-row:focus-visible {
@@ -964,11 +967,13 @@ body {
   color: var(--muted);
   margin-top: 6px;
 }
+/* No opacity here. --muted is already the secondary-text role and is
+   pinned to 4.65:1; dimming it again to 0.65 composited to rgb(160,160,159)
+   and dropped the pace line to 2.52:1. */
 .strava-sub {
   font-size: 10px;
   letter-spacing: 0.04em;
   color: var(--muted);
-  opacity: 0.65;
   margin-top: 4px;
 }
 
@@ -1010,7 +1015,7 @@ body {
      three projects sat below its internal fold with no affordance saying
      so — a third of the catalogue, invisible. The cell grows to its
      content instead and the page does the scrolling. */
-  /* 13px of block padding takes the 19px link to a 45px touch target.
+  /* 14px of block padding takes the 17px line box to a 45px target.
      Inline padding does not grow the line box, so the rows only need
      enough row-gap that adjacent targets stop overlapping. The rule
      moves from border-bottom to a text underline: a border sits on the
@@ -1019,12 +1024,23 @@ body {
     row-gap: 24px;
   }
   .contact-val a {
-    padding-block: 13px;
+    /* padding-block on an inline element paints but does not reserve
+       line-box space, so two 45px-tall padded links stacked 24px apart
+       physically overlapped: their padding regions painted over each
+       other and a tap in that band could hit either link depending on
+       paint order. inline-block makes the box participate in layout for
+       real, so the row genuinely grows and the next row is pushed down. */
+    display: inline-block;
+    padding-block: 14px;
     border-bottom: 0;
     text-decoration: underline;
     text-decoration-color: var(--muted);
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
+    /* The base rule transitions border-color; this rule swaps the ruled
+       edge for a text-decoration, so that property no longer exists and
+       the eased property has to move with it. */
+    transition: text-decoration-color 120ms ease;
   }
   .contact-val a:hover {
     text-decoration-color: var(--ink);
