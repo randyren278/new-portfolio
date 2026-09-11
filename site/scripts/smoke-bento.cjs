@@ -115,12 +115,9 @@ function assert(cond, label) {
   );
   const resumeBadge = await page.$eval('.resume-preview span', (el) => el.textContent?.trim());
   assert(resumeBadge === '1 / 1', `résumé preview carries the page badge (got "${resumeBadge}")`);
-  const resumeSpec = await page.$$eval('.resume-spec', (els) =>
-    els.map((e) => e.textContent?.trim()),
-  );
   assert(
-    resumeSpec.length === 1 && resumeSpec[0] === 'PDF · 1 PAGE',
-    `résumé spec is a single format line (got ${JSON.stringify(resumeSpec)})`,
+    !/1\s*PAGE/i.test(resumeCardText),
+    'résumé card has no "1 PAGE" line now that the thumbnail badge carries the count',
   );
 
   const resumeActionHeights = await page.$$eval('.resume-action', (links) =>
@@ -876,8 +873,10 @@ function assert(cond, label) {
           listOverflow: list.scrollWidth - list.clientWidth,
           blurbOverrun: overrun('.projects-blb'),
           summaryOverrun: overrun('.resume-summary'),
-          specGap: Math.round(rect('.resume-spec').top - rect('.resume-summary').bottom),
           previewSlack: Math.round(preview.height - img.height),
+          // the thumbnail should absorb the cell's height, not leave it empty
+          layoutH: Math.round(rect('.resume-layout').height),
+          previewH: Math.round(preview.height),
           projectsBottom: Math.round(rect('.cell-projects').bottom),
           stravaBottom: Math.round(rect('.cell-strava').bottom),
         };
@@ -892,8 +891,12 @@ function assert(cond, label) {
       if (m.listOverflow > 0) bad.push(`projects list clips ${m.listOverflow}px`);
       if (m.blurbOverrun > 1) bad.push(`project blurb overruns ${m.blurbOverrun}px`);
       if (m.summaryOverrun > 1) bad.push(`résumé summary overruns ${m.summaryOverrun}px`);
-      if (m.specGap < 8 || m.specGap > 20) bad.push(`résumé spec ${m.specGap}px below summary`);
       if (Math.abs(m.previewSlack) > 3) bad.push(`résumé page ${m.previewSlack}px short of its frame`);
+      // Multi-column only: in one column the cell is content-sized and the
+      // page is deliberately width-driven, so there is no row to fill.
+      if (expectCols > 1 && m.layoutH - m.previewH > 3) {
+        bad.push(`résumé page ${m.previewH}px in a ${m.layoutH}px row`);
+      }
       if (expectCols === 2 && Math.abs(m.projectsBottom - m.stravaBottom) > 1) {
         bad.push(`2-col Projects ends at ${m.projectsBottom}, Strava at ${m.stravaBottom}`);
       }

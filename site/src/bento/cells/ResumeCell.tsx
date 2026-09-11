@@ -20,7 +20,6 @@ export function ResumeCell({ resume }: { resume: ResumeContent }) {
 
         <div className="resume-copy">
           <p className="resume-summary">{resume.summary}</p>
-          <div className="resume-spec">PDF · 1 PAGE</div>
         </div>
       </div>
 
