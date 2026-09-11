@@ -105,18 +105,16 @@ function assert(cond, label) {
     `résumé download purpose is explicit (got "${resumeDownloadAccessibleName}")`,
   );
 
-  // The card must not restate what the page already says. The wordmark
-  // lives in the Name cell; a page-count badge on the thumbnail duplicates
-  // the "1 PAGE" spec line. Both were removed — assert they stay gone.
+  // The card must not restate the wordmark the Name cell already carries.
+  // The "1 / 1" badge on the thumbnail is deliberate (it reads as a page
+  // counter on the document, not as a repeat of the spec line).
   const resumeCardText = await page.$eval('.cell-resume', (el) => el.textContent ?? '');
   assert(
     !/Randy\s+Ren/i.test(resumeCardText),
     'résumé card does not repeat the name already carried by the Name cell',
   );
-  assert(
-    (await page.$('.resume-preview span')) === null,
-    'résumé preview carries no page-count badge',
-  );
+  const resumeBadge = await page.$eval('.resume-preview span', (el) => el.textContent?.trim());
+  assert(resumeBadge === '1 / 1', `résumé preview carries the page badge (got "${resumeBadge}")`);
   const resumeSpec = await page.$$eval('.resume-spec', (els) =>
     els.map((e) => e.textContent?.trim()),
   );

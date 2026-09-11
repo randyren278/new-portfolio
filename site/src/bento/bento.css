@@ -309,14 +309,21 @@ body {
 
 .resume-layout {
   display: grid;
-  grid-template-columns: minmax(82px, 118px) minmax(0, 1fr);
+  /* The thumbnail scales with the cell instead of sitting at a fixed
+     118px: a postage stamp in an 800px cell, and it still leaves the
+     copy column at least ~60% at the narrow end. */
+  grid-template-columns: clamp(92px, 26%, 150px) minmax(0, 1fr);
   gap: 20px;
   flex: 1 1 auto;
   min-height: 0;
 }
 .resume-preview {
   position: relative;
-  height: 156px;
+  /* The page's own proportion (935x1210). A fixed height with a
+     width-driven image left a dead white band under the page on narrow
+     columns and clipped its foot on the short-desktop variant. */
+  aspect-ratio: 935 / 1210;
+  align-self: start;
   overflow: hidden;
   border: 1px solid var(--rule);
   background: var(--bg);
@@ -325,7 +332,18 @@ body {
 .resume-preview img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+}
+.resume-preview span {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  padding: 1px 4px;
+  color: var(--muted);
+  background: rgba(var(--bg-rgb) / 0.9);
+  font-size: 8px;
+  letter-spacing: 0.08em;
 }
 .resume-copy {
   display: flex;
@@ -338,9 +356,18 @@ body {
   font-size: 13px;
   line-height: 1.6;
   text-wrap: pretty;
+  /* "infrastructure," is wider than the copy column at 320px and ran
+     through the cell border. Hyphenate first; break anywhere as the
+     last resort. */
+  hyphens: auto;
+  overflow-wrap: anywhere;
 }
 .resume-spec {
-  margin-top: auto;
+  /* Sits with the copy, a fixed gap under the summary. It used
+     margin-top:auto in a column stretched to the cell's height, so it
+     floated anywhere from 20px to 190px below the text depending on the
+     viewport. */
+  margin-top: 12px;
   color: rgba(var(--ink-rgb) / 0.65);
   font-size: 9px;
   letter-spacing: 0.08em;
@@ -1086,7 +1113,7 @@ body {
     min-height: 322px;
   }
   .resume-layout {
-    grid-template-columns: 100px minmax(0, 1fr);
+    grid-template-columns: clamp(88px, 30%, 120px) minmax(0, 1fr);
     gap: 17px;
   }
   .resume-actions {
@@ -1133,7 +1160,6 @@ body {
     gap: 16px;
   }
   .cell-resume .resume-preview {
-    height: 112px;
     box-shadow: 5px 6px 0 rgba(var(--ink-rgb) / 0.045);
   }
   .cell-resume .resume-summary {
