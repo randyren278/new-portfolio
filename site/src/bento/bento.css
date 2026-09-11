@@ -490,6 +490,32 @@ body {
   line-height: 1.4;
 }
 
+/* The three-column row (number / title / blurb) needs ~130px for the
+   blurb before it stops wrapping and starts getting cut off at the list
+   edge. That happens whenever the cell is narrow — the 3-col grid at
+   1025-1180px, the 2-col grid under ~800px — not just on phones, so the
+   switch is keyed on the cell's own width, not the viewport's. The
+   stacked form (number beside title, blurb beneath) is the same one the
+   mobile query uses. */
+.cell-projects {
+  container-type: inline-size;
+}
+@container (max-width: 380px) {
+  .projects-row {
+    grid-template-columns: 28px 1fr;
+    align-items: start;
+    column-gap: 12px;
+    row-gap: 2px;
+    padding-block: 10px;
+  }
+  .projects-num {
+    grid-row: 1 / span 2;
+  }
+  .projects-blb {
+    grid-column: 2;
+  }
+}
+
 /* ----- Expanded plate: viewport-centered card that grows out of the
    clicked row (FLIP). The row's rect is the origin; computeFinal() in
    ProjectsCell.tsx sets the open geometry. Both the overlay and the card
