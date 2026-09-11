@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { POOL_SIZE, type PhotoSlot } from '../photos';
 
 /**
@@ -53,6 +53,20 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
   const [flipped, setFlipped] = useState(false);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const frontRef = useRef<HTMLButtonElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+  const interacted = useRef(false);
+
+  useEffect(() => {
+    if (!interacted.current) return;
+    const timer = setTimeout(
+      () => {
+        (flipped ? backRef : frontRef).current?.focus({ preventScroll: true });
+      },
+      matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 320,
+    );
+    return () => clearTimeout(timer);
+  }, [flipped]);
 
   const flipBack = useCallback(() => setFlipped(false), []);
 
@@ -76,7 +90,7 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
       aria-label={`Photograph ${photo.file}`}
     >
       <div className="photo-inner">
-        <div className="photo-face photo-front">
+        <div className="photo-face photo-front" inert={flipped}>
           {!failed && (
             <img
               className="photo-img"
@@ -86,23 +100,29 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
               loading="lazy"
               onLoad={() => setLoaded(true)}
               onError={() => setFailed(true)}
-              style={{ opacity: loaded ? 1 : 0, transition: 'opacity 220ms ease' }}
+              style={{ opacity: loaded ? 1 : 0 }}
             />
           )}
           <span className="photo-fname">{photo.file.toUpperCase()}</span>
           <button
             type="button"
             className="photo-flip"
-            onClick={() => setFlipped(true)}
+            ref={frontRef}
+            onClick={() => {
+              interacted.current = true;
+              setFlipped(true);
+            }}
             aria-expanded={flipped}
             aria-label={`Show details for ${photo.file}`}
           >
-            <span className="photo-mark" aria-hidden="true" />
+            <span className="photo-glass-label">
+              Photo details <span aria-hidden="true">↗</span>
+            </span>
           </button>
         </div>
 
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: the full verso is a redundant pointer target; the nested return button provides the keyboard action. */}
-        <div className="photo-face photo-back" onClick={flipBack}>
+        <div className="photo-face photo-back" onClick={flipBack} inert={!flipped}>
           <div className={`photo-verso ${caption ? '' : 'photo-verso-nocap'}`}>
             <div className="photo-verso-top">
               <span className="kicker">
@@ -146,6 +166,7 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
           <button
             type="button"
             className="photo-return"
+            ref={backRef}
             onClick={flipBack}
             aria-label="Back to photograph"
           >

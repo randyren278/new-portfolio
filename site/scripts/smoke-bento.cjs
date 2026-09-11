@@ -267,6 +267,19 @@ function assert(cond, label) {
     await page.click(row);
     await page.waitForSelector('.projects-plate', { state: 'visible' });
 
+    await page.focus('.projects-plate-close');
+    await page.keyboard.press('Shift+Tab');
+    assert(
+      await page.evaluate(() => !!document.activeElement.closest('.projects-plate')),
+      'project dialog contains reverse keyboard navigation',
+    );
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    assert(
+      await page.$eval('.projects-plate', (el) => getComputedStyle(el).transitionDuration === '0s'),
+      'project dialog honors reduced motion',
+    );
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+
     const plateTitle = await page.$eval('.projects-plate-title', (el) => el.textContent?.trim());
     const plateNumber = await page.$eval('.projects-plate-number', (el) => el.textContent?.trim());
     const plateEssayCount = await page.$$eval('.projects-plate-essay', (els) => els.length);
@@ -459,6 +472,10 @@ function assert(cond, label) {
         .map((e) => e.cls),
     );
     assert(stack[0] === 'cell-name', `Name card stacks first on mobile (got "${stack[0]}")`);
+    assert(
+      stack.join(',') === 'cell-name,cell-contact,cell-projects,cell-photo-a,cell-resume,cell-strava,cell-photo-b',
+      'mobile reading order is predictable and prioritizes work and contact',
+    );
     const photoAIdx = stack.indexOf('cell-photo-a');
     const photoBIdx = stack.indexOf('cell-photo-b');
     assert(
@@ -538,6 +555,13 @@ function assert(cond, label) {
     for (const control of touchControls) {
       if (!(await control.isVisible())) continue;
       if (!(await control.evaluate((el) => el.getRootNode() === document))) continue;
+      // The skip link is intentionally exposed only to keyboard focus.
+      if (await control.evaluate((el) => el.classList.contains('skip-link'))) {
+        // Establish keyboard modality: programmatic focus after a pointer click
+        // does not consistently activate :focus-visible on mobile Chromium.
+        await page.keyboard.press('Tab');
+        await control.focus();
+      }
       await control.scrollIntoViewIfNeeded();
       const verdict = await control.evaluate((el) => {
         const HALF = 21.5;
