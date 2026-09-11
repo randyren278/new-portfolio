@@ -825,6 +825,87 @@ function assert(cond, label) {
   await page.click('.projects-plate-close');
   await page.waitForSelector('.projects-plate', { state: 'detached' });
 
+  // ---- 8c. the layout holds across viewports ---------------------------
+  // The single desktop/mobile pair above misses the widths where the grid
+  // actually broke: 3-col at 1025-1100 (cells ~306px, blurbs clipped),
+  // 2-col at 721-800 (same), 2-col Projects spanning four rows (1300px of
+  // dead space), an uncapped page at 2560, and the résumé spec line
+  // floating away from its summary at every size. Open each size fresh
+  // and measure the things that went wrong. Desktop run only — the sizes
+  // are the point, not the device profile.
+
+  if (!IS_MOBILE) {
+    const sizes = [
+      [2560, 1440],
+      [1920, 1080],
+      [1440, 900],
+      [1280, 720],
+      [1101, 768],
+      [1100, 768],
+      [1024, 768],
+      [768, 1024],
+      [721, 900],
+      [720, 900],
+      [390, 844],
+      [320, 568],
+    ];
+    const layoutFailures = [];
+    for (const [w, h] of sizes) {
+      const ctx = await browser.newContext({ viewport: { width: w, height: h } });
+      const vp = await ctx.newPage();
+      await vp.goto(BASE_URL, { waitUntil: 'networkidle' });
+      const m = await vp.evaluate(() => {
+        const rect = (sel) => document.querySelector(sel)?.getBoundingClientRect();
+        const overrun = (sel) => {
+          let worst = 0;
+          for (const el of document.querySelectorAll(sel)) {
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            const right = Math.max(0, ...[...range.getClientRects()].map((r) => r.right));
+            worst = Math.max(worst, right - el.getBoundingClientRect().right);
+          }
+          return Math.round(worst);
+        };
+        const list = document.querySelector('.projects-list');
+        const preview = rect('.resume-preview');
+        const img = rect('.resume-preview img');
+        return {
+          cols: getComputedStyle(document.querySelector('.bento-grid')).gridTemplateColumns.split(' ').length,
+          hscroll: document.documentElement.scrollWidth - innerWidth,
+          pageW: Math.round(rect('.bento-page').width),
+          listOverflow: list.scrollWidth - list.clientWidth,
+          blurbOverrun: overrun('.projects-blb'),
+          summaryOverrun: overrun('.resume-summary'),
+          specGap: Math.round(rect('.resume-spec').top - rect('.resume-summary').bottom),
+          previewSlack: Math.round(preview.height - img.height),
+          projectsBottom: Math.round(rect('.cell-projects').bottom),
+          stravaBottom: Math.round(rect('.cell-strava').bottom),
+        };
+      });
+      await ctx.close();
+
+      const expectCols = w <= 720 ? 1 : w <= 1100 ? 2 : 3;
+      const bad = [];
+      if (m.cols !== expectCols) bad.push(`${m.cols} columns, expected ${expectCols}`);
+      if (m.hscroll > 0) bad.push(`horizontal scroll ${m.hscroll}px`);
+      if (m.pageW > 1680) bad.push(`page ${m.pageW}px wide, cap is 1680`);
+      if (m.listOverflow > 0) bad.push(`projects list clips ${m.listOverflow}px`);
+      if (m.blurbOverrun > 1) bad.push(`project blurb overruns ${m.blurbOverrun}px`);
+      if (m.summaryOverrun > 1) bad.push(`résumé summary overruns ${m.summaryOverrun}px`);
+      if (m.specGap < 8 || m.specGap > 20) bad.push(`résumé spec ${m.specGap}px below summary`);
+      if (Math.abs(m.previewSlack) > 3) bad.push(`résumé page ${m.previewSlack}px short of its frame`);
+      if (expectCols === 2 && Math.abs(m.projectsBottom - m.stravaBottom) > 1) {
+        bad.push(`2-col Projects ends at ${m.projectsBottom}, Strava at ${m.stravaBottom}`);
+      }
+      if (bad.length) layoutFailures.push(`${w}x${h}: ${bad.join('; ')}`);
+    }
+    assert(
+      layoutFailures.length === 0,
+      `layout holds at all ${sizes.length} viewports (${layoutFailures.length} failing)`,
+    );
+    if (layoutFailures.length) layoutFailures.forEach((f) => console.error('    ', f));
+  }
+
   // ---- 9. only expected 404s (photo placeholders) ---------------------
 
   const unexpected404s = badResponses.filter((r) => !/\/photos\/photo-\d+\.jpe?g$/i.test(r.url));

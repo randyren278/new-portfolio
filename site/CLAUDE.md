@@ -76,7 +76,19 @@ Row 3: [ (Projects)  ] [Photo B      ] [Résumé       ]
 ```
 
 Projects spans rows 2–3 on the left. The middle column is a vertical
-photo strip. Strava sits between Contact and Résumé on the right.
+photo strip. Strava sits between Contact and Résumé on the right. The
+page is capped at `max-width: 1680px` and centred; above that the cells
+were stretching to 800px and the bio ran 120 characters a line.
+
+- **Two columns (`721px`–`1100px`):** Name | Contact, then Projects
+  (spanning two rows) | Photo A over Strava, then Résumé | Photo B. Photos
+  are square here so the right column lands near the projects list.
+  Projects used to span all four rows and sat 1300px tall with an empty
+  bottom two-thirds.
+- **Project rows** switch from `number / title / blurb` to `number /
+  title-over-blurb` via a container query on the cell (`<= 380px`), not
+  the viewport — the three-column row clips the blurb in any cell that
+  narrow, which happens in both the 3-col and 2-col grids.
 
 - **Mobile (`@media (max-width: 720px)`):** stacks to one column. Index stays
   first; Contact, Projects, Strava, Photo-A, Photo-B, and Résumé shuffle per
