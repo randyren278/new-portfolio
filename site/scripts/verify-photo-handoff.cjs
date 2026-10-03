@@ -42,6 +42,16 @@ const os = require('node:os');
       });
       await page.evaluate(() => {
         window.photoLeaks = [];
+        window.uncoverChecks = [];
+        const remove = Element.prototype.remove;
+        Element.prototype.remove = function (...args) {
+          if (this.classList.contains('bento-departure')) {
+            window.uncoverChecks.push(
+              getComputedStyle(document.querySelector('.bento-page')).visibility,
+            );
+          }
+          return remove.apply(this, args);
+        };
         window.sampleHandoff = true;
         function sample() {
           if (!window.sampleHandoff) return;
@@ -72,6 +82,11 @@ const os = require('node:os');
         assert(deviation / data.length < 0.5, `${name}: visible content survived the fade`);
       }
       assert.deepEqual(await page.evaluate(() => photoLeaks), []);
+      assert.deepEqual(
+        await page.evaluate(() => uncoverChecks),
+        ['hidden'],
+        'Cover removed before React hid the bento',
+      );
       await page.evaluate(() => {
         window.sampleHandoff = false;
       });

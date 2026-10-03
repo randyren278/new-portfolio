@@ -2,6 +2,7 @@
 
 import type { ShellContent } from '@/content/types';
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import './bento.css';
 import './puff.css';
 import { PuffEntrance } from './PuffEntrance';
@@ -94,13 +95,16 @@ export function BentoHome({
         })
         .finished.catch(() => {});
     }
-    window.scrollTo(0, 0);
-    setScene(['space', 'pool', 'kite'][Math.floor(Math.random() * 3)]);
-    setIntro(true);
-    requestAnimationFrame(() => {
-      curtain?.remove();
-      replaying.current = false;
+    // Commit the hidden portfolio before scrolling or removing its cover.
+    // A requestAnimationFrame can run before a concurrent React commit and
+    // briefly expose the complete bento at scroll position zero.
+    flushSync(() => {
+      setScene(['space', 'pool', 'kite'][Math.floor(Math.random() * 3)]);
+      setIntro(true);
     });
+    window.scrollTo(0, 0);
+    curtain?.remove();
+    replaying.current = false;
   }
   const [slots, setSlots] = useState<readonly PhotoSlot[]>(INITIAL_SLOTS);
   const gridRef = useRef<HTMLElement>(null);
