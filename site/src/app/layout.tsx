@@ -41,14 +41,12 @@ export const viewport: Viewport = {
   // iPhones — every CSS max(14px, env(safe-area-inset-top)) below depends
   // on this flag.
   viewportFit: 'cover',
-  // Single light palette site-wide — dark mode was retired with the
-  // terminal engine. iOS Safari picks up this color for the status bar.
-  themeColor: '#fafaf7',
+  themeColor: '#181917',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="puff-theme">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

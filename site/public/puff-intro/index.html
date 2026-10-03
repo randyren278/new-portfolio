@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111211">
+  <title>Randy Ren</title>
+  <link rel="stylesheet" href="base.css">
+  <script src="runtime.js" defer></script>
+  <script src="puff-pixels.js" defer></script>
+  <script src="fields.js" defer></script>
+  <script src="puff-engine.js" defer></script>
+  <link rel="stylesheet" href="scene.css">
+  <script src="kite-actor.js" defer></script>
+  <script src="scene.js" defer></script>
+  <script src="transit.js" defer></script>
+  <link rel="stylesheet" href="redesign.css">
+<style>html,body{background:transparent!important}#portfolio{visibility:hidden;pointer-events:none}</style><script src="bridge.js" defer></script></head>
+<body>  <section id="entrance" class="entrance" aria-labelledby="entrance-title">
+    <canvas id="space" aria-hidden="true"></canvas>
+    <div class="scene-grain" aria-hidden="true"></div>
+    <header class="entrance-top"><a class="scene-monogram" href="#portfolio" aria-label="Skip to Randy Ren’s portfolio">rr<span>®</span></a><a href="#portfolio" class="skip-entrance">Skip intro <span aria-hidden="true">↗</span></a></header>
+
+    <div class="arrival">
+
+      <h1 id="entrance-title" aria-label="Randy Ren"><span>Randy</span> <span>Ren</span><button id="light-button" type="button" aria-label="Change the scene lighting"><span aria-hidden="true">✳</span></button></h1>
+      <a href="#portfolio" class="explore-button"><span>Click to explore</span><span aria-hidden="true">↗</span></a>
+    </div>
+    <button id="entrance-puff-button" class="scene-puff puff-button" type="button" aria-label="Say hello to Puff"><span id="entrance-puff" class="explorer"></span></button>
+    <button id="planet-button" class="scene-target planet-target" type="button" aria-label="Send a satellite around the planet"><span class="target-ring" aria-hidden="true"></span></button>
+    <button id="signal-button" class="scene-target signal-target" type="button" aria-label="Reveal a hidden constellation"><span class="signal-spark" aria-hidden="true">✳</span></button>
+    <button id="comet-button" class="scene-target comet-target" type="button" aria-label="Send a shooting star"><span aria-hidden="true">+</span></button>
+    <div class="entrance-bottom mono"><span>VANCOUVER, EARTH <span class="live-pip" aria-hidden="true"></span></span><button id="scene-effect" type="button">Shooting star ↗</button><span class="scene-hint" id="scene-hint"></span><button id="motion-toggle" type="button" aria-pressed="false" aria-label="Pause scene motion">Pause <span aria-hidden="true">Ⅱ</span></button></div>
+    <p id="scene-announcement" class="sr-only" role="status"></p>
+  </section>
+
+<div id="portfolio"><header class="blank-header"></header><footer class="blank-footer"></footer></div></body></html>

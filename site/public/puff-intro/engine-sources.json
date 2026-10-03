@@ -1,0 +1,26 @@
+{
+  "retrievedAt": "2026-10-02T18:00:19.642Z",
+  "upstreamAssets": [
+    {
+      "url": "https://claude.dev/_next/static/chunks/3ujeutb_bgqh0.js",
+      "file": "original/3ujeutb_bgqh0.js",
+      "bytes": 52565,
+      "sha256": "77f502327471f83d7530358486089df582273db222a80fe45d8efc4c4bebbd0f",
+      "mapStatus": 404,
+      "mapContentType": "text/html",
+      "referencedBy": []
+    },
+    {
+      "url": "https://claude.dev/_next/static/chunks/09vvvyoggmt1p.js",
+      "file": "original/09vvvyoggmt1p.js",
+      "bytes": 190076,
+      "sha256": "897f7fab6de58eb246d4096cbd76867cb9925843bc580256bd0a1f195f2b1d7f",
+      "mapStatus": 404,
+      "mapContentType": "text/html",
+      "referencedBy": []
+    }
+  ],
+  "adaptation": "Four sprite-family data initializers replaced. fields.js retains module 98092; puff-engine.js retains module 82742 rendering and motion logic. Authored wrapper manages lifecycle and accessibility.",
+  "artworkSource": "puff-pixels.js",
+  "frameData": "puff-sprites.json"
+}

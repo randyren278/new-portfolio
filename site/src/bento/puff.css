@@ -1,0 +1,136 @@
+html.puff-theme,
+.puff-bento {
+  color-scheme: dark;
+  --bg: #181917;
+  --ink: #eee7d7;
+  --muted: #a5a69b;
+  --rule: #3a3d35;
+  --accent: #d99177;
+  --bg-rgb: 24 25 23;
+  --ink-rgb: 238 231 215;
+  --muted-rgb: 165 166 155;
+  --glass-rgb: 32 34 29;
+  --shelter-rgb: 155 172 143;
+}
+.puff-bento {
+  background: var(--bg);
+  color: var(--ink);
+}
+.puff-bento.awaiting-intro {
+  visibility: hidden;
+}
+.puff-entrance {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  border: 0;
+  z-index: 1000;
+  background: transparent;
+}
+.bento-text-button {
+  padding: 8px 0;
+  min-height: 44px;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.bento-text-button:hover {
+  color: var(--ink);
+}
+.bento-text-button:focus-visible,
+.correspondence-puff:focus-visible {
+  outline: 1px dashed var(--accent);
+  outline-offset: 4px;
+}
+.puff-bento .cell-contact {
+  position: relative;
+}
+.correspondence-puff {
+  float: right;
+  position: relative;
+  margin: -14px 0 0 8px;
+  width: 56px;
+  height: 48px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.correspondence-puff img {
+  image-rendering: pixelated;
+  display: block;
+}
+.puff-greeting {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.puff-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+html.puff-theme body {
+  background: var(--bg);
+}
+.correspondence-puff {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  margin: 0;
+  float: none;
+}
+.puff-bento .cell-contact .kicker {
+  padding-right: 62px;
+}
+.puff-greeting {
+  right: 4px;
+  top: 100%;
+  bottom: auto;
+}
+
+/* Preserve the original topbar footprints; 44px hit areas do not size grid rows. */
+.puff-bento .bento-topbar {
+  position: relative;
+}
+.puff-bento .bento-topbar .bento-text-button {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.puff-bento footer.bento-topbar {
+  min-height: 24.8px;
+}
+
+@keyframes bento-land {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.bento-landing .cell {
+  animation: bento-land 1300ms 850ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.bento-landing .bento-topbar {
+  animation: bento-land 1100ms 1050ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bento-landing .cell,
+  .bento-landing .bento-topbar {
+    animation: none;
+  }
+}

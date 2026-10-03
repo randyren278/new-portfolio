@@ -3,6 +3,8 @@
 import type { ShellContent } from '@/content/types';
 import { useEffect, useRef, useState } from 'react';
 import './bento.css';
+import './puff.css';
+import { PuffEntrance } from './PuffEntrance';
 import { ContactCell } from './cells/ContactCell';
 import { NameCell } from './cells/NameCell';
 import { PhotoCell } from './cells/PhotoCell';
@@ -43,51 +45,114 @@ export function BentoHome({
   content: ShellContent;
   strava: StravaData | null;
 }) {
+  const [intro, setIntro] = useState(true);
+  const [entering, setEntering] = useState(false);
+  const [scene, setScene] = useState<string | null>(null);
+  const [shuffleCount, setShuffleCount] = useState(0);
+  useEffect(() => {
+    setScene(['space', 'pool', 'kite'][Math.floor(Math.random() * 3)]);
+  }, []);
+  useEffect(() => {
+    if (!intro) return;
+    const old = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = old;
+    };
+  }, [intro]);
+  function shufflePhotos() {
+    let next = pickLayout();
+    for (
+      let i = 0;
+      i < 20 && next.some((n) => slots.some((s) => s.photo.file === n.photo.file));
+      i++
+    )
+      next = pickLayout();
+    setSlots(next);
+    setShuffleCount((count) => count + 1);
+  }
+  function finishIntro() {
+    setIntro(false);
+    setEntering(false);
+  }
+  function replayIntro() {
+    window.scrollTo(0, 0);
+    setIntro(true);
+  }
   const [slots, setSlots] = useState<readonly PhotoSlot[]>(INITIAL_SLOTS);
   const gridRef = useRef<HTMLElement>(null);
   useResizeTreatment(gridRef);
+  useEffect(() => {
+    if (!intro) gridRef.current?.focus({ preventScroll: true });
+  }, [intro]);
 
   useEffect(() => {
     setSlots(pickLayout());
   }, []);
 
   return (
-    <div className="bento-page">
-      <a className="skip-link" href="#portfolio">
-        Skip to content
-      </a>
-      <header className="bento-topbar">
-        <div className="brand">RANDY REN · PORTFOLIO</div>
-      </header>
+    <>
+      {intro && scene && (
+        <PuffEntrance scene={scene} onEntering={() => setEntering(true)} onEntered={finishIntro} />
+      )}
+      <div
+        className={`bento-page puff-bento${intro && !entering ? ' awaiting-intro' : ''}${entering ? ' bento-landing' : ''}`}
+        inert={intro}
+      >
+        <a className="skip-link" href="#portfolio">
+          Skip to content
+        </a>
+        <header className="bento-topbar">
+          <div className="brand">RANDY REN · PORTFOLIO</div>
+          <button className="bento-text-button" type="button" onClick={shufflePhotos}>
+            Shuffle photos ↻
+          </button>
+          <output className="puff-sr-only">
+            {shuffleCount ? `Photos shuffled (${shuffleCount})` : ''}
+          </output>
+        </header>
 
-      <main id="portfolio" ref={gridRef} className="bento-grid" data-photo-count={slots.length}>
-        <NameCell aboutText={content.ABOUT_TEXT} />
-        <ContactCell contactText={content.CONTACT_TEXT} />
-        <ProjectsCell order={content.ORDER} mediums={content.MEDIUMS} plates={content.PLATE_DATA} />
-        {slots[0] && (
-          <PhotoCell
-            key={`a-${slots[0].photo.file}`}
-            slot={slots[0]}
-            areaClass="cell-photo-a"
-            caption={content.PHOTO_CAPTIONS[slots[0].photo.file]}
+        <main
+          id="portfolio"
+          tabIndex={-1}
+          ref={gridRef}
+          className="bento-grid"
+          data-photo-count={slots.length}
+        >
+          <NameCell aboutText={content.ABOUT_TEXT} />
+          <ContactCell contactText={content.CONTACT_TEXT} puff />
+          <ProjectsCell
+            order={content.ORDER}
+            mediums={content.MEDIUMS}
+            plates={content.PLATE_DATA}
           />
-        )}
-        <ResumeCell resume={content.RESUME} />
-        <StravaCell strava={strava} />
-        {slots[1] && (
-          <PhotoCell
-            key={`b-${slots[1].photo.file}`}
-            slot={slots[1]}
-            areaClass="cell-photo-b"
-            caption={content.PHOTO_CAPTIONS[slots[1].photo.file]}
-          />
-        )}
-      </main>
+          {slots[0] && (
+            <PhotoCell
+              key={`a-${slots[0].photo.file}`}
+              slot={slots[0]}
+              areaClass="cell-photo-a"
+              caption={content.PHOTO_CAPTIONS[slots[0].photo.file]}
+            />
+          )}
+          <ResumeCell resume={content.RESUME} />
+          <StravaCell strava={strava} />
+          {slots[1] && (
+            <PhotoCell
+              key={`b-${slots[1].photo.file}`}
+              slot={slots[1]}
+              areaClass="cell-photo-b"
+              caption={content.PHOTO_CAPTIONS[slots[1].photo.file]}
+            />
+          )}
+        </main>
 
-      <footer className="bento-topbar">
-        <div>randyren.org</div>
-        <div className="welcome-note">Stay a little while.</div>
-      </footer>
-    </div>
+        <footer className="bento-topbar">
+          <div>randyren.org</div>
+          <button className="bento-text-button" type="button" onClick={replayIntro}>
+            Return to intro ↑
+          </button>
+        </footer>
+      </div>
+    </>
   );
 }

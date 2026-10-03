@@ -1,3 +1,4 @@
+import { CorrespondencePuff } from '../PuffEntrance';
 /**
  * Contact card — top-right corner.
  *
@@ -35,11 +36,15 @@ function parseContact(text: string): Row[] {
   return rows;
 }
 
-export function ContactCell({ contactText }: { contactText: string }) {
+export function ContactCell({
+  contactText,
+  puff = false,
+}: { contactText: string; puff?: boolean }) {
   const rows = parseContact(contactText);
   return (
     <section className="cell cell-contact" aria-label="Contact">
       <h2 className="kicker">§ CORRESPONDENCE</h2>
+      {puff && <CorrespondencePuff />}
       <div className="contact-rows">
         {rows.map((r) => (
           <div key={r.lab} style={{ display: 'contents' }}>
