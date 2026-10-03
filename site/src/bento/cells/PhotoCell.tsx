@@ -97,7 +97,7 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
               src={`/photos/${photo.file}`}
               alt=""
               decoding="async"
-              loading="lazy"
+              loading="eager"
               onLoad={() => setLoaded(true)}
               onError={() => setFailed(true)}
               style={{ opacity: loaded ? 1 : 0 }}
@@ -146,7 +146,7 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
                 src={`/photos/${partner.file}`}
                 alt=""
                 decoding="async"
-                loading="lazy"
+                loading="eager"
               />
               <div className="photo-pairmeta">
                 <span className="kicker">PAIRED WITH</span>

@@ -81,3 +81,10 @@ body{background:var(--bg)}
 @media(max-width:400px){.entrance .arrival h1{transform:translateX(-15px)}.entrance .arrival h1 #light-button{right:-40px}}
 @media(max-height:700px) and (max-width:499px){.entrance .arrival{top:16%}}
 @media(max-height:500px) and (min-width:500px){.entrance[data-scene=kite] .arrival{left:7%;right:auto;top:17%}}
+
+/* Avoid platform emoji, visited-link colors and iOS tap paint. */
+html{color-scheme:dark}
+.entrance a,.entrance button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.entrance .arrival .explore-button,.entrance .arrival .explore-button:visited,.entrance .arrival .explore-button:active{color:#ddd5c5;-webkit-text-fill-color:#ddd5c5;background:transparent;text-decoration:none}
+.entrance .arrival h1 #light-button{display:grid;place-items:center;appearance:none;-webkit-appearance:none;background:transparent;color:#b7aa88}
+.entrance .arrival h1 #light-button svg{display:block}

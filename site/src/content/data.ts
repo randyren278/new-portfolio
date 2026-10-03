@@ -94,7 +94,7 @@ export const ORDER = [
 // frame on the card verso, so there's no obligation to write all forty.
 export const PHOTO_CAPTIONS: Record<string, string> = {};
 
-export const ABOUT_TEXT = `Randy is a design oriented engineer studying at the University of British Columbia. Currently focused on making agents feel like real collaborators; the kind you'd actually want to work with, not the kind that eats your afternoon. Open to roles starting spring 2027.`;
+export const ABOUT_TEXT = `Randy is a design oriented engineer studying at the University of British Columbia. Currently focused on making agents feel like real collaborators; the kind you'd actually want to work with, not the kind that eats your afternoon. Open to roles starting winter 2027.`;
 
 export const CONTACT_TEXT = `email     randyren278@gmail.com
 github    randyren278

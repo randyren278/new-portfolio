@@ -16,6 +16,8 @@ fs.mkdirSync(output, { recursive: true });
 		errors = [];
 	for (const viewport of [
 		{ width: 1440, height: 900 },
+		{ width: 1280, height: 720 },
+		{ width: 1512, height: 982 },
 		{ width: 390, height: 844 },
 		{ width: 320, height: 568 },
 		{ width: 844, height: 390 },
@@ -32,6 +34,7 @@ fs.mkdirSync(output, { recursive: true });
 				.evaluate((e) => !e.matches(":focus-visible")),
 		);
 		assert.equal(await f.locator("[data-scene]").count(), 1);
+		assert.equal(await f.locator("#light-button svg").count(), 1);
 		const title = await f
 			.locator("h1")
 			.evaluate((e) => ({
@@ -72,7 +75,13 @@ fs.mkdirSync(output, { recursive: true });
 				() => document.documentElement.scrollWidth === innerWidth,
 			),
 		);
-		results.push({
+		assert.equal(await p.locator('#portfolio').evaluate(e => getComputedStyle(e).outlineStyle), 'none');
+        assert((await p.locator('.name-bio').innerText()).includes('winter 2027'));
+        if (viewport.width >= 1280 && viewport.height >= 720) {
+            assert(await p.evaluate(() => document.documentElement.scrollHeight === innerHeight));
+            assert(await p.locator('.cell').evaluateAll(cells => cells.every(e => e.scrollHeight <= e.clientHeight + 1)));
+        }
+        results.push({
 			viewport,
 			titleSize: title.font,
 			kiteTransitionMs: duration,

@@ -12,6 +12,7 @@ export function PuffEntrance({
   scene: string;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     function receive(event: MessageEvent) {
       if (event.origin !== location.origin || event.source !== frame.current?.contentWindow) return;
@@ -24,7 +25,8 @@ export function PuffEntrance({
   return (
     <iframe
       ref={frame}
-      className="puff-entrance"
+      className={`puff-entrance${ready ? ' is-ready' : ''}`}
+      onLoad={() => setReady(true)}
       title="Puff — explore Randy’s portfolio"
       src={`/puff-intro/index.html?scene=${scene}`}
     />

@@ -75,9 +75,25 @@ export function BentoHome({
     setIntro(false);
     setEntering(false);
   }
-  function replayIntro() {
+  const replaying = useRef(false);
+  async function replayIntro() {
+    if (replaying.current) return;
+    replaying.current = true;
+    const page = gridRef.current?.closest('.bento-page');
+    const fade = matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? null
+      : page?.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: 320,
+          easing: 'ease-in-out',
+          fill: 'forwards',
+        });
+    await fade?.finished.catch(() => {});
     window.scrollTo(0, 0);
     setIntro(true);
+    requestAnimationFrame(() => {
+      fade?.cancel();
+      replaying.current = false;
+    });
   }
   const [slots, setSlots] = useState<readonly PhotoSlot[]>(INITIAL_SLOTS);
   const gridRef = useRef<HTMLElement>(null);

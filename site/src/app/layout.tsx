@@ -42,6 +42,7 @@ export const viewport: Viewport = {
   // on this flag.
   viewportFit: 'cover',
   themeColor: '#181917',
+  colorScheme: 'dark',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
