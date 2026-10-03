@@ -52,7 +52,7 @@
           else if(this.mode==='pool')this.resources.push(engines.poolWater(this.field,{spacing:9,rA:1.35,rB:2.4,colorVar:'--space-dot',avoidRef,clickHost:this.layer,progressRef:this.progress}));
           else this.resources.push(engines.dotSky(this.field,{spacing:9,rA:1.35,rB:2.4,colorVar:'--space-dot',smooth:true,speed:7}));
         }
-      });if(!this.reduced){this.field.animate([{opacity:0},{opacity:1}],{duration:450,easing:'ease-out'});this.layer.animate([{opacity:0},{opacity:1}],{duration:450,easing:'ease-out'})}this.frozenHome=null;this.updateHint();this.updateClearZones();this.scheduleAmbient();this.snapshot();
+      });if(this.mode==='pool')this.resources.push(new PoolFish(this.element,{reduced:this.reduced}));if(!this.reduced){this.field.animate([{opacity:0},{opacity:1}],{duration:450,easing:'ease-out'});this.layer.animate([{opacity:0},{opacity:1}],{duration:450,easing:'ease-out'})}this.frozenHome=null;this.updateHint();this.updateClearZones();this.scheduleAmbient();this.snapshot();
     }
     updateHitTarget(){if(!this.lastPosition)return;const {x,y}=this.lastPosition;this.button.style.left=x+'px';this.button.style.top=y+'px';}
     updateHint(){this.button.setAttribute('aria-label',this.mode==='kite'?'Give Puff and the kite a gentle gust':this.mode==='pool'?'Make a ripple around Puff':'Wave to Puff');document.querySelector('#scene-effect').textContent=({space:'Shooting star ↗',pool:'Make a ripple ◌',kite:'A little wind ≋',ride:'Ride again ↻'})[this.mode];}

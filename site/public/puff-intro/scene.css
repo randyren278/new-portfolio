@@ -38,3 +38,6 @@ dialog{background:#1b1e19;color:var(--ink);border-color:#4e5546}.dialog-bar,.pro
 @media(max-width:760px){.scene-puff,.scene-puff .explorer.puff{width:78px;height:78px}}
 @media(max-height:580px){.scene-puff,.scene-puff .explorer.puff{width:72px;height:72px}}
 .entrance{-webkit-user-select:none;user-select:none}
+
+/* Ambient fish never intercept ripple gestures or enter the actor capture. */
+.entrance canvas.fish-layer{position:absolute;inset:0;pointer-events:none;z-index:3}

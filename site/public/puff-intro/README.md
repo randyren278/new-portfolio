@@ -11,3 +11,5 @@ See `SOURCES.md` for renderer/artwork provenance. The original approved study an
 Desktop viewports at least 1280×720 fit the complete bento without clipping. Narrower windows retain natural scrolling. Entry and replay fade the complete page as one surface; photo faces have no separate entrance transforms. The lighting control uses SVG, avoiding platform emoji, and main-landmark focus has no decorative outline while interactive controls retain keyboard focus indicators.
 
 The lighting star recolours the existing renderers without resetting actors, clouds or water. Pool opens through an expanding, feathered ripple while the water field zooms outward and pixel bubbles rise; Puff keeps the helmet throughout the dive.
+
+Pool occasionally has a 13 × 7 pixel fish jump beside Puff. Timing, position and direction are random: first arrival after 8–18 seconds, then 12–25 seconds of quiet after each splash. Taps still only trigger ripples. Fish stop for reduced motion, background tabs, scene disposal and portfolio entry; no fish canvas remains behind the bento.
