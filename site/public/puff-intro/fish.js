@@ -13,8 +13,8 @@
   const pixels=document.createElement('canvas');pixels.width=13;pixels.height=7;
   const pen=pixels.getContext('2d');sprite.forEach((row,y)=>[...row].forEach((c,x)=>{if(palette[c]){pen.fillStyle=palette[c];pen.fillRect(x,y,1,1)}}));
   class PoolFish {
-    constructor(host,{reduced=false}={}) {
-      this.host=host;this.reduced=reduced;this.alive=true;this.count=0;
+    constructor(host,{reduced=false,history={direction:0,streak:0}}={}) {
+      this.host=host;this.history=history;this.reduced=reduced;this.alive=true;this.count=0;
       this.canvas=document.createElement('canvas');this.canvas.className='fish-layer';this.canvas.setAttribute('aria-hidden','true');host.append(this.canvas);this.ctx=this.canvas.getContext('2d');
       this.resize=()=>{const interrupted=!!this.active;cancelAnimationFrame(this.raf);this.w=host.clientWidth;this.h=host.clientHeight;this.dpr=Math.min(devicePixelRatio||1,2);this.canvas.width=this.w*this.dpr;this.canvas.height=this.h*this.dpr;this.canvas.style.width=this.w+'px';this.canvas.style.height=this.h+'px';this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);this.ctx.imageSmoothingEnabled=false;this.active=null;if(interrupted)this.schedule();};
       this.resize();this.observer=new ResizeObserver(this.resize);this.observer.observe(host);
@@ -22,14 +22,39 @@
       this.schedule(6000+Math.random()*8000);
     }
     schedule(delay=10000+Math.random()*10000){clearTimeout(this.timer);if(this.reduced||!this.alive||document.hidden)return;this.timer=setTimeout(()=>this.jump(),delay)}
-    onRipple(){if(Math.random()<.25)this.jump()}
-    jump(){
+    onRipple(point){if(Math.random()<.25)this.jump(point)}
+    placement(dir,point){
+      const margin=18,distance=Math.min(68,this.w*.12),rise=Math.min(42,this.h*.052);
+      const host=this.host.getBoundingClientRect(),puff=this.host.querySelector('#entrance-puff-button')?.getBoundingClientRect();
+      const blocked=puff?{left:puff.left-host.left-12,right:puff.right-host.left+12,top:puff.top-host.top-12,bottom:puff.bottom-host.top+12}:null;
+      const fit=(x,y)=>{
+        x=Math.max(margin+(dir<0?distance:0),Math.min(this.w-margin-(dir>0?distance:0),x));
+        y=Math.max(margin,Math.min(this.h-margin,y));
+        const height=Math.min(rise,y-margin),left=Math.min(x,x+dir*distance)-margin,right=Math.max(x,x+dir*distance)+margin;
+        if(blocked&&left<blocked.right&&right>blocked.left&&y+margin>blocked.top&&y-height-margin<blocked.bottom)return null;
+        return {x,y,dx:dir*distance,height};
+      };
+      if(point){
+        // Search outwards from the gesture, rather than falling back to a distant random spot.
+        for(let radius=0;radius<=Math.max(this.w,this.h);radius+=20){
+          const offset=Math.random()*Math.PI*2;
+          for(let i=0;i<16;i++){const angle=offset+i*Math.PI/8,candidate=fit(point.x+Math.cos(angle)*radius,point.y+Math.sin(angle)*radius);if(candidate)return candidate;}
+        }
+      }else{
+        for(let i=0;i<40;i++){const candidate=fit(Math.random()*this.w,Math.random()*this.h);if(candidate)return candidate;}
+        for(let y=margin;y<this.h;y+=40)for(let x=margin;x<this.w;x+=40){const candidate=fit(x,y);if(candidate)return candidate;}
+      }
+      return null;
+    }
+    jump(point){
       if(!this.alive||this.reduced||document.hidden||this.active)return false;
-      clearTimeout(this.timer);const w=this.w,h=this.h,side=Math.random()<.5?-1:1;this.count++;
-      // Keep each arc beside Puff, below the title and above the invitation.
-      const distance=Math.min(68,w*.12),center=w*(side<0?.18+Math.random()*.13:.69+Math.random()*.13);
-      const dir=Math.random()<.5?-1:1;
-      this.active={x:center-dir*distance/2,y:h*(.60+Math.random()*.09),dx:dir*distance,height:Math.min(42,h*.052),dir,start:performance.now(),duration:1450};
+      const history=this.history;
+      const dir=history.streak>=2?-history.direction:(Math.random()<.5?-1:1);
+      const placement=this.placement(dir,point);
+      if(!placement){this.schedule();return false;}
+      clearTimeout(this.timer);this.count++;
+      history.streak=dir===history.direction?history.streak+1:1;history.direction=dir;
+      this.active={...placement,dir,start:performance.now(),duration:1450};
       const tick=now=>{if(!this.active||!this.alive)return;const t=(now-this.active.start)/this.active.duration;this.draw(t);if(t<1.72)this.raf=requestAnimationFrame(tick);else{this.clear();this.schedule()}};
       this.raf=requestAnimationFrame(tick);return true;
     }

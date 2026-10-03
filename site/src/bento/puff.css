@@ -346,3 +346,11 @@ html.puff-theme body {
     transform: none;
   }
 }
+
+.bento-departure {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: #181917;
+  pointer-events: auto;
+}

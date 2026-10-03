@@ -79,19 +79,26 @@ export function BentoHome({
   async function replayIntro() {
     if (replaying.current) return;
     replaying.current = true;
-    const page = gridRef.current?.closest('.bento-page');
-    const fade = matchMedia('(prefers-reduced-motion: reduce)').matches
-      ? null
-      : page?.animate([{ opacity: 1 }, { opacity: 0 }], {
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Fade one opaque surface over the page, including composited 3D photo faces.
+    const curtain = reduced ? null : document.createElement('div');
+    if (curtain) {
+      curtain.className = 'bento-departure';
+      curtain.setAttribute('aria-hidden', 'true');
+      document.body.append(curtain);
+      await curtain
+        .animate([{ opacity: 0 }, { opacity: 1 }], {
           duration: 320,
           easing: 'ease-in-out',
           fill: 'forwards',
-        });
-    await fade?.finished.catch(() => {});
+        })
+        .finished.catch(() => {});
+    }
     window.scrollTo(0, 0);
+    setScene(['space', 'pool', 'kite'][Math.floor(Math.random() * 3)]);
     setIntro(true);
     requestAnimationFrame(() => {
-      fade?.cancel();
+      curtain?.remove();
       replaying.current = false;
     });
   }

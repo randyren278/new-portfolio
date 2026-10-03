@@ -13,15 +13,15 @@
   class OrbitalScene{
     constructor(element){this.element=element;this.mode='space';this.vehicle='skate';this.running=false;this.reduced=motionState.reducedMotion;this.resources=[];this.observers=[];this.listeners=[];
       this.field=document.createElement('div');this.field.id='pixel-field';this.layer=document.createElement('div');this.layer.id='pixel-actor';element.querySelector('#space').replaceWith(this.field);element.insertBefore(this.layer,element.firstChild);
-      this.button=element.querySelector('#entrance-puff-button');this.button.replaceChildren();this.button.setAttribute('aria-label','Wave to Puff');this.button.addEventListener('click',e=>{e.stopPropagation();this.mode==='kite'?this.gust(e.detail?e.clientX:undefined):this.mode==='pool'?this.effect():this.hello()});
+      this.button=element.querySelector('#entrance-puff-button');this.button.replaceChildren();this.button.setAttribute('aria-label','Wave to Puff');this.button.addEventListener('click',e=>{e.stopPropagation();this.mode==='kite'?this.gust(e.detail?e.clientX:undefined):this.mode==='pool'?this.effect(false,e.detail?{x:e.clientX,y:e.clientY}:null):this.hello()});
       this.actorRect=null;this.lastPosition=null;this.progress={p:1};this.palette=0;
       element.querySelector('#light-button').onclick=()=>{this.palette=(this.palette+1)%3;element.dataset.light=['night','ember','sage'][this.palette];document.documentElement.style.setProperty('--space-dot',['#87867f','#9a8073','#829386'][this.palette]);this.resources.forEach(resource=>resource.rerender?.());this.say(['Night sky','Warm ember','Sage night'][this.palette])};
       element.querySelector('#comet-button').onclick=()=>this.effect();
       element.querySelector('#planet-button').onclick=()=>{this.setMode('space');this.effect()};
       element.querySelector('#signal-button').onclick=()=>{this.hello();this.effect()};
       document.querySelectorAll('button[data-scene]').forEach(b=>b.addEventListener('click',()=>this.setMode(b.dataset.scene)));
-      element.addEventListener('click',e=>{if(this.mode==='pool'&&e.isTrusted&&e.target.closest('#pixel-actor'))this.fishRipple();if(this.mode==='kite'&&!e.target.closest('a,button'))this.gust(e.clientX)});
-      element.querySelector('#scene-effect').onclick=()=>this.effect();
+      element.addEventListener('click',e=>{if(this.mode==='pool'&&e.isTrusted&&e.target.closest('#pixel-actor'))this.fishRipple({x:e.clientX,y:e.clientY});if(this.mode==='kite'&&!e.target.closest('a,button'))this.gust(e.clientX)});
+      element.querySelector('#scene-effect').onclick=e=>this.effect(false,e.detail?{x:e.clientX,y:e.clientY}:null);
       document.addEventListener('visibilitychange',()=>{if(document.hidden)this.dispose();else if(this.running)this.mount()});
       document.fonts.ready.then(()=>this.updateClearZones());
       addEventListener('resize',()=>{this.updateClearZones();if(this.reduced&&this.running)this.remount();else{this.updateHitTarget();this.snapshot()}});
@@ -29,8 +29,8 @@
     say(text){this.element.querySelector('#scene-announcement').textContent=text}
     hello(){if(this.reduced){this.say('Puff says hello');return}clearTimeout(this.helloTimer);const s=PuffPixels.sprites.space;this.savedFrames||=s.frames.slice();s.canvases.clear();s.frames=s.frames.map((f,i)=>i>=30&&i<98?this.savedFrames[90+(i%6)]:f);this.helloTimer=setTimeout(()=>{s.frames=this.savedFrames.slice();s.canvases.clear()},1400);this.say('Puff says hello')}
     setMode(mode){if(!['space','pool','kite'].includes(mode))return;if(this.mode===mode&&mode!=='ride')return;this.frozenHome=null;this.mode=mode;this.element.dataset.scene=mode;document.querySelectorAll('button[data-scene]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.scene===mode))});document.querySelectorAll('[data-vehicle]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.vehicle===this.vehicle)));this.remount();this.say({space:'Puff in orbit',pool:'Puff at the pool',kite:'Puff flying a kite',ride:'Puff riding a '+this.vehicle}[mode])}
-    effect(silent=false){if(this.mode==='ride'){this.remount();this.say('Puff rides again');return}if(this.mode==='kite'){this.gust();return}const r=this.field.getBoundingClientRect();const target=this.mode==='pool'?this.layer:this.field;target.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:r.left+(this.mode==='pool'&&this.lastPosition?this.lastPosition.x:r.width*.7),clientY:r.top+(this.mode==='pool'&&this.lastPosition?this.lastPosition.y:r.height*.57)}));if(!silent&&this.mode==='pool')this.fishRipple();if(!silent)this.say(this.mode==='space'?'Shooting star':this.mode==='pool'?'Water ripple':'Scene refreshed')}
-    fishRipple(){this.resources.find(resource=>resource instanceof PoolFish)?.onRipple()}
+    effect(silent=false,point=null){if(this.mode==='ride'){this.remount();this.say('Puff rides again');return}if(this.mode==='kite'){this.gust();return}const r=this.field.getBoundingClientRect();const target=this.mode==='pool'?this.layer:this.field;target.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:r.left+(this.mode==='pool'&&this.lastPosition?this.lastPosition.x:r.width*.7),clientY:r.top+(this.mode==='pool'&&this.lastPosition?this.lastPosition.y:r.height*.57)}));if(!silent&&this.mode==='pool')this.fishRipple(point||{x:r.left+(this.lastPosition?.x||r.width/2),y:r.top+(this.lastPosition?.y||r.height*.61)});if(!silent)this.say(this.mode==='space'?'Shooting star':this.mode==='pool'?'Water ripple':'Scene refreshed')}
+    fishRipple(point){const r=this.element.getBoundingClientRect();this.resources.find(resource=>resource instanceof PoolFish)?.onRipple(point?{x:point.x-r.left,y:point.y-r.top}:undefined)}
     gust(clientX){if(!this.running||this.element.inert)return;this.say('The breeze catches the kite and pulls Puff along');if(!this.reduced)this.actor?.gust?.(Number.isFinite(clientX)?(clientX<this.element.getBoundingClientRect().width/2?1:-1):undefined);}
     updateClearZones(){
       const host=this.element.getBoundingClientRect();if(!host.width||!host.height)return;
@@ -53,7 +53,7 @@
           else if(this.mode==='pool')this.resources.push(engines.poolWater(this.field,{spacing:9,rA:1.35,rB:2.4,colorVar:'--space-dot',avoidRef,clickHost:this.layer,progressRef:this.progress}));
           else this.resources.push(engines.dotSky(this.field,{spacing:9,rA:1.35,rB:2.4,colorVar:'--space-dot',smooth:true,speed:7}));
         }
-      });if(this.mode==='pool')this.resources.push(new PoolFish(this.element,{reduced:this.reduced}));if(!this.reduced){this.field.animate([{opacity:0},{opacity:1}],{duration:450,easing:'ease-out'});this.layer.animate([{opacity:0},{opacity:1}],{duration:450,easing:'ease-out'})}this.frozenHome=null;this.updateHint();this.updateClearZones();this.scheduleAmbient();this.snapshot();
+      });if(this.mode==='pool')this.resources.push(new PoolFish(this.element,{reduced:this.reduced,history:this.fishHistory||={direction:0,streak:0}}));if(!this.reduced){this.field.animate([{opacity:0},{opacity:1}],{duration:450,easing:'ease-out'});this.layer.animate([{opacity:0},{opacity:1}],{duration:450,easing:'ease-out'})}this.frozenHome=null;this.updateHint();this.updateClearZones();this.scheduleAmbient();this.snapshot();
     }
     updateHitTarget(){if(!this.lastPosition)return;const {x,y}=this.lastPosition;this.button.style.left=x+'px';this.button.style.top=y+'px';}
     updateHint(){this.button.setAttribute('aria-label',this.mode==='kite'?'Give Puff and the kite a gentle gust':this.mode==='pool'?'Make a ripple around Puff':'Wave to Puff');document.querySelector('#scene-effect').textContent=({space:'Shooting star ↗',pool:'Make a ripple ◌',kite:'A little wind ≋',ride:'Ride again ↻'})[this.mode];}
