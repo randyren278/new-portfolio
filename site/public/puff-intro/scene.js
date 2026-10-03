@@ -15,7 +15,7 @@
       this.field=document.createElement('div');this.field.id='pixel-field';this.layer=document.createElement('div');this.layer.id='pixel-actor';element.querySelector('#space').replaceWith(this.field);element.insertBefore(this.layer,element.firstChild);
       this.button=element.querySelector('#entrance-puff-button');this.button.replaceChildren();this.button.setAttribute('aria-label','Wave to Puff');this.button.addEventListener('click',e=>{e.stopPropagation();this.mode==='kite'?this.gust(e.detail?e.clientX:undefined):this.mode==='pool'?this.effect():this.hello()});
       this.actorRect=null;this.lastPosition=null;this.progress={p:1};this.palette=0;
-      element.querySelector('#light-button').onclick=()=>{this.palette=(this.palette+1)%3;element.dataset.light=['night','ember','sage'][this.palette];document.documentElement.style.setProperty('--space-dot',['#87867f','#9a8073','#829386'][this.palette]);this.remount();this.say(['Night sky','Warm ember','Sage night'][this.palette])};
+      element.querySelector('#light-button').onclick=()=>{this.palette=(this.palette+1)%3;element.dataset.light=['night','ember','sage'][this.palette];document.documentElement.style.setProperty('--space-dot',['#87867f','#9a8073','#829386'][this.palette]);this.resources.forEach(resource=>resource.rerender?.());this.say(['Night sky','Warm ember','Sage night'][this.palette])};
       element.querySelector('#comet-button').onclick=()=>this.effect();
       element.querySelector('#planet-button').onclick=()=>{this.setMode('space');this.effect()};
       element.querySelector('#signal-button').onclick=()=>{this.hello();this.effect()};

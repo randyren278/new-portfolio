@@ -23,12 +23,12 @@
       const animate=(el,frames,options)=>{const a=el.animate(frames,{fill:'both',...options,duration:options.duration*1.65,delay:(options.delay||0)*1.65});this.animations.push(a);return a};
       [entrance.querySelector('.arrival'),entrance.querySelector('.entrance-top'),entrance.querySelector('.entrance-bottom'),entrance.querySelector('.scene-switcher'),entrance.querySelector('.vehicle-switcher')].filter(Boolean).forEach(el=>animate(el,[{opacity:1,transform:getComputedStyle(el).transform},{opacity:0,transform:getComputedStyle(el).transform}],{duration:200,easing:'ease-out'}));
       if(mode==='space')animate(scene.field,[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(2.8)'}],{duration:820,easing:'cubic-bezier(.55,0,.8,.45)'});
-      else if(mode==='pool')animate(scene.field,[{opacity:1,transform:'translateY(0) scale(1)'},{opacity:.35,transform:'translateY(6px) scale(1.025)'}],{duration:1500,easing:'ease-in-out'});
+      else if(mode==='pool'){scene.field.style.transformOrigin=`${origin.x}px ${origin.y}px`;animate(scene.field,[{opacity:1,transform:'scale(1)'},{opacity:.65,transform:'scale(2.4)'}],{duration:1550,easing:'cubic-bezier(.45,0,.2,1)'})}
       else if(mode==='kite')animate(scene.field,[{opacity:1,transform:'translate(0,0)'},{opacity:.6,transform:'translate(-28px,-12px)'}],{duration:1050,easing:'ease-in-out'});
       else animate(scene.field,[{opacity:1,transform:'translateX(0)'},{opacity:.75,transform:`translateX(${-w*.65}px)`}],{duration:1000,easing:'cubic-bezier(.5,0,.7,1)'});
       scene.layer.style.opacity='0';
       if(mode==='space')animate(entrance,[{opacity:1,offset:0},{opacity:1,offset:.25},{opacity:0,offset:1}],{duration:1050,easing:'cubic-bezier(.3,0,.3,1)'});
-      else if(mode==='pool')animate(entrance,[{opacity:1,offset:0},{opacity:1,offset:.08},{opacity:0,offset:1}],{duration:1650,easing:'cubic-bezier(.4,0,.35,1)'});
+      else if(mode==='pool')animate(entrance,[{opacity:1,offset:0},{opacity:1,offset:.62},{opacity:0,offset:1}],{duration:1650,easing:'cubic-bezier(.4,0,.35,1)'});
       else animate(entrance,[{opacity:1,offset:0},{opacity:1,offset:.7},{opacity:0,offset:1}],{duration:1780,easing:'linear'});
       const cards=[...portfolio.querySelectorAll('.blank-bento .bento-cell')].map(el=>({el,rect:el.getBoundingClientRect()})).sort((a,b)=>Math.hypot(a.rect.x+a.rect.width/2-cx,a.rect.y+a.rect.height/2-cy)-Math.hypot(b.rect.x+b.rect.width/2-cx,b.rect.y+b.rect.height/2-cy));
       if(mode==='kite'||mode==='ride')cards.sort((a,b)=>a.rect.x-b.rect.x||a.rect.y-b.rect.y);
@@ -50,11 +50,34 @@
         } else {
           const reveal=smooth(clamp((elapsed-280)/1400)),fade=1-ease(clamp((elapsed-1350)/450));ctx.imageSmoothingEnabled=false;
           if(mode==='pool'){
-            const ripple=clamp((elapsed-100)/1450),r=24+smooth(ripple)*Math.hypot(w,h)*.68;
-            const ox=origin.x,oy=origin.y;
-            for(let ring=0;ring<3;ring++){const radius=Math.max(0,r-ring*18);ctx.fillStyle=['#c1d9ef','#699acb','#476c91'][ring];for(let a=0;radius>0&&a<Math.PI*2;a+=8/Math.max(20,radius)){ctx.globalAlpha=Math.sin(ripple*Math.PI)*(.25-ring*.055);ctx.fillRect(Math.round(ox+Math.cos(a)*radius),Math.round(oy+Math.sin(a)*radius*.78),ring===0?1.8:1.3,ring===0?1.8:1.3)}}
-            const dip=smooth(clamp((elapsed-50)/1050));ctx.save();ctx.globalAlpha=1-dip;ctx.translate(origin.x,origin.y+dip*18);ctx.rotate(Math.sin(dip*Math.PI)*.035);ctx.drawImage(sprite,-origin.width/2,-origin.height/2,origin.width,origin.height);ctx.restore();
-            for(let i=0;i<7;i++){const a=clamp((elapsed-130-i*35)/560);ctx.globalAlpha=Math.sin(a*Math.PI)*.65;ctx.fillStyle=['#c1d9ef','#699acb','#476c91'][i%3];const bx=Math.round(origin.x+(hash(i+19)-.5)*65),by=Math.round(origin.y-8-a*(35+hash(i+8)*28)),size=i%3===0?3:2;ctx.fillRect(bx,by,size,size)}
+            // A dive opens a soft elliptical aperture through the dotted water.
+            const ox=origin.x,oy=origin.y+origin.height*.23;
+            const dive=smooth(clamp(elapsed/680));
+            const opening=smooth(clamp((elapsed-320)/1200));
+            const radius=12+opening*Math.hypot(w,h)*1.22;
+            const feather=Math.min(32,radius*.3);
+            const mask=`radial-gradient(ellipse ${radius}px ${radius*.72}px at ${ox}px ${oy}px,transparent ${Math.max(0,radius-feather)}px,#000 ${radius}px)`;
+            entrance.style.maskImage=mask;entrance.style.webkitMaskImage=mask;
+            for(let ring=0;ring<4;ring++){
+              const r=Math.max(2,radius-ring*(10+opening*18));
+              ctx.fillStyle=['#c1d9ef','#8fb6cd','#699acb','#87867f'][ring];
+              const alpha=Math.sin(clamp(elapsed/1700)*Math.PI)*(.55-ring*.09);
+              for(let angle=0;angle<Math.PI*2;angle+=6/Math.max(12,r)){
+                const wave=Math.sin(angle*7-elapsed*.006)*Math.min(8,r*.035);
+                ctx.globalAlpha=alpha*(.65+.35*Math.sin(angle*3+elapsed*.003)**2);
+                ctx.fillRect(Math.round(ox+Math.cos(angle)*(r+wave)),Math.round(oy+Math.sin(angle)*(r*.72+wave)),ring?1.6:2.3,ring?1.6:2.3);
+              }
+            }
+            // Helmet remains intact as Puff dips below the rim; small bubbles rise past us.
+            ctx.save();ctx.globalAlpha=1-smooth(clamp((elapsed-300)/430));ctx.translate(origin.x,origin.y+dive*48);ctx.rotate(Math.sin(dive*Math.PI)*.08);
+            const scale=1-dive*.24;ctx.drawImage(sprite,-origin.width*scale/2,-origin.height*scale/2,origin.width*scale,origin.height*scale);ctx.restore();
+            for(let i=0;i<25;i++){
+              const t=clamp((elapsed-180-i*17)/1150),spread=24+smooth(t)*w*.55;
+              const bx=ox+(hash(i+28)-.5)*spread*2,by=oy-t*(h*.65+hash(i+7)*100);
+              ctx.globalAlpha=Math.sin(t*Math.PI)*.55;ctx.fillStyle=i%3?'#699acb':'#c1d9ef';
+              const size=1.5+hash(i+35)*2.5;ctx.strokeStyle=ctx.fillStyle;ctx.lineWidth=1;
+              if(i%4===0)ctx.strokeRect(Math.round(bx),Math.round(by),size+2,size+2);else ctx.fillRect(Math.round(bx),Math.round(by),size,size);
+            }
           } else if(mode==='kite'){
             const edge=-h*.35+reveal*(w+h*.7);entrance.style.clipPath=`polygon(${edge-h*.35}px 0, ${w}px 0, ${w}px ${h}px, ${edge+h*.35}px ${h}px)`;
             // Curving wind ribbons follow the diagonal wipe, with a handful of kite-tail bows.
@@ -76,7 +99,7 @@
       this.visibility=()=>{if(document.hidden)this.complete()};document.addEventListener('visibilitychange',this.visibility);
     }
     complete(){if(!this.active||this.finished)return;this.finished=true;const finish=this.onfinish;this.cancel();finish?.()}
-    cancel(){this.active=false;cancelAnimationFrame(this.raf);clearTimeout(this.timeout);this.canvas?.remove();this.canvas=null;this.animations?.splice(0).forEach(a=>a.cancel());document.body.classList.remove('warping');document.querySelector('#entrance')?.classList.remove('warp-departure');document.querySelector('#portfolio')?.classList.remove('warp-arrival');if(this.scene){this.scene.layer.style.opacity='';this.scene.element.style.clipPath=''}if(this.escape)document.removeEventListener('keydown',this.escape);if(this.visibility)document.removeEventListener('visibilitychange',this.visibility);this.onfinish=null}
+    cancel(){this.active=false;cancelAnimationFrame(this.raf);clearTimeout(this.timeout);this.canvas?.remove();this.canvas=null;this.animations?.splice(0).forEach(a=>a.cancel());document.body.classList.remove('warping');document.querySelector('#entrance')?.classList.remove('warp-departure');document.querySelector('#portfolio')?.classList.remove('warp-arrival');if(this.scene){this.scene.layer.style.opacity='';this.scene.element.style.clipPath='';this.scene.element.style.maskImage='';this.scene.element.style.webkitMaskImage='';this.scene.field.style.transformOrigin=''}if(this.escape)document.removeEventListener('keydown',this.escape);if(this.visibility)document.removeEventListener('visibilitychange',this.visibility);this.onfinish=null}
   }
   window.SpaceTransit=SpaceTransit;
 })();

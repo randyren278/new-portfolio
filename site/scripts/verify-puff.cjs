@@ -26,7 +26,20 @@ fs.mkdirSync(output, { recursive: true });
 		p.on("pageerror", (e) => errors.push(e.message));
 		await p.goto(process.env.PUFF_URL || "http://127.0.0.1:4190/");
 		const f = await (await p.locator("iframe").elementHandle()).contentFrame();
+		await p.locator("iframe.is-ready").waitFor();
 		await f.locator(".explore-button").waitFor();
+		assert.equal(await f.locator(".entrance-top,#motion-toggle,.skip-entrance").count(), 0);
+		for (const mode of ["space", "pool", "kite"]) {
+			await f.evaluate(mode => spaceScene.setMode(mode), mode);
+			await f.waitForTimeout(100);
+			assert(await f.evaluate(() => {
+				const actor = spaceScene.actor;
+				const canvases = [...document.querySelectorAll("canvas")];
+				const position = {...spaceScene.lastPosition};
+				document.querySelector("#light-button").click();
+				return actor === spaceScene.actor && canvases.every(c => c.isConnected) && Math.hypot(position.x - spaceScene.lastPosition.x, position.y - spaceScene.lastPosition.y) < .01;
+			}), `Lighting reset ${mode}`);
+		}
 		await f.evaluate(() => document.fonts.ready);
 		assert(
 			await f

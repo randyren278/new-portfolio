@@ -4,7 +4,7 @@ ReferenceModules.register(98092, e => {
     "use strict";
     var t = e.i(93384);
     function n(e) { let t = document.createElement("canvas"); t.setAttribute("aria-hidden", "true"), t.style.cssText = "display:block;width:100%;height:100%;", e.appendChild(t); let n = t.getContext("2d"), a = () => { let a = Math.min(2, devicePixelRatio || 1), o = e.getBoundingClientRect(); t.width = Math.max(1, o.width * a), t.height = Math.max(1, o.height * a), n.setTransform(a, 0, 0, a, 0, 0); }; a(); let o = new ResizeObserver(a); return o.observe(e), { c: t, ctx: n, ro: o, fit: a }; }
-    function a(e) { let t, n = !1, a = o => { n || (e(o / 1e3), t = requestAnimationFrame(a)); }; return t = requestAnimationFrame(a), () => { n = !0, cancelAnimationFrame(t); }; }
+    function a(e) { let t, n = !1, last = 0, a = o => { n || (last=o/1e3,e(last),t=requestAnimationFrame(a)); }; const stop=()=>{n=!0;cancelAnimationFrame(t)};stop.render=()=>e(last);t=requestAnimationFrame(a);return stop; }
     let o = e => getComputedStyle(document.documentElement).getPropertyValue(e).trim(), l = e => `rgba(${getComputedStyle(document.documentElement).getPropertyValue("--ink-rgb").trim() || "250,249,245"},${e})`, i = 0xffffffff * Math.random() | 0;
     function r(e, t, n) { let a = 0x165667b1 * e + 0x27d4eb2f * t + 69069 * n | 0; return a = Math.imul(a ^ a >>> 13, 0x4bf19f61), ((a ^= a >>> 16) >>> 0) / 0x100000000; }
     function s(e, t, n, a) { let o = e / a, l = t / a, i = Math.floor(o), s = Math.floor(l), d = o - i, c = l - s; d = d * d * (3 - 2 * d), c = c * c * (3 - 2 * c); let p = r(i, s, n), u = r(i + 1, s, n), h = r(i, s + 1, n), m = r(i + 1, s + 1, n), f = p + (u - p) * d; return f + (h + (m - h) * d - f) * c; }
@@ -125,7 +125,7 @@ ReferenceModules.register(98092, e => {
                 }
                 let v = Math.min(1, (m - L) / Math.max(1e-4, T - L)), w = v * v * (3 - 2 * v), x = .6 + (q - .6) * w;
                 y > .9985 && (x += 1.2 * (.5 + .5 * w)), x < .45 || (g.fillStyle = A, g.beginPath(), g.arc(o, t, x, 0, 2 * Math.PI), g.fill());
-            } x.fn && x.fn(n, a, f, k); }); return { stop: () => { C(), b.disconnect(); }, canvas: v, drawShots: T, shots: L }; }, "starDots", 0, function (e, { color: o = null, count: i = 220, twinkle: r = !0, progressRef: s = null } = {}) { let { c: d, ctx: c, ro: p } = n(e), u = Array.from({ length: i }, () => ({ x: Math.random(), y: Math.random(), s: .85 > Math.random() ? 2 : 3, p: Math.random() * Math.PI * 2, f: .4 + 1.2 * Math.random(), reveal: Math.random() })), h = a(e => { let n = d.clientWidth, a = d.clientHeight, i = o || l(.65); c.clearRect(0, 0, n, a); let p = s ? Math.max(0, Math.min(1, s.p)) : 1; for (let o of u) {
+            } x.fn && x.fn(n, a, f, k); }); return { rerender: () => C.render(), stop: () => { C(), b.disconnect(); }, canvas: v, drawShots: T, shots: L }; }, "starDots", 0, function (e, { color: o = null, count: i = 220, twinkle: r = !0, progressRef: s = null } = {}) { let { c: d, ctx: c, ro: p } = n(e), u = Array.from({ length: i }, () => ({ x: Math.random(), y: Math.random(), s: .85 > Math.random() ? 2 : 3, p: Math.random() * Math.PI * 2, f: .4 + 1.2 * Math.random(), reveal: Math.random() })), h = a(e => { let n = d.clientWidth, a = d.clientHeight, i = o || l(.65); c.clearRect(0, 0, n, a); let p = s ? Math.max(0, Math.min(1, s.p)) : 1; for (let o of u) {
             if (o.reveal > p)
                 continue;
             let l = r && !t.reducedMotion ? .25 + .75 * (.5 + .5 * Math.sin(e * o.f + o.p)) : .8;
