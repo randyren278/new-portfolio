@@ -18,9 +18,36 @@ const assert = require('node:assert/strict');
       let frame = await (await page.locator('iframe').elementHandle()).contentFrame();
       await frame.evaluate(() => spaceScene.setMode('pool'));
       await frame.locator('.fish-layer').waitFor();
-      await frame.locator('#entrance-puff-button').click();
-      await frame.locator('#scene-effect').click();
-      assert.equal(await frame.evaluate(() => spaceScene.resources.find(r => r instanceof PoolFish).count), 0);
+      // Deterministic rolls cover the 25% boundary through the real control.
+      for (const [roll, expected] of [[.1, 1], [.25, 0], [.5, 0], [.99, 0]]) {
+        await frame.evaluate(roll => {
+          const fish = spaceScene.resources.find(r => r instanceof PoolFish);
+          fish.clear(); clearTimeout(fish.timer); fish.count = 0;
+          window.originalRandom = Math.random; Math.random = () => roll;
+        }, roll);
+        await frame.locator('#scene-effect').click();
+        assert.equal(await frame.evaluate(() => spaceScene.resources.find(r => r instanceof PoolFish).count), expected);
+        await frame.evaluate(() => { Math.random = originalRandom; });
+      }
+      for (const selector of ['#entrance-puff-button', '#pixel-actor']) {
+        await frame.evaluate(() => {
+          const fish = spaceScene.resources.find(r => r instanceof PoolFish);
+          fish.clear(); clearTimeout(fish.timer); fish.count = 0;
+          window.originalRandom = Math.random; Math.random = () => .1;
+        });
+        await frame.locator(selector).click(selector === '#pixel-actor' ? { position: { x: 30, y: viewport.height * .6 } } : {});
+        await frame.locator('#scene-effect').click();
+        assert.equal(await frame.evaluate(() => spaceScene.resources.find(r => r instanceof PoolFish).count), 1, 'No duplicate fish');
+        await frame.evaluate(() => { Math.random = originalRandom; });
+      }
+      await frame.evaluate(() => {
+        const fish = spaceScene.resources.find(r => r instanceof PoolFish);
+        fish.clear(); fish.count = 0;
+        const random = Math.random; Math.random = () => 0;
+        spaceScene.effect(true);
+        if (fish.count) throw new Error('Ambient ripple spawned a fish');
+        Math.random = random; fish.schedule(100);
+      });
       await frame.waitForFunction(() => spaceScene.resources.find(r => r instanceof PoolFish).active, {}, { timeout: 22000 });
       assert(await frame.evaluate(() => {
         const fish = spaceScene.resources.find(r => r instanceof PoolFish), active = fish.active;
@@ -50,7 +77,7 @@ const assert = require('node:assert/strict');
       await frame.evaluate(() => spaceScene.setMode('space'));
       assert.equal(await frame.locator('.fish-layer').count(), 0);
       assert.deepEqual(errors, []);
-      console.log(`${name}: ambient arrival, ripple-only taps, lighting continuity, entry cleanup, reduced motion and scene isolation passed`);
+      console.log(`${name}: ambient arrival, 25% ripple chance, lighting continuity, entry cleanup, reduced motion and scene isolation passed`);
     } finally { await browser.close(); }
   }));
 })();

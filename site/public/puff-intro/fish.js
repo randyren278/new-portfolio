@@ -19,9 +19,10 @@
       this.resize=()=>{const interrupted=!!this.active;cancelAnimationFrame(this.raf);this.w=host.clientWidth;this.h=host.clientHeight;this.dpr=Math.min(devicePixelRatio||1,2);this.canvas.width=this.w*this.dpr;this.canvas.height=this.h*this.dpr;this.canvas.style.width=this.w+'px';this.canvas.style.height=this.h+'px';this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);this.ctx.imageSmoothingEnabled=false;this.active=null;if(interrupted)this.schedule();};
       this.resize();this.observer=new ResizeObserver(this.resize);this.observer.observe(host);
       this.visibility=()=>{if(document.hidden){this.clear();clearTimeout(this.timer)}else this.schedule()};document.addEventListener('visibilitychange',this.visibility);
-      this.schedule(8000+Math.random()*10000);
+      this.schedule(6000+Math.random()*8000);
     }
-    schedule(delay=12000+Math.random()*13000){clearTimeout(this.timer);if(this.reduced||!this.alive||document.hidden)return;this.timer=setTimeout(()=>this.jump(),delay)}
+    schedule(delay=10000+Math.random()*10000){clearTimeout(this.timer);if(this.reduced||!this.alive||document.hidden)return;this.timer=setTimeout(()=>this.jump(),delay)}
+    onRipple(){if(Math.random()<.25)this.jump()}
     jump(){
       if(!this.alive||this.reduced||document.hidden||this.active)return false;
       clearTimeout(this.timer);const w=this.w,h=this.h,side=Math.random()<.5?-1:1;this.count++;
@@ -44,8 +45,8 @@
         c.save();c.beginPath();c.rect(0,0,this.w,a.y+1);c.clip();
         c.translate(x,y);c.scale(a.dir,1);c.rotate(angle);c.globalAlpha=1;
         // Whole-pixel sprite, with a tiny tail flick rather than a squash/stretch.
-        c.drawImage(pixels,-6,-3,13,7);
-        if(Math.floor(t*16)%2){c.fillStyle='#8fb6cd';c.fillRect(-6,-2,1,1)}
+        c.drawImage(pixels,-13,-7,26,14);
+        if(Math.floor(t*16)%2){c.fillStyle='#8fb6cd';c.fillRect(-13,-4,2,2)}
         c.restore();
       }
       this.ripple(a.x+a.dx,a.y,(t-1)/.72);this.splash(a.x+a.dx,a.y,(t-1)/.47,a.dir);c.globalAlpha=1;

@@ -20,7 +20,7 @@
       element.querySelector('#planet-button').onclick=()=>{this.setMode('space');this.effect()};
       element.querySelector('#signal-button').onclick=()=>{this.hello();this.effect()};
       document.querySelectorAll('button[data-scene]').forEach(b=>b.addEventListener('click',()=>this.setMode(b.dataset.scene)));
-      element.addEventListener('click',e=>{if(this.mode==='kite'&&!e.target.closest('a,button'))this.gust(e.clientX)});
+      element.addEventListener('click',e=>{if(this.mode==='pool'&&e.isTrusted&&e.target.closest('#pixel-actor'))this.fishRipple();if(this.mode==='kite'&&!e.target.closest('a,button'))this.gust(e.clientX)});
       element.querySelector('#scene-effect').onclick=()=>this.effect();
       document.addEventListener('visibilitychange',()=>{if(document.hidden)this.dispose();else if(this.running)this.mount()});
       document.fonts.ready.then(()=>this.updateClearZones());
@@ -29,7 +29,8 @@
     say(text){this.element.querySelector('#scene-announcement').textContent=text}
     hello(){if(this.reduced){this.say('Puff says hello');return}clearTimeout(this.helloTimer);const s=PuffPixels.sprites.space;this.savedFrames||=s.frames.slice();s.canvases.clear();s.frames=s.frames.map((f,i)=>i>=30&&i<98?this.savedFrames[90+(i%6)]:f);this.helloTimer=setTimeout(()=>{s.frames=this.savedFrames.slice();s.canvases.clear()},1400);this.say('Puff says hello')}
     setMode(mode){if(!['space','pool','kite'].includes(mode))return;if(this.mode===mode&&mode!=='ride')return;this.frozenHome=null;this.mode=mode;this.element.dataset.scene=mode;document.querySelectorAll('button[data-scene]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.scene===mode))});document.querySelectorAll('[data-vehicle]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.vehicle===this.vehicle)));this.remount();this.say({space:'Puff in orbit',pool:'Puff at the pool',kite:'Puff flying a kite',ride:'Puff riding a '+this.vehicle}[mode])}
-    effect(silent=false){if(this.mode==='ride'){this.remount();this.say('Puff rides again');return}if(this.mode==='kite'){this.gust();return}const r=this.field.getBoundingClientRect();const target=this.mode==='pool'?this.layer:this.field;target.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:r.left+(this.mode==='pool'&&this.lastPosition?this.lastPosition.x:r.width*.7),clientY:r.top+(this.mode==='pool'&&this.lastPosition?this.lastPosition.y:r.height*.57)}));if(!silent)this.say(this.mode==='space'?'Shooting star':this.mode==='pool'?'Water ripple':'Scene refreshed')}
+    effect(silent=false){if(this.mode==='ride'){this.remount();this.say('Puff rides again');return}if(this.mode==='kite'){this.gust();return}const r=this.field.getBoundingClientRect();const target=this.mode==='pool'?this.layer:this.field;target.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:r.left+(this.mode==='pool'&&this.lastPosition?this.lastPosition.x:r.width*.7),clientY:r.top+(this.mode==='pool'&&this.lastPosition?this.lastPosition.y:r.height*.57)}));if(!silent&&this.mode==='pool')this.fishRipple();if(!silent)this.say(this.mode==='space'?'Shooting star':this.mode==='pool'?'Water ripple':'Scene refreshed')}
+    fishRipple(){this.resources.find(resource=>resource instanceof PoolFish)?.onRipple()}
     gust(clientX){if(!this.running||this.element.inert)return;this.say('The breeze catches the kite and pulls Puff along');if(!this.reduced)this.actor?.gust?.(Number.isFinite(clientX)?(clientX<this.element.getBoundingClientRect().width/2?1:-1):undefined);}
     updateClearZones(){
       const host=this.element.getBoundingClientRect();if(!host.width||!host.height)return;

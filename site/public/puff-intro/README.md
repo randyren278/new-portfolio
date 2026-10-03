@@ -12,4 +12,4 @@ Desktop viewports at least 1280×720 fit the complete bento without clipping. Na
 
 The lighting star recolours the existing renderers without resetting actors, clouds or water. Pool opens through an expanding, feathered ripple while the water field zooms outward and pixel bubbles rise; Puff keeps the helmet throughout the dive.
 
-Pool occasionally has a 13 × 7 pixel fish jump beside Puff. Timing, position and direction are random: first arrival after 8–18 seconds, then 12–25 seconds of quiet after each splash. Taps still only trigger ripples. Fish stop for reduced motion, background tabs, scene disposal and portfolio entry; no fish canvas remains behind the bento.
+Pool occasionally has a 26 × 14 pixel fish jump beside Puff. Timing, position and direction are random: first arrival after 6–14 seconds, then 10–20 seconds of quiet after each splash. User-triggered ripples also have a 25% chance of a fish jump, with at most one fish active. Automatic ambient ripples do not roll this chance. Fish stop for reduced motion, background tabs, scene disposal and portfolio entry; no fish canvas remains behind the bento.
