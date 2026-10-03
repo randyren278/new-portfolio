@@ -59,8 +59,7 @@ html.puff-theme,
   border: 0;
   cursor: pointer;
 }
-.correspondence-puff img {
-  image-rendering: pixelated;
+.correspondence-puff svg {
   display: block;
 }
 .puff-greeting {
@@ -250,5 +249,100 @@ html.puff-theme body {
   }
   .puff-bento .name-meta {
     margin-top: 6px;
+  }
+}
+
+/* Quiet face and starlight animation; the body never translates or bounces. */
+.puff-glance {
+  animation: puff-look 14s steps(1, end) infinite;
+}
+.puff-eyes {
+  transform-origin: 25px 29px;
+  animation: puff-blink 7.3s steps(1, end) infinite;
+}
+.puff-star-cross {
+  animation: puff-twinkle 4.6s ease-in-out infinite;
+}
+.puff-star-sparks {
+  animation: puff-sparkle 4.6s ease-in-out infinite;
+  opacity: 0;
+}
+.puff-star-left path {
+  animation-delay: -2.1s;
+}
+.correspondence-puff.is-curious .puff-glance {
+  animation: none;
+  transform: translateY(-1px);
+}
+.correspondence-puff.is-curious .puff-star {
+  filter: brightness(1.3);
+}
+@keyframes puff-look {
+  0%,
+  23%,
+  48%,
+  100% {
+    transform: translateX(0);
+  }
+  12%,
+  19% {
+    transform: translateX(-1px);
+  }
+  36%,
+  44% {
+    transform: translateX(1px);
+  }
+  76%,
+  84% {
+    transform: translateY(-1px);
+  }
+}
+@keyframes puff-blink {
+  0%,
+  39%,
+  42%,
+  78%,
+  81%,
+  100% {
+    transform: scaleY(1);
+  }
+  40%,
+  79% {
+    transform: scaleY(0.5);
+  }
+}
+@keyframes puff-twinkle {
+  0%,
+  28%,
+  65%,
+  100% {
+    opacity: 0.75;
+  }
+  40% {
+    opacity: 1;
+  }
+  49%,
+  55% {
+    opacity: 0;
+  }
+}
+@keyframes puff-sparkle {
+  0%,
+  40%,
+  65%,
+  100% {
+    opacity: 0;
+  }
+  49%,
+  55% {
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .correspondence-puff svg * {
+    animation: none;
+  }
+  .correspondence-puff.is-curious .puff-glance {
+    transform: none;
   }
 }
