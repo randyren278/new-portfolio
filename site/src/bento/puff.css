@@ -19,6 +19,12 @@ html.puff-theme,
 .puff-bento.awaiting-intro {
   visibility: hidden;
 }
+/* Flip faces otherwise delay inherited hiding by 310ms; an open back face
+   explicitly stays visible. Hide both immediately during the intro handoff. */
+.puff-bento.awaiting-intro .photo-face {
+  visibility: hidden;
+  transition: none;
+}
 .puff-entrance {
   position: fixed;
   inset: 0;
