@@ -1,7 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import fallbackPhotos from '../photo-fallbacks.json';
 import { POOL_SIZE, type PhotoSlot } from '../photos';
+import type { ReadyPhoto } from '../usePhotoShuffle';
 
 /**
  * Photo cell — a flip card. The front is the photograph; clicking it turns
@@ -25,8 +27,8 @@ import { POOL_SIZE, type PhotoSlot } from '../photos';
  * reason.
  *
  * Cell placement (grid-row / grid-column / aspect-ratio) lives in bento.css.
- * If /photos/<file> 404s, onError hides the <img> and the muted rectangle
- * stands alone — no broken-image icon, and the verso still works.
+ * The image stage owns decoded DOM images so a shuffle keeps the previous
+ * photograph underneath the incoming film frame until its animation finishes.
  */
 type Props = {
   slot: PhotoSlot;
@@ -34,7 +36,12 @@ type Props = {
   areaClass: string;
   /** Optional authored caption for this file; most photos have none. */
   caption?: string;
+  incoming?: ReadyPhoto;
+  onSettled: (file: string) => void;
+  delay: number;
 };
+
+const fallbacks: Record<string, string> = fallbackPhotos;
 
 const stem = (file: string) => file.replace(/\.[^.]+$/, '').toUpperCase();
 
@@ -48,14 +55,56 @@ function Ribbon({ palette, className }: { palette: { hex: string }[]; className:
   );
 }
 
-export function PhotoCell({ slot, areaClass, caption }: Props) {
+export function PhotoCell({ slot, areaClass, caption, incoming, onSettled, delay }: Props) {
   const { photo, partner, rank } = slot;
   const [flipped, setFlipped] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const initial = useRef(slot);
+  const stage = useRef<HTMLDivElement>(null);
+  const displayed = useRef<HTMLImageElement | null>(null);
+  const flippedRef = useRef(flipped);
+  flippedRef.current = flipped;
   const frontRef = useRef<HTMLButtonElement>(null);
   const backRef = useRef<HTMLButtonElement>(null);
   const interacted = useRef(false);
+
+  useEffect(() => {
+    if (!incoming || !stage.current) return;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const wasFlipped = flippedRef.current;
+    // A shuffle should not move focus from its button back into a photo.
+    interacted.current = false;
+    setFlipped(false);
+    const image = incoming.image;
+    image.className = 'photo-img photo-incoming';
+    stage.current.append(image);
+    const animation = image.animate(
+      reduced
+        ? [{ opacity: 0 }, { opacity: 1 }]
+        : [{ transform: 'translateY(101%)' }, { transform: 'translateY(0)' }],
+      {
+        duration: reduced ? 120 : 720,
+        delay: reduced ? 0 : delay + (wasFlipped ? 620 : 0),
+        easing: 'cubic-bezier(.22,.8,.2,1)',
+        fill: 'both',
+      },
+    );
+    let completed = false;
+    animation.finished.then(
+      () => {
+        completed = true;
+        displayed.current?.remove();
+        displayed.current = image;
+        image.className = 'photo-img photo-current';
+        animation.cancel();
+        onSettled(incoming.slot.photo.file);
+      },
+      () => {},
+    );
+    return () => {
+      animation.cancel();
+      if (!completed) image.remove();
+    };
+  }, [incoming, onSettled, delay]);
 
   useEffect(() => {
     if (!interacted.current) return;
@@ -91,23 +140,21 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
     >
       <div className="photo-inner">
         <div className="photo-face photo-front" inert={flipped}>
-          {!failed && (
+          <div className="photo-stage" ref={stage}>
             <img
-              className="photo-img"
-              src={`/photos/${photo.file}`}
+              className="photo-img photo-fallback"
+              src={fallbacks[initial.current.photo.file]}
               alt=""
               decoding="async"
               loading="eager"
-              onLoad={() => setLoaded(true)}
-              onError={() => setFailed(true)}
-              style={{ opacity: loaded ? 1 : 0 }}
             />
-          )}
+          </div>
           <span className="photo-fname">{photo.file.toUpperCase()}</span>
           <button
             type="button"
             className="photo-flip"
             ref={frontRef}
+            disabled={!!incoming}
             onClick={() => {
               interacted.current = true;
               setFlipped(true);
@@ -143,7 +190,7 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
             <div className="photo-pair">
               <img
                 className="photo-thumb"
-                src={`/photos/${partner.file}`}
+                src={fallbacks[partner.file] ?? `/photos/${partner.file}`}
                 alt=""
                 decoding="async"
                 loading="eager"
@@ -152,7 +199,7 @@ export function PhotoCell({ slot, areaClass, caption }: Props) {
                 <span className="kicker">PAIRED WITH</span>
                 <span className="photo-pairname">{stem(partner.file)}</span>
                 <Ribbon palette={partner.palette} className="photo-rib photo-rib-sm" />
-                <span className="photo-foot">Δ{delta}° OF HUE · ADJACENT IN THE SORT</span>
+                <span className="photo-foot">Δ{delta}° OF HUE · PAIRED BY COLOR</span>
               </div>
             </div>
 

@@ -59,7 +59,7 @@ function hueRank(file: string): number {
 export type PhotoSlot = { photo: PhotoMeta; partner: PhotoMeta; rank: number };
 
 /** Both cells from one picked pair, each pointing at the other. */
-function toSlots(pair: PhotoMeta[]): PhotoSlot[] {
+export function toSlots(pair: PhotoMeta[]): PhotoSlot[] {
   const [first, second] = pair;
   if (!first || !second) return [];
   return [

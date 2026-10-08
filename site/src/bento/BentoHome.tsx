@@ -12,7 +12,7 @@ import { PhotoCell } from './cells/PhotoCell';
 import { ProjectsCell } from './cells/ProjectsCell';
 import { ResumeCell } from './cells/ResumeCell';
 import { StravaCell, type StravaData } from './cells/StravaCell';
-import { INITIAL_SLOTS, type PhotoSlot, pickLayout } from './photos';
+import { usePhotoShuffle } from './usePhotoShuffle';
 import { useResizeTreatment } from './useResizeTreatment';
 
 /**
@@ -34,7 +34,7 @@ import { useResizeTreatment } from './useResizeTreatment';
  *
  * Hydration story: SSR + first client paint render `INITIAL_SLOTS`
  * (deterministic, first 2 photos from the manifest). A useEffect swaps
- * in the seeded selection. One-frame swap, imperceptible in practice.
+ * in a decoded pair, retaining the bundled starting photos until ready.
  *
  * Mobile: Name, Contact, Projects, Photo A, Résumé, Activity, Photo B.
  * Only the photo selection changes between visits.
@@ -49,7 +49,8 @@ export function BentoHome({
   const [intro, setIntro] = useState(true);
   const [entering, setEntering] = useState(false);
   const [scene, setScene] = useState<string | null>(null);
-  const [shuffleCount, setShuffleCount] = useState(0);
+  const photos = usePhotoShuffle();
+  const { slots } = photos;
   useEffect(() => {
     setScene(['space', 'pool', 'kite'][Math.floor(Math.random() * 3)]);
   }, []);
@@ -61,17 +62,6 @@ export function BentoHome({
       document.body.style.overflow = old;
     };
   }, [intro]);
-  function shufflePhotos() {
-    let next = pickLayout();
-    for (
-      let i = 0;
-      i < 20 && next.some((n) => slots.some((s) => s.photo.file === n.photo.file));
-      i++
-    )
-      next = pickLayout();
-    setSlots(next);
-    setShuffleCount((count) => count + 1);
-  }
   function finishIntro() {
     setIntro(false);
     setEntering(false);
@@ -106,16 +96,11 @@ export function BentoHome({
     curtain?.remove();
     replaying.current = false;
   }
-  const [slots, setSlots] = useState<readonly PhotoSlot[]>(INITIAL_SLOTS);
   const gridRef = useRef<HTMLElement>(null);
   useResizeTreatment(gridRef);
   useEffect(() => {
     if (!intro) gridRef.current?.focus({ preventScroll: true });
   }, [intro]);
-
-  useEffect(() => {
-    setSlots(pickLayout());
-  }, []);
 
   return (
     <>
@@ -131,12 +116,16 @@ export function BentoHome({
         </a>
         <header className="bento-topbar">
           <div className="brand">RANDY REN · PORTFOLIO</div>
-          <button className="bento-text-button" type="button" onClick={shufflePhotos}>
-            Shuffle photos ↻
+          <button
+            className="bento-text-button photo-shuffle"
+            type="button"
+            onClick={photos.shuffle}
+            disabled={photos.busy}
+            aria-busy={photos.busy}
+          >
+            Shuffle photos <span aria-hidden="true">↻</span>
           </button>
-          <output className="puff-sr-only">
-            {shuffleCount ? `Photos shuffled (${shuffleCount})` : ''}
-          </output>
+          <output className="puff-sr-only">{photos.message}</output>
         </header>
 
         <main
@@ -155,8 +144,10 @@ export function BentoHome({
           />
           {slots[0] && (
             <PhotoCell
-              key={`a-${slots[0].photo.file}`}
               slot={slots[0]}
+              incoming={photos.incoming?.[0]}
+              onSettled={photos.onSettled}
+              delay={0}
               areaClass="cell-photo-a"
               caption={content.PHOTO_CAPTIONS[slots[0].photo.file]}
             />
@@ -165,8 +156,10 @@ export function BentoHome({
           <StravaCell strava={strava} />
           {slots[1] && (
             <PhotoCell
-              key={`b-${slots[1].photo.file}`}
               slot={slots[1]}
+              incoming={photos.incoming?.[1]}
+              onSettled={photos.onSettled}
+              delay={90}
               areaClass="cell-photo-b"
               caption={content.PHOTO_CAPTIONS[slots[1].photo.file]}
             />
