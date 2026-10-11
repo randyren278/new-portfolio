@@ -30,7 +30,7 @@ site/
 │   ├── app/
 │   │   ├── layout.tsx              — root metadata + viewport (viewport-fit=cover) + font links
 │   │   ├── page.tsx                — server component; loads content + strava, renders <BentoHome>
-│   │   └── api/strava/{connect,callback,latest}/route.ts
+│   │   └── api/{strava,coros}/{connect,callback}/route.ts, api/training/summary
 │   ├── bento/                      — the home page (replaces the old src/studio)
 │   │   ├── BentoHome.tsx           — client wrapper, composes the 3×3 asymmetric grid
 │   │   ├── bento.css               — palette API + grid geometry + cell chrome
@@ -108,25 +108,26 @@ were stretching to 800px and the bio ran 120 characters a line.
 
 ## The palette API
 
-**Light-only.** Dark mode and the theme toggle were retired with the
-terminal engine — there is no `theme.ts`, no `ThemeToggle.tsx`, and no
-`data-theme` attribute. `:root` declares `color-scheme: light` so a
-visitor whose OS is dark does not get dark UA surfaces on paper.
+**Dark-only, since the Puff entrance (4123f4c).** `layout.tsx` puts
+`puff-theme` on `<html>`, and `html.puff-theme` in `src/bento/puff.css`
+overrides the original light palette that still sits in `bento.css`'s
+`:root`. It declares `color-scheme: dark`, so an OS-light visitor doesn't
+get light scrollbars or UA surfaces on the dark page (the smoke asserts it).
 
-Five roles, one `:root` block at the top of `src/bento/bento.css`:
+The live roles, all in that one `html.puff-theme` block:
 
-- `--bg #fafaf7`, `--ink #0f0f0f`, `--muted #6f6f6f`,
-  `--rule #d8d8d5`, `--accent #a8100a` (heritage vermillion)
-- **Split-var pairs:** `--bg-rgb`, `--ink-rgb`, `--muted-rgb` (space-
-  separated triplets so `rgba(var(--ink-rgb) / 0.03)` works)
+- `--bg #181917`, `--ink #eee7d7`, `--muted #a5a69b`, `--rule #3a3d35`,
+  `--accent #d99177` (terracotta)
+- **Split-var pairs:** `--bg-rgb`, `--ink-rgb`, `--muted-rgb`, `--glass-rgb`,
+  `--shelter-rgb` (space-separated triplets so `rgba(var(--ink-rgb) / 0.03)` works)
+- **Data marks** (`/training` charts only, never text): `--data-dim` and the
+  dark → light `--ramp-1` … `--ramp-5`
 
-**Never add a hardcoded color literal outside that `:root` block.** Every
+**Never add a hardcoded color literal outside the palette blocks.** Every
 hex/rgba elsewhere is a bug.
 
-**`--muted` is pinned to WCAG AA.** It carries every section label,
-caption, and metadata line on the page. At its old `#8a8a8a` it was
-3.30:1 against `--bg` and failed AA on 21 text runs at once. `#6f6f6f` is
-4.65:1. Do not lighten it; the smoke's contrast sweep will reject it.
+**`--muted` carries every label, caption, and metadata line.** It must clear
+WCAG AA on `--bg`; the smokes' contrast sweeps reject anything that doesn't.
 
 ## Content flow
 
@@ -147,8 +148,10 @@ caption, and metadata line on the page. At its old `#8a8a8a` it was
 The middle-right cell renders a projected SVG polyline from the most
 recent GPS activity.
 
-- OAuth: visit `/api/strava/connect` once → callback lands at
-  `/api/strava/callback` → tokens persisted to the store.
+- OAuth: visit `/api/strava/connect?key=<CONNECT_KEY>` once → callback lands
+  at `/api/strava/callback` → tokens persisted to the store. Both bootstraps
+  (Strava and Coros) are gated by `src/auth/connectGate.ts`: no key, no flow;
+  no matching state cookie, no tokens written.
 - Two token backends, chosen by env:
   - `STRAVA_TOKEN_FILE` set → local JSON file (for `pnpm dev`, gitignored).
   - Otherwise → **Vercel Edge Config** (reads via SDK; writes via REST API
@@ -158,7 +161,9 @@ recent GPS activity.
 - If the fetch fails (no tokens, offline, no GPS activity), `page.tsx`
   passes `strava: null` and `StravaCell` renders a hand-drawn fallback
   polyline with a "not connected" caption. **The cell is never broken.**
-- Data cache: 15 min via `next: { revalidate: 900 }` on the Strava fetch.
+- Data cache: 60 s (`unstable_cache` in `page.tsx`). The app gets 100 Strava
+  reads per 15 minutes in total; uncached, a burst of visitors would exhaust
+  it and blank this cell and `/training`'s routes.
 
 ## Training status (`/training`)
 
@@ -176,7 +181,7 @@ so the Puff intro doesn't replay.
   `src/training/coros/parse.ts`; everything the page says is computed in the pure
   `src/training/derive.ts`. Both are tested against real captured responses in
   `src/training/fixtures/` (coordinates stripped): `pnpm test:training`.
-- **Connecting Coros (once):** visit `/api/coros/connect?key=<COROS_CONNECT_KEY>`
+- **Connecting Coros (once):** visit `/api/coros/connect?key=<CONNECT_KEY>`
   and approve on Coros. Tokens land in Edge Config under `coros_auth` (or the file
   named by `COROS_TOKEN_FILE` locally) and refresh themselves. The key gate is
   what stops anyone else connecting *their* Coros account to this page.

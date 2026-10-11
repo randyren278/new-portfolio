@@ -85,8 +85,8 @@ On mobile, **Index stays first** and the remaining six cells are shuffled per
 visit, with one constraint: the two photo cells never land back-to-back. The
 fixed CSS order remains as the JavaScript-off fallback.
 
-The visual rules are intentionally narrow: hairline borders, a warm off-white
-page, almost no radius, no card fills, and motion only where it explains a
+The visual rules are intentionally narrow: hairline borders, a warm dark page,
+soft corners, no card fills, and motion only where it explains a
 state change.
 
 <p align="right"><a href="#readme-top">back to top ↑</a></p>
@@ -104,6 +104,14 @@ in a local JSON file during development or in Vercel Edge Config in production.
 If Strava is unavailable, the cell falls back to a designed static line rather
 than leaving a broken state.
 
+### Training status
+
+The Strava cell is also a doorway. Tapping it asks whether you'd like to see
+how the training is going, and `/training` answers from the watch itself:
+Coros' load and recovery verdicts, HRV and sleep, the latest session lap by
+lap, and the weeks behind it. Coros is read through its hosted MCP server;
+Strava contributes the route shapes. Every number is fetched, never typed.
+
 ### Photography
 
 The photo system builds from a manifest rather than fixed imports. The server
@@ -118,10 +126,11 @@ showing broken-image chrome.
 The site uses a small material vocabulary and repeats it everywhere.
 
 <table>
-  <tr><td><b>Page</b></td><td><code>#fafaf7</code> — warm cream</td></tr>
-  <tr><td><b>Ink</b></td><td><code>#0f0f0f</code> — near black</td></tr>
-  <tr><td><b>Muted</b></td><td><code>#8a8a8a</code></td></tr>
-  <tr><td><b>Rule</b></td><td><code>#d8d8d5</code></td></tr>
+  <tr><td><b>Page</b></td><td><code>#181917</code> — warm charcoal</td></tr>
+  <tr><td><b>Ink</b></td><td><code>#eee7d7</code> — cream</td></tr>
+  <tr><td><b>Muted</b></td><td><code>#a5a69b</code></td></tr>
+  <tr><td><b>Rule</b></td><td><code>#3a3d35</code></td></tr>
+  <tr><td><b>Accent</b></td><td><code>#d99177</code> — terracotta</td></tr>
   <tr><td><b>Sans / utility</b></td><td>IBM Plex Mono</td></tr>
   <tr><td><b>Editorial serif</b></td><td>Instrument Serif / Newsreader</td></tr>
 </table>
