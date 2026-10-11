@@ -2,7 +2,8 @@
  * Training status loader (server only).
  *
  * Coros (via its hosted MCP server) is the source of truth for activities,
- * load, recovery, HRV, sleep, fitness and laps. Strava supplies route
+ * load, recovery, HRV, sleep, fitness and laps. Heart rate is never fetched
+ * or kept: Randy keeps HR off the site. Strava supplies route
  * shapes, and stands in for the activity list if Coros is unavailable.
  * Each source is cached for 15 minutes; per-activity Coros details and
  * laps never change, so they are cached for good.
@@ -104,37 +105,33 @@ async function fetchCorosCore(today: string): Promise<CorosCore> {
     ),
     settle('fitness', coros.call('queryFitnessAssessmentOverview').then(P.parseFitness)),
   ]);
-  const [recovery, restingHr] = await Promise.all([
+  const [recovery, hrv] = await Promise.all([
     settle('recovery', coros.call('queryRecoveryStatus').then(P.parseRecovery)),
-    settle('resting hr', coros.call('queryRestingHeartRate', { days: 28 }).then(P.parseRestingHr)),
-  ]);
-  const [hrv, sleep] = await Promise.all([
     settle(
       'hrv',
       coros
         .call('querySleepHrv', { startDate: ymd(from28), endDate: ymd(today), days: 28 })
         .then(P.parseSleepHrv),
     ),
-    settle(
-      'sleep',
-      coros
-        .call('querySleepOverview', { startDate: ymd(from28), endDate: ymd(today) })
-        .then(P.parseSleepOverview),
-    ),
   ]);
+  const sleep = await settle(
+    'sleep',
+    coros
+      .call('querySleepOverview', { startDate: ymd(from28), endDate: ymd(today) })
+      .then(P.parseSleepOverview),
+  );
   return {
     asOf: new Date().toISOString(),
     records,
     load,
     fitness,
     recovery,
-    restingHr,
     hrv,
     sleep,
   };
 }
 
-const corosCoreCached = unstable_cache(fetchCorosCore, ['coros-core-v1'], { revalidate: 900 });
+const corosCoreCached = unstable_cache(fetchCorosCore, ['coros-core-v2'], { revalidate: 900 });
 
 /**
  * Per-activity detail and laps never change, so each is cached for good
@@ -217,14 +214,13 @@ async function fetchStrava(today: string): Promise<StravaRun[]> {
       indoor: !!a.trainer || /virtual/i.test(type),
       km: a.distance / 1000,
       sec: a.moving_time,
-      avgHr: a.average_heartrate ?? null,
       // Routes only for activities Randy has made public on Strava.
       route: isPublic && poly ? projectToSvgPath(decodePolyline(poly), 160, 110, 10) : null,
     };
   });
 }
 
-const stravaCached = unstable_cache(fetchStrava, ['strava-runs-v1'], { revalidate: 900 });
+const stravaCached = unstable_cache(fetchStrava, ['strava-runs-v2'], { revalidate: 900 });
 
 // ------------------------------------------------------------ fixtures
 
@@ -242,7 +238,6 @@ async function fixtureSources(): Promise<Sources> {
     load: P.parseTrainingLoad(await fx('training-load.txt')),
     fitness: P.parseFitness(await fx('fitness.txt')),
     recovery: P.parseRecovery(await fx('recovery.txt')),
-    restingHr: P.parseRestingHr(await fx('resting-hr.txt')),
     hrv: P.parseSleepHrv(await fx('sleep-hrv.txt')),
     sleep: P.parseSleepOverview(await fx('sleep-overview.txt')),
     details: Object.fromEntries(
@@ -270,7 +265,6 @@ export async function loadTrainingView(): Promise<TrainingView | null> {
     load: coros?.load ?? null,
     fitness: coros?.fitness ?? null,
     recovery: coros?.recovery ?? null,
-    restingHr: coros?.restingHr ?? null,
     hrv: coros?.hrv ?? null,
     sleep: coros?.sleep ?? null,
     details: coros?.details ?? {},

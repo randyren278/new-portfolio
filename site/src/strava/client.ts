@@ -106,7 +106,6 @@ export type StravaActivity = {
   sport_type?: string;
   start_date_local?: string; // athlete-local wall time, ISO with a Z
   trainer?: boolean;
-  average_heartrate?: number;
 };
 
 /**

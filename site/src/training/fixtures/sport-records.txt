@@ -5,266 +5,266 @@ Sport Records — 2026-04-13 to 2026-10-10 (117 records)
    Location: —
    Time Window: startTimestamp=1791648846 | endTimestamp=1791654385
    Duration: 1:09:16 | Distance: 15.41 km
-   Average Pace: 4:30 /km | Avg HR: 161 bpm | Calories: 1131 kcal
+   Average Pace: 4:30 /km | Calories: 1131 kcal
    LabelId: 480944039976271974 | SportType: 100
 
 2. Indoor Run — 2026-10-09
    Location: —
    Time Window: startTimestamp=1791573777 | endTimestamp=1791577378
    Duration: 1:00:01 | Distance: 13.16 km
-   Average Pace: 4:34 /km | Avg HR: 143 bpm | Calories: 545 kcal
+   Average Pace: 4:34 /km | Calories: 545 kcal
    LabelId: 480922904716935369 | SportType: 101
 
 3. Indoor Run — 2026-10-08
    Location: —
    Time Window: startTimestamp=1791478149 | endTimestamp=1791481151
    Duration: 50:02 | Distance: 11.11 km
-   Average Pace: 4:30 /km | Avg HR: 135 bpm | Calories: 417 kcal
+   Average Pace: 4:30 /km | Calories: 417 kcal
    LabelId: 480897067535860113 | SportType: 101
 
 4. Indoor Run — 2026-10-07
    Location: —
    Time Window: startTimestamp=1791396919 | endTimestamp=1791399650
    Duration: 45:31 | Distance: 10.03 km
-   Average Pace: 4:32 /km | Avg HR: 129 bpm | Calories: 352 kcal
+   Average Pace: 4:32 /km | Calories: 352 kcal
    LabelId: 480875386266222793 | SportType: 101
 
 5. Outdoor Run — 2026-10-06
    Location: —
    Time Window: startTimestamp=1791326545 | endTimestamp=1791333297
    Duration: 1:26:10 | Distance: 19.32 km
-   Average Pace: 4:28 /km | Avg HR: 160 bpm | Calories: 1401 kcal
+   Average Pace: 4:28 /km | Calories: 1401 kcal
    LabelId: 480857205141176320 | SportType: 100
 
 6. Outdoor Run — 2026-10-05
    Location: —
    Time Window: startTimestamp=1791228690 | endTimestamp=1791232934
    Duration: 1:03:22 | Distance: 13.01 km
-   Average Pace: 4:52 /km | Avg HR: 140 bpm | Calories: 828 kcal
+   Average Pace: 4:52 /km | Calories: 828 kcal
    LabelId: 480830460908306635 | SportType: 100
 
 7. Cycling — 2026-10-04
    Location: —
    Time Window: startTimestamp=1791153550 | endTimestamp=1791160096
    Duration: 1:41:04 | Distance: 41.92 km
-   Average Speed: 24.9 km/h | Avg HR: 118 bpm | Calories: 736 kcal
+   Average Speed: 24.9 km/h | Calories: 736 kcal
    LabelId: 480809427111280645 | SportType: 200
 
 8. Outdoor Run — 2026-10-04
    Location: —
    Time Window: startTimestamp=1791129740 | endTimestamp=1791133579
    Duration: 50:52 | Distance: 10.18 km
-   Average Pace: 5:00 /km | Avg HR: 154 bpm | Calories: 700 kcal
+   Average Pace: 5:00 /km | Calories: 700 kcal
    LabelId: 480804269667156371 | SportType: 100
 
 9. Outdoor Run — 2026-10-03
    Location: —
    Time Window: startTimestamp=1791051103 | endTimestamp=1791058458
    Duration: 1:32:06 | Distance: 18.72 km
-   Average Pace: 4:55 /km | Avg HR: 165 bpm | Calories: 1544 kcal
+   Average Pace: 4:55 /km | Calories: 1544 kcal
    LabelId: 480783905348157846 | SportType: 100
 
 10. Outdoor Run — 2026-10-02
    Location: —
    Time Window: startTimestamp=1790975230 | endTimestamp=1790979329
    Duration: 58:51 | Distance: 12.28 km
-   Average Pace: 4:48 /km | Avg HR: 144 bpm | Calories: 807 kcal
+   Average Pace: 4:48 /km | Calories: 807 kcal
    LabelId: 480764063935136050 | SportType: 100
 
 11. Indoor Run — 2026-10-01
    Location: —
    Time Window: startTimestamp=1790873753 | endTimestamp=1790876511
    Duration: 45:29 | Distance: 10.02 km
-   Average Pace: 4:32 /km | Avg HR: 130 bpm | Calories: 353 kcal
+   Average Pace: 4:32 /km | Calories: 353 kcal
    LabelId: 480734759650099603 | SportType: 101
 
 12. Indoor Run — 2026-09-30
    Location: —
    Time Window: startTimestamp=1790793896 | endTimestamp=1790796944
    Duration: 50:02 | Distance: 11.03 km
-   Average Pace: 4:32 /km | Avg HR: 133 bpm | Calories: 406 kcal
+   Average Pace: 4:32 /km | Calories: 406 kcal
    LabelId: 480713135286681902 | SportType: 101
 
 13. Outdoor Run — 2026-09-29
    Location: —
    Time Window: startTimestamp=1790721610 | endTimestamp=1790727406
    Duration: 57:52 | Distance: 13.18 km
-   Average Pace: 4:23 /km | Avg HR: 151 bpm | Calories: 861 kcal
+   Average Pace: 4:23 /km | Calories: 861 kcal
    LabelId: 480694737802658093 | SportType: 100
 
 14. Outdoor Run — 2026-09-28
    Location: —
    Time Window: startTimestamp=1790632882 | endTimestamp=1790636485
    Duration: 50:55 | Distance: 10.45 km
-   Average Pace: 4:52 /km | Avg HR: 141 bpm | Calories: 670 kcal
+   Average Pace: 4:52 /km | Calories: 670 kcal
    LabelId: 480670342117883911 | SportType: 100
 
 15. Outdoor Run — 2026-09-27
    Location: —
    Time Window: startTimestamp=1790541117 | endTimestamp=1790542033
    Duration: 14:30 | Distance: 3.00 km
-   Average Pace: 4:50 /km | Avg HR: 151 bpm | Calories: 205 kcal
+   Average Pace: 4:50 /km | Calories: 205 kcal
    LabelId: 480645037774897354 | SportType: 100
 
 16. Outdoor Run — 2026-09-27
    Location: —
    Time Window: startTimestamp=1790537966 | endTimestamp=1790539614
    Duration: 27:27 | Distance: 8.26 km
-   Average Pace: 3:19 /km | Avg HR: 183 bpm | Calories: 579 kcal
+   Average Pace: 3:19 /km | Calories: 579 kcal
    LabelId: 480644550302400914 | SportType: 100
 
 17. Outdoor Run — 2026-09-27
    Location: —
    Time Window: startTimestamp=1790535266 | endTimestamp=1790536474
    Duration: 17:22 | Distance: 3.50 km
-   Average Pace: 4:58 /km | Avg HR: 161 bpm | Calories: 264 kcal
+   Average Pace: 4:58 /km | Calories: 264 kcal
    LabelId: 480643483808334028 | SportType: 100
 
 18. Cycling — 2026-09-26
    Location: —
    Time Window: startTimestamp=1790449373 | endTimestamp=1790450001
    Duration: 5:55 | Distance: 2.39 km
-   Average Speed: 24.2 km/h | Avg HR: 128 bpm | Calories: 66 kcal
+   Average Speed: 24.2 km/h | Calories: 66 kcal
    LabelId: 480620271382855781 | SportType: 200
 
 19. Outdoor Run — 2026-09-26
    Location: —
    Time Window: startTimestamp=1790446761 | endTimestamp=1790449075
    Duration: 29:33 | Distance: 5.77 km
-   Average Pace: 5:07 /km | Avg HR: 139 bpm | Calories: 376 kcal
+   Average Pace: 5:07 /km | Calories: 376 kcal
    LabelId: 480619853972013357 | SportType: 100
 
 20. Indoor Run — 2026-09-25
    Location: —
    Time Window: startTimestamp=1790362546 | endTimestamp=1790365563
    Duration: 50:16 | Distance: 11.03 km
-   Average Pace: 4:33 /km | Avg HR: 129 bpm | Calories: 390 kcal
+   Average Pace: 4:33 /km | Calories: 390 kcal
    LabelId: 480597136010936320 | SportType: 101
 
 21. Outdoor Run — 2026-09-24
    Location: —
    Time Window: startTimestamp=1790287531 | endTimestamp=1790292500
    Duration: 49:05 | Distance: 10.27 km
-   Average Pace: 4:47 /km | Avg HR: 145 bpm | Calories: 678 kcal
+   Average Pace: 4:47 /km | Calories: 678 kcal
    LabelId: 480578003005374574 | SportType: 100
 
 22. Gym Cardio — 2026-09-23
    Location: —
    Time Window: startTimestamp=1790203489 | endTimestamp=1790204048
    Duration: 9:19
- | Avg HR: 95 bpm | Calories: 42 kcal
+ | Calories: 42 kcal
    LabelId: 480554242443083879 | SportType: 400
 
 23. Indoor Run — 2026-09-23
    Location: —
    Time Window: startTimestamp=1790188511 | endTimestamp=1790191767
    Duration: 50:39 | Distance: 10.33 km
-   Average Pace: 4:54 /km | Avg HR: 123 bpm | Calories: 361 kcal
+   Average Pace: 4:54 /km | Calories: 361 kcal
    LabelId: 480550978267939216 | SportType: 101
 
 24. Outdoor Run — 2026-09-22
    Location: —
    Time Window: startTimestamp=1790117190 | endTimestamp=1790124016
    Duration: 1:20:27 | Distance: 17.22 km
-   Average Pace: 4:40 /km | Avg HR: 154 bpm | Calories: 1221 kcal
+   Average Pace: 4:40 /km | Calories: 1221 kcal
    LabelId: 480532765725458532 | SportType: 100
 
 25. Outdoor Run — 2026-09-21
    Location: —
    Time Window: startTimestamp=1790027418 | endTimestamp=1790031707
    Duration: 57:07 | Distance: 11.66 km
-   Average Pace: 4:54 /km | Avg HR: 140 bpm | Calories: 742 kcal
+   Average Pace: 4:54 /km | Calories: 742 kcal
    LabelId: 480508005775868010 | SportType: 100
 
 26. Outdoor Run — 2026-09-19
    Location: —
    Time Window: startTimestamp=1789840993 | endTimestamp=1789848245
    Duration: 1:14:32 | Distance: 16.53 km
-   Average Pace: 4:31 /km | Avg HR: 160 bpm | Calories: 1202 kcal
+   Average Pace: 4:31 /km | Calories: 1202 kcal
    LabelId: 480457319793065992 | SportType: 100
 
 27. Outdoor Run — 2026-09-18
    Location: —
    Time Window: startTimestamp=1789768507 | endTimestamp=1789773467
    Duration: 1:00:35 | Distance: 12.17 km
-   Average Pace: 4:59 /km | Avg HR: 140 bpm | Calories: 793 kcal
+   Average Pace: 4:59 /km | Calories: 793 kcal
    LabelId: 480438690911387653 | SportType: 100
 
 28. Outdoor Run — 2026-09-17
    Location: —
    Time Window: startTimestamp=1789664418 | endTimestamp=1789670429
    Duration: 1:30:05 | Distance: 17.79 km
-   Average Pace: 5:04 /km | Avg HR: 139 bpm | Calories: 1158 kcal
+   Average Pace: 5:04 /km | Calories: 1158 kcal
    LabelId: 480411021381501031 | SportType: 100
 
 29. Indoor Run — 2026-09-16
    Location: —
    Time Window: startTimestamp=1789585768 | endTimestamp=1789588772
    Duration: 50:04 | Distance: 10.29 km
-   Average Pace: 4:52 /km | Avg HR: 129 bpm | Calories: 388 kcal
+   Average Pace: 4:52 /km | Calories: 388 kcal
    LabelId: 480389085110763629 | SportType: 101
 
 30. Outdoor Run — 2026-09-15
    Location: —
    Time Window: startTimestamp=1789512159 | endTimestamp=1789518027
    Duration: 1:12:36 | Distance: 15.18 km
-   Average Pace: 4:47 /km | Avg HR: 159 bpm | Calories: 1156 kcal
+   Average Pace: 4:47 /km | Calories: 1156 kcal
    LabelId: 480370097322492112 | SportType: 100
 
 31. Outdoor Run — 2026-09-14
    Location: —
    Time Window: startTimestamp=1789426740 | endTimestamp=1789430875
    Duration: 1:02:48 | Distance: 12.75 km
-   Average Pace: 4:56 /km | Avg HR: 147 bpm | Calories: 892 kcal
+   Average Pace: 4:56 /km | Calories: 892 kcal
    LabelId: 480346713381437753 | SportType: 100
 
 32. Cycling — 2026-09-13
    Location: —
    Time Window: startTimestamp=1789316022 | endTimestamp=1789329644
    Duration: 2:33:27 | Distance: 72.77 km
-   Average Speed: 28.5 km/h | Avg HR: 104 bpm | Calories: 941 kcal
+   Average Speed: 28.5 km/h | Calories: 941 kcal
    LabelId: 480315954436276230 | SportType: 200
 
 33. Outdoor Run — 2026-09-12
    Location: —
    Time Window: startTimestamp=1789235835 | endTimestamp=1789244421
    Duration: 1:21:40 | Distance: 17.77 km
-   Average Pace: 4:36 /km | Avg HR: 161 bpm | Calories: 1328 kcal
+   Average Pace: 4:36 /km | Calories: 1328 kcal
    LabelId: 480296663320133935 | SportType: 100
 
 34. Outdoor Run — 2026-09-11
    Location: —
    Time Window: startTimestamp=1789153109 | endTimestamp=1789156406
    Duration: 52:26 | Distance: 10.91 km
-   Average Pace: 4:48 /km | Avg HR: 152 bpm | Calories: 778 kcal
+   Average Pace: 4:48 /km | Calories: 778 kcal
    LabelId: 480273046630858753 | SportType: 100
 
 35. Outdoor Run — 2026-09-10
    Location: —
    Time Window: startTimestamp=1789081491 | endTimestamp=1789085612
    Duration: 52:48 | Distance: 10.50 km
-   Average Pace: 5:02 /km | Avg HR: 151 bpm | Calories: 770 kcal
+   Average Pace: 5:02 /km | Calories: 770 kcal
    LabelId: 480253833639919924 | SportType: 100
 
 36. Outdoor Run — 2026-09-09
    Location: —
    Time Window: startTimestamp=1788984343 | endTimestamp=1788987437
    Duration: 48:08 | Distance: 10.08 km
-   Average Pace: 4:46 /km | Avg HR: 153 bpm | Calories: 722 kcal
+   Average Pace: 4:46 /km | Calories: 722 kcal
    LabelId: 480227692321473117 | SportType: 100
 
 37. Cycling — 2026-09-08
    Location: —
    Time Window: startTimestamp=1788925912 | endTimestamp=1788926352
    Duration: 7:20 | Distance: 2.45 km
-   Average Speed: 20.1 km/h | Avg HR: 104 bpm | Calories: 52 kcal
+   Average Speed: 20.1 km/h | Calories: 52 kcal
    LabelId: 480211266753822822 | SportType: 200
 
 38. Outdoor Run — 2026-09-08
    Location: —
    Time Window: startTimestamp=1788913723 | endTimestamp=1788920992
    Duration: 1:29:57 | Distance: 19.50 km
-   Average Pace: 4:37 /km | Avg HR: 162 bpm | Calories: 1483 kcal
+   Average Pace: 4:37 /km | Calories: 1483 kcal
    LabelId: 480209876251869788 | SportType: 100
 
 39. Cycling — 2026-09-08
@@ -278,544 +278,544 @@ Sport Records — 2026-04-13 to 2026-10-10 (117 records)
    Location: —
    Time Window: startTimestamp=1788800360 | endTimestamp=1788804766
    Duration: 49:47 | Distance: 10.22 km
-   Average Pace: 4:52 /km | Avg HR: 146 bpm | Calories: 693 kcal
+   Average Pace: 4:52 /km | Calories: 693 kcal
    LabelId: 480178630641615254 | SportType: 100
 
 41. Outdoor Run — 2026-09-06
    Location: —
    Time Window: startTimestamp=1788713806 | endTimestamp=1788717807
    Duration: 54:51 | Distance: 11.47 km
-   Average Pace: 4:47 /km | Avg HR: 143 bpm | Calories: 732 kcal
+   Average Pace: 4:47 /km | Calories: 732 kcal
    LabelId: 480155325878534145 | SportType: 100
 
 42. Outdoor Run — 2026-09-05
    Location: —
    Time Window: startTimestamp=1788624346 | endTimestamp=1788628006
    Duration: 51:43 | Distance: 10.86 km
-   Average Pace: 4:46 /km | Avg HR: 143 bpm | Calories: 683 kcal
+   Average Pace: 4:46 /km | Calories: 683 kcal
    LabelId: 480131217155457225 | SportType: 100
 
 43. Outdoor Run — 2026-09-04
    Location: —
    Time Window: startTimestamp=1788538060 | endTimestamp=1788544530
    Duration: 1:17:17 | Distance: 17.30 km
-   Average Pace: 4:28 /km | Avg HR: 167 bpm | Calories: 1287 kcal
+   Average Pace: 4:28 /km | Calories: 1287 kcal
    LabelId: 480108833933394022 | SportType: 100
 
 44. Outdoor Run — 2026-09-03
    Location: —
    Time Window: startTimestamp=1788476752 | endTimestamp=1788481037
    Duration: 1:00:29 | Distance: 12.93 km
-   Average Pace: 4:41 /km | Avg HR: 152 bpm | Calories: 874 kcal
+   Average Pace: 4:41 /km | Calories: 874 kcal
    LabelId: 480091767604019305 | SportType: 100
 
 45. Outdoor Run — 2026-09-01
    Location: —
    Time Window: startTimestamp=1788308691 | endTimestamp=1788316512
    Duration: 1:20:41 | Distance: 18.21 km
-   Average Pace: 4:26 /km | Avg HR: 164 bpm | Calories: 1390 kcal
+   Average Pace: 4:26 /km | Calories: 1390 kcal
    LabelId: 480047574806462667 | SportType: 100
 
 46. Outdoor Run — 2026-08-30
    Location: —
    Time Window: startTimestamp=1788110309 | endTimestamp=1788113402
    Duration: 41:04 | Distance: 7.58 km
-   Average Pace: 5:25 /km | Avg HR: 139 bpm | Calories: 506 kcal
+   Average Pace: 5:25 /km | Calories: 506 kcal
    LabelId: 479993047250141585 | SportType: 100
 
 47. Outdoor Run — 2026-08-29
    Location: —
    Time Window: startTimestamp=1788019891 | endTimestamp=1788024648
    Duration: 1:12:21 | Distance: 15.17 km
-   Average Pace: 4:46 /km | Avg HR: 168 bpm | Calories: 1244 kcal
+   Average Pace: 4:46 /km | Calories: 1244 kcal
    LabelId: 479969411239805132 | SportType: 100
 
 48. Outdoor Run — 2026-08-28
    Location: —
    Time Window: startTimestamp=1787955378 | endTimestamp=1787958692
    Duration: 51:29 | Distance: 10.76 km
-   Average Pace: 4:47 /km | Avg HR: 154 bpm | Calories: 758 kcal
+   Average Pace: 4:47 /km | Calories: 758 kcal
    LabelId: 479951514113179852 | SportType: 100
 
 49. Indoor Run — 2026-08-26
    Location: —
    Time Window: startTimestamp=1787707164 | endTimestamp=1787709124
    Duration: 30:04 | Distance: 6.35 km
-   Average Pace: 4:44 /km | Avg HR: 131 bpm | Calories: 232 kcal
+   Average Pace: 4:44 /km | Calories: 232 kcal
    LabelId: 479884521741779045 | SportType: 101
 
 50. Indoor Run — 2026-08-25
    Location: —
    Time Window: startTimestamp=1787626213 | endTimestamp=1787628623
    Duration: 40:10 | Distance: 10.31 km
-   Average Pace: 3:54 /km | Avg HR: 150 bpm | Calories: 382 kcal
+   Average Pace: 3:54 /km | Calories: 382 kcal
    LabelId: 479862910808523055 | SportType: 101
 
 51. Indoor Run — 2026-08-24
    Location: —
    Time Window: startTimestamp=1787537588 | endTimestamp=1787540594
    Duration: 50:06 | Distance: 11.48 km
-   Average Pace: 4:22 /km | Avg HR: 155 bpm | Calories: 503 kcal
+   Average Pace: 4:22 /km | Calories: 503 kcal
    LabelId: 479839290644267010 | SportType: 101
 
 52. Indoor Run — 2026-08-22
    Location: —
    Time Window: startTimestamp=1787365565 | endTimestamp=1787369289
    Duration: 1:00:18 | Distance: 15.78 km
-   Average Pace: 3:49 /km | Avg HR: 144 bpm | Calories: 540 kcal
+   Average Pace: 3:49 /km | Calories: 540 kcal
    LabelId: 479793297179574274 | SportType: 101
 
 53. Indoor Run — 2026-08-22
    Location: —
    Time Window: startTimestamp=1787365433 | endTimestamp=1787365542
    Duration: 1:49 | Distance: 273 m
-   Average Pace: 6:41 /km | Avg HR: 110 bpm | Calories: 10 kcal
+   Average Pace: 6:41 /km | Calories: 10 kcal
    LabelId: 479793297179574273 | SportType: 101
 
 54. Outdoor Run — 2026-08-21
    Location: —
    Time Window: startTimestamp=1787302722 | endTimestamp=1787305248
    Duration: 29:51 | Distance: 6.65 km
-   Average Pace: 4:29 /km | Avg HR: 158 bpm | Calories: 510 kcal
+   Average Pace: 4:29 /km | Calories: 510 kcal
    LabelId: 479775933694247017 | SportType: 100
 
 55. Indoor Run — 2026-08-19
    Location: —
    Time Window: startTimestamp=1787105862 | endTimestamp=1787108421
    Duration: 40:00 | Distance: 11.16 km
-   Average Pace: 3:35 /km | Avg HR: 156 bpm | Calories: 403 kcal
+   Average Pace: 3:35 /km | Calories: 403 kcal
    LabelId: 479723345049321573 | SportType: 101
 
 56. Indoor Run — 2026-08-17
    Location: —
    Time Window: startTimestamp=1786923438 | endTimestamp=1786925868
    Duration: 40:30 | Distance: 9.11 km
-   Average Pace: 4:27 /km | Avg HR: 145 bpm | Calories: 366 kcal
+   Average Pace: 4:27 /km | Calories: 366 kcal
    LabelId: 479674264845320299 | SportType: 101
 
 57. Indoor Run — 2026-08-16
    Location: —
    Time Window: startTimestamp=1786838605 | endTimestamp=1786841864
    Duration: 54:03 | Distance: 15.11 km
-   Average Pace: 3:35 /km | Avg HR: 152 bpm | Calories: 526 kcal
+   Average Pace: 3:35 /km | Calories: 526 kcal
    LabelId: 479651931009089540 | SportType: 101
 
 58. Outdoor Run — 2026-08-15
    Location: —
    Time Window: startTimestamp=1786754224 | endTimestamp=1786754395
    Duration: 2:51 | Distance: 997 m
-   Average Pace: 2:52 /km | Avg HR: 174 bpm | Calories: 57 kcal
+   Average Pace: 2:52 /km | Calories: 57 kcal
    LabelId: 479628303863414787 | SportType: 100
 
 59. Outdoor Run — 2026-08-15
    Location: —
    Time Window: startTimestamp=1786752026 | endTimestamp=1786753549
    Duration: 24:04 | Distance: 5.01 km
-   Average Pace: 4:48 /km | Avg HR: 155 bpm | Calories: 384 kcal
+   Average Pace: 4:48 /km | Calories: 384 kcal
    LabelId: 479627748470456323 | SportType: 100
 
 60. Outdoor Run — 2026-08-12
    Location: —
    Time Window: startTimestamp=1786579758 | endTimestamp=1786583556
    Duration: 50:18 | Distance: 10.91 km
-   Average Pace: 4:37 /km | Avg HR: 155 bpm | Calories: 742 kcal
+   Average Pace: 4:37 /km | Calories: 742 kcal
    LabelId: 479582395226423599 | SportType: 100
 
 61. Indoor Run — 2026-08-11
    Location: —
    Time Window: startTimestamp=1786488035 | endTimestamp=1786490434
    Duration: 39:59 | Distance: 8.39 km
-   Average Pace: 4:46 /km | Avg HR: 142 bpm | Calories: 349 kcal
+   Average Pace: 4:46 /km | Calories: 349 kcal
    LabelId: 479557385625567538 | SportType: 101
 
 62. Indoor Run — 2026-08-09
    Location: —
    Time Window: startTimestamp=1786334321 | endTimestamp=1786336723
    Duration: 40:02 | Distance: 8.53 km
-   Average Pace: 4:42 /km | Avg HR: 150 bpm | Calories: 387 kcal
+   Average Pace: 4:42 /km | Calories: 387 kcal
    LabelId: 479516147765510444 | SportType: 101
 
 63. Outdoor Run — 2026-08-09
    Location: —
    Time Window: startTimestamp=1786314032 | endTimestamp=1786315234
    Duration: 20:02 | Distance: 632 m
-   Average Pace: 31:41 /km | Avg HR: 122 bpm | Calories: 120 kcal
+   Average Pace: 31:41 /km | Calories: 120 kcal
    LabelId: 479510152265891942 | SportType: 100
 
 64. Outdoor Run — 2026-08-08
    Location: —
    Time Window: startTimestamp=1786235852 | endTimestamp=1786239829
    Duration: 1:05:16 | Distance: 13.76 km
-   Average Pace: 4:45 /km | Avg HR: 163 bpm | Calories: 1036 kcal
+   Average Pace: 4:45 /km | Calories: 1036 kcal
    LabelId: 479490128320954473 | SportType: 100
 
 65. Outdoor Run — 2026-08-07
    Location: —
    Time Window: startTimestamp=1786144968 | endTimestamp=1786145518
    Duration: 9:11 | Distance: 2.00 km
-   Average Pace: 4:35 /km | Avg HR: 150 bpm | Calories: 138 kcal
+   Average Pace: 4:35 /km | Calories: 138 kcal
    LabelId: 479464807068631241 | SportType: 100
 
 66. Indoor Run — 2026-08-06
    Location: —
    Time Window: startTimestamp=1786062436 | endTimestamp=1786064841
    Duration: 40:05 | Distance: 8.50 km
-   Average Pace: 4:43 /km | Avg HR: 143 bpm | Calories: 363 kcal
+   Average Pace: 4:43 /km | Calories: 363 kcal
    LabelId: 479443142716719212 | SportType: 101
 
 67. Indoor Run — 2026-08-04
    Location: —
    Time Window: startTimestamp=1785887577 | endTimestamp=1785890008
    Duration: 40:02 | Distance: 8.41 km
-   Average Pace: 4:46 /km | Avg HR: 147 bpm | Calories: 376 kcal
+   Average Pace: 4:46 /km | Calories: 376 kcal
    LabelId: 479396220735881424 | SportType: 101
 
 68. Outdoor Run — 2026-08-02
    Location: —
    Time Window: startTimestamp=1785679084 | endTimestamp=1785684026
    Duration: 1:10:03 | Distance: 14.03 km
-   Average Pace: 5:00 /km | Avg HR: 160 bpm | Calories: 1062 kcal
+   Average Pace: 5:00 /km | Calories: 1062 kcal
    LabelId: 479340941285556328 | SportType: 100
 
 69. Outdoor Run — 2026-07-31
    Location: —
    Time Window: startTimestamp=1785508778 | endTimestamp=1785511789
    Duration: 42:53 | Distance: 8.76 km
-   Average Pace: 4:54 /km | Avg HR: 162 bpm | Calories: 668 kcal
+   Average Pace: 4:54 /km | Calories: 668 kcal
    LabelId: 479294677244215298 | SportType: 100
 
 70. Outdoor Run — 2026-07-29
    Location: —
    Time Window: startTimestamp=1785365956 | endTimestamp=1785368886
    Duration: 47:04 | Distance: 10.01 km
-   Average Pace: 4:42 /km | Avg HR: 167 bpm | Calories: 749 kcal
+   Average Pace: 4:42 /km | Calories: 749 kcal
    LabelId: 479256522629611624 | SportType: 100
 
 71. Indoor Run — 2026-07-27
    Location: —
    Time Window: startTimestamp=1785196446 | endTimestamp=1785197668
    Duration: 20:22 | Distance: 4.26 km
-   Average Pace: 4:47 /km | Avg HR: 156 bpm | Calories: 210 kcal
+   Average Pace: 4:47 /km | Calories: 210 kcal
    LabelId: 479210357905195111 | SportType: 101
 
 72. Indoor Run — 2026-07-26
    Location: —
    Time Window: startTimestamp=1785084309 | endTimestamp=1785086714
    Duration: 40:05 | Distance: 8.46 km
-   Average Pace: 4:44 /km | Avg HR: 152 bpm | Calories: 396 kcal
+   Average Pace: 4:44 /km | Calories: 396 kcal
    LabelId: 479180572038562291 | SportType: 101
 
 73. Indoor Run — 2026-07-24
    Location: —
    Time Window: startTimestamp=1784945547 | endTimestamp=1784948008
    Duration: 40:09 | Distance: 8.42 km
-   Average Pace: 4:46 /km | Avg HR: 155 bpm | Calories: 409 kcal
+   Average Pace: 4:46 /km | Calories: 409 kcal
    LabelId: 479143338436493414 | SportType: 101
 
 74. Outdoor Run — 2026-07-22
    Location: —
    Time Window: startTimestamp=1784772062 | endTimestamp=1784774717
    Duration: 41:26 | Distance: 8.60 km
-   Average Pace: 4:49 /km | Avg HR: 170 bpm | Calories: 735 kcal
+   Average Pace: 4:49 /km | Calories: 735 kcal
    LabelId: 479096990905434513 | SportType: 100
 
 75. Outdoor Run — 2026-07-19
    Location: —
    Time Window: startTimestamp=1784508580 | endTimestamp=1784512529
    Duration: 55:43 | Distance: 3.84 km
-   Average Pace: 14:30 /km | Avg HR: 129 bpm | Calories: 311 kcal
+   Average Pace: 14:30 /km | Calories: 311 kcal
    LabelId: 479026444993855495 | SportType: 100
 
 76. Cycling — 2026-07-11
    Location: —
    Time Window: startTimestamp=1783786745 | endTimestamp=1783796304
    Duration: 1:39:04 | Distance: 42.56 km
-   Average Speed: 25.8 km/h | Avg HR: 134 bpm | Calories: 915 kcal
+   Average Speed: 25.8 km/h | Calories: 915 kcal
    LabelId: 478834186415800326 | SportType: 200
 
 77. Outdoor Run — 2026-07-09
    Location: —
    Time Window: startTimestamp=1783640238 | endTimestamp=1783643631
    Duration: 56:17 | Distance: 3.75 km
-   Average Pace: 15:00 /km | Avg HR: 124 bpm | Calories: 308 kcal
+   Average Pace: 15:00 /km | Calories: 308 kcal
    LabelId: 478792385646592100 | SportType: 100
 
 78. Cycling — 2026-07-08
    Location: —
    Time Window: startTimestamp=1783562001 | endTimestamp=1783569344
    Duration: 1:50:27 | Distance: 50.14 km
-   Average Speed: 27.2 km/h | Avg HR: 142 bpm | Calories: 1077 kcal
+   Average Speed: 27.2 km/h | Calories: 1077 kcal
    LabelId: 478773161647702023 | SportType: 200
 
 79. Cycling — 2026-07-07
    Location: —
    Time Window: startTimestamp=1783467137 | endTimestamp=1783473890
    Duration: 1:29:38 | Distance: 40.82 km
-   Average Speed: 27.3 km/h | Avg HR: 135 bpm | Calories: 885 kcal
+   Average Speed: 27.3 km/h | Calories: 885 kcal
    LabelId: 478747633167401065 | SportType: 200
 
 80. Cycling — 2026-07-04
    Location: —
    Time Window: startTimestamp=1783202449 | endTimestamp=1783222254
    Duration: 1:40:36 | Distance: 43.00 km
-   Average Speed: 25.7 km/h | Avg HR: 139 bpm | Calories: 940 kcal
+   Average Speed: 25.7 km/h | Calories: 940 kcal
    LabelId: 478680085136703793 | SportType: 200
 
 81. Cycling — 2026-07-03
    Location: —
    Time Window: startTimestamp=1783131297 | endTimestamp=1783138629
    Duration: 1:32:23 | Distance: 40.92 km
-   Average Speed: 26.6 km/h | Avg HR: 136 bpm | Calories: 839 kcal
+   Average Speed: 26.6 km/h | Calories: 839 kcal
    LabelId: 478656168080736362 | SportType: 200
 
 82. Outdoor Run — 2026-07-02
    Location: —
    Time Window: startTimestamp=1783035344 | endTimestamp=1783039402
    Duration: 1:04:08 | Distance: 3.48 km
-   Average Pace: 18:26 /km | Avg HR: 117 bpm | Calories: 275 kcal
+   Average Pace: 18:26 /km | Calories: 275 kcal
    LabelId: 478631029098184820 | SportType: 100
 
 83. Cycling — 2026-06-30
    Location: —
    Time Window: startTimestamp=1782873286 | endTimestamp=1782879038
    Duration: 1:27:09 | Distance: 41.11 km
-   Average Speed: 28.3 km/h | Avg HR: 137 bpm | Calories: 888 kcal
+   Average Speed: 28.3 km/h | Calories: 888 kcal
    LabelId: 478587954067963908 | SportType: 200
 
 84. Outdoor Run — 2026-06-27
    Location: —
    Time Window: startTimestamp=1782583539 | endTimestamp=1782587282
    Duration: 50:29 | Distance: 3.85 km
-   Average Pace: 13:07 /km | Avg HR: 129 bpm | Calories: 311 kcal
+   Average Pace: 13:07 /km | Calories: 311 kcal
    LabelId: 478510271793496071 | SportType: 100
 
 85. Cycling — 2026-06-27
    Location: —
    Time Window: startTimestamp=1782565581 | endTimestamp=1782579977
    Duration: 2:58:15 | Distance: 80.00 km
-   Average Speed: 26.9 km/h | Avg HR: 115 bpm | Calories: 1703 kcal
+   Average Speed: 26.9 km/h | Calories: 1703 kcal
    LabelId: 478507678170120293 | SportType: 200
 
 86. Cycling — 2026-06-24
    Location: —
    Time Window: startTimestamp=1782347551 | endTimestamp=1782353946
    Duration: 1:29:56 | Distance: 40.27 km
-   Average Speed: 26.9 km/h | Avg HR: 145 bpm | Calories: 896 kcal
+   Average Speed: 26.9 km/h | Calories: 896 kcal
    LabelId: 478447002370212045 | SportType: 200
 
 87. Cycling — 2026-06-23
    Location: —
    Time Window: startTimestamp=1782264674 | endTimestamp=1782271210
    Duration: 1:19:07 | Distance: 38.35 km
-   Average Speed: 29.1 km/h | Avg HR: 152 bpm | Calories: 849 kcal
+   Average Speed: 29.1 km/h | Calories: 849 kcal
    LabelId: 478424805173920045 | SportType: 200
 
 88. Cycling — 2026-06-20
    Location: —
    Time Window: startTimestamp=1781970214 | endTimestamp=1781982139
    Duration: 2:19:54 | Distance: 60.02 km
-   Average Speed: 25.7 km/h | Avg HR: 137 bpm | Calories: 1218 kcal
+   Average Speed: 25.7 km/h | Calories: 1218 kcal
    LabelId: 478347195920187395 | SportType: 200
 
 89. Cycling — 2026-06-18
    Location: —
    Time Window: startTimestamp=1781842235 | endTimestamp=1781845101
    Duration: 35:31 | Distance: 10.59 km
-   Average Speed: 17.9 km/h | Avg HR: 104 bpm | Calories: 155 kcal
+   Average Speed: 17.9 km/h | Calories: 155 kcal
    LabelId: 478310407096795237 | SportType: 200
 
 90. Cycling — 2026-06-16
    Location: —
    Time Window: startTimestamp=1781663940 | endTimestamp=1781668940
    Duration: 1:12:01 | Distance: 33.88 km
-   Average Speed: 28.2 km/h | Avg HR: 143 bpm | Calories: 760 kcal
+   Average Speed: 28.2 km/h | Calories: 760 kcal
    LabelId: 478263127572512774 | SportType: 200
 
 91. Cycling — 2026-06-15
    Location: —
    Time Window: startTimestamp=1781568177 | endTimestamp=1781577414
    Duration: 1:47:58 | Distance: 50.60 km
-   Average Speed: 28.1 km/h | Avg HR: 125 bpm | Calories: 1154 kcal
+   Average Speed: 28.1 km/h | Calories: 1154 kcal
    LabelId: 478239415058071552 | SportType: 200
 
 92. Cycling — 2026-06-11
    Location: —
    Time Window: startTimestamp=1781225904 | endTimestamp=1781233533
    Duration: 1:37:29 | Distance: 41.68 km
-   Average Speed: 25.7 km/h | Avg HR: 119 bpm | Calories: 902 kcal
+   Average Speed: 25.7 km/h | Calories: 902 kcal
    LabelId: 478146244332519433 | SportType: 200
 
 93. Cycling — 2026-06-10
    Location: —
    Time Window: startTimestamp=1781149759 | endTimestamp=1781152588
    Duration: 33:46 | Distance: 11.10 km
-   Average Speed: 19.7 km/h | Avg HR: 112 bpm | Calories: 179 kcal
+   Average Speed: 19.7 km/h | Calories: 179 kcal
    LabelId: 478124535944609994 | SportType: 200
 
 94. Cycling — 2026-06-09
    Location: —
    Time Window: startTimestamp=1781056759 | endTimestamp=1781063021
    Duration: 1:12:28 | Distance: 33.70 km
-   Average Speed: 27.9 km/h | Avg HR: 120 bpm | Calories: 724 kcal
+   Average Speed: 27.9 km/h | Calories: 724 kcal
    LabelId: 478100470171206033 | SportType: 200
 
 95. Cycling — 2026-06-06
    Location: —
    Time Window: startTimestamp=1780764399 | endTimestamp=1780767447
    Duration: 35:49 | Distance: 16.16 km
-   Average Speed: 27.1 km/h | Avg HR: 126 bpm | Calories: 351 kcal
+   Average Speed: 27.1 km/h | Calories: 351 kcal
    LabelId: 478021173542682725 | SportType: 200
 
 96. Cycling — 2026-06-03
    Location: —
    Time Window: startTimestamp=1780535392 | endTimestamp=1780539730
    Duration: 1:04:52 | Distance: 29.61 km
-   Average Speed: 27.4 km/h | Avg HR: 130 bpm | Calories: 507 kcal
+   Average Speed: 27.4 km/h | Calories: 507 kcal
    LabelId: 477959998444437508 | SportType: 200
 
 97. Cycling — 2026-06-01
    Location: —
    Time Window: startTimestamp=1780362483 | endTimestamp=1780370375
    Duration: 1:29:55 | Distance: 36.46 km
-   Average Speed: 24.3 km/h | Avg HR: 127 bpm | Calories: 678 kcal
+   Average Speed: 24.3 km/h | Calories: 678 kcal
    LabelId: 477914554188202186 | SportType: 200
 
 98. Walk — 2026-05-27
    Location: —
    Time Window: startTimestamp=1779935851 | endTimestamp=1779938456
    Duration: 39:26 | Distance: 2.26 km
-   Average Pace: 17:25 /km | Avg HR: 94 bpm | Calories: 172 kcal
+   Average Pace: 17:25 /km | Calories: 172 kcal
    LabelId: 477798595171483648 | SportType: 900
 
 99. Walk — 2026-05-23
    Location: —
    Time Window: startTimestamp=1779586919 | endTimestamp=1779588462
    Duration: 25:43 | Distance: 564 m
-   Average Pace: 45:33 /km | Avg HR: 87 bpm | Calories: 93 kcal
+   Average Pace: 45:33 /km | Calories: 93 kcal
    LabelId: 477704643042902118 | SportType: 900
 
 100. Outdoor Run — 2026-05-12
    Location: —
    Time Window: startTimestamp=1778634111 | endTimestamp=1778639828
    Duration: 1:02:27 | Distance: 11.06 km
-   Average Pace: 5:39 /km | Avg HR: 161 bpm | Calories: 882 kcal
+   Average Pace: 5:39 /km | Calories: 882 kcal
    LabelId: 477450016433143813 | SportType: 100
 
 101. Outdoor Run — 2026-05-09
    Location: —
    Time Window: startTimestamp=1778362817 | endTimestamp=1778363424
    Duration: 4:48 | Distance: 726 m
-   Average Pace: 6:36 /km | Avg HR: 138 bpm | Calories: 54 kcal
+   Average Pace: 6:36 /km | Calories: 54 kcal
    LabelId: 477375798861398220 | SportType: 100
 
 102. Outdoor Run — 2026-05-09
    Location: —
    Time Window: startTimestamp=1778359081 | endTimestamp=1778359663
    Duration: 9:42 | Distance: 1.06 km
-   Average Pace: 9:10 /km | Avg HR: 128 bpm | Calories: 74 kcal
+   Average Pace: 9:10 /km | Calories: 74 kcal
    LabelId: 477374789812519017 | SportType: 100
 
 103. Outdoor Run — 2026-05-07
    Location: —
    Time Window: startTimestamp=1778207602 | endTimestamp=1778208754
    Duration: 7:32 | Distance: 1.19 km
-   Average Pace: 6:20 /km | Avg HR: 131 bpm | Calories: 87 kcal
+   Average Pace: 6:20 /km | Calories: 87 kcal
    LabelId: 477335050088644813 | SportType: 100
 
 104. Outdoor Run — 2026-05-05
    Location: —
    Time Window: startTimestamp=1778028747 | endTimestamp=1778031721
    Duration: 17:44 | Distance: 2.69 km
-   Average Pace: 6:35 /km | Avg HR: 136 bpm | Calories: 168 kcal
+   Average Pace: 6:35 /km | Calories: 168 kcal
    LabelId: 477287007939231760 | SportType: 100
 
 105. Outdoor Run — 2026-05-03
    Location: —
    Time Window: startTimestamp=1777844380 | endTimestamp=1777847476
    Duration: 42:22 | Distance: 6.76 km
-   Average Pace: 6:16 /km | Avg HR: 142 bpm | Calories: 479 kcal
+   Average Pace: 6:16 /km | Calories: 479 kcal
    LabelId: 477237321599582414 | SportType: 100
 
 106. Outdoor Run — 2026-05-02
    Location: —
    Time Window: startTimestamp=1777738234 | endTimestamp=1777744388
    Duration: 42:50 | Distance: 7.50 km
-   Average Pace: 5:43 /km | Avg HR: 154 bpm | Calories: 537 kcal
+   Average Pace: 5:43 /km | Calories: 537 kcal
    LabelId: 477209848035966978 | SportType: 100
 
 107. Outdoor Run — 2026-04-28
    Location: —
    Time Window: startTimestamp=1777423032 | endTimestamp=1777426432
    Duration: 34:52 | Distance: 5.44 km
-   Average Pace: 6:24 /km | Avg HR: 149 bpm | Calories: 364 kcal
+   Average Pace: 6:24 /km | Calories: 364 kcal
    LabelId: 477124981898117221 | SportType: 100
 
 108. Outdoor Run — 2026-04-25
    Location: —
    Time Window: startTimestamp=1777146644 | endTimestamp=1777146990
    Duration: 5:46 | Distance: 1.00 km
-   Average Pace: 5:44 /km | Avg HR: 144 bpm | Calories: 71 kcal
+   Average Pace: 5:44 /km | Calories: 71 kcal
    LabelId: 477049303511105541 | SportType: 100
 
 109. Outdoor Run — 2026-04-25
    Location: —
    Time Window: startTimestamp=1777141436 | endTimestamp=1777142178
    Duration: 10:51 | Distance: 2.02 km
-   Average Pace: 5:22 /km | Avg HR: 144 bpm | Calories: 145 kcal
+   Average Pace: 5:22 /km | Calories: 145 kcal
    LabelId: 477048054468345864 | SportType: 100
 
 110. Outdoor Run — 2026-04-24
    Location: —
    Time Window: startTimestamp=1777065068 | endTimestamp=1777065984
    Duration: 14:42 | Distance: 2.75 km
-   Average Pace: 5:21 /km | Avg HR: 153 bpm | Calories: 200 kcal
+   Average Pace: 5:21 /km | Calories: 200 kcal
    LabelId: 477027521303445605 | SportType: 100
 
 111. Outdoor Run — 2026-04-24
    Location: —
    Time Window: startTimestamp=1777059784 | endTimestamp=1777060725
    Duration: 11:19 | Distance: 2.27 km
-   Average Pace: 4:59 /km | Avg HR: 137 bpm | Calories: 159 kcal
+   Average Pace: 4:59 /km | Calories: 159 kcal
    LabelId: 477026150403571824 | SportType: 100
 
 112. Outdoor Run — 2026-04-23
    Location: —
    Time Window: startTimestamp=1776993489 | endTimestamp=1776995793
    Duration: 32:14 | Distance: 5.23 km
-   Average Pace: 6:10 /km | Avg HR: 144 bpm | Calories: 372 kcal
+   Average Pace: 6:10 /km | Calories: 372 kcal
    LabelId: 477008697803964418 | SportType: 100
 
 113. Outdoor Run — 2026-04-21
    Location: —
    Time Window: startTimestamp=1776818303 | endTimestamp=1776823308
    Duration: 46:15 | Distance: 8.53 km
-   Average Pace: 5:25 /km | Avg HR: 162 bpm | Calories: 746 kcal
+   Average Pace: 5:25 /km | Calories: 746 kcal
    LabelId: 476963606552936453 | SportType: 100
 
 114. Outdoor Run — 2026-04-19
    Location: —
    Time Window: startTimestamp=1776649305 | endTimestamp=1776651111
    Duration: 23:53 | Distance: 5.11 km
-   Average Pace: 4:40 /km | Avg HR: 149 bpm | Calories: 347 kcal
+   Average Pace: 4:40 /km | Calories: 347 kcal
    LabelId: 476916154680508519 | SportType: 100
 
 115. Outdoor Run — 2026-04-18
    Location: —
    Time Window: startTimestamp=1776529243 | endTimestamp=1776534829
    Duration: 59:29 | Distance: 10.07 km
-   Average Pace: 5:54 /km | Avg HR: 155 bpm | Calories: 682 kcal
+   Average Pace: 5:54 /km | Calories: 682 kcal
    LabelId: 476885454266859723 | SportType: 100
 
 116. Outdoor Run — 2026-04-16
    Location: —
    Time Window: startTimestamp=1776389951 | endTimestamp=1776393695
    Duration: 50:54 | Distance: 8.88 km
-   Average Pace: 5:44 /km | Avg HR: 145 bpm | Calories: 605 kcal
+   Average Pace: 5:44 /km | Calories: 605 kcal
    LabelId: 476847116302450896 | SportType: 100
 
 117. Outdoor Run — 2026-04-14
    Location: —
    Time Window: startTimestamp=1776213654 | endTimestamp=1776220107
    Duration: 58:31 | Distance: 11.12 km
-   Average Pace: 5:16 /km | Avg HR: 157 bpm | Calories: 724 kcal
+   Average Pace: 5:16 /km | Calories: 724 kcal
    LabelId: 476800762867908612 | SportType: 100

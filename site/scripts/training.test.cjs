@@ -36,7 +36,6 @@ function sources(overrides = {}) {
     load: P.parseTrainingLoad(fx('training-load.txt')),
     fitness: P.parseFitness(fx('fitness.txt')),
     recovery: P.parseRecovery(fx('recovery.txt')),
-    restingHr: P.parseRestingHr(fx('resting-hr.txt')),
     hrv: P.parseSleepHrv(fx('sleep-hrv.txt')),
     sleep: P.parseSleepOverview(fx('sleep-overview.txt')),
     details,
@@ -64,13 +63,12 @@ test('sport records parse every block, with optional fields', () => {
     start: 1791648846,
     durationSec: 4156,
     km: 15.41,
-    avgHr: 161,
   });
   const ride = r.find((x) => x.kind === 'Cycling');
   assert.ok(ride && ride.km > 0, 'cycling keeps its distance');
 });
 
-test('training load, fitness, recovery, resting HR, HRV and sleep parse', () => {
+test('training load, fitness, recovery, HRV and sleep parse', () => {
   const load = P.parseTrainingLoad(fx('training-load.txt'));
   assert.equal(load.length, 31);
   assert.deepEqual(load.at(-1), {
@@ -101,9 +99,6 @@ test('training load, fitness, recovery, resting HR, HRV and sleep parse', () => 
     fullRecoveryHours: 28,
   });
   assert.equal(P.parseRecovery('nothing here'), null);
-
-  const rhr = P.parseRestingHr(fx('resting-hr.txt'));
-  assert.deepEqual(rhr.at(-1), { date: '2026-10-10', bpm: 53 });
 
   const hrv = P.parseSleepHrv(fx('sleep-hrv.txt'));
   assert.equal(hrv.length, 33);
@@ -183,6 +178,15 @@ test('deriveView builds the full page from Coros', () => {
   assert.ok(v.status.essay.length > 40);
 });
 
+test('no heart-rate figure reaches the page', () => {
+  // Randy keeps HR (resting or in-session) off the site. HRV is fine.
+  const json = JSON.stringify(D.deriveView(sources()));
+  assert.doesNotMatch(json, /"(rhr|hr|avgHr|restingHr|maxHr|bpm)"\s*:/);
+  assert.doesNotMatch(json, /heart rate|resting hr|\bbpm\b/i);
+  const laps = P.parseLaps(fx('laps-480944039976271974.json')).laps;
+  assert.deepEqual(Object.keys(laps[0]).sort(), ['km', 'sec', 'watts']);
+});
+
 test('without Coros, Strava carries the activity panels alone', () => {
   const strava = [
     {
@@ -193,7 +197,6 @@ test('without Coros, Strava carries the activity panels alone', () => {
       indoor: false,
       km: 15.4,
       sec: 4156,
-      avgHr: 161,
       route: 'M0,0L1,1',
     },
     {
@@ -204,7 +207,6 @@ test('without Coros, Strava carries the activity panels alone', () => {
       indoor: true,
       km: 13.2,
       sec: 3601,
-      avgHr: 143,
       route: null,
     },
   ];
@@ -215,7 +217,6 @@ test('without Coros, Strava carries the activity panels alone', () => {
     load: null,
     fitness: null,
     recovery: null,
-    restingHr: null,
     hrv: null,
     sleep: null,
     details: {},
@@ -243,7 +244,6 @@ test('Coros activities pick up the matching Strava route', () => {
         indoor: false,
         km: 15.4,
         sec: 4156,
-        avgHr: 161,
         route: 'M1,1',
       },
     ],

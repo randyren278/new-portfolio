@@ -31,7 +31,6 @@ export type StravaRun = {
   indoor: boolean;
   km: number;
   sec: number;
-  avgHr: number | null;
   route: string | null; // SVG path in a 160×110 box; public activities only
 };
 
@@ -43,7 +42,6 @@ export type Sources = {
   load: CorosLoadDay[] | null;
   fitness: CorosFitness | null;
   recovery: CorosRecovery | null;
-  restingHr: { date: string; bpm: number }[] | null;
   hrv: CorosNightHrv[] | null;
   sleep: CorosSleep[] | null;
   details: Record<string, CorosActivityDetail>;
@@ -62,7 +60,6 @@ export type Activity = {
   indoor: boolean;
   km: number;
   sec: number;
-  avgHr: number | null;
   focus: string | null;
   route: string | null;
 };
@@ -92,7 +89,6 @@ export type Night = {
   hrv: number | null;
   baseline: number | null;
   hrvStatus: string | null;
-  rhr: number | null;
   sleep: number | null;
 };
 
@@ -113,7 +109,6 @@ export type Session = {
     km: number;
     sec: number;
     pace: number;
-    hr: number | null;
     watts: number | null;
   }[];
   fastest: number; // index into reps
@@ -137,7 +132,6 @@ export type TrainingView = {
     level: string | null;
     fullRecoveryHours: number | null;
     hrv: Vital | null;
-    rhr: Vital | null;
     sleep: Vital | null;
   } | null;
   load: CorosLoadDay[] | null;
@@ -269,7 +263,6 @@ function activitiesOf(src: Sources): Activity[] {
           indoor,
           km: r.km ?? 0,
           sec: r.durationSec,
-          avgHr: r.avgHr,
           focus: src.details[r.labelId]?.focus ?? null,
           route: indoor ? null : routeFor(r.start),
         };
@@ -285,7 +278,6 @@ function activitiesOf(src: Sources): Activity[] {
       indoor: s.indoor,
       km: s.km,
       sec: s.sec,
-      avgHr: s.avgHr,
       focus: null,
       route: s.route,
     }))
@@ -389,7 +381,6 @@ function deriveSession(src: Sources, acts: Activity[]): Session | null {
       km: l.km,
       sec: l.sec,
       pace: l.sec / l.km,
-      hr: l.hr,
       watts: l.watts,
     }));
   const repKm = reps.reduce((s, r) => s + r.km, 0);
@@ -595,7 +586,7 @@ export function deriveView(src: Sources): TrainingView {
 }
 
 function deriveNights(src: Sources, today: string): Night[] | null {
-  if (!src.hrv && !src.restingHr && !src.sleep) return null;
+  if (!src.hrv && !src.sleep) return null;
   const from = shift(today, -20);
   const out: Night[] = [];
   for (let d = from; d <= today; d = shift(d, 1)) {
@@ -605,11 +596,10 @@ function deriveNights(src: Sources, today: string): Night[] | null {
       hrv: h?.hrv ?? null,
       baseline: h?.baseline ?? null,
       hrvStatus: h?.status ?? null,
-      rhr: src.restingHr?.find((x) => x.date === d)?.bpm ?? null,
       sleep: src.sleep?.find((x) => x.date === d)?.score ?? null,
     });
   }
-  return out.some((n) => n.hrv != null || n.rhr != null || n.sleep != null) ? out : null;
+  return out.some((n) => n.hrv != null || n.sleep != null) ? out : null;
 }
 
 function deriveReadiness(src: Sources, today: string): TrainingView['readiness'] {
@@ -617,10 +607,8 @@ function deriveReadiness(src: Sources, today: string): TrainingView['readiness']
   const last = <T extends { date: string }>(xs: T[] | null) =>
     xs?.filter((x) => x.date <= today).slice(-14) ?? [];
   const hrv = last(src.hrv);
-  const rhr = last(src.restingHr);
   const sleep = last(src.sleep);
   const lastHrv = hrv[hrv.length - 1];
-  const lastRhr = rhr[rhr.length - 1];
   const lastSleep = sleep[sleep.length - 1];
   return {
     pct: src.recovery.pct,
@@ -628,18 +616,6 @@ function deriveReadiness(src: Sources, today: string): TrainingView['readiness']
     fullRecoveryHours: src.recovery.fullRecoveryHours,
     hrv: lastHrv
       ? { value: lastHrv.hrv, baseline: lastHrv.baseline, series: hrv.map((x) => x.hrv) }
-      : null,
-    rhr: lastRhr
-      ? {
-          value: lastRhr.bpm,
-          // Baseline = median of the preceding nights, never the night itself.
-          baseline: median(
-            (src.restingHr ?? [])
-              .filter((x) => x.date < lastRhr.date && x.date >= shift(lastRhr.date, -21))
-              .map((x) => x.bpm),
-          ),
-          series: rhr.map((x) => x.bpm),
-        }
       : null,
     sleep: lastSleep
       ? {
@@ -737,14 +713,13 @@ function deriveNotes(
   if (s) {
     const fast = s.reps[s.fastest];
     const lastIsFastest = s.fastest === s.reps.length - 1;
-    const maxHr = Math.max(...s.reps.map((r) => r.hr ?? 0));
     notes.push({
       when: fmtDow(s.date),
       text: `${s.reps.length} reps at ${pace(s.repPace)} /km on average, ${
         lastIsFastest
           ? `the last one quickest at ${pace(fast.pace)}.`
           : `quickest on rep ${fast.n} at ${pace(fast.pace)}.`
-      }${maxHr ? ` Heart rate topped out at ${maxHr}.` : ''}`,
+      }`,
     });
   }
   if (ctx.biggest && ctx.biggest === ctx.lastFull) {

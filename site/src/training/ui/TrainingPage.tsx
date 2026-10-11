@@ -144,20 +144,6 @@ function Cells({ view }: { view: TrainingView }) {
                 base={r.hrv.baseline}
               />
             )}
-            {r.rhr && (
-              <Vital
-                label="Resting HR"
-                value={r.rhr.value}
-                unit="bpm"
-                note={
-                  r.rhr.baseline != null
-                    ? `${signed(r.rhr.value - r.rhr.baseline, 0)} vs ${Math.round(r.rhr.baseline)}`
-                    : ''
-                }
-                series={r.rhr.series}
-                base={r.rhr.baseline}
-              />
-            )}
             {r.sleep && (
               <Vital
                 label="Sleep"
@@ -247,7 +233,6 @@ function Cells({ view }: { view: TrainingView }) {
                     <th scope="col">Dist</th>
                     <th scope="col">Time</th>
                     <th scope="col">Pace</th>
-                    <th scope="col">HR</th>
                     <th scope="col">Watts</th>
                   </tr>
                 </thead>
@@ -263,7 +248,6 @@ function Cells({ view }: { view: TrainingView }) {
                         )}
                         {pace(rep.pace)}
                       </td>
-                      <td>{rep.hr ?? '—'}</td>
                       <td>{rep.watts ?? '—'}</td>
                     </tr>
                   ))}
@@ -314,7 +298,6 @@ function Cells({ view }: { view: TrainingView }) {
           </h2>
           <RecoveryChart
             nights={view.nights}
-            rhrBase={view.readiness?.rhr?.baseline ?? null}
             sleepBase={view.readiness?.sleep?.baseline ?? null}
             dayTips={dayTips}
           />
@@ -456,8 +439,7 @@ function Cells({ view }: { view: TrainingView }) {
         <div className="tr-src">
           <span className="tr-lab">Coros</span>
           <span>
-            Activities, training load and its grade, recovery, HRV, resting HR, sleep, laps, fitness
-            assessment
+            Activities, training load and its grade, recovery, HRV, sleep, laps, fitness assessment
           </span>
         </div>
         <div className="tr-src">

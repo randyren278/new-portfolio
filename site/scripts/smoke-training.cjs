@@ -202,6 +202,16 @@ const contrastFailures = (page) =>
     assert(reps >= 2 && best === 1, `session table lists reps with one fastest (${reps} reps)`);
   }
 
+  // Randy keeps heart rate off the site: not shown, and not shipped in the
+  // page's data payload either (HRV is fine).
+  const payload = await (await page.request.get(url('/training'))).text();
+  assert(
+    !/\\?"(rhr|hr|avgHr|restingHr|maxHr)\\?"\s*:/.test(payload),
+    'no heart-rate fields in the page payload',
+  );
+  const visible = await page.evaluate(() => document.body.innerText);
+  assert(!/\bbpm\b|resting hr|heart rate|\bHR\b/i.test(visible), 'no heart-rate figures on the page');
+
   const outline = await page.$$eval('h1, h2, h3', (els) => els.map((e) => Number(e.tagName[1])));
   assert(outline.filter((l) => l === 1).length === 1 && outline[0] === 1, 'one H1 leads the outline');
   assert(outline.every((l, i) => i === 0 || l <= outline[i - 1] + 1), 'no heading level is skipped');

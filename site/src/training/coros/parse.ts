@@ -8,6 +8,9 @@
  *
  * Pure functions, no imports: scripts/training.test.cjs runs them
  * directly against real captured responses in ../fixtures.
+ *
+ * Heart rate is deliberately never parsed (Randy keeps HR off the site),
+ * so it can't reach the page by accident.
  */
 
 export type CorosRecord = {
@@ -18,7 +21,6 @@ export type CorosRecord = {
   start: number; // unix seconds
   durationSec: number;
   km: number | null;
-  avgHr: number | null;
 };
 
 export type CorosLoadDay = {
@@ -61,7 +63,7 @@ export type CorosActivityDetail = {
   avgPower: number | null;
 };
 
-export type CorosLap = { km: number; sec: number; hr: number | null; watts: number | null };
+export type CorosLap = { km: number; sec: number; watts: number | null };
 
 /** MCP text content sometimes arrives as a JSON string literal; unwrap it. */
 export function unwrapText(text: string): string {
@@ -125,7 +127,6 @@ export function parseSportRecords(raw: string): CorosRecord[] {
       start: Number(start[1]),
       durationSec: clockToSec(dur[1]) ?? 0,
       km: num(/Distance:\s*([\d.]+)\s*km/, block),
-      avgHr: num(/Avg HR:\s*(\d+)\s*bpm/, block),
     });
   }
   return records;
@@ -178,13 +179,6 @@ export function parseRecovery(raw: string): CorosRecovery | null {
   };
 }
 
-export function parseRestingHr(raw: string): { date: string; bpm: number }[] {
-  const text = unwrapText(raw);
-  return [...text.matchAll(/^(\d{4}-\d{2}-\d{2}):\s*(\d+)\s*bpm/gm)]
-    .map((m) => ({ date: m[1], bpm: Number(m[2]) }))
-    .sort((a, b) => (a.date < b.date ? -1 : 1));
-}
-
 /** Only the daily assessment section; the raw per-sample series is ignored. */
 export function parseSleepHrv(raw: string): CorosNightHrv[] {
   const text = unwrapText(raw);
@@ -231,7 +225,7 @@ export function parseActivityDetail(raw: string): CorosActivityDetail {
   };
 }
 
-type RawLap = { distance?: number; time?: number; avgHr?: number; avgPower?: number };
+type RawLap = { distance?: number; time?: number; avgPower?: number };
 type RawLapGroup = { type?: number; laps?: RawLap[] };
 
 /**
@@ -256,7 +250,6 @@ export function parseLaps(raw: string): { source: 'manual' | 'auto'; laps: Coros
     laps: group.laps.map((l) => ({
       km: (l.distance ?? 0) / 100000,
       sec: l.time ?? 0,
-      hr: l.avgHr || null,
       watts: l.avgPower || null,
     })),
   };

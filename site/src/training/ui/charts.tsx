@@ -324,11 +324,9 @@ export function SessionChart({
   const ml = 34;
   const mr = 8;
   const mt = 18;
-  const H1 = 190;
-  const gap = 26;
-  const H2 = 64;
+  const H1 = 230;
   const mb = 20;
-  const H = mt + H1 + gap + H2 + mb;
+  const H = mt + H1 + mb;
   if (W < 160) return <div ref={ref} className="chart" style={{ height: H }} />;
   const iw = W - ml - mr;
   const total = session.laps.reduce((s, l) => s + l.sec, 0);
@@ -344,12 +342,6 @@ export function SessionChart({
   const ticks: number[] = [];
   for (let p = pFast; p <= pSlow; p += 30) ticks.push(p);
 
-  const hrs = session.laps.map((l) => l.hr).filter((h): h is number => h != null);
-  const hlo = Math.floor((Math.min(...hrs) - 5) / 10) * 10;
-  const hhi = Math.ceil((Math.max(...hrs) + 5) / 10) * 10;
-  const hy0 = mt + H1 + gap;
-  const hy = (v: number) => hy0 + H2 - ((v - hlo) / (hhi - hlo)) * H2;
-
   let t = 0;
   let repN = 0;
   const marks = session.laps.map((l, i) => {
@@ -362,24 +354,13 @@ export function SessionChart({
     if (l.part === 'rep') {
       repN++;
       const rep = session.reps[repN - 1];
-      tip = `Rep ${repN}|${l.km.toFixed(2)} km · ${clock(l.sec)} · ${pace(p)} /km|HR ${l.hr ?? '—'}${l.watts ? ` · ${l.watts} W` : ''}`;
+      tip = `Rep ${repN}|${l.km.toFixed(2)} km · ${clock(l.sec)} · ${pace(p)} /km${l.watts ? `|${l.watts} W` : ''}`;
       if (repN === 1 || rep === session.reps[session.fastest]) label = pace(p);
-    } else if (l.part === 'rest') tip = `Recovery|${clock(l.sec)}|HR ${l.hr ?? '—'}`;
+    } else if (l.part === 'rest') tip = `Recovery|${clock(l.sec)}`;
     else
-      tip = `${l.part === 'warmup' ? 'Warm-up' : 'Cool-down'}|${l.km.toFixed(2)} km · ${pace(p)} /km|HR ${l.hr ?? '—'}`;
+      tip = `${l.part === 'warmup' ? 'Warm-up' : 'Cool-down'}|${l.km.toFixed(2)} km · ${pace(p)} /km`;
     return { i, l, x0, x1, p, tip, label };
   });
-  const hrPath = line(
-    marks.flatMap((m) =>
-      m.l.hr == null
-        ? []
-        : ([
-            [m.x0, hy(m.l.hr)],
-            [m.x1, hy(m.l.hr)],
-          ] as [number, number][]),
-    ),
-  );
-
   return (
     <div ref={ref} className="chart">
       <svg width={W} height={H} aria-hidden="true">
@@ -435,14 +416,6 @@ export function SessionChart({
             </text>
           ) : null,
         )}
-        <text x={ml - 6} y={hy0 + 10} textAnchor="end" {...AX}>
-          HR
-        </text>
-        <line x1={ml} x2={ml + iw} y1={hy((hlo + hhi) / 2)} y2={hy((hlo + hhi) / 2)} {...GRID} />
-        <text x={ml - 6} y={hy((hlo + hhi) / 2) + 3} textAnchor="end" {...AX}>
-          {(hlo + hhi) / 2}
-        </text>
-        <path d={hrPath} fill="none" stroke="var(--ink)" strokeWidth={1.5} strokeLinejoin="round" />
         {Array.from({ length: Math.floor(total / 60 / 20) + 1 }, (_, k) => k * 20).map((m) => (
           <text key={m} x={tx(m * 60)} y={H - 4} textAnchor={m ? 'middle' : 'start'} {...AX}>
             {m}′
@@ -454,7 +427,7 @@ export function SessionChart({
             x={m.x0}
             y={mt}
             width={Math.max(4, m.x1 - m.x0)}
-            height={H1 + gap + H2}
+            height={H1}
             fill="transparent"
             data-tip={m.tip}
           />
@@ -543,7 +516,7 @@ export function VolumeChart({ weeks }: { weeks: Week[] }) {
 // --------------------------------------------------------- recovery
 
 type Panel = {
-  key: 'hrv' | 'rhr' | 'sleep';
+  key: 'hrv' | 'sleep';
   label: string;
   value: (n: Night) => number | null;
   base: (n: Night) => number | null;
@@ -553,12 +526,10 @@ type Panel = {
 
 export function RecoveryChart({
   nights,
-  rhrBase,
   sleepBase,
   dayTips,
 }: {
   nights: Night[];
-  rhrBase: number | null;
   sleepBase: number | null;
   dayTips: Map<string, string>;
 }) {
@@ -570,7 +541,7 @@ export function RecoveryChart({
   const gap = 28;
   const top = 16;
   const mb = 20;
-  const H = top + 3 * rowH + 2 * gap + mb;
+  const H = top + 2 * rowH + gap + mb;
   const iw = Math.max(1, W - ml - mr);
   const x = (i: number) => ml + (n > 1 ? (i * iw) / (n - 1) : 0);
   const cross = useCrosshair(n, x, (i) => {
@@ -578,7 +549,7 @@ export function RecoveryChart({
     return [
       fmtDow(d.date),
       `HRV ${d.hrv ?? '—'} ms${d.baseline ? ` (base ${d.baseline})` : ''}${d.hrvStatus ? ` · ${d.hrvStatus}` : ''}`,
-      `Resting HR ${d.rhr ?? '—'} · Sleep ${d.sleep ?? '—'}`,
+      `Sleep score ${d.sleep ?? '—'}`,
       `Day before: ${dayTips.get(shift(d.date, -1)) ?? 'rest'}`,
     ];
   });
@@ -591,13 +562,6 @@ export function RecoveryChart({
       value: (d) => d.hrv,
       base: (d) => d.baseline,
       flag: (d) => /low/i.test(d.hrvStatus ?? ''),
-    },
-    {
-      key: 'rhr',
-      label: 'RESTING HR · BPM',
-      value: (d) => d.rhr,
-      base: () => rhrBase,
-      flag: (d) => rhrBase != null && (d.rhr ?? 0) >= rhrBase + 6,
     },
     {
       key: 'sleep',
