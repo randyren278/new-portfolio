@@ -106,22 +106,30 @@ export function StravaCell({ strava }: { strava: StravaData | null }) {
           />
         </svg>
       </div>
-      {usingFallback ? (
-        <>
-          <div className="strava-cap">— NO RECENT ACTIVITY —</div>
-          <div className="strava-sub">strava not connected</div>
-        </>
-      ) : (
-        <>
-          <div className="strava-cap">
-            {formatDistance(strava.distanceM)} · {formatDuration(strava.movingTimeS)} ·{' '}
-            {strava.activityType.toUpperCase()}
+      <div className="strava-foot">
+        {usingFallback ? (
+          <div>
+            <div className="strava-cap">— NO RECENT ACTIVITY —</div>
+            <div className="strava-sub">strava not connected</div>
           </div>
-          <div className="strava-sub">
-            {formatSpeed(strava.distanceM, strava.movingTimeS, strava.activityType)}
+        ) : (
+          <div>
+            <div className="strava-cap">
+              {formatDistance(strava.distanceM)} · {formatDuration(strava.movingTimeS)} ·{' '}
+              {strava.activityType.toUpperCase()}
+            </div>
+            <div className="strava-sub">
+              {formatSpeed(strava.distanceM, strava.movingTimeS, strava.activityType)}
+            </div>
           </div>
-        </>
-      )}
+        )}
+        {/* Holds the pill's place on the rail: where the caption and the pill
+            don't fit side by side, this wraps below and the caption stands
+            clear above the real pill (laid over the cell, below). */}
+        <span className="glass-pill strava-pill-ghost" aria-hidden="true">
+          Training status <span>→</span>
+        </span>
+      </div>
       <button
         ref={opener}
         className="strava-open"

@@ -124,8 +124,11 @@ export function LoadChart({
     yl = mid - (s * 30) / 2;
   }
   const lx = ml + iw + 14;
+  // Weekly date ticks, or fortnightly where a week is narrower than a
+  // label (~42px; they overprinted on a 320px phone).
+  const step = (7 * iw) / Math.max(1, n - 1) < 42 ? 14 : 7;
   const ticks: number[] = [];
-  for (let i = n - 1; i >= 0; i -= 7) ticks.push(i);
+  for (let i = n - 1; i >= 0; i -= step) ticks.push(i);
   const bw = Math.max(2, iw / n - 3);
 
   return (

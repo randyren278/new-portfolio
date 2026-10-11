@@ -72,7 +72,9 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
       const pad = Number.parseFloat(getComputedStyle(cell).paddingBottom);
       const room =
         cell.getBoundingClientRect().bottom - pad - 1 - last.getBoundingClientRect().bottom;
-      meta.toggleAttribute('data-tight', room < meta.offsetHeight);
+      // Fractional height, with half a pixel of slack: offsetHeight rounds up,
+      // so a content-sized cell (every phone) read as tight and hid the line.
+      meta.toggleAttribute('data-tight', room < meta.getBoundingClientRect().height - 0.5);
     };
     const ro = new ResizeObserver(check);
     ro.observe(cell);
@@ -186,8 +188,9 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
             >
               <span className="projects-num">{num}</span>
               <span className="projects-ttl">{m.title}</span>
+              {/* No-break spaces keep the year on the last word's line. */}
               <span className="projects-blb">
-                {m.medium} · {m.year}
+                {m.medium}&nbsp;·&nbsp;{m.year}
               </span>
             </button>
           );
