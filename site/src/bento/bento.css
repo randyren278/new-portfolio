@@ -1607,6 +1607,10 @@ body {
   opacity: 0;
   transition: transform 180ms ease, opacity 180ms ease;
 }
+.training-ask-plate:focus {
+  /* The plate takes focus on open for screen readers; it isn't a control. */
+  outline: none;
+}
 .training-ask.open .training-ask-overlay {
   opacity: 1;
 }

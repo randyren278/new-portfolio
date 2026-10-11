@@ -106,6 +106,35 @@ const contrastFailures = (page) =>
 
   console.log(`\n== smoke-training (${IS_MOBILE ? 'mobile / iPhone 13' : 'desktop'}) → ${BASE_URL} ==`);
 
+  // ---- 0. clickable as soon as it's visible -------------------------------
+  // The bento used to stay inert (and the transparent intro iframe kept
+  // swallowing clicks) for ~1s after it had fully faded in, so an early tap on
+  // Training status did nothing. Click the moment the page is visible.
+  {
+    const early = await context.newPage();
+    if (process.env.SHARE_URL) await early.goto(process.env.SHARE_URL, { waitUntil: 'load' });
+    await early.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await early.frameLocator('iframe.puff-entrance').locator('a[href="#portfolio"]').first().click();
+    await early.waitForFunction(
+      () => Number(getComputedStyle(document.querySelector('.puff-bento')).opacity) >= 0.95,
+    );
+    const stillTransiting = (await early.locator('iframe.puff-entrance').count()) > 0;
+    // On a phone the cell is below the fold; a visitor scrolls to it first.
+    await early.locator('.strava-open').scrollIntoViewIfNeeded();
+    const b = await early.locator('.strava-open').boundingBox();
+    await early.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+    const opened = await early
+      .locator('.training-ask-plate')
+      .waitFor({ state: 'visible', timeout: 2000 })
+      .then(() => true)
+      .catch(() => false);
+    assert(
+      opened,
+      `Training status opens as soon as the page is visible${stillTransiting ? ' (mid-transition)' : ''}`,
+    );
+    await early.close();
+  }
+
   // ---- 1. the doorway ----------------------------------------------------
   // A Vercel share link sets the cookie that lets us through preview protection.
   if (process.env.SHARE_URL) await page.goto(process.env.SHARE_URL, { waitUntil: 'load' });
@@ -138,8 +167,12 @@ const contrastFailures = (page) =>
     (await plate.getAttribute('aria-modal')) === 'true' && (await plate.evaluate((el) => el.tagName)) === 'DIALOG',
     'plate is a modal <dialog>',
   );
-  const focusedInPlate = await page.evaluate(() => document.activeElement?.closest('.training-ask-plate') != null);
-  assert(focusedInPlate, 'focus moves into the plate');
+  // The plate itself takes focus, never a button: Safari draws a scripted
+  // focus on a button as keyboard focus, so it opened pre-highlighted.
+  const focusedInPlate = await page.evaluate(() =>
+    document.activeElement?.classList.contains('training-ask-plate'),
+  );
+  assert(focusedInPlate, 'focus moves to the plate itself, not a button');
   for (let i = 0; i < 6; i++) await page.keyboard.press('Tab');
   assert(
     await page.evaluate(() => document.activeElement?.closest('.training-ask-plate') != null),

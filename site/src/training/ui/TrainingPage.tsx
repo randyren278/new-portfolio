@@ -11,7 +11,7 @@ import '@/bento/bento.css';
 import '@/bento/puff.css';
 import '../training.css';
 import Link from 'next/link';
-import { type CSSProperties, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 import { type TrainingView, clock, fmtDay, fmtDow, hm, km1, pace, runTitle } from '../derive';
 import { markReturnToHome } from '../returnFlag';
 import {
@@ -24,6 +24,7 @@ import {
   VolumeChart,
   WeekBars,
 } from './charts';
+import { useLiftCurtain } from './curtain';
 import { TipLayer } from './tip';
 
 const markReturn = markReturnToHome;
@@ -55,19 +56,7 @@ function syncedLabel(view: TrainingView) {
 }
 
 export function TrainingPage({ view }: { view: TrainingView | null }) {
-  // The home plate fades the bento out under a curtain before routing here;
-  // lift it once this page has painted.
-  useEffect(() => {
-    for (const el of document.querySelectorAll<HTMLElement>('.bento-departure')) {
-      el.animate([{ opacity: 1 }, { opacity: 0 }], {
-        duration: 260,
-        easing: 'ease-in-out',
-        fill: 'forwards',
-      })
-        .finished.catch(() => {})
-        .then(() => el.remove());
-    }
-  }, []);
+  useLiftCurtain();
   return (
     <TipLayer>
       <div className="bento-page training-page">

@@ -6,10 +6,12 @@ export function PuffEntrance({
   onEntering,
   onEntered,
   scene,
+  entering,
 }: {
   onEntering: () => void;
   onEntered: () => void;
   scene: string;
+  entering: boolean;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const [ready, setReady] = useState(false);
@@ -25,7 +27,7 @@ export function PuffEntrance({
   return (
     <iframe
       ref={frame}
-      className={`puff-entrance${ready ? ' is-ready' : ''}`}
+      className={`puff-entrance${ready ? ' is-ready' : ''}${entering ? ' is-entering' : ''}`}
       onLoad={() => setReady(true)}
       title="Puff — explore Randy’s portfolio"
       src={`/puff-intro/index.html?scene=${scene}`}

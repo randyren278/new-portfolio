@@ -229,6 +229,24 @@
   }
 }
 
+/* ----- loading ----- */
+.tr-loading {
+  align-self: start;
+}
+.tr-loading-word {
+  animation: tr-breathe 1.6s ease-in-out infinite;
+}
+@keyframes tr-breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tr-loading-word {
+    animation: none;
+  }
+}
+
 /* ----- readiness ----- */
 .tr-ready-top {
   display: flex;

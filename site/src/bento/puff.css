@@ -43,6 +43,11 @@ html.puff-theme,
   z-index: 1000;
   background: transparent;
 }
+/* Once the visitor has entered, the transit is only scenery: let clicks fall
+   through to the portfolio fading in underneath. */
+.puff-entrance.is-entering {
+  pointer-events: none;
+}
 .bento-text-button {
   padding: 8px 0;
   min-height: 44px;

@@ -131,7 +131,12 @@ async function fetchCorosCore(today: string): Promise<CorosCore> {
   };
 }
 
-const corosCoreCached = unstable_cache(fetchCorosCore, ['coros-core-v2'], { revalidate: 900 });
+// No date in the key: a new day serves the last bundle instantly and refreshes
+// behind it (stale-while-revalidate). With the date in the key, the first
+// visitor each morning waited on a full cold Coros fetch.
+const corosCoreCached = unstable_cache(() => fetchCorosCore(todayLocal()), ['coros-core-v3'], {
+  revalidate: 900,
+});
 
 /**
  * Per-activity detail and laps never change, so each is cached for good
@@ -184,7 +189,7 @@ async function corosPerActivity(
 }
 
 async function fetchCoros(today: string): Promise<CorosBundle> {
-  const core = await corosCoreCached(today);
+  const core = await corosCoreCached();
   return { ...core, ...(await corosPerActivity(core, today)) };
 }
 
@@ -220,11 +225,16 @@ async function fetchStrava(today: string): Promise<StravaRun[]> {
   });
 }
 
-const stravaCached = unstable_cache(fetchStrava, ['strava-runs-v2'], { revalidate: 900 });
+const stravaCached = unstable_cache(() => fetchStrava(todayLocal()), ['strava-runs-v3'], {
+  revalidate: 900,
+});
 
 // ------------------------------------------------------------ fixtures
 
 async function fixtureSources(): Promise<Sources> {
+  // Lets a local run simulate a cold Coros fetch (the loading state).
+  const delay = Number(process.env.TRAINING_FIXTURE_DELAY_MS ?? 0);
+  if (delay > 0) await new Promise((r) => setTimeout(r, delay));
   const dir = path.join(process.cwd(), 'src/training/fixtures');
   const fx = (f: string) => readFile(path.join(dir, f), 'utf8');
   const details = JSON.parse(await fx('activity-details.json')) as Record<string, string>;
@@ -254,7 +264,7 @@ export async function loadTrainingView(): Promise<TrainingView | null> {
   const today = todayLocal();
   const [coros, strava] = await Promise.all([
     settle('coros', fetchCoros(today)),
-    settle('strava', stravaCached(today)),
+    settle('strava', stravaCached()),
   ]);
   if (!coros && !strava) return null;
   return deriveView({

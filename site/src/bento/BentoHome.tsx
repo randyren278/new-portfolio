@@ -60,14 +60,18 @@ export function BentoHome({
     }
     setScene(['space', 'pool', 'kite'][Math.floor(Math.random() * 3)]);
   }, []);
+  // The portfolio is live from the moment it starts fading in. Holding it
+  // inert until the transit finished left a second where everything was
+  // visible but every click (Training status, photos, projects) did nothing.
+  const covered = intro && !entering;
   useEffect(() => {
-    if (!intro) return;
+    if (!covered) return;
     const old = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = old;
     };
-  }, [intro]);
+  }, [covered]);
   function finishIntro() {
     setIntro(false);
     setEntering(false);
@@ -105,17 +109,27 @@ export function BentoHome({
   const gridRef = useRef<HTMLElement>(null);
   useResizeTreatment(gridRef);
   useEffect(() => {
-    if (!intro) gridRef.current?.focus({ preventScroll: true });
+    // Hand focus to the grid unless the visitor already moved it (e.g. opened
+    // the training plate during the fade-in).
+    const active = document.activeElement;
+    if (!intro && (!active || active === document.body || active.tagName === 'IFRAME')) {
+      gridRef.current?.focus({ preventScroll: true });
+    }
   }, [intro]);
 
   return (
     <>
       {intro && scene && (
-        <PuffEntrance scene={scene} onEntering={() => setEntering(true)} onEntered={finishIntro} />
+        <PuffEntrance
+          scene={scene}
+          entering={entering}
+          onEntering={() => setEntering(true)}
+          onEntered={finishIntro}
+        />
       )}
       <div
         className={`bento-page puff-bento${intro && !entering ? ' awaiting-intro' : ''}${entering ? ' bento-landing' : ''}`}
-        inert={intro}
+        inert={covered}
       >
         <a className="skip-link" href="#portfolio">
           Skip to content

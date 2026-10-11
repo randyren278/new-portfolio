@@ -28,7 +28,6 @@ export function TrainingAsk({
   const [shown, setShown] = useState(false);
   const [summary, setSummary] = useState<Summary | null | 'error'>(null);
   const plate = useRef<HTMLDialogElement>(null);
-  const go = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -51,7 +50,10 @@ export function TrainingAsk({
     const raf = requestAnimationFrame(() => setShown(true));
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    go.current?.focus();
+    // Focus the plate itself, not its primary button: Safari treats a
+    // scripted focus on a button as keyboard focus and draws the ring, so the
+    // plate opened with "View training status" already highlighted.
+    plate.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -112,6 +114,7 @@ export function TrainingAsk({
         className="training-ask-plate"
         aria-modal="true"
         aria-labelledby="training-ask-title"
+        tabIndex={-1}
         ref={plate}
       >
         <button className="training-ask-close" type="button" onClick={onClose} aria-label="Close">
@@ -148,7 +151,7 @@ export function TrainingAsk({
           </dl>
         )}
         <div className="training-ask-actions">
-          <button ref={go} className="glass-pill training-ask-go" type="button" onClick={view}>
+          <button className="glass-pill training-ask-go" type="button" onClick={view}>
             View training status <span aria-hidden="true">→</span>
           </button>
           <button className="glass-pill" type="button" onClick={onClose}>
