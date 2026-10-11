@@ -497,26 +497,26 @@ function assert(cond, label) {
     );
   }
 
-  // ---- 6c. the light-only palette is declared to the UA ----------------
-  // Light-only is a deliberate choice, but without `color-scheme: light`
-  // an OS-dark visitor gets dark scrollbars and UA surfaces against the
-  // paper background. Assert it under an emulated dark preference, which
-  // is the only condition where its absence shows.
+  // ---- 6c. the dark palette is declared to the UA -----------------------
+  // The bento has been dark-only since the Puff entrance (4123f4c). Without
+  // `color-scheme: dark` an OS-light visitor gets light scrollbars and UA
+  // surfaces against the dark page. Assert it under an emulated light
+  // preference, which is the only condition where its absence shows.
 
-  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.emulateMedia({ colorScheme: 'light' });
   const declaredScheme = await page.evaluate(
     () => getComputedStyle(document.documentElement).colorScheme,
   );
   assert(
-    declaredScheme === 'light',
-    `page declares its light-only scheme to the UA (got "${declaredScheme}")`,
+    declaredScheme === 'dark',
+    `page declares its dark scheme to the UA (got "${declaredScheme}")`,
   );
-  const bodyInDark = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const bodyInLight = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   assert(
-    bodyInDark === 'rgba(0, 0, 0, 0)' || /250, 250, 247/.test(bodyInDark),
-    `page keeps its paper background under OS dark mode (got "${bodyInDark}")`,
+    /24, 25, 23/.test(bodyInLight),
+    `page keeps its dark background under OS light mode (got "${bodyInLight}")`,
   );
-  await page.emulateMedia({ colorScheme: 'light' });
+  await page.emulateMedia({ colorScheme: null });
 
   // ---- 7a. touch targets are big enough to hit -------------------------
   // Mobile only: the contact links were 19px tall and the verso return

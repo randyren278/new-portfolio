@@ -128,10 +128,15 @@ const assert = require('node:assert/strict');
             window.originalRandom = Math.random;
             Math.random = () => 0.1;
           });
+          // Puff floats in the pool by design (sub-pixel drift every frame), so
+          // it never satisfies Playwright's "stable" wait in WebKit; a real tap
+          // lands on a moving target just fine.
           await frame
             .locator(selector)
             .click(
-              selector === '#pixel-actor' ? { position: { x: 30, y: viewport.height * 0.6 } } : {},
+              selector === '#pixel-actor'
+                ? { position: { x: 30, y: viewport.height * 0.6 } }
+                : { force: true },
             );
           if (selector === '#pixel-actor')
             assert(

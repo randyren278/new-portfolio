@@ -8,6 +8,11 @@ const assert = require('node:assert/strict');
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(process.env.BASE_URL || 'http://localhost:3878');
+    // The Puff entrance covers (and inerts) the bento until its invitation
+    // is followed; measure the portfolio a visitor actually reaches.
+    await page.frameLocator('iframe.puff-entrance').locator('a[href="#portfolio"]').first().click();
+    await page.waitForSelector('iframe.puff-entrance', { state: 'detached' });
+    await page.waitForSelector('.puff-bento:not(.awaiting-intro)');
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(500);
     assert.equal(await page.locator('header .welcome-note').count(), 0, 'top-right tagline removed');
