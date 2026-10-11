@@ -41,6 +41,13 @@ function computeFinal(): Rect {
   return { top: (vh - height) / 2, left: (vw - width) / 2, width, height };
 }
 
+function yearSpan(order: string[], mediums: Record<string, MediumEntry>) {
+  const years = order.map((id) => mediums[id]?.year).filter((y): y is number => !!y);
+  const lo = Math.min(...years);
+  const hi = Math.max(...years);
+  return lo === hi ? String(lo) : `${lo} – ${hi}`;
+}
+
 export function ProjectsCell({ order, mediums, plates }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -50,6 +57,29 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openerRef = useRef<HTMLButtonElement | null>(null);
+  const metaRef = useRef<HTMLDivElement | null>(null);
+
+  // The closing meta line sits on the cell's bottom rail only where the list
+  // leaves room for it; on short or narrow desktops (blurbs wrap, the cell
+  // shrinks) it would overlap the last row, so it steps out of sight there.
+  useEffect(() => {
+    const meta = metaRef.current;
+    const cell = meta?.closest('.cell');
+    if (!meta || !cell) return;
+    const rows = cell.querySelectorAll('.projects-row');
+    const last = rows[rows.length - 1];
+    const check = () => {
+      const pad = Number.parseFloat(getComputedStyle(cell).paddingBottom);
+      const room =
+        cell.getBoundingClientRect().bottom - pad - 1 - last.getBoundingClientRect().bottom;
+      meta.toggleAttribute('data-tight', room < meta.offsetHeight);
+    };
+    const ro = new ResizeObserver(check);
+    ro.observe(cell);
+    ro.observe(last);
+    check();
+    return () => ro.disconnect();
+  }, []);
 
   const openPlate = (id: string) => {
     openerRef.current = rowRefs.current[id];
@@ -162,6 +192,12 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
             </button>
           );
         })}
+      </div>
+      <div className="projects-meta" ref={metaRef}>
+        <span>
+          {String(order.length).padStart(2, '0')} PROJECTS · {yearSpan(order, mediums)}
+        </span>
+        <span>SELECT ONE TO OPEN</span>
       </div>
 
       {expanded &&

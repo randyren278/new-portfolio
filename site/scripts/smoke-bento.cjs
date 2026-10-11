@@ -93,7 +93,15 @@ function assert(cond, label) {
         const c = getComputedStyle(el);
         return {
           label: el.textContent.replace(/\s+/g, ' ').trim(),
-          look: [c.backgroundColor, c.borderTopColor, c.borderRadius, c.fontSize, c.fontFamily, c.textTransform, Math.round(el.getBoundingClientRect().height)].join(' | '),
+          look: [
+            c.backgroundColor,
+            c.borderTopColor,
+            c.borderRadius,
+            c.fontSize,
+            c.fontFamily,
+            c.textTransform,
+            Math.round(el.getBoundingClientRect().height),
+          ].join(' | '),
           shadow: c.boxShadow,
         };
       }),
@@ -101,21 +109,52 @@ function assert(cond, label) {
   await page.mouse.move(2, 2); // the intro's click leaves the pointer over a photo
   await page.waitForTimeout(250);
   const pills = await pillLook();
-  assert(pills.length >= 4, `the page's actions are glass pills (${pills.map((p) => p.label).join(', ')})`);
+  assert(
+    pills.length >= 4,
+    `the page's actions are glass pills (${pills.map((p) => p.label).join(', ')})`,
+  );
   assert(
     new Set(pills.map((p) => p.look)).size === 1,
     `every pill renders identically (${[...new Set(pills.map((p) => p.look))].join(' // ')})`,
   );
-  const ink = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ink-rgb').trim().split(/\s+/).join(', '));
+  const ink = await page.evaluate(() =>
+    getComputedStyle(document.documentElement)
+      .getPropertyValue('--ink-rgb')
+      .trim()
+      .split(/\s+/)
+      .join(', '),
+  );
   // A light glow = an outer (non-inset) shadow layer in the ink colour.
   const glows = (shadow) =>
-    shadow.split(/,(?![^(]*\))/).some((layer) => !layer.includes('inset') && layer.includes(`rgba(${ink}`));
+    shadow
+      .split(/,(?![^(]*\))/)
+      .some((layer) => !layer.includes('inset') && layer.includes(`rgba(${ink}`));
   assert(
     pills.every((p) => !glows(p.shadow)),
     `no pill casts a light glow (${[...new Set(pills.map((p) => p.shadow))].join(' // ')})`,
   );
+  const creamShadows = await page.evaluate((inkRgb) => {
+    const out = [];
+    for (const el of document.querySelectorAll('body *')) {
+      const sh = getComputedStyle(el).boxShadow;
+      if (sh === 'none') continue;
+      const layers = sh.split(/,(?![^(]*\))/);
+      if (layers.some((l) => !l.includes('inset') && l.includes(`rgba(${inkRgb}`)))
+        out.push(el.className || el.tagName);
+    }
+    return out;
+  }, ink);
+  assert(
+    creamShadows.length === 0,
+    `nothing on the page casts a cream shadow (${creamShadows.join(', ') || 'none'})`,
+  );
   const hovered = [];
-  for (const trigger of ['.cell-photo-a .photo-flip', '.strava-open', '.resume-view', '.resume-download']) {
+  for (const trigger of [
+    '.cell-photo-a .photo-flip',
+    '.strava-open',
+    '.resume-view',
+    '.resume-download',
+  ]) {
     await page.hover(trigger);
     await page.waitForTimeout(250);
     hovered.push(
@@ -126,8 +165,14 @@ function assert(cond, label) {
     );
   }
   await page.mouse.move(2, 2);
-  assert(new Set(hovered).size === 1, `every pill hovers the same way (${[...new Set(hovered)].join(' // ')})`);
-  assert(hovered[0] !== pills[0].look.split(' | ').slice(0, 2).join(' | '), 'hovering a pill visibly changes it');
+  assert(
+    new Set(hovered).size === 1,
+    `every pill hovers the same way (${[...new Set(hovered)].join(' // ')})`,
+  );
+  assert(
+    hovered[0] !== pills[0].look.split(' | ').slice(0, 2).join(' | '),
+    'hovering a pill visibly changes it',
+  );
 
   // ---- 2b. résumé card exposes the real one-page document ------------
 
@@ -530,7 +575,8 @@ function assert(cond, label) {
     );
     assert(stack[0] === 'cell-name', `Name card stacks first on mobile (got "${stack[0]}")`);
     assert(
-      stack.join(',') === 'cell-name,cell-contact,cell-projects,cell-photo-a,cell-resume,cell-strava,cell-photo-b',
+      stack.join(',') ===
+        'cell-name,cell-contact,cell-projects,cell-photo-a,cell-resume,cell-strava,cell-photo-b',
       'mobile reading order is predictable and prioritizes work and contact',
     );
     const photoAIdx = stack.indexOf('cell-photo-a');
@@ -751,7 +797,11 @@ function assert(cond, label) {
         node = node.parentElement
       ) {
         const nodeStyle = getComputedStyle(node);
-        if (nodeStyle.overflow === 'visible' && nodeStyle.overflowX === 'visible' && nodeStyle.overflowY === 'visible') {
+        if (
+          nodeStyle.overflow === 'visible' &&
+          nodeStyle.overflowX === 'visible' &&
+          nodeStyle.overflowY === 'visible'
+        ) {
           continue;
         }
         const clip = node.getBoundingClientRect();
@@ -794,91 +844,92 @@ function assert(cond, label) {
   // were never in the queried set. runContrastSweep() is called a second
   // time below with a plate open so that surface is covered too.
 
-  const runContrastSweep = () => page.evaluate(() => {
-    const channel = (v) => {
-      const c = v / 255;
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    };
-    const luminance = ([r, g, b]) =>
-      0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-    const parse = (value) => {
-      const n = (value.match(/[\d.]+/g) ?? []).map(Number);
-      return { rgb: n.slice(0, 3), alpha: n.length > 3 ? n[3] : 1 };
-    };
-    // Composite every translucent layer between the text and the first
-    // opaque one. Treating a layer as opaque the moment it is not fully
-    // transparent reads a 3% hover tint as solid --ink and reports a
-    // false 1.00:1 on whichever row the pointer happens to rest over.
-    const opaqueBackdrop = (node) => {
-      const layers = [];
-      for (let el = node; el; el = el.parentElement) {
-        const { rgb, alpha } = parse(getComputedStyle(el).backgroundColor);
-        if (alpha === 0) continue;
-        layers.push({ rgb, alpha });
-        if (alpha === 1) break;
-      }
-      let base =
-        layers.length && layers[layers.length - 1].alpha === 1
-          ? layers.pop().rgb
-          : parse(getComputedStyle(document.documentElement).backgroundColor).rgb;
-      for (let i = layers.length - 1; i >= 0; i--) {
-        base = layers[i].rgb.map((v, k) => v * layers[i].alpha + base[k] * (1 - layers[i].alpha));
-      }
-      return base;
-    };
+  const runContrastSweep = () =>
+    page.evaluate(() => {
+      const channel = (v) => {
+        const c = v / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      };
+      const luminance = ([r, g, b]) =>
+        0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+      const parse = (value) => {
+        const n = (value.match(/[\d.]+/g) ?? []).map(Number);
+        return { rgb: n.slice(0, 3), alpha: n.length > 3 ? n[3] : 1 };
+      };
+      // Composite every translucent layer between the text and the first
+      // opaque one. Treating a layer as opaque the moment it is not fully
+      // transparent reads a 3% hover tint as solid --ink and reports a
+      // false 1.00:1 on whichever row the pointer happens to rest over.
+      const opaqueBackdrop = (node) => {
+        const layers = [];
+        for (let el = node; el; el = el.parentElement) {
+          const { rgb, alpha } = parse(getComputedStyle(el).backgroundColor);
+          if (alpha === 0) continue;
+          layers.push({ rgb, alpha });
+          if (alpha === 1) break;
+        }
+        let base =
+          layers.length && layers[layers.length - 1].alpha === 1
+            ? layers.pop().rgb
+            : parse(getComputedStyle(document.documentElement).backgroundColor).rgb;
+        for (let i = layers.length - 1; i >= 0; i--) {
+          base = layers[i].rgb.map((v, k) => v * layers[i].alpha + base[k] * (1 - layers[i].alpha));
+        }
+        return base;
+      };
 
-    const failures = [];
-    for (const el of document.querySelectorAll('body *')) {
-      const own = [...el.childNodes]
-        .filter((n) => n.nodeType === Node.TEXT_NODE)
-        .map((n) => n.textContent?.trim())
-        .join(' ')
-        .trim();
-      if (!own) continue;
+      const failures = [];
+      for (const el of document.querySelectorAll('body *')) {
+        const own = [...el.childNodes]
+          .filter((n) => n.nodeType === Node.TEXT_NODE)
+          .map((n) => n.textContent?.trim())
+          .join(' ')
+          .trim();
+        if (!own) continue;
 
-      const style = getComputedStyle(el);
-      const rect = el.getBoundingClientRect();
-      if (!rect.width || !rect.height) continue;
-      if (style.visibility === 'hidden' || style.opacity === '0') continue;
-      // .photo-fname is white type laid over a photograph, and its
-      // legibility comes from a text-shadow, not from a colour pair. A
-      // ratio against the cell's background measures nothing real here,
-      // so it is exempt — and therefore NOT covered by this sweep.
-      if (el.classList.contains('photo-fname')) continue;
-      // WCAG 1.4.3 exempts disabled controls by spec (incidental text).
-      // The plate's PREV/NEXT dim to --muted at opacity .3 when disabled,
-      // which is a legitimate design signal ("nothing further this way"),
-      // not a contrast bug — so it is exempt for the same reason the spec
-      // is, not because this sweep cannot see it.
-      if (el.closest('button')?.disabled) continue;
+        const style = getComputedStyle(el);
+        const rect = el.getBoundingClientRect();
+        if (!rect.width || !rect.height) continue;
+        if (style.visibility === 'hidden' || style.opacity === '0') continue;
+        // .photo-fname is white type laid over a photograph, and its
+        // legibility comes from a text-shadow, not from a colour pair. A
+        // ratio against the cell's background measures nothing real here,
+        // so it is exempt — and therefore NOT covered by this sweep.
+        if (el.classList.contains('photo-fname')) continue;
+        // WCAG 1.4.3 exempts disabled controls by spec (incidental text).
+        // The plate's PREV/NEXT dim to --muted at opacity .3 when disabled,
+        // which is a legitimate design signal ("nothing further this way"),
+        // not a contrast bug — so it is exempt for the same reason the spec
+        // is, not because this sweep cannot see it.
+        if (el.closest('button')?.disabled) continue;
 
-      // `opacity` dims the painted result independently of the colour's own
-      // alpha, and it inherits down the ancestor chain. Reading style.color
-      // alone rated .strava-sub (--muted at opacity .65) as 4.81:1 when it
-      // actually paints rgb(160,160,159) for 2.52:1.
-      let cumulativeOpacity = 1;
-      for (let node = el; node && node !== document.documentElement; node = node.parentElement) {
-        cumulativeOpacity *= Number(getComputedStyle(node).opacity);
+        // `opacity` dims the painted result independently of the colour's own
+        // alpha, and it inherits down the ancestor chain. Reading style.color
+        // alone rated .strava-sub (--muted at opacity .65) as 4.81:1 when it
+        // actually paints rgb(160,160,159) for 2.52:1.
+        let cumulativeOpacity = 1;
+        for (let node = el; node && node !== document.documentElement; node = node.parentElement) {
+          cumulativeOpacity *= Number(getComputedStyle(node).opacity);
+        }
+        const fg = parse(style.color);
+        const bg = opaqueBackdrop(el);
+        const effectiveAlpha = fg.alpha * cumulativeOpacity;
+        const composited = fg.rgb.map((v, i) => v * effectiveAlpha + bg[i] * (1 - effectiveAlpha));
+        const a = luminance(composited);
+        const b = luminance(bg);
+        const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+        const px = Number.parseFloat(style.fontSize);
+        const isLarge = px >= 24 || (px >= 18.66 && Number(style.fontWeight) >= 700);
+        const required = isLarge ? 3 : 4.5;
+        if (ratio + 0.005 < required) {
+          failures.push(
+            `${own.slice(0, 24)} [${el.className || el.tagName}] ${ratio.toFixed(2)}:1 < ${required}`,
+          );
+        }
       }
-      const fg = parse(style.color);
-      const bg = opaqueBackdrop(el);
-      const effectiveAlpha = fg.alpha * cumulativeOpacity;
-      const composited = fg.rgb.map((v, i) => v * effectiveAlpha + bg[i] * (1 - effectiveAlpha));
-      const a = luminance(composited);
-      const b = luminance(bg);
-      const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
-
-      const px = Number.parseFloat(style.fontSize);
-      const isLarge = px >= 24 || (px >= 18.66 && Number(style.fontWeight) >= 700);
-      const required = isLarge ? 3 : 4.5;
-      if (ratio + 0.005 < required) {
-        failures.push(
-          `${own.slice(0, 24)} [${el.className || el.tagName}] ${ratio.toFixed(2)}:1 < ${required}`,
-        );
-      }
-    }
-    return failures;
-  });
+      return failures;
+    });
   const contrastFailures = await runContrastSweep();
   assert(
     contrastFailures.length === 0,
@@ -949,7 +1000,9 @@ function assert(cond, label) {
         const preview = rect('.resume-preview');
         const img = rect('.resume-preview img');
         return {
-          cols: getComputedStyle(document.querySelector('.bento-grid')).gridTemplateColumns.split(' ').length,
+          cols: getComputedStyle(document.querySelector('.bento-grid')).gridTemplateColumns.split(
+            ' ',
+          ).length,
           hscroll: document.documentElement.scrollWidth - innerWidth,
           pageW: Math.round(rect('.bento-page').width),
           listOverflow: list.scrollWidth - list.clientWidth,
@@ -973,7 +1026,8 @@ function assert(cond, label) {
       if (m.listOverflow > 0) bad.push(`projects list clips ${m.listOverflow}px`);
       if (m.blurbOverrun > 1) bad.push(`project blurb overruns ${m.blurbOverrun}px`);
       if (m.summaryOverrun > 1) bad.push(`résumé summary overruns ${m.summaryOverrun}px`);
-      if (Math.abs(m.previewSlack) > 3) bad.push(`résumé page ${m.previewSlack}px short of its frame`);
+      if (Math.abs(m.previewSlack) > 3)
+        bad.push(`résumé page ${m.previewSlack}px short of its frame`);
       // Multi-column only: in one column the cell is content-sized and the
       // page is deliberately width-driven, so there is no row to fill.
       if (expectCols > 1 && m.layoutH - m.previewH > 3) {
@@ -989,6 +1043,125 @@ function assert(cond, label) {
       `layout holds at all ${sizes.length} viewports (${layoutFailures.length} failing)`,
     );
     if (layoutFailures.length) layoutFailures.forEach((f) => console.error('    ', f));
+  }
+
+  // ---- 8d. one inset, one rail, at every size ---------------------------
+  // Edge-anchored things took their inset from four places (cell padding, a
+  // fixed 22px on the photo pill and label, a clamp() on the Strava pill, a
+  // fixed 18/22 on Puff) and drifted 2-8px apart at every size, so Photo
+  // details floated above the résumé buttons on the shared bottom line. Now
+  // everything reads --inset-y/--inset-x; assert each sits exactly on its
+  // cell's padding line, the bottom row shares one rail, and the bars'
+  // left and right labels share a baseline.
+
+  if (!IS_MOBILE) {
+    const cohesionSizes = [
+      [1920, 1080],
+      [1512, 982],
+      [1440, 900],
+      [1280, 800],
+      [1280, 720],
+      [1200, 800],
+      [1024, 768],
+      [390, 844],
+    ];
+    const drift = [];
+    for (const [w, h] of cohesionSizes) {
+      const ctx = await browser.newContext({ viewport: { width: w, height: h } });
+      const vp = await ctx.newPage();
+      await vp.goto(BASE_URL, { waitUntil: 'networkidle' });
+      await passIntro(vp);
+      await vp.mouse.move(1, 1);
+      const m = await vp.evaluate(() => {
+        const ref = getComputedStyle(document.querySelector('.cell-name'));
+        const py = Number.parseFloat(ref.paddingTop);
+        const px = Number.parseFloat(ref.paddingLeft);
+        const B = 1; // cell border
+        const at = (sel) => {
+          const el = document.querySelector(sel);
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          const c = el.closest('.cell').getBoundingClientRect();
+          return {
+            top: r.top - c.top - B,
+            left: r.left - c.left - B,
+            right: c.right - r.right - B,
+            bottom: c.bottom - r.bottom - B,
+            el: r,
+          };
+        };
+        const off = [];
+        const near = (a, b) => Math.abs(a - b) <= 1;
+        for (const sel of [
+          '.cell-photo-a .glass-pill',
+          '.cell-photo-b .glass-pill',
+          '.strava-pill',
+          '.resume-download',
+        ]) {
+          const a = at(sel);
+          if (a && !(near(a.bottom, py) && near(a.right, px)))
+            off.push(
+              `${sel} bottom ${a.bottom.toFixed(1)} right ${a.right.toFixed(1)} (inset ${py}/${px})`,
+            );
+        }
+        for (const sel of ['.cell-photo-a .photo-fname', '.cell-photo-b .photo-fname']) {
+          const a = at(sel);
+          if (a && !(near(a.top, py) && near(a.left, px)))
+            off.push(`${sel} top ${a.top.toFixed(1)} left ${a.left.toFixed(1)}`);
+        }
+        const puff = at('.correspondence-puff');
+        if (puff && !(near(puff.top, py) && near(puff.right, px)))
+          off.push(`puff top ${puff.top.toFixed(1)} right ${puff.right.toFixed(1)}`);
+        for (const c of document.querySelectorAll('.bento-grid > .cell:not(.cell-photo)')) {
+          const s = getComputedStyle(c);
+          if (Number.parseFloat(s.paddingTop) !== py || Number.parseFloat(s.paddingLeft) !== px)
+            off.push(`${c.className} padding ${s.padding}`);
+        }
+        // The Projects meta line never overlaps the list (it hides when tight).
+        const meta = document.querySelector('.projects-meta');
+        const rows = document.querySelectorAll('.projects-row');
+        if (meta && getComputedStyle(meta).visibility !== 'hidden') {
+          const gap =
+            meta.getBoundingClientRect().top - rows[rows.length - 1].getBoundingClientRect().bottom;
+          if (gap < 0) off.push(`projects meta overlaps the last row by ${(-gap).toFixed(1)}px`);
+        }
+        // Bottom row shares a rail when Photo B and Résumé end on one grid line.
+        const pb = at('.cell-photo-b .glass-pill');
+        const rs = at('.resume-download');
+        const sameLine =
+          Math.abs(
+            document.querySelector('.cell-photo-b').getBoundingClientRect().bottom -
+              document.querySelector('.cell-resume').getBoundingClientRect().bottom,
+          ) < 1;
+        if (pb && rs && sameLine && !near(pb.el.bottom, rs.el.bottom))
+          off.push(
+            `bottom rail: photo ${pb.el.bottom.toFixed(1)} vs résumé ${rs.el.bottom.toFixed(1)}`,
+          );
+        // The text's own baseline, not the icon glyph's taller inline-block box.
+        const baseline = (el) => {
+          const t = [...el.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+          const r = document.createRange();
+          r.selectNodeContents(t ?? el);
+          return r.getBoundingClientRect().bottom;
+        };
+        for (const bar of document.querySelectorAll('.bento-topbar')) {
+          const left = bar.firstElementChild;
+          const right = bar.querySelector('button');
+          if (left && right && Math.abs(baseline(left) - baseline(right)) > 1)
+            off.push(
+              `${bar.tagName.toLowerCase()} baselines ${baseline(left).toFixed(1)} vs ${baseline(right).toFixed(1)}`,
+            );
+        }
+        return off;
+      });
+      if (m.length) drift.push(`${w}x${h}: ${m.join('; ')}`);
+      await ctx.close();
+    }
+    assert(
+      drift.length === 0,
+      `one inset and one rail at all ${cohesionSizes.length} sizes (${drift.length} drifting)`,
+    );
+    for (const d of drift) console.error('    ', d);
   }
 
   // ---- 9. only expected 404s (photo placeholders) ---------------------

@@ -11,6 +11,7 @@ html.puff-theme,
   --muted-rgb: 165 166 155;
   --glass-rgb: 32 34 29;
   --shelter-rgb: 155 172 143;
+  --shadow-rgb: 0 0 0;
   /* Data marks on /training: a dim neutral for context and a one-hue
      ramp (dark → light) for magnitude. Never used for text. */
   --data-dim: #6b6d63;
@@ -98,8 +99,8 @@ html.puff-theme body {
 }
 .correspondence-puff {
   position: absolute;
-  top: 18px;
-  right: 22px;
+  top: var(--inset-y);
+  right: var(--inset-x);
   margin: 0;
   float: none;
 }
@@ -112,9 +113,12 @@ html.puff-theme body {
   bottom: auto;
 }
 
-/* Preserve the original topbar footprints; 44px hit areas do not size grid rows. */
+/* Preserve the original topbar footprints; 44px hit areas do not size grid rows.
+   Centred, not baseline-aligned: the absolutely placed button centres on the
+   bar, so the label must too or the two sit 2–5px apart. */
 .puff-bento .bento-topbar {
   position: relative;
+  align-items: center;
 }
 .puff-bento .bento-topbar .bento-text-button {
   position: absolute;
@@ -160,8 +164,9 @@ html.puff-theme body {
     grid-template-rows: repeat(6, minmax(0, 1fr));
     gap: 12px;
   }
-  .puff-bento .cell {
-    padding: 18px 22px;
+  .puff-bento {
+    --inset-y: 18px;
+    --inset-x: 22px;
   }
   .puff-bento .cell-photo {
     padding: 0;
@@ -214,8 +219,9 @@ html.puff-theme body {
     padding-block: 12px;
     gap: 10px;
   }
-  .puff-bento .cell {
-    padding: 14px 18px;
+  .puff-bento {
+    --inset-y: 14px;
+    --inset-x: 18px;
   }
   .puff-bento .cell-photo {
     padding: 0;
