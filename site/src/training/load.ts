@@ -73,7 +73,10 @@ async function pool<T, R>(items: T[], n: number, fn: (item: T) => Promise<R>): P
 
 // --------------------------------------------------------------- Coros
 
-async function fetchCoros(today: string): Promise<CorosBundle> {
+type CorosCore = Omit<CorosBundle, 'details' | 'session'>;
+
+/** The day-level calls. Cached as one unit for 15 minutes. */
+async function fetchCorosCore(today: string): Promise<CorosCore> {
   const coros: CorosClient = await connectCoros(await getCorosToken());
   const from = windowStart(today);
   const from28 = shift(today, -27);
@@ -113,19 +116,49 @@ async function fetchCoros(today: string): Promise<CorosBundle> {
         .then(P.parseSleepOverview),
     ),
   ]);
+  return {
+    asOf: new Date().toISOString(),
+    records,
+    load,
+    fitness,
+    recovery,
+    restingHr,
+    hrv,
+    sleep,
+  };
+}
 
-  // Details (training focus, load) for the last four weeks of runs.
-  const recentRuns = records.filter((r) => /run/i.test(r.kind) && r.date >= from28);
-  const detailOf = (r: P.CorosRecord) =>
+const corosCoreCached = unstable_cache(fetchCorosCore, ['coros-core-v1'], { revalidate: 900 });
+
+/**
+ * Per-activity detail and laps never change, so each is cached for good
+ * under its own key. These caches must sit outside corosCoreCached: Next
+ * bypasses an unstable_cache nested inside another one. A Coros session
+ * is only opened if something actually misses.
+ */
+async function corosPerActivity(
+  core: CorosCore,
+  today: string,
+): Promise<Pick<CorosBundle, 'details' | 'session'>> {
+  let client: Promise<CorosClient> | null = null;
+  const coros = () => {
+    client ??= getCorosToken().then(connectCoros);
+    return client;
+  };
+  const once = (tool: string, r: P.CorosRecord) =>
     unstable_cache(
-      () => coros.call('getActivityDetail', { labelId: r.labelId, sportType: r.sportType }),
-      ['coros-detail', r.labelId],
+      async () => (await coros()).call(tool, { labelId: r.labelId, sportType: r.sportType }),
+      [`coros-${tool}`, r.labelId],
       { revalidate: false },
     )();
-  const detailTexts = await pool(recentRuns, 4, (r) => settle('detail', detailOf(r)));
+
+  // Details (training focus, load) for the last four weeks of runs.
+  const from28 = shift(today, -27);
+  const recentRuns = (core.records ?? []).filter((r) => /run/i.test(r.kind) && r.date >= from28);
+  const texts = await pool(recentRuns, 4, (r) => settle('detail', once('getActivityDetail', r)));
   const details: Record<string, P.CorosActivityDetail> = {};
   recentRuns.forEach((r, i) => {
-    const text = detailTexts[i];
+    const text = texts[i];
     if (text) details[r.labelId] = P.parseActivityDetail(text);
   });
 
@@ -138,38 +171,19 @@ async function fetchCoros(today: string): Promise<CorosBundle> {
     )
     .sort((a, b) => b.start - a.start)
     .slice(0, 3);
-  let session: CorosBundle['session'] = null;
   for (const r of candidates) {
-    const text = await settle(
-      'laps',
-      unstable_cache(
-        () => coros.call('queryActivityLapData', { labelId: r.labelId, sportType: r.sportType }),
-        ['coros-laps', r.labelId],
-        { revalidate: false },
-      )(),
-    );
+    const text = await settle('laps', once('queryActivityLapData', r));
     const laps = text ? P.parseLaps(text) : null;
-    if (laps && classifyLaps(laps.laps)) {
-      session = { labelId: r.labelId, laps: laps.laps };
-      break;
-    }
+    if (laps && classifyLaps(laps.laps))
+      return { details, session: { labelId: r.labelId, laps: laps.laps } };
   }
-
-  return {
-    asOf: new Date().toISOString(),
-    records,
-    load,
-    fitness,
-    recovery,
-    restingHr,
-    hrv,
-    sleep,
-    details,
-    session,
-  };
+  return { details, session: null };
 }
 
-const corosCached = unstable_cache(fetchCoros, ['coros-bundle-v1'], { revalidate: 900 });
+async function fetchCoros(today: string): Promise<CorosBundle> {
+  const core = await corosCoreCached(today);
+  return { ...core, ...(await corosPerActivity(core, today)) };
+}
 
 // -------------------------------------------------------------- Strava
 
@@ -238,7 +252,7 @@ export async function loadTrainingView(): Promise<TrainingView | null> {
   if (process.env.TRAINING_FIXTURE === '1') return deriveView(await fixtureSources());
   const today = todayLocal();
   const [coros, strava] = await Promise.all([
-    settle('coros', corosCached(today)),
+    settle('coros', fetchCoros(today)),
     settle('strava', stravaCached(today)),
   ]);
   if (!coros && !strava) return null;
