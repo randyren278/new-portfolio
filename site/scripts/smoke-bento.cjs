@@ -16,6 +16,14 @@ const { chromium, devices } = require('playwright');
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3877/';
 const IS_MOBILE = process.env.DEVICE === 'mobile';
 
+// The Puff entrance covers the bento (and makes it inert) until the visitor
+// follows its invitation. Do what a visitor does, then wait for the handoff.
+async function passIntro(page) {
+  await page.frameLocator('iframe.puff-entrance').locator('a[href="#portfolio"]').first().click();
+  await page.waitForSelector('iframe.puff-entrance', { state: 'detached' });
+  await page.waitForSelector('.puff-bento:not(.awaiting-intro)');
+}
+
 function assert(cond, label) {
   if (cond) {
     console.log(`  ok  ${label}`);
@@ -57,6 +65,7 @@ function assert(cond, label) {
   console.log(`\n== smoke-bento (${IS_MOBILE ? 'mobile / iPhone 13' : 'desktop'}) ==`);
 
   await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await passIntro(page);
 
   // ---- 1. page + title ---------------------------------------------------
 
@@ -875,6 +884,7 @@ function assert(cond, label) {
       const ctx = await browser.newContext({ viewport: { width: w, height: h } });
       const vp = await ctx.newPage();
       await vp.goto(BASE_URL, { waitUntil: 'networkidle' });
+      await passIntro(vp);
       const m = await vp.evaluate(() => {
         const rect = (sel) => document.querySelector(sel)?.getBoundingClientRect();
         const overrun = (sel) => {

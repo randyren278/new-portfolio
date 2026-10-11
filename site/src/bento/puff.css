@@ -11,6 +11,14 @@ html.puff-theme,
   --muted-rgb: 165 166 155;
   --glass-rgb: 32 34 29;
   --shelter-rgb: 155 172 143;
+  /* Data marks on /training: a dim neutral for context and a one-hue
+     ramp (dark → light) for magnitude. Never used for text. */
+  --data-dim: #6b6d63;
+  --ramp-1: #42332c;
+  --ramp-2: #6f4f42;
+  --ramp-3: #9f6d5a;
+  --ramp-4: #d99177;
+  --ramp-5: #f0c2ae;
 }
 .puff-bento {
   background: var(--bg);

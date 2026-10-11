@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Strava cell — middle-right of the bento.
  *
@@ -10,7 +12,11 @@
  * route handler; this cell just drops it into <path d={...}>.
  */
 
+import { useCallback, useRef, useState } from 'react';
+import { TrainingAsk } from '../TrainingAsk';
+
 export type StravaData = {
+  id: number;
   name: string;
   distanceM: number;
   movingTimeS: number;
@@ -68,6 +74,14 @@ const FALLBACK_PATH = `M 34 46
 
 export function StravaCell({ strava }: { strava: StravaData | null }) {
   const usingFallback = strava === null;
+  // The whole cell is the doorway to /training: one real button laid over
+  // it, asking first (TrainingAsk) rather than navigating on a stray tap.
+  const [asking, setAsking] = useState(false);
+  const opener = useRef<HTMLButtonElement>(null);
+  const close = useCallback(() => {
+    setAsking(false);
+    opener.current?.focus();
+  }, []);
 
   return (
     <section className="cell cell-strava" aria-label="Latest activity">
@@ -108,6 +122,23 @@ export function StravaCell({ strava }: { strava: StravaData | null }) {
           </div>
         </>
       )}
+      <button
+        ref={opener}
+        className="strava-open"
+        type="button"
+        aria-haspopup="dialog"
+        aria-label="Training status — see how Randy’s training is going"
+        onClick={() => setAsking(true)}
+      >
+        <span className="photo-glass-label strava-pill" aria-hidden="true">
+          Training status <span>→</span>
+        </span>
+      </button>
+      <TrainingAsk
+        open={asking}
+        onClose={close}
+        stravaUrl={strava ? `https://www.strava.com/activities/${strava.id}` : null}
+      />
     </section>
   );
 }

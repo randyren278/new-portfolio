@@ -1,0 +1,368 @@
+{
+  "labelId": "480857205141176320",
+  "sportType": 100,
+  "lapGroups": [
+    {
+      "type": 10,
+      "laps": [
+        {
+          "lapIndex": 1,
+          "distance": 100000,
+          "time": 311.67,
+          "avgPace": 311.68,
+          "avgHr": 146,
+          "avgPower": 214
+        },
+        {
+          "lapIndex": 2,
+          "distance": 100000,
+          "time": 307.72,
+          "avgPace": 307.73,
+          "avgHr": 154,
+          "avgPower": 201
+        },
+        {
+          "lapIndex": 3,
+          "distance": 100000,
+          "time": 299.21,
+          "avgPace": 299.21,
+          "avgHr": 157,
+          "avgPower": 227
+        },
+        {
+          "lapIndex": 4,
+          "distance": 100000,
+          "time": 305.45,
+          "avgPace": 305.45,
+          "avgHr": 156,
+          "avgPower": 237
+        },
+        {
+          "lapIndex": 5,
+          "distance": 5700,
+          "time": 11.31,
+          "avgPace": 198.42,
+          "avgHr": 118,
+          "avgPower": 170
+        },
+        {
+          "lapIndex": 6,
+          "distance": 100000,
+          "time": 219.82,
+          "avgPace": 219.83,
+          "avgHr": 154,
+          "avgPower": 311
+        },
+        {
+          "lapIndex": 7,
+          "distance": 60140,
+          "time": 134.4,
+          "avgPace": 223.48,
+          "avgHr": 170,
+          "avgPower": 344
+        },
+        {
+          "lapIndex": 8,
+          "distance": 1930,
+          "time": 60.55,
+          "avgPace": 3137.31,
+          "avgHr": 169,
+          "avgPower": 97
+        },
+        {
+          "lapIndex": 9,
+          "distance": 100000,
+          "time": 202.53,
+          "avgPace": 202.54,
+          "avgHr": 165,
+          "avgPower": 303
+        },
+        {
+          "lapIndex": 10,
+          "distance": 61611,
+          "time": 128.46,
+          "avgPace": 208.51,
+          "avgHr": 171,
+          "avgPower": 325
+        },
+        {
+          "lapIndex": 11,
+          "distance": 4248,
+          "time": 59.46,
+          "avgPace": 1399.73,
+          "avgHr": 167,
+          "avgPower": 106
+        },
+        {
+          "lapIndex": 12,
+          "distance": 100000,
+          "time": 207.77,
+          "avgPace": 207.78,
+          "avgHr": 166,
+          "avgPower": 336
+        },
+        {
+          "lapIndex": 13,
+          "distance": 100000,
+          "time": 212.96,
+          "avgPace": 212.97,
+          "avgHr": 173,
+          "avgPower": 336
+        },
+        {
+          "lapIndex": 14,
+          "distance": 100000,
+          "time": 205.8,
+          "avgPace": 205.81,
+          "avgHr": 180,
+          "avgPower": 325
+        },
+        {
+          "lapIndex": 15,
+          "distance": 22840,
+          "time": 45.9,
+          "avgPace": 200.97,
+          "avgHr": 185,
+          "avgPower": 322
+        },
+        {
+          "lapIndex": 16,
+          "distance": 5126,
+          "time": 119.74,
+          "avgPace": 2335.94,
+          "avgHr": 155,
+          "avgPower": 50
+        },
+        {
+          "lapIndex": 17,
+          "distance": 100000,
+          "time": 204.69,
+          "avgPace": 204.7,
+          "avgHr": 160,
+          "avgPower": 346
+        },
+        {
+          "lapIndex": 18,
+          "distance": 60707,
+          "time": 128.8,
+          "avgPace": 212.17,
+          "avgHr": 168,
+          "avgPower": 360
+        },
+        {
+          "lapIndex": 19,
+          "distance": 1418,
+          "time": 61.33,
+          "avgPace": 4325.11,
+          "avgHr": 174,
+          "avgPower": 98
+        },
+        {
+          "lapIndex": 20,
+          "distance": 100000,
+          "time": 201.41,
+          "avgPace": 201.41,
+          "avgHr": 172,
+          "avgPower": 305
+        },
+        {
+          "lapIndex": 21,
+          "distance": 61868,
+          "time": 123.59,
+          "avgPace": 199.77,
+          "avgHr": 174,
+          "avgPower": 342
+        },
+        {
+          "lapIndex": 22,
+          "distance": 2089,
+          "time": 60.48,
+          "avgPace": 2895.17,
+          "avgHr": 171,
+          "avgPower": 48
+        },
+        {
+          "lapIndex": 23,
+          "distance": 100000,
+          "time": 200.75,
+          "avgPace": 200.76,
+          "avgHr": 171,
+          "avgPower": 338
+        },
+        {
+          "lapIndex": 24,
+          "distance": 58767,
+          "time": 107.63,
+          "avgPace": 183.15,
+          "avgHr": 173,
+          "avgPower": 371
+        },
+        {
+          "lapIndex": 25,
+          "distance": 3228,
+          "time": 464.2,
+          "avgPace": 14380.42,
+          "avgHr": 170,
+          "avgPower": 333
+        },
+        {
+          "lapIndex": 26,
+          "distance": 100000,
+          "time": 415.93,
+          "avgPace": 415.94,
+          "avgHr": 144,
+          "avgPower": 219
+        },
+        {
+          "lapIndex": 27,
+          "distance": 100000,
+          "time": 301.05,
+          "avgPace": 301.05,
+          "avgHr": 151,
+          "avgPower": 240
+        },
+        {
+          "lapIndex": 28,
+          "distance": 100000,
+          "time": 491.9,
+          "avgPace": 491.91,
+          "avgHr": 146,
+          "avgPower": 230
+        },
+        {
+          "lapIndex": 29,
+          "distance": 81594,
+          "time": 236.74,
+          "avgPace": 290.14,
+          "avgHr": 166,
+          "avgPower": 237
+        }
+      ]
+    },
+    {
+      "type": 2,
+      "laps": [
+        {
+          "lapIndex": 1,
+          "distance": 405700,
+          "time": 1235.36,
+          "avgPace": 304.51,
+          "avgHr": 153,
+          "avgPower": 217
+        },
+        {
+          "lapIndex": 2,
+          "distance": 567,
+          "time": 31.94,
+          "avgPace": 5633.16,
+          "avgHr": 108,
+          "avgPower": 67
+        },
+        {
+          "lapIndex": 3,
+          "distance": 160140,
+          "time": 354.22,
+          "avgPace": 221.19,
+          "avgHr": 160,
+          "avgPower": 324
+        },
+        {
+          "lapIndex": 4,
+          "distance": 1930,
+          "time": 60.55,
+          "avgPace": 3137.31,
+          "avgHr": 169,
+          "avgPower": 95
+        },
+        {
+          "lapIndex": 5,
+          "distance": 161611,
+          "time": 330.99,
+          "avgPace": 204.82,
+          "avgHr": 167,
+          "avgPower": 311
+        },
+        {
+          "lapIndex": 6,
+          "distance": 4248,
+          "time": 59.46,
+          "avgPace": 1399.73,
+          "avgHr": 167,
+          "avgPower": 105
+        },
+        {
+          "lapIndex": 7,
+          "distance": 322840,
+          "time": 672.43,
+          "avgPace": 208.29,
+          "avgHr": 174,
+          "avgPower": 331
+        },
+        {
+          "lapIndex": 8,
+          "distance": 5126,
+          "time": 119.74,
+          "avgPace": 2335.94,
+          "avgHr": 155,
+          "avgPower": 50
+        },
+        {
+          "lapIndex": 9,
+          "distance": 160707,
+          "time": 333.49,
+          "avgPace": 207.52,
+          "avgHr": 163,
+          "avgPower": 350
+        },
+        {
+          "lapIndex": 10,
+          "distance": 1418,
+          "time": 61.33,
+          "avgPace": 4325.11,
+          "avgHr": 174,
+          "avgPower": 101
+        },
+        {
+          "lapIndex": 11,
+          "distance": 161868,
+          "time": 325.0,
+          "avgPace": 200.79,
+          "avgHr": 173,
+          "avgPower": 319
+        },
+        {
+          "lapIndex": 12,
+          "distance": 2089,
+          "time": 60.48,
+          "avgPace": 2895.17,
+          "avgHr": 171,
+          "avgPower": 51
+        },
+        {
+          "lapIndex": 13,
+          "distance": 158767,
+          "time": 308.38,
+          "avgPace": 194.23,
+          "avgHr": 172,
+          "avgPower": 350
+        },
+        {
+          "lapIndex": 14,
+          "distance": 3228,
+          "time": 16.75,
+          "avgPace": 518.91,
+          "avgHr": 170,
+          "avgPower": 312
+        },
+        {
+          "lapIndex": 15,
+          "distance": 381594,
+          "time": 1200.07,
+          "avgPace": 314.49,
+          "avgHr": 150,
+          "avgPower": 231
+        }
+      ]
+    }
+  ]
+}

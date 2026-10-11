@@ -1,6 +1,7 @@
 'use client';
 
 import type { ShellContent } from '@/content/types';
+import { consumeReturnToHome } from '@/training/returnFlag';
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import './bento.css';
@@ -52,6 +53,11 @@ export function BentoHome({
   const photos = usePhotoShuffle();
   const { slots } = photos;
   useEffect(() => {
+    // Coming back from /training: the visitor has already been welcomed.
+    if (consumeReturnToHome()) {
+      setIntro(false);
+      return;
+    }
     setScene(['space', 'pool', 'kite'][Math.floor(Math.random() * 3)]);
   }, []);
   useEffect(() => {

@@ -103,7 +103,33 @@ export type StravaActivity = {
   // activities. Older ones may omit the field entirely — default to
   // 'everyone' so we don't silently hide a legit public activity.
   visibility?: 'everyone' | 'followers_only' | 'only_me';
+  sport_type?: string;
+  start_date_local?: string; // athlete-local wall time, ISO with a Z
+  trainer?: boolean;
+  average_heartrate?: number;
 };
+
+/**
+ * Every activity started after `after` (unix seconds), oldest pages last.
+ * Used by the training status page; capped at 600 activities.
+ */
+export async function fetchActivitiesSince(after: number): Promise<StravaActivity[]> {
+  const token = await getAccessToken();
+  const out: StravaActivity[] = [];
+  for (let page = 1; page <= 3; page++) {
+    const res = await fetch(
+      `${API_BASE}/athlete/activities?after=${after}&per_page=200&page=${page}`,
+      { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' },
+    );
+    if (!res.ok) {
+      throw new Error(`strava activities fetch failed: ${res.status} ${await res.text()}`);
+    }
+    const batch = (await res.json()) as StravaActivity[];
+    out.push(...batch);
+    if (batch.length < 200) break;
+  }
+  return out;
+}
 
 /**
  * Fetch the most recent PUBLIC activity with a GPS polyline. Indoor /

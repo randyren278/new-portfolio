@@ -1,0 +1,142 @@
+Sleep HRV — 2026-09-08 to 2026-10-10
+========================
+Note: dates are wake-up days (each value comes from the night that ended that morning).
+
+HRV Assessment — Last 33 days
+========================
+
+2026-10-10:
+  HRV Avg: 81 ms — Normal
+  Normal Range: 67 - 101 ms
+  Baseline: 84 ms
+2026-10-09:
+  HRV Avg: 70 ms — Normal
+  Normal Range: 69 - 101 ms
+  Baseline: 85 ms
+2026-10-08:
+  HRV Avg: 96 ms — Normal
+  Normal Range: 68 - 100 ms
+  Baseline: 84 ms
+2026-10-07:
+  HRV Avg: 84 ms — Normal
+  Normal Range: 67 - 101 ms
+  Baseline: 84 ms
+2026-10-06:
+  HRV Avg: 103 ms — Above normal
+  Normal Range: 66 - 100 ms
+  Baseline: 83 ms
+2026-10-05:
+  HRV Avg: 85 ms — Normal
+  Normal Range: 66 - 100 ms
+  Baseline: 83 ms
+2026-10-04:
+  HRV Avg: 85 ms — Normal
+  Normal Range: 66 - 100 ms
+  Baseline: 83 ms
+2026-10-03:
+  HRV Avg: 85 ms — Normal
+  Normal Range: 66 - 100 ms
+  Baseline: 83 ms
+2026-10-02:
+  HRV Avg: 95 ms — Normal
+  Normal Range: 65 - 99 ms
+  Baseline: 82 ms
+2026-10-01:
+  HRV Avg: 98 ms — Normal
+  Normal Range: 65 - 99 ms
+  Baseline: 82 ms
+2026-09-30:
+  HRV Avg: 97 ms — Normal
+  Normal Range: 66 - 98 ms
+  Baseline: 82 ms
+2026-09-29:
+  HRV Avg: 100 ms — Above normal
+  Normal Range: 65 - 97 ms
+  Baseline: 81 ms
+2026-09-28:
+  HRV Avg: 39 ms — Low
+  Normal Range: 67 - 97 ms
+  Baseline: 82 ms
+2026-09-27:
+  HRV Avg: 72 ms — Normal
+  Normal Range: 67 - 97 ms
+  Baseline: 82 ms
+2026-09-26:
+  HRV Avg: 100 ms — Above normal
+  Normal Range: 66 - 96 ms
+  Baseline: 81 ms
+2026-09-25:
+  HRV Avg: 82 ms — Normal
+  Normal Range: 65 - 95 ms
+  Baseline: 80 ms
+2026-09-24:
+  HRV Avg: 85 ms — Normal
+  Normal Range: 65 - 95 ms
+  Baseline: 80 ms
+2026-09-23:
+  HRV Avg: 69 ms — Normal
+  Normal Range: 63 - 95 ms
+  Baseline: 79 ms
+2026-09-22:
+  HRV Avg: 84 ms — Normal
+  Normal Range: 63 - 95 ms
+  Baseline: 79 ms
+2026-09-21:
+  HRV Avg: 100 ms — Above normal
+  Normal Range: 61 - 93 ms
+  Baseline: 77 ms
+2026-09-20:
+  HRV Avg: 99 ms — Above normal
+  Normal Range: 62 - 92 ms
+  Baseline: 77 ms
+2026-09-19:
+  HRV Avg: 82 ms — Normal
+  Normal Range: 61 - 91 ms
+  Baseline: 76 ms
+2026-09-18:
+  HRV Avg: 29 ms — Low
+  Normal Range: 65 - 91 ms
+  Baseline: 78 ms
+2026-09-17:
+  HRV Avg: 71 ms — Normal
+  Normal Range: 65 - 91 ms
+  Baseline: 78 ms
+2026-09-16:
+  HRV Avg: 73 ms — Normal
+  Normal Range: 65 - 91 ms
+  Baseline: 78 ms
+2026-09-15:
+  HRV Avg: 85 ms — Normal
+  Normal Range: 64 - 90 ms
+  Baseline: 77 ms
+2026-09-14:
+  HRV Avg: 89 ms — Normal
+  Normal Range: 64 - 90 ms
+  Baseline: 77 ms
+2026-09-13:
+  HRV Avg: 92 ms — Above normal
+  Normal Range: 64 - 88 ms
+  Baseline: 76 ms
+2026-09-12:
+  HRV Avg: 96 ms — Above normal
+  Normal Range: 63 - 87 ms
+  Baseline: 75 ms
+2026-09-11:
+  HRV Avg: 91 ms — Above normal
+  Normal Range: 61 - 87 ms
+  Baseline: 74 ms
+2026-09-10:
+  HRV Avg: 89 ms — Above normal
+  Normal Range: 60 - 86 ms
+  Baseline: 73 ms
+2026-09-09:
+  HRV Avg: 91 ms — Above normal
+  Normal Range: 60 - 84 ms
+  Baseline: 72 ms
+2026-09-08:
+  HRV Avg: 84 ms — Above normal
+  Normal Range: 59 - 83 ms
+  Baseline: 71 ms
+
+Sleep HRV Time Series — Last 33 days
+========================

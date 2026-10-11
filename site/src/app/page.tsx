@@ -21,6 +21,7 @@ async function loadStrava(): Promise<StravaData | null> {
     const points = decodePolyline(activity.map.summary_polyline);
     const polylinePath = projectToSvgPath(points, 360, 200, 12);
     return {
+      id: activity.id,
       name: activity.name,
       distanceM: activity.distance,
       movingTimeS: activity.moving_time,

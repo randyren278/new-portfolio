@@ -160,6 +160,38 @@ recent GPS activity.
   polyline with a "not connected" caption. **The cell is never broken.**
 - Data cache: 15 min via `next: { revalidate: 900 }` on the Strava fetch.
 
+## Training status (`/training`)
+
+The Latest Activity cell is a doorway: one button over the whole cell opens
+`TrainingAsk` (a glass plate, Puff asking), and "View training status" routes
+to `/training`. Coming back sets a sessionStorage flag (`src/training/returnFlag.ts`)
+so the Puff intro doesn't replay.
+
+- **Data:** `src/training/load.ts`. Coros (hosted MCP at `mcpus.coros.com/mcp`)
+  supplies activities, training load + its grade, recovery, HRV, resting HR,
+  sleep, laps and the fitness assessment. Strava supplies route shapes only
+  (public activities), and the activity list if Coros is down. Both are cached
+  15 min via `unstable_cache`; per-activity Coros details/laps are cached for good.
+- **Coros output is text, not JSON** (laps excepted). Parsers live in
+  `src/training/coros/parse.ts`; everything the page says is computed in the pure
+  `src/training/derive.ts`. Both are tested against real captured responses in
+  `src/training/fixtures/` (coordinates stripped): `pnpm test:training`.
+- **Connecting Coros (once):** visit `/api/coros/connect?key=<COROS_CONNECT_KEY>`
+  and approve on Coros. Tokens land in Edge Config under `coros_auth` (or the file
+  named by `COROS_TOKEN_FILE` locally) and refresh themselves. The key gate is
+  what stops anyone else connecting *their* Coros account to this page.
+- **Every cell is optional.** A source that fails removes its cells; with neither
+  source the page says so instead of breaking.
+- **Local:** never point local dev at the live Strava/Coros tokens (refresh
+  tokens rotate; a local refresh breaks production). Run with the fixtures:
+
+  ```sh
+  TRAINING_FIXTURE=1 STRAVA_TOKEN_FILE=/nonexistent PORT=3877 pnpm dev
+  node scripts/smoke-training.cjs            # desktop
+  DEVICE=mobile node scripts/smoke-training.cjs
+  BASE_URL=https://www.randyren.org/ node scripts/smoke-training.cjs   # live
+  ```
+
 ## Photos
 
 `src/bento/photos.ts` holds an 8-entry pool of filenames
