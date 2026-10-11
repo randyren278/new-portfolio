@@ -6,6 +6,7 @@
  *   DEVICE=mobile node scripts/smoke-training.cjs        # iPhone 13
  *   BASE_URL=https://www.randyren.org/ node scripts/smoke-training.cjs
  *   EXPECT_COROS=0 …                                     # Coros not connected yet
+ *   SHARE_URL=<vercel share link> BASE_URL=<preview> …   # protected preview
  *
  * Locally, run the dev server with TRAINING_FIXTURE=1 on :3877 so the page
  * renders the captured Coros responses instead of a live account.
@@ -106,6 +107,8 @@ const contrastFailures = (page) =>
   console.log(`\n== smoke-training (${IS_MOBILE ? 'mobile / iPhone 13' : 'desktop'}) → ${BASE_URL} ==`);
 
   // ---- 1. the doorway ----------------------------------------------------
+  // A Vercel share link sets the cookie that lets us through preview protection.
+  if (process.env.SHARE_URL) await page.goto(process.env.SHARE_URL, { waitUntil: 'load' });
   await page.goto(BASE_URL, { waitUntil: 'networkidle' });
   await passIntro(page);
   const opener = page.locator('.strava-open');
