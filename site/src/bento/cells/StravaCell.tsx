@@ -3,7 +3,7 @@
 /**
  * Strava cell — middle-right of the bento.
  *
- * Server-provided prop: either a real activity (from /api/strava/latest)
+ * Server-provided prop: either a real activity (loaded in app/page.tsx)
  * or null (no tokens / fetch error). Never a broken cell — when strava
  * is null we render a hand-drawn fallback polyline in the same visual
  * language as the mockup, plus a muted "not connected" caption.

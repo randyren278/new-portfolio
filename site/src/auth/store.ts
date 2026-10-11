@@ -1,6 +1,7 @@
 /**
- * A small persistent JSON store for OAuth state, same two backends as
- * src/strava/tokenStore.ts:
+ * A small persistent JSON store for OAuth state (Strava and Coros tokens).
+ * Refresh tokens rotate, so this has to be mutable and shared by every
+ * instance. Two backends:
  *
  * - **local** (the named file env var is set) — JSON file. For `pnpm dev`.
  * - **edge-config** — Vercel Edge Config. Reads via the SDK; writes via the

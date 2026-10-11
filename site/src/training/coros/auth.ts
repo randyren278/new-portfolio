@@ -4,12 +4,11 @@
  * Coros' MCP server publishes standard OAuth metadata with dynamic client
  * registration, so the site registers itself on connect, sends Randy to
  * Coros' consent screen once, and keeps the refresh token in the store.
- * Connecting is gated by COROS_CONNECT_KEY — without it anyone could
- * replace these tokens with their own Coros account.
+ * The connect and callback routes are gated by src/auth/connectGate.ts.
  */
 
 import { createHash, randomBytes } from 'node:crypto';
-import { readStored, writeStored } from '../store';
+import { readStored, writeStored } from '@/auth/store';
 
 const ISSUER = 'https://mcpus.coros.com';
 const RESOURCE = 'https://mcpus.coros.com';
@@ -30,7 +29,7 @@ const b64url = (buf: Buffer) => buf.toString('base64url');
 export function pkce() {
   const verifier = b64url(randomBytes(32));
   const challenge = b64url(createHash('sha256').update(verifier).digest());
-  return { verifier, challenge, state: b64url(randomBytes(16)) };
+  return { verifier, challenge };
 }
 
 export async function registerClient(redirectUri: string): Promise<string> {
