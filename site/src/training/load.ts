@@ -6,8 +6,10 @@
  * the only heart rate fetched (the readiness cell shows it, nothing else
  * does); in-session HR is never fetched or kept. Strava supplies route
  * shapes, and stands in for the activity list if Coros is unavailable.
- * Each source is cached for 15 minutes; per-activity Coros details and
- * laps never change, so they are cached for good.
+ * Each source is kept in Postgres and served stale-while-revalidate, 15
+ * minutes fresh (./cache.ts), so a visit never waits on Coros once warm;
+ * per-activity Coros details and laps never change, so they are cached for
+ * good.
  *
  * TRAINING_FIXTURE=1 swaps both sources for the captured responses in
  * ./fixtures — the local smoke runs against that, never a live account.
@@ -18,6 +20,7 @@ import path from 'node:path';
 import { fetchActivitiesSince } from '@/strava/client';
 import { decodePolyline, projectToSvgPath } from '@/strava/polyline';
 import { unstable_cache } from 'next/cache';
+import { cached } from './cache';
 import { getCorosToken } from './coros/auth';
 import { type CorosClient, connectCoros } from './coros/mcp';
 import * as P from './coros/parse';
@@ -77,7 +80,7 @@ async function pool<T, R>(items: T[], n: number, fn: (item: T) => Promise<R>): P
 
 type CorosCore = Omit<CorosBundle, 'details' | 'session'>;
 
-/** The day-level calls. Cached as one unit for 15 minutes. */
+/** The day-level calls. */
 async function fetchCorosCore(today: string): Promise<CorosCore> {
   const coros: CorosClient = await connectCoros(await getCorosToken());
   const from = windowStart(today);
@@ -136,19 +139,12 @@ async function fetchCorosCore(today: string): Promise<CorosCore> {
   };
 }
 
-// Bump the version whenever the bundle's shape changes (v4: restingHr is back).
-// No date in the key: a new day serves the last bundle instantly and refreshes
-// behind it (stale-while-revalidate). With the date in the key, the first
-// visitor each morning waited on a full cold Coros fetch.
-const corosCoreCached = unstable_cache(() => fetchCorosCore(todayLocal()), ['coros-core-v4'], {
-  revalidate: 900,
-});
-
 /**
  * Per-activity detail and laps never change, so each is cached for good
- * under its own key. These caches must sit outside corosCoreCached: Next
- * bypasses an unstable_cache nested inside another one. A Coros session
- * is only opened if something actually misses.
+ * under its own key; a refresh of the bundle only fetches what's new. (Next
+ * bypasses an unstable_cache nested inside another one, which is why the
+ * bundle itself is cached in Postgres, not here.) A Coros session is only
+ * opened if something actually misses.
  */
 async function corosPerActivity(
   core: CorosCore,
@@ -195,9 +191,15 @@ async function corosPerActivity(
 }
 
 async function fetchCoros(today: string): Promise<CorosBundle> {
-  const core = await corosCoreCached();
+  const core = await fetchCorosCore(today);
   return { ...core, ...(await corosPerActivity(core, today)) };
 }
+
+// Bump the version whenever the bundle's shape changes (v4: restingHr is back).
+// No date in the key: a new day serves the last bundle instantly and refreshes
+// behind it. With the date in the key, the first visitor each morning waited
+// on a full cold Coros fetch.
+const corosCached = () => cached('coros-v4', 900, () => fetchCoros(todayLocal()));
 
 // -------------------------------------------------------------- Strava
 
@@ -231,9 +233,7 @@ async function fetchStrava(today: string): Promise<StravaRun[]> {
   });
 }
 
-const stravaCached = unstable_cache(() => fetchStrava(todayLocal()), ['strava-runs-v3'], {
-  revalidate: 900,
-});
+const stravaCached = () => cached('strava-runs-v3', 900, () => fetchStrava(todayLocal()));
 
 // ------------------------------------------------------------ fixtures
 
@@ -270,7 +270,7 @@ export async function loadTrainingView(): Promise<TrainingView | null> {
   if (process.env.TRAINING_FIXTURE === '1') return deriveView(await fixtureSources());
   const today = todayLocal();
   const [coros, strava] = await Promise.all([
-    settle('coros', fetchCoros(today)),
+    settle('coros', corosCached()),
     settle('strava', stravaCached()),
   ]);
   if (!coros && !strava) return null;

@@ -176,7 +176,14 @@ so the Puff intro doesn't replay.
   supplies activities, training load + its grade, recovery, HRV, resting HR,
   sleep, laps and the fitness assessment. Strava supplies route shapes only
   (public activities), and the activity list if Coros is down. Both are cached
-  15 min via `unstable_cache`; per-activity Coros details/laps are cached for good.
+  in Postgres (`src/training/cache.ts`): the Supabase project **straits**, schema
+  `randyren_site`, table `training_cache`, reached via `TRAINING_CACHE_URL` (Vercel
+  env, Production + Preview) as role `randyren_site_cache`, which can read and
+  write that one table and nothing else. Served stale-while-revalidate: 15 min
+  fresh, then still served while one claimed refresh runs after the response, so
+  visits never wait on Coros once warm, deploys included. Unset (local dev) or
+  unreachable, an in-process cache stands in. Per-activity Coros details/laps
+  stay in `unstable_cache` for good.
 - **Coros output is text, not JSON** (laps excepted). Parsers live in
   `src/training/coros/parse.ts`; everything the page says is computed in the pure
   `src/training/derive.ts`. Both are tested against real captured responses in
