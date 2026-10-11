@@ -81,28 +81,34 @@ async function fetchCorosCore(today: string): Promise<CorosCore> {
   const from = windowStart(today);
   const from28 = shift(today, -27);
 
-  const [records, load, fitness, recovery, restingHr, hrv, sleep] = await Promise.all([
-    coros
-      .call('querySportRecords', {
-        startDate: ymd(from),
-        endDate: ymd(today),
-        sportTypeCodes: [65535],
-        minDistanceKm: 0,
-        maxDistanceKm: 10000,
-        minDurationMinutes: 0,
-        maxDurationMinutes: 100000,
-        maxAveragePace: '',
-        locationKeyword: '',
-        limit: 400,
-      })
-      .then(P.parseSportRecords),
+  // At most two calls in flight: Coros has blocked parallel bursts from
+  // this account before (12 at once tripped an anomaly check; 2 was fine).
+  const records = await coros
+    .call('querySportRecords', {
+      startDate: ymd(from),
+      endDate: ymd(today),
+      sportTypeCodes: [65535],
+      minDistanceKm: 0,
+      maxDistanceKm: 10000,
+      minDurationMinutes: 0,
+      maxDurationMinutes: 100000,
+      maxAveragePace: '',
+      locationKeyword: '',
+      limit: 400,
+    })
+    .then(P.parseSportRecords);
+  const [load, fitness] = await Promise.all([
     settle(
       'load',
       coros.call('queryTrainingLoadAssessment', { days: 31 }).then(P.parseTrainingLoad),
     ),
     settle('fitness', coros.call('queryFitnessAssessmentOverview').then(P.parseFitness)),
+  ]);
+  const [recovery, restingHr] = await Promise.all([
     settle('recovery', coros.call('queryRecoveryStatus').then(P.parseRecovery)),
     settle('resting hr', coros.call('queryRestingHeartRate', { days: 28 }).then(P.parseRestingHr)),
+  ]);
+  const [hrv, sleep] = await Promise.all([
     settle(
       'hrv',
       coros
@@ -155,7 +161,7 @@ async function corosPerActivity(
   // Details (training focus, load) for the last four weeks of runs.
   const from28 = shift(today, -27);
   const recentRuns = (core.records ?? []).filter((r) => /run/i.test(r.kind) && r.date >= from28);
-  const texts = await pool(recentRuns, 4, (r) => settle('detail', once('getActivityDetail', r)));
+  const texts = await pool(recentRuns, 2, (r) => settle('detail', once('getActivityDetail', r)));
   const details: Record<string, P.CorosActivityDetail> = {};
   recentRuns.forEach((r, i) => {
     const text = texts[i];
