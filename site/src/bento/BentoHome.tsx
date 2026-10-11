@@ -60,10 +60,17 @@ export function BentoHome({
     }
     setScene(['space', 'pool', 'kite'][Math.floor(Math.random() * 3)]);
   }, []);
-  // The portfolio is live from the moment it starts fading in. Holding it
-  // inert until the transit finished left a second where everything was
-  // visible but every click (Training status, photos, projects) did nothing.
-  const covered = intro && !entering;
+  // The portfolio is live from the moment it starts fading in (the landing
+  // animation's start, after its delay) — not before, or a double-click on
+  // the invitation lands on invisible controls; and not after the transit
+  // ends, which left a second where everything was visible but every click
+  // (Training status, photos, projects) did nothing.
+  const [visible, setVisible] = useState(false);
+  const covered = intro && !visible;
+  useEffect(() => {
+    // Reduced motion has no landing animation to wait for.
+    if (entering && matchMedia('(prefers-reduced-motion: reduce)').matches) setVisible(true);
+  }, [entering]);
   useEffect(() => {
     if (!covered) return;
     const old = document.body.style.overflow;
@@ -75,6 +82,7 @@ export function BentoHome({
   function finishIntro() {
     setIntro(false);
     setEntering(false);
+    setVisible(false);
   }
   const replaying = useRef(false);
   async function replayIntro() {
@@ -122,7 +130,7 @@ export function BentoHome({
       {intro && scene && (
         <PuffEntrance
           scene={scene}
-          entering={entering}
+          released={visible}
           onEntering={() => setEntering(true)}
           onEntered={finishIntro}
         />
@@ -130,6 +138,9 @@ export function BentoHome({
       <div
         className={`bento-page puff-bento${intro && !entering ? ' awaiting-intro' : ''}${entering ? ' bento-landing' : ''}`}
         inert={covered}
+        onAnimationStart={(e) => {
+          if (e.target === e.currentTarget && e.animationName === 'bento-land') setVisible(true);
+        }}
       >
         <a className="skip-link" href="#portfolio">
           Skip to content

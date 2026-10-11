@@ -85,7 +85,8 @@ const contrastFailures = (page) =>
       const ratio = (Math.max(lum(c), lum(bg)) + 0.05) / (Math.min(lum(c), lum(bg)) + 0.05);
       const px = Number.parseFloat(style.fontSize);
       const need = px >= 24 || (px >= 18.66 && Number(style.fontWeight) >= 700) ? 3 : 4.5;
-      if (ratio + 0.005 < need) out.push(`${own.slice(0, 24)} [${el.className}] ${ratio.toFixed(2)}:1`);
+      if (ratio + 0.005 < need)
+        out.push(`${own.slice(0, 24)} [${el.className}] ${ratio.toFixed(2)}:1`);
     }
     return out;
   });
@@ -104,7 +105,9 @@ const contrastFailures = (page) =>
     }
   });
 
-  console.log(`\n== smoke-training (${IS_MOBILE ? 'mobile / iPhone 13' : 'desktop'}) → ${BASE_URL} ==`);
+  console.log(
+    `\n== smoke-training (${IS_MOBILE ? 'mobile / iPhone 13' : 'desktop'}) → ${BASE_URL} ==`,
+  );
 
   // ---- 0. clickable as soon as it's visible -------------------------------
   // The bento used to stay inert (and the transparent intro iframe kept
@@ -114,7 +117,29 @@ const contrastFailures = (page) =>
     const early = await context.newPage();
     if (process.env.SHARE_URL) await early.goto(process.env.SHARE_URL, { waitUntil: 'load' });
     await early.goto(BASE_URL, { waitUntil: 'networkidle' });
-    await early.frameLocator('iframe.puff-entrance').locator('a[href="#portfolio"]').first().click();
+    await early
+      .frameLocator('iframe.puff-entrance')
+      .locator('a[href="#portfolio"]')
+      .first()
+      .click();
+    // While the page is still invisible (the landing fade waits ~850ms), a
+    // stray second click must not open anything blind.
+    const hidden = await early.evaluate(() =>
+      Number(getComputedStyle(document.querySelector('.puff-bento')).opacity),
+    );
+    if (hidden < 0.05) {
+      await early
+        .locator('.strava-open')
+        .scrollIntoViewIfNeeded()
+        .catch(() => {});
+      const hb = await early.locator('.strava-open').boundingBox();
+      await early.mouse.click(hb.x + hb.width / 2, hb.y + hb.height / 2);
+      const blind = await early
+        .locator('.training-ask-plate')
+        .isVisible()
+        .catch(() => false);
+      assert(!blind, 'a click while the page is still invisible opens nothing');
+    }
     await early.waitForFunction(
       () => Number(getComputedStyle(document.querySelector('.puff-bento')).opacity) >= 0.95,
     );
@@ -149,7 +174,10 @@ const contrastFailures = (page) =>
     'opener announces that it opens a dialog',
   );
   const box = await opener.boundingBox();
-  assert(box.width >= 44 && box.height >= 44, `opener is a large target (${Math.round(box.width)}×${Math.round(box.height)})`);
+  assert(
+    box.width >= 44 && box.height >= 44,
+    `opener is a large target (${Math.round(box.width)}×${Math.round(box.height)})`,
+  );
   await opener.focus();
   const ring = await opener.evaluate((el) => {
     const s = getComputedStyle(el);
@@ -162,9 +190,13 @@ const contrastFailures = (page) =>
   const plate = page.locator('.training-ask-plate');
   await plate.waitFor({ state: 'visible' });
   const title = (await page.textContent('#training-ask-title'))?.trim();
-  assert(title === 'Do you want to view Randy’s training status?', `plate asks the question (got "${title}")`);
   assert(
-    (await plate.getAttribute('aria-modal')) === 'true' && (await plate.evaluate((el) => el.tagName)) === 'DIALOG',
+    title === 'Do you want to view Randy’s training status?',
+    `plate asks the question (got "${title}")`,
+  );
+  assert(
+    (await plate.getAttribute('aria-modal')) === 'true' &&
+      (await plate.evaluate((el) => el.tagName)) === 'DIALOG',
     'plate is a modal <dialog>',
   );
   // The plate itself takes focus, never a button: Safari draws a scripted
@@ -178,21 +210,35 @@ const contrastFailures = (page) =>
     await page.evaluate(() => document.activeElement?.closest('.training-ask-plate') != null),
     'Tab stays trapped inside the plate',
   );
-  await page.waitForFunction(
-    () => [...document.querySelectorAll('.training-ask-preview dd')].every((d) => d.textContent !== '…'),
-    null,
-    { timeout: 20000 },
-  ).catch(() => {});
-  const preview = await page.$$eval('.training-ask-preview dd', (els) => els.map((e) => e.textContent));
-  assert(preview.length === 3 && preview.every((t) => t && t !== '…'), `plate previews the numbers (${preview.join(' / ')})`);
-  if (EXPECT_COROS) assert(preview[0] !== '—' && preview[1].endsWith('%'), 'preview has Coros status and recovery');
+  await page
+    .waitForFunction(
+      () =>
+        [...document.querySelectorAll('.training-ask-preview dd')].every(
+          (d) => d.textContent !== '…',
+        ),
+      null,
+      { timeout: 20000 },
+    )
+    .catch(() => {});
+  const preview = await page.$$eval('.training-ask-preview dd', (els) =>
+    els.map((e) => e.textContent),
+  );
+  assert(
+    preview.length === 3 && preview.every((t) => t && t !== '…'),
+    `plate previews the numbers (${preview.join(' / ')})`,
+  );
+  if (EXPECT_COROS)
+    assert(preview[0] !== '—' && preview[1].endsWith('%'), 'preview has Coros status and recovery');
   await page.keyboard.press('Escape');
   await plate.waitFor({ state: 'detached' });
   assert(
     await page.evaluate(() => document.activeElement?.classList.contains('strava-open')),
     'Escape closes the plate and returns focus to the opener',
   );
-  assert(await page.evaluate(() => document.body.style.overflow !== 'hidden'), 'page scroll is restored after closing');
+  assert(
+    await page.evaluate(() => document.body.style.overflow !== 'hidden'),
+    'page scroll is restored after closing',
+  );
 
   // ---- 3. the plate, by pointer → /training ---------------------------------
   await opener.click();
@@ -207,26 +253,58 @@ const contrastFailures = (page) =>
   await page.waitForSelector('.tr-grid');
   await page.waitForTimeout(800);
   assert(new URL(page.url()).pathname === '/training', 'View training status lands on /training');
-  assert((await page.title()) === 'Training status — Randy Ren', `training page title (got "${await page.title()}")`);
-  assert((await page.locator('.bento-departure').count()) === 0, 'the departure curtain is lifted on arrival');
+  assert(
+    (await page.title()) === 'Training status — Randy Ren',
+    `training page title (got "${await page.title()}")`,
+  );
+  assert(
+    (await page.locator('.bento-departure').count()) === 0,
+    'the departure curtain is lifted on arrival',
+  );
 
   // ---- 4. the training page -------------------------------------------------
-  const kickers = await page.$$eval('.tr-grid h2.kicker', (els) => els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+  const kickers = await page.$$eval('.tr-grid h2.kicker', (els) =>
+    els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
+  );
   const has = (prefix) => kickers.some((k) => k.startsWith(prefix));
-  for (const k of ['§ STATUS', '§ THIS WEEK', '§ WEEKLY VOLUME', '§ CONSISTENCY', '§ LINE STUDIES', '§ ODOMETER', '§ HOW THIS WORKS']) {
+  for (const k of [
+    '§ STATUS',
+    '§ THIS WEEK',
+    '§ WEEKLY VOLUME',
+    '§ CONSISTENCY',
+    '§ LINE STUDIES',
+    '§ ODOMETER',
+    '§ HOW THIS WORKS',
+  ]) {
     assert(has(k), `cell rendered: ${k}`);
   }
   if (EXPECT_COROS) {
-    for (const k of ['§ READINESS', '§ TRAINING LOAD', '§ RECOVERY', '§ TRAINING FOCUS', '§ RACE PREDICTOR', '§ NOTES FROM THE LOG']) {
+    for (const k of [
+      '§ READINESS',
+      '§ TRAINING LOAD',
+      '§ RECOVERY',
+      '§ TRAINING FOCUS',
+      '§ RACE PREDICTOR',
+      '§ NOTES FROM THE LOG',
+    ]) {
       assert(has(k), `Coros cell rendered: ${k}`);
     }
   }
   const word = (await page.textContent('.tr-status-word'))?.trim();
-  assert(/^[A-Z][a-z]+\.$/.test(word ?? ''), `status word reads as one word and a full stop (got "${word}")`);
-  if (EXPECT_COROS) assert(word !== 'Logging.', 'status comes from Coros, not the Strava-only fallback');
+  assert(
+    /^[A-Z][a-z]+\.$/.test(word ?? ''),
+    `status word reads as one word and a full stop (got "${word}")`,
+  );
+  if (EXPECT_COROS)
+    assert(word !== 'Logging.', 'status comes from Coros, not the Strava-only fallback');
 
-  const charts = await page.$$eval('.chart svg', (els) => els.map((e) => e.getBoundingClientRect().width));
-  assert(charts.length >= (EXPECT_COROS ? 6 : 3) && charts.every((w) => w > 100), `charts drew at their real width (${charts.map(Math.round).join(', ')})`);
+  const charts = await page.$$eval('.chart svg', (els) =>
+    els.map((e) => e.getBoundingClientRect().width),
+  );
+  assert(
+    charts.length >= (EXPECT_COROS ? 6 : 3) && charts.every((w) => w > 100),
+    `charts drew at their real width (${charts.map(Math.round).join(', ')})`,
+  );
   const lines = await page.locator('.tr-study').count();
   assert(lines >= 1 && lines <= 8, `line studies show the latest activities (${lines})`);
   if (await page.locator('.tr-reps').count()) {
@@ -243,19 +321,33 @@ const contrastFailures = (page) =>
     'no heart-rate fields in the page payload',
   );
   const visible = await page.evaluate(() => document.body.innerText);
-  assert(!/\bbpm\b|resting hr|heart rate|\bHR\b/i.test(visible), 'no heart-rate figures on the page');
+  assert(
+    !/\bbpm\b|resting hr|heart rate|\bHR\b/i.test(visible),
+    'no heart-rate figures on the page',
+  );
 
   const outline = await page.$$eval('h1, h2, h3', (els) => els.map((e) => Number(e.tagName[1])));
-  assert(outline.filter((l) => l === 1).length === 1 && outline[0] === 1, 'one H1 leads the outline');
-  assert(outline.every((l, i) => i === 0 || l <= outline[i - 1] + 1), 'no heading level is skipped');
+  assert(
+    outline.filter((l) => l === 1).length === 1 && outline[0] === 1,
+    'one H1 leads the outline',
+  );
+  assert(
+    outline.every((l, i) => i === 0 || l <= outline[i - 1] + 1),
+    'no heading level is skipped',
+  );
 
   const hscroll = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   assert(hscroll <= 0, `no horizontal scroll (${hscroll}px)`);
   const contrast = await contrastFailures(page);
   assert(contrast.length === 0, `all visible text clears WCAG AA (${contrast.length} failing)`);
   for (const f of contrast) console.error('    ', f);
-  const svgText = await page.$$eval('.tr-grid svg text', (els) => [...new Set(els.map((t) => t.getAttribute('fill')))]);
-  assert(svgText.every((f) => f === 'var(--muted)' || f === 'var(--ink)'), `chart text uses text colours only (${svgText.join(', ')})`);
+  const svgText = await page.$$eval('.tr-grid svg text', (els) => [
+    ...new Set(els.map((t) => t.getAttribute('fill'))),
+  ]);
+  assert(
+    svgText.every((f) => f === 'var(--muted)' || f === 'var(--ink)'),
+    `chart text uses text colours only (${svgText.join(', ')})`,
+  );
 
   // Reach the back link the way a keyboard user does: Tab from the brand.
   const back = page.locator('.training-page header a.bento-text-button');
@@ -271,10 +363,12 @@ const contrastFailures = (page) =>
   });
   assert(backRing === 'solid 2px', `back link has a visible focus ring (${backRing})`);
   if (IS_MOBILE) {
-    const small = await page.$$eval('.training-page a, .training-page button', (els) =>
-      els
-        .map((e) => e.getBoundingClientRect())
-        .filter((r) => r.width && (r.width < 44 || r.height < 44)).length,
+    const small = await page.$$eval(
+      '.training-page a, .training-page button',
+      (els) =>
+        els
+          .map((e) => e.getBoundingClientRect())
+          .filter((r) => r.width && (r.width < 44 || r.height < 44)).length,
     );
     assert(small === 0, `every control owns a 44px target (${small} too small)`);
   }
@@ -288,26 +382,47 @@ const contrastFailures = (page) =>
   else await page.mouse.move(dbox.x + dbox.width / 2, dbox.y + dbox.height / 2);
   await page.waitForTimeout(150);
   const tipText = await page.textContent('.tr-tip').catch(() => null);
-  assert(!!tipText && /[A-Z]{3} [A-Z]{3} \d+/.test(tipText), `hovering a mark shows its tooltip ("${tipText?.slice(0, 40)}")`);
+  assert(
+    !!tipText && /[A-Z]{3} [A-Z]{3} \d+/.test(tipText),
+    `hovering a mark shows its tooltip ("${tipText?.slice(0, 40)}")`,
+  );
 
   // ---- 5. API + connect gate --------------------------------------------------
   const summary = await page.request.get(url('/api/training/summary'));
   const body = await summary.json().catch(() => ({}));
-  assert(summary.ok() && 'km7' in body && 'status' in body, `summary API answers (${summary.status()})`);
-  if (EXPECT_COROS) assert(`${body.status}.` === word, `summary status matches the page (${body.status})`);
+  assert(
+    summary.ok() && 'km7' in body && 'status' in body,
+    `summary API answers (${summary.status()})`,
+  );
+  if (EXPECT_COROS)
+    assert(`${body.status}.` === word, `summary status matches the page (${body.status})`);
   const connect = await page.request.get(url('/api/coros/connect'), { maxRedirects: 0 });
-  assert([403, 500].includes(connect.status()), `Coros connect refuses without the key (${connect.status()})`);
+  assert(
+    [403, 500].includes(connect.status()),
+    `Coros connect refuses without the key (${connect.status()})`,
+  );
   const wrongKey = await page.request.get(url('/api/coros/connect?key=nope'), { maxRedirects: 0 });
-  assert([403, 500].includes(wrongKey.status()), `Coros connect refuses a wrong key (${wrongKey.status()})`);
-  const callback = await page.request.get(url('/api/coros/callback?code=x&state=y'), { maxRedirects: 0 });
-  assert(callback.status() === 400, `Coros callback refuses a flow it didn't start (${callback.status()})`);
+  assert(
+    [403, 500].includes(wrongKey.status()),
+    `Coros connect refuses a wrong key (${wrongKey.status()})`,
+  );
+  const callback = await page.request.get(url('/api/coros/callback?code=x&state=y'), {
+    maxRedirects: 0,
+  });
+  assert(
+    callback.status() === 400,
+    `Coros callback refuses a flow it didn't start (${callback.status()})`,
+  );
 
   // ---- 6. back home, without the intro ------------------------------------------
   await back.click();
   await page.waitForURL((u) => new URL(u).pathname === '/', { timeout: 20000 });
   await page.waitForSelector('.strava-open');
   await page.waitForTimeout(1200);
-  assert((await page.locator('iframe.puff-entrance').count()) === 0, 'returning home skips the Puff intro');
+  assert(
+    (await page.locator('iframe.puff-entrance').count()) === 0,
+    'returning home skips the Puff intro',
+  );
   assert(await page.locator('.strava-open').isVisible(), 'the bento is visible on return');
 
   assert(errors.length === 0, `no page or console errors (${errors.length})`);

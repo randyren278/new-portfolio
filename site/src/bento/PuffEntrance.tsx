@@ -6,12 +6,13 @@ export function PuffEntrance({
   onEntering,
   onEntered,
   scene,
-  entering,
+  released,
 }: {
   onEntering: () => void;
   onEntered: () => void;
   scene: string;
-  entering: boolean;
+  /** The portfolio underneath is visible; let clicks fall through to it. */
+  released: boolean;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const [ready, setReady] = useState(false);
@@ -27,7 +28,7 @@ export function PuffEntrance({
   return (
     <iframe
       ref={frame}
-      className={`puff-entrance${ready ? ' is-ready' : ''}${entering ? ' is-entering' : ''}`}
+      className={`puff-entrance${ready ? ' is-ready' : ''}${released ? ' is-released' : ''}`}
       onLoad={() => setReady(true)}
       title="Puff — explore Randy’s portfolio"
       src={`/puff-intro/index.html?scene=${scene}`}

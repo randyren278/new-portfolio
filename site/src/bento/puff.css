@@ -43,9 +43,9 @@ html.puff-theme,
   z-index: 1000;
   background: transparent;
 }
-/* Once the visitor has entered, the transit is only scenery: let clicks fall
-   through to the portfolio fading in underneath. */
-.puff-entrance.is-entering {
+/* Once the portfolio starts fading in, the transit is only scenery: let
+   clicks fall through to it. */
+.puff-entrance.is-released {
   pointer-events: none;
 }
 .bento-text-button {
