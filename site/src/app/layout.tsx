@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.randyren.org'),
   title: 'Randy Ren',
   description: 'A working catalogue.',
+  alternates: { canonical: '/' },
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
