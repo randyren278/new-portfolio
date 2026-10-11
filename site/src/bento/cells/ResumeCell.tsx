@@ -25,21 +25,21 @@ export function ResumeCell({ resume }: { resume: ResumeContent }) {
 
       <div className="resume-actions">
         <a
-          className="resume-action resume-action-primary resume-view"
+          className="resume-action glass-pill resume-view"
           href={resume.pdfHref}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`View ${resume.name} résumé (PDF, opens in a new tab)`}
         >
-          VIEW RÉSUMÉ ↗︎
+          View résumé <span aria-hidden="true">↗</span>
         </a>
         <a
-          className="resume-action resume-download"
+          className="resume-action glass-pill resume-download"
           href="/api/resume/download"
           download={resume.downloadName}
           aria-label={`Download ${resume.name} résumé (PDF)`}
         >
-          DOWNLOAD ↓
+          Download <span aria-hidden="true">↓</span>
         </a>
       </div>
     </section>

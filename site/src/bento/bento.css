@@ -396,35 +396,13 @@ body {
   gap: 9px;
   margin-top: 18px;
 }
+.resume-actions {
+  flex-wrap: wrap;
+}
+/* The résumé links are .glass-pill buttons (see "One pill" below); this
+   only sizes them within the pair. */
 .resume-action {
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 0 13px;
-  color: var(--ink);
-  background: transparent;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-  text-transform: uppercase;
-  transition: color 120ms ease, border-color 120ms ease, background-color 120ms ease;
-}
-.resume-action-primary {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--bg);
-}
-.resume-action:hover {
-  border-color: var(--ink);
-  background: rgba(var(--ink-rgb) / 0.04);
-}
-.resume-action-primary:hover {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--bg);
+  flex: 0 0 auto;
 }
 /* One keyboard focus ring for the whole page. Every interactive element
    used to fold :focus-visible into its :hover rule and then set
@@ -1005,9 +983,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .resume-action {
-    transition: none;
-  }
   .photo-inner {
     transition: none;
     transform: none !important;
@@ -1190,8 +1165,10 @@ body {
   }
   .resume-action {
     flex: 1 1 auto;
-    padding-inline: 8px;
-    font-size: 9px;
+  }
+  .resume-actions .glass-pill {
+    gap: 10px;
+    padding-inline: 12px;
   }
   .name-bio {
     max-width: 100%;
@@ -1295,11 +1272,6 @@ body {
 .resume-preview {
   border-radius: 3px;
 }
-.resume-action {
-  border-radius: 9px;
-  font-size: 11px;
-  letter-spacing: 0.025em;
-}
 .resume-summary {
   font-size: 13px;
 }
@@ -1310,23 +1282,48 @@ body {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.photo-glass-label {
+/* ----- One pill ----- */
+
+/* Every action on the page is the same glass pill — Photo details,
+   Training status, the résumé links, the training plate's buttons — with
+   one hairline, one hover and one focus ring. The drop shadow is built from
+   --bg-rgb: built from --ink-rgb, as it once was, it is a cream glow on the
+   dark palette (invisible over a photo, a halo on a plain cell). */
+.glass-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 18px;
-  padding: 12px 16px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(var(--ink-rgb) / 0.14);
   border-radius: 30px;
   color: var(--ink);
   background: rgba(var(--glass-rgb) / 0.9);
-  border: 1px solid rgba(var(--glass-rgb) / 0.95);
-  box-shadow: inset 0 1px 1px rgba(var(--glass-rgb) / 0.95), 0 4px 18px rgba(var(--ink-rgb) / 0.12);
+  box-shadow: inset 0 1px 0 rgba(var(--ink-rgb) / 0.05), 0 4px 16px rgba(var(--bg-rgb) / 0.35);
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
   backdrop-filter: blur(18px) saturate(1.2);
   font: 12px "IBM Plex Mono", monospace;
-  transition: background-color 180ms ease;
+  letter-spacing: 0;
+  text-transform: none;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
 }
-.photo-flip:hover .photo-glass-label {
-  background: rgba(var(--glass-rgb) / 0.98);
+/* Hover/focus on the pill itself, or on the full-cell button that carries it. */
+.glass-pill:hover,
+.glass-pill:focus-visible,
+.photo-flip:hover .glass-pill,
+.photo-flip:focus-visible .glass-pill,
+.strava-open:hover .glass-pill,
+.strava-open:focus-visible .glass-pill {
+  background: rgba(var(--glass-rgb) / 1);
+  border-color: rgba(var(--ink-rgb) / 0.36);
+}
+.glass-pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 .photo-return {
   min-width: 44px;
@@ -1447,9 +1444,6 @@ body {
   .cell-strava {
     min-height: 240px;
   }
-  .resume-action {
-    font-size: 11px;
-  }
   .projects-plate-body {
     padding-top: 30px;
   }
@@ -1459,7 +1453,7 @@ body {
   .projects-plate-body,
   .projects-plate-overlay,
   .photo-face,
-  .photo-glass-label {
+  .glass-pill {
     animation: none;
     transition: none;
   }
@@ -1471,7 +1465,7 @@ body {
   }
 }
 @supports not (backdrop-filter: blur(1px)) {
-  .photo-glass-label,
+  .glass-pill,
   .projects-plate {
     background: var(--bg);
   }
@@ -1529,8 +1523,8 @@ body {
 
 /* ----- Latest activity → training status ----- */
 
-/* One real button laid over the whole Strava cell; the glass pill in its
-   corner is the visible affordance, in the photo cells' idiom. */
+/* One real button laid over the whole Strava cell; the .glass-pill in its
+   corner is the visible affordance, exactly as on the photo cells. */
 .strava-open {
   position: absolute;
   inset: 0;
@@ -1548,20 +1542,6 @@ body {
 .strava-open:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
-}
-.strava-pill {
-  gap: 12px;
-  padding: 10px 14px;
-  font-size: 11px;
-  white-space: nowrap;
-}
-.strava-open:hover .strava-pill,
-.strava-open:focus-visible .strava-pill {
-  background: rgba(var(--glass-rgb) / 0.98);
-  border-color: rgba(var(--ink-rgb) / 0.22);
-}
-.cell-strava:has(.strava-open:hover) {
-  border-color: rgba(var(--ink-rgb) / 0.2);
 }
 
 /* The plate: same glass as a project plate, centred, Puff asking. */
@@ -1622,7 +1602,6 @@ body {
   color: var(--ink);
 }
 .training-ask-close:focus-visible,
-.training-ask-actions .resume-action:focus-visible,
 .training-ask-strava:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
@@ -1637,12 +1616,7 @@ body {
   display: block;
 }
 .training-ask-head .kicker {
-  margin: 0 0 6px;
-}
-.training-ask-bubble {
-  font-size: 11px;
-  color: var(--muted);
-  padding-bottom: 8px;
+  margin: 0 0 10px;
 }
 .training-ask-title {
   font-family: "Instrument Serif", "IBM Plex Serif", ui-serif, Georgia, serif;
@@ -1695,9 +1669,6 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-}
-.training-ask-actions .resume-action {
-  gap: 8px;
 }
 .training-ask-strava {
   margin-left: auto;

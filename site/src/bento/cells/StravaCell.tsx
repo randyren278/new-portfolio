@@ -130,7 +130,7 @@ export function StravaCell({ strava }: { strava: StravaData | null }) {
         aria-label="Training status — see how Randy’s training is going"
         onClick={() => setAsking(true)}
       >
-        <span className="photo-glass-label strava-pill" aria-hidden="true">
+        <span className="glass-pill strava-pill" aria-hidden="true">
           Training status <span>→</span>
         </span>
       </button>

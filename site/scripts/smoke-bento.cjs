@@ -81,6 +81,54 @@ function assert(cond, label) {
   assert(kickers.includes('§ RÉSUMÉ / ONE PAGE'), 'Résumé card kicker rendered');
   assert(kickers.includes('§ LATEST ACTIVITY'), 'Strava card kicker rendered');
 
+  // ---- 2a. every action is the same pill ------------------------------
+  // Photo details, Training status and the two résumé links drifted into
+  // three looks and three hover behaviours (one with a cream glow: a shadow
+  // built from --ink-rgb on the dark palette). One .glass-pill now; assert
+  // they render identically, cast no light glow, and hover identically.
+
+  const pillLook = () =>
+    page.$$eval('.bento-grid .glass-pill', (els) =>
+      els.map((el) => {
+        const c = getComputedStyle(el);
+        return {
+          label: el.textContent.replace(/\s+/g, ' ').trim(),
+          look: [c.backgroundColor, c.borderTopColor, c.borderRadius, c.fontSize, c.fontFamily, c.textTransform, Math.round(el.getBoundingClientRect().height)].join(' | '),
+          shadow: c.boxShadow,
+        };
+      }),
+    );
+  await page.mouse.move(2, 2); // the intro's click leaves the pointer over a photo
+  await page.waitForTimeout(250);
+  const pills = await pillLook();
+  assert(pills.length >= 4, `the page's actions are glass pills (${pills.map((p) => p.label).join(', ')})`);
+  assert(
+    new Set(pills.map((p) => p.look)).size === 1,
+    `every pill renders identically (${[...new Set(pills.map((p) => p.look))].join(' // ')})`,
+  );
+  const ink = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ink-rgb').trim().split(/\s+/).join(', '));
+  // A light glow = an outer (non-inset) shadow layer in the ink colour.
+  const glows = (shadow) =>
+    shadow.split(/,(?![^(]*\))/).some((layer) => !layer.includes('inset') && layer.includes(`rgba(${ink}`));
+  assert(
+    pills.every((p) => !glows(p.shadow)),
+    `no pill casts a light glow (${[...new Set(pills.map((p) => p.shadow))].join(' // ')})`,
+  );
+  const hovered = [];
+  for (const trigger of ['.cell-photo-a .photo-flip', '.strava-open', '.resume-view', '.resume-download']) {
+    await page.hover(trigger);
+    await page.waitForTimeout(250);
+    hovered.push(
+      await page.$eval(`${trigger}.glass-pill, ${trigger} .glass-pill`, (el) => {
+        const c = getComputedStyle(el);
+        return `${c.backgroundColor} | ${c.borderTopColor}`;
+      }),
+    );
+  }
+  await page.mouse.move(2, 2);
+  assert(new Set(hovered).size === 1, `every pill hovers the same way (${[...new Set(hovered)].join(' // ')})`);
+  assert(hovered[0] !== pills[0].look.split(' | ').slice(0, 2).join(' | '), 'hovering a pill visibly changes it');
+
   // ---- 2b. résumé card exposes the real one-page document ------------
 
   const resumeViewHref = await page.getAttribute('.resume-view', 'href');

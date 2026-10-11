@@ -169,7 +169,7 @@ const contrastFailures = (page) =>
   assert(true, '"Not now" closes the plate');
   await opener.click();
   await plate.waitFor({ state: 'visible' });
-  await page.click('.training-ask-actions .resume-action-primary');
+  await page.click('.training-ask-go');
   await page.waitForURL('**/training', { timeout: 20000 });
   await page.waitForSelector('.tr-grid');
   await page.waitForTimeout(800);

@@ -121,10 +121,7 @@ export function TrainingAsk({
           <span className="training-ask-puff" aria-hidden="true">
             <PuffArt />
           </span>
-          <div>
-            <div className="kicker">§ TRAINING STATUS</div>
-            <div className="training-ask-bubble">Puff has been keeping the log.</div>
-          </div>
+          <div className="kicker">§ TRAINING STATUS</div>
         </div>
         <h2 className="training-ask-title" id="training-ask-title">
           Do you want to view Randy’s training status?
@@ -151,15 +148,10 @@ export function TrainingAsk({
           </dl>
         )}
         <div className="training-ask-actions">
-          <button
-            ref={go}
-            className="resume-action resume-action-primary"
-            type="button"
-            onClick={view}
-          >
+          <button ref={go} className="glass-pill training-ask-go" type="button" onClick={view}>
             View training status <span aria-hidden="true">→</span>
           </button>
-          <button className="resume-action" type="button" onClick={onClose}>
+          <button className="glass-pill" type="button" onClick={onClose}>
             Not now
           </button>
           {stravaUrl && (

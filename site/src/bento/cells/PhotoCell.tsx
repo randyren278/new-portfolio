@@ -162,7 +162,7 @@ export function PhotoCell({ slot, areaClass, caption, incoming, onSettled, delay
             aria-expanded={flipped}
             aria-label={`Show details for ${photo.file}`}
           >
-            <span className="photo-glass-label">
+            <span className="photo-glass-label glass-pill">
               Photo details <span aria-hidden="true">↗</span>
             </span>
           </button>
