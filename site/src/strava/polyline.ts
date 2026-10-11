@@ -55,10 +55,10 @@ export function projectToSvgPath(
 ): string {
   if (points.length === 0) return '';
 
-  let minLat = Infinity;
-  let maxLat = -Infinity;
-  let minLng = Infinity;
-  let maxLng = -Infinity;
+  let minLat = Number.POSITIVE_INFINITY;
+  let maxLat = Number.NEGATIVE_INFINITY;
+  let minLng = Number.POSITIVE_INFINITY;
+  let maxLng = Number.NEGATIVE_INFINITY;
   for (const [lat, lng] of points) {
     if (lat < minLat) minLat = lat;
     if (lat > maxLat) maxLat = lat;

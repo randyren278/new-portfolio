@@ -3,7 +3,7 @@
  * All calls hit https://www.strava.com/api/v3 or /oauth.
  */
 
-import { readTokens, writeTokens, type StravaTokens } from './tokenStore';
+import { type StravaTokens, readTokens, writeTokens } from './tokenStore';
 
 const OAUTH_BASE = 'https://www.strava.com/oauth';
 const API_BASE = 'https://www.strava.com/api/v3';
