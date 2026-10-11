@@ -136,10 +136,11 @@ async function fetchCorosCore(today: string): Promise<CorosCore> {
   };
 }
 
+// Bump the version whenever the bundle's shape changes (v4: restingHr is back).
 // No date in the key: a new day serves the last bundle instantly and refreshes
 // behind it (stale-while-revalidate). With the date in the key, the first
 // visitor each morning waited on a full cold Coros fetch.
-const corosCoreCached = unstable_cache(() => fetchCorosCore(todayLocal()), ['coros-core-v3'], {
+const corosCoreCached = unstable_cache(() => fetchCorosCore(todayLocal()), ['coros-core-v4'], {
   revalidate: 900,
 });
 
