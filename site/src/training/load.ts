@@ -2,8 +2,9 @@
  * Training status loader (server only).
  *
  * Coros (via its hosted MCP server) is the source of truth for activities,
- * load, recovery, HRV, sleep, fitness and laps. Heart rate is never fetched
- * or kept: Randy keeps HR off the site. Strava supplies route
+ * load, recovery, HRV, resting HR, sleep, fitness and laps. Resting HR is
+ * the only heart rate fetched (the readiness cell shows it, nothing else
+ * does); in-session HR is never fetched or kept. Strava supplies route
  * shapes, and stands in for the activity list if Coros is unavailable.
  * Each source is cached for 15 minutes; per-activity Coros details and
  * laps never change, so they are cached for good.
@@ -105,27 +106,31 @@ async function fetchCorosCore(today: string): Promise<CorosCore> {
     ),
     settle('fitness', coros.call('queryFitnessAssessmentOverview').then(P.parseFitness)),
   ]);
-  const [recovery, hrv] = await Promise.all([
+  const [recovery, restingHr] = await Promise.all([
     settle('recovery', coros.call('queryRecoveryStatus').then(P.parseRecovery)),
+    settle('resting hr', coros.call('queryRestingHeartRate', { days: 28 }).then(P.parseRestingHr)),
+  ]);
+  const [hrv, sleep] = await Promise.all([
     settle(
       'hrv',
       coros
         .call('querySleepHrv', { startDate: ymd(from28), endDate: ymd(today), days: 28 })
         .then(P.parseSleepHrv),
     ),
+    settle(
+      'sleep',
+      coros
+        .call('querySleepOverview', { startDate: ymd(from28), endDate: ymd(today) })
+        .then(P.parseSleepOverview),
+    ),
   ]);
-  const sleep = await settle(
-    'sleep',
-    coros
-      .call('querySleepOverview', { startDate: ymd(from28), endDate: ymd(today) })
-      .then(P.parseSleepOverview),
-  );
   return {
     asOf: new Date().toISOString(),
     records,
     load,
     fitness,
     recovery,
+    restingHr,
     hrv,
     sleep,
   };
@@ -238,6 +243,7 @@ async function fixtureSources(): Promise<Sources> {
     load: P.parseTrainingLoad(await fx('training-load.txt')),
     fitness: P.parseFitness(await fx('fitness.txt')),
     recovery: P.parseRecovery(await fx('recovery.txt')),
+    restingHr: P.parseRestingHr(await fx('resting-hr.txt')),
     hrv: P.parseSleepHrv(await fx('sleep-hrv.txt')),
     sleep: P.parseSleepOverview(await fx('sleep-overview.txt')),
     details: Object.fromEntries(
@@ -265,6 +271,7 @@ export async function loadTrainingView(): Promise<TrainingView | null> {
     load: coros?.load ?? null,
     fitness: coros?.fitness ?? null,
     recovery: coros?.recovery ?? null,
+    restingHr: coros?.restingHr ?? null,
     hrv: coros?.hrv ?? null,
     sleep: coros?.sleep ?? null,
     details: coros?.details ?? {},

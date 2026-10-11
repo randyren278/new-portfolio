@@ -36,6 +36,7 @@ function sources(overrides = {}) {
     load: P.parseTrainingLoad(fx('training-load.txt')),
     fitness: P.parseFitness(fx('fitness.txt')),
     recovery: P.parseRecovery(fx('recovery.txt')),
+    restingHr: P.parseRestingHr(fx('resting-hr.txt')),
     hrv: P.parseSleepHrv(fx('sleep-hrv.txt')),
     sleep: P.parseSleepOverview(fx('sleep-overview.txt')),
     details,
@@ -68,7 +69,7 @@ test('sport records parse every block, with optional fields', () => {
   assert.ok(ride && ride.km > 0, 'cycling keeps its distance');
 });
 
-test('training load, fitness, recovery, HRV and sleep parse', () => {
+test('training load, fitness, recovery, resting HR, HRV and sleep parse', () => {
   const load = P.parseTrainingLoad(fx('training-load.txt'));
   assert.equal(load.length, 31);
   assert.deepEqual(load.at(-1), {
@@ -99,6 +100,10 @@ test('training load, fitness, recovery, HRV and sleep parse', () => {
     fullRecoveryHours: 28,
   });
   assert.equal(P.parseRecovery('nothing here'), null);
+
+  const rhr = P.parseRestingHr(fx('resting-hr.txt'));
+  assert.deepEqual(rhr.at(-1), { date: '2026-10-10', bpm: 53 });
+  assert.ok(rhr[0].date < rhr.at(-1).date, 'resting HR is ascending');
 
   const hrv = P.parseSleepHrv(fx('sleep-hrv.txt'));
   assert.equal(hrv.length, 33);
@@ -154,6 +159,9 @@ test('deriveView builds the full page from Coros', () => {
   assert.equal(v.status.ratio, 1.28);
   assert.equal(v.readiness.pct, 79);
   assert.equal(v.readiness.hrv.value, 81);
+  assert.equal(v.readiness.rhr.value, 53);
+  assert.equal(v.readiness.rhr.series.length, 14);
+  assert.ok(v.readiness.rhr.baseline > 40 && v.readiness.rhr.baseline < 70);
   assert.equal(v.session.title, '8 × 1 km');
   assert.equal(v.session.focus, 'VO2 Max');
   assert.equal(v.session.reps.length, 8);
@@ -178,10 +186,14 @@ test('deriveView builds the full page from Coros', () => {
   assert.ok(v.status.essay.length > 40);
 });
 
-test('no heart-rate figure reaches the page', () => {
-  // Randy keeps HR (resting or in-session) off the site. HRV is fine.
-  const json = JSON.stringify(D.deriveView(sources()));
-  assert.doesNotMatch(json, /"(rhr|hr|avgHr|restingHr|maxHr|bpm)"\s*:/);
+test('resting HR reaches the page only in readiness', () => {
+  // Randy shows resting HR in the readiness cell and nowhere else; in-session
+  // HR never reaches the page. HRV is fine.
+  const v = D.deriveView(sources());
+  assert.deepEqual(Object.keys(v.readiness.rhr).sort(), ['baseline', 'series', 'value']);
+  const json = JSON.stringify({ ...v, readiness: { ...v.readiness, rhr: null } });
+  assert.doesNotMatch(json, /"(hr|avgHr|restingHr|maxHr|bpm)"\s*:/);
+  assert.equal(json.match(/"rhr"\s*:/g)?.length, 1, 'rhr appears once, nulled above');
   assert.doesNotMatch(json, /heart rate|resting hr|\bbpm\b/i);
   const laps = P.parseLaps(fx('laps-480944039976271974.json')).laps;
   assert.deepEqual(Object.keys(laps[0]).sort(), ['km', 'sec', 'watts']);
@@ -217,6 +229,7 @@ test('without Coros, Strava carries the activity panels alone', () => {
     load: null,
     fitness: null,
     recovery: null,
+    restingHr: null,
     hrv: null,
     sleep: null,
     details: {},

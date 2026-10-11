@@ -9,8 +9,9 @@
  * Pure functions, no imports: scripts/training.test.cjs runs them
  * directly against real captured responses in ../fixtures.
  *
- * Heart rate is deliberately never parsed (Randy keeps HR off the site),
- * so it can't reach the page by accident.
+ * Resting HR is the only heart rate parsed (it shows in the readiness cell
+ * and nowhere else); in-session HR is deliberately never read, so it can't
+ * reach the page by accident.
  */
 
 export type CorosRecord = {
@@ -177,6 +178,13 @@ export function parseRecovery(raw: string): CorosRecovery | null {
     level: /Level:\s*(.+)/.exec(text)?.[1].trim() ?? null,
     fullRecoveryHours: num(/Estimated Full Recovery:\s*([\d.]+)\s*h/, text),
   };
+}
+
+export function parseRestingHr(raw: string): { date: string; bpm: number }[] {
+  const text = unwrapText(raw);
+  return [...text.matchAll(/^(\d{4}-\d{2}-\d{2}):\s*(\d+)\s*bpm/gm)]
+    .map((m) => ({ date: m[1], bpm: Number(m[2]) }))
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
 }
 
 /** Only the daily assessment section; the raw per-sample series is ignored. */
