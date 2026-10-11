@@ -173,7 +173,7 @@ to `/training`. Coming back sets a sessionStorage flag (`src/training/returnFlag
 so the Puff intro doesn't replay.
 
 - **Data:** `src/training/load.ts`. Coros (hosted MCP at `mcpus.coros.com/mcp`)
-  supplies activities, training load + its grade, recovery, HRV,
+  supplies activities, training load + its grade, recovery, HRV, resting HR,
   sleep, laps and the fitness assessment. Strava supplies route shapes only
   (public activities), and the activity list if Coros is down. Both are cached
   15 min via `unstable_cache`; per-activity Coros details/laps are cached for good.
@@ -185,9 +185,11 @@ so the Puff intro doesn't replay.
   and approve on Coros. Tokens land in Edge Config under `coros_auth` (or the file
   named by `COROS_TOKEN_FILE` locally) and refresh themselves. The key gate is
   what stops anyone else connecting *their* Coros account to this page.
-- **No heart rate, anywhere.** Randy keeps HR (resting and in-session) off the
-  site: it is never fetched, parsed, cached, or shipped in the page payload.
-  `pnpm test:training` and `smoke-training` both fail if it comes back. HRV is fine.
+- **Resting HR in the readiness cell, no heart rate anywhere else.** Randy shows
+  resting HR as one readiness vital and nowhere else (not the recovery chart,
+  notes, tooltips or source list). In-session HR is never fetched, parsed, cached,
+  or shipped in the page payload. `pnpm test:training` and `smoke-training` both
+  fail if HR shows up outside readiness. HRV is fine.
 - **Every cell is optional.** A source that fails removes its cells; with neither
   source the page says so instead of breaking.
 - **Local:** never point local dev at the live Strava/Coros tokens (refresh

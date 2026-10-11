@@ -15,7 +15,6 @@ import type { CSSProperties } from 'react';
 import { type TrainingView, clock, fmtDay, fmtDow, hm, km1, pace, runTitle } from '../derive';
 import { markReturnToHome } from '../returnFlag';
 import {
-  Heatmap,
   LoadChart,
   RecoveryChart,
   Ring,
@@ -131,6 +130,20 @@ function Cells({ view }: { view: TrainingView }) {
                 note={r.hrv.baseline ? `baseline ${r.hrv.baseline}` : ''}
                 series={r.hrv.series}
                 base={r.hrv.baseline}
+              />
+            )}
+            {r.rhr && (
+              <Vital
+                label="Resting HR"
+                value={r.rhr.value}
+                unit="bpm"
+                note={
+                  r.rhr.baseline != null
+                    ? `${signed(r.rhr.value - r.rhr.baseline, 0)} vs ${Math.round(r.rhr.baseline)}`
+                    : ''
+                }
+                series={r.rhr.series}
+                base={r.rhr.baseline}
               />
             )}
             {r.sleep && (
@@ -294,63 +307,6 @@ function Cells({ view }: { view: TrainingView }) {
       )}
 
       {view.focus && <FocusCell focus={view.focus} />}
-
-      <section className="cell span-2" aria-labelledby="k-cons">
-        <h2 className="kicker" id="k-cons">
-          § CONSISTENCY · 26 WK
-        </h2>
-        <div className="tr-stats">
-          <Stat
-            label="Days run"
-            value={view.consistency.daysRun}
-            unit={`/ ${view.consistency.daysTotal}`}
-          />
-          <Stat label="Current streak" value={view.consistency.streak} unit="days" />
-          <Stat label="Longest streak" value={view.consistency.longest} unit="days" />
-          <Stat label="Avg week" value={Math.round(view.consistency.avgWeekKm)} unit="km" />
-        </div>
-        <Heatmap days={view.heat.days} today={view.today} />
-        <div className="tr-heat-legend" aria-hidden="true">
-          <span>Less</span>
-          {[
-            'rgba(var(--ink-rgb) / 0.06)',
-            'var(--ramp-1)',
-            'var(--ramp-2)',
-            'var(--ramp-3)',
-            'var(--ramp-4)',
-          ].map((c) => (
-            <i key={c} style={{ background: c }} />
-          ))}
-          <span>More</span>
-        </div>
-      </section>
-
-      {view.predictor && (
-        <section className="cell" aria-labelledby="k-pred">
-          <h2 className="kicker" id="k-pred">
-            § RACE PREDICTOR
-          </h2>
-          <div className="tr-pred">
-            {view.predictor.predictions.map((p) => (
-              <div className="tr-pred-row" key={p.label}>
-                <div>
-                  <div className="tr-lab">{p.label}</div>
-                  <span className="tr-pred-pace">{pace(p.sec / p.km)} /km</span>
-                </div>
-                <span className="tr-serif">{clock(p.sec)}</span>
-              </div>
-            ))}
-          </div>
-          <p className="tr-foot">
-            From Coros’ fitness assessment
-            {view.predictor.vo2max ? ` · VO2max ${view.predictor.vo2max}` : ''}
-            {view.predictor.thresholdPace
-              ? ` · threshold ${pace(view.predictor.thresholdPace)} /km`
-              : ''}
-            {view.predictor.runningLevel ? ` · running level ${view.predictor.runningLevel}` : ''}.
-          </p>
-        </section>
-      )}
 
       <section className="cell span-3" aria-labelledby="k-lines">
         <div className="tr-cell-head">
@@ -620,18 +576,6 @@ function Metric(p: { label: string; value: string; unit: string; sub: string }) 
         {p.unit && <span className="tr-unit">{p.unit}</span>}
       </span>
       <div className="tr-sub">{p.sub}</div>
-    </div>
-  );
-}
-
-function Stat(p: { label: string; value: number; unit: string }) {
-  return (
-    <div>
-      <div className="tr-lab">{p.label}</div>
-      <span className="tr-serif">
-        {p.value}
-        <span className="tr-unit">{p.unit}</span>
-      </span>
     </div>
   );
 }

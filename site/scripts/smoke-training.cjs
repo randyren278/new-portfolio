@@ -271,7 +271,6 @@ const contrastFailures = (page) =>
     '§ STATUS',
     '§ THIS WEEK',
     '§ WEEKLY VOLUME',
-    '§ CONSISTENCY',
     '§ LINE STUDIES',
     '§ ODOMETER',
     '§ HOW THIS WORKS',
@@ -284,12 +283,12 @@ const contrastFailures = (page) =>
       '§ TRAINING LOAD',
       '§ RECOVERY',
       '§ TRAINING FOCUS',
-      '§ RACE PREDICTOR',
       '§ NOTES FROM THE LOG',
     ]) {
       assert(has(k), `Coros cell rendered: ${k}`);
     }
   }
+  for (const k of ['§ CONSISTENCY', '§ RACE PREDICTOR']) assert(!has(k), `cell removed: ${k}`);
   const word = (await page.textContent('.tr-status-word'))?.trim();
   assert(
     /^[A-Z][a-z]+\.$/.test(word ?? ''),
@@ -302,7 +301,7 @@ const contrastFailures = (page) =>
     els.map((e) => e.getBoundingClientRect().width),
   );
   assert(
-    charts.length >= (EXPECT_COROS ? 6 : 3) && charts.every((w) => w > 100),
+    charts.length >= (EXPECT_COROS ? 5 : 2) && charts.every((w) => w > 100),
     `charts drew at their real width (${charts.map(Math.round).join(', ')})`,
   );
   const lines = await page.locator('.tr-study').count();
@@ -313,18 +312,40 @@ const contrastFailures = (page) =>
     assert(reps >= 2 && best === 1, `session table lists reps with one fastest (${reps} reps)`);
   }
 
-  // Randy keeps heart rate off the site: not shown, and not shipped in the
-  // page's data payload either (HRV is fine).
+  // Randy shows resting HR in the readiness cell and nowhere else: no other
+  // heart-rate field in the page's data payload, and no HR text, tooltip or
+  // label outside that cell (HRV is fine).
   const payload = await (await page.request.get(url('/training'))).text();
   assert(
-    !/\\?"(rhr|hr|avgHr|restingHr|maxHr)\\?"\s*:/.test(payload),
-    'no heart-rate fields in the page payload',
+    !/\\?"(hr|avgHr|restingHr|maxHr)\\?"\s*:/.test(payload) &&
+      (payload.match(/\\?"rhr\\?"\s*:/g) ?? []).length <= 1,
+    'the page payload carries only the readiness resting HR',
   );
-  const visible = await page.evaluate(() => document.body.innerText);
+  const hrOutside = await page.evaluate(() => {
+    const HR = /\bbpm\b|resting hr|heart rate|\bHR\b/i;
+    const hits = [];
+    const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+      const el = n.parentElement;
+      if (el.closest('script, style, template, noscript, .tr-ready')) continue;
+      if (HR.test(n.nodeValue)) hits.push(n.nodeValue.trim());
+    }
+    for (const el of document.querySelectorAll('[data-tip], [aria-label], [title]')) {
+      const text = ['data-tip', 'aria-label', 'title']
+        .map((a) => el.getAttribute(a) ?? '')
+        .join(' ');
+      if (HR.test(text) && !el.closest('.tr-ready')) hits.push(text.trim());
+    }
+    return hits;
+  });
   assert(
-    !/\bbpm\b|resting hr|heart rate|\bHR\b/i.test(visible),
-    'no heart-rate figures on the page',
+    hrOutside.length === 0,
+    `no heart rate outside readiness (${hrOutside.slice(0, 3).join(' / ')})`,
   );
+  if (EXPECT_COROS) {
+    const ready = await page.locator('.tr-ready').innerText();
+    assert(/resting hr/i.test(ready) && /\d+\s*bpm/i.test(ready), 'readiness shows resting HR');
+  }
 
   const outline = await page.$$eval('h1, h2, h3', (els) => els.map((e) => Number(e.tagName[1])));
   assert(
@@ -373,7 +394,7 @@ const contrastFailures = (page) =>
     assert(small === 0, `every control owns a 44px target (${small} too small)`);
   }
 
-  // Tooltips: a heatmap day, then (desktop) the load chart crosshair.
+  // Tooltips: a day bar, then (desktop) the load chart crosshair.
   const day = page.locator('.tr-grid rect[data-tip]').first();
   await day.scrollIntoViewIfNeeded();
   const dbox = await day.boundingBox();

@@ -42,6 +42,7 @@ export type Sources = {
   load: CorosLoadDay[] | null;
   fitness: CorosFitness | null;
   recovery: CorosRecovery | null;
+  restingHr: { date: string; bpm: number }[] | null;
   hrv: CorosNightHrv[] | null;
   sleep: CorosSleep[] | null;
   details: Record<string, CorosActivityDetail>;
@@ -132,6 +133,7 @@ export type TrainingView = {
     level: string | null;
     fullRecoveryHours: number | null;
     hrv: Vital | null;
+    rhr: Vital | null;
     sleep: Vital | null;
   } | null;
   load: CorosLoadDay[] | null;
@@ -142,13 +144,6 @@ export type TrainingView = {
   nights: Night[] | null;
   focus: { label: string; sec: number; rank: number }[] | null;
   heat: { start: string; days: { date: string; km: number; tip: string }[] };
-  consistency: {
-    daysRun: number;
-    daysTotal: number;
-    streak: number;
-    longest: number;
-    avgWeekKm: number;
-  };
   predictor: CorosFitness | null;
   lines: Activity[];
   odometer: {
@@ -186,7 +181,6 @@ export const fmtDay = (s: string) => {
   return `${MON[d.getUTCMonth()]} ${d.getUTCDate()}`;
 };
 export const fmtDow = (s: string) => `${weekday(s)} ${fmtDay(s)}`;
-export const monthOf = (s: string) => MON[toDate(s).getUTCMonth()];
 
 /** seconds per km → "3:14" */
 export const pace = (secPerKm: number) => {
@@ -525,7 +519,7 @@ export function deriveView(src: Sources): TrainingView {
     today,
   });
 
-  // Heatmap + consistency.
+  // Per-day tips (the recovery chart's "day before").
   const heatDays: { date: string; km: number; tip: string }[] = [];
   for (let d = heatStart; d <= shift(mondayOf(today), 6); d = shift(d, 1)) {
     const list = (byDay.get(d) ?? []).filter((a) => a.sport === 'run' || a.sport === 'ride');
@@ -540,9 +534,6 @@ export function deriveView(src: Sources): TrainingView {
       : 'Rest';
     heatDays.push({ date: d, km: runKmOn(d), tip });
   }
-  const pastDays = heatDays.filter((d) => d.date <= today);
-  const daysRun = pastDays.filter((d) => d.km > 0).length;
-  const windowKm = pastDays.reduce((s, d) => s + d.km, 0);
 
   const windowActs = acts.filter((a) => a.date >= heatStart && a.date <= today);
   const windowRuns = windowActs.filter((a) => a.sport === 'run');
@@ -562,13 +553,6 @@ export function deriveView(src: Sources): TrainingView {
     nights,
     focus,
     heat: { start: heatStart, days: heatDays },
-    consistency: {
-      daysRun,
-      daysTotal: pastDays.length,
-      streak,
-      longest,
-      avgWeekKm: windowKm / (pastDays.length / 7),
-    },
     predictor: src.fitness?.predictions.length ? src.fitness : null,
     lines: windowActs
       .filter((a) => a.sport === 'run' || a.sport === 'ride')
@@ -607,8 +591,10 @@ function deriveReadiness(src: Sources, today: string): TrainingView['readiness']
   const last = <T extends { date: string }>(xs: T[] | null) =>
     xs?.filter((x) => x.date <= today).slice(-14) ?? [];
   const hrv = last(src.hrv);
+  const rhr = last(src.restingHr);
   const sleep = last(src.sleep);
   const lastHrv = hrv[hrv.length - 1];
+  const lastRhr = rhr[rhr.length - 1];
   const lastSleep = sleep[sleep.length - 1];
   return {
     pct: src.recovery.pct,
@@ -616,6 +602,18 @@ function deriveReadiness(src: Sources, today: string): TrainingView['readiness']
     fullRecoveryHours: src.recovery.fullRecoveryHours,
     hrv: lastHrv
       ? { value: lastHrv.hrv, baseline: lastHrv.baseline, series: hrv.map((x) => x.hrv) }
+      : null,
+    rhr: lastRhr
+      ? {
+          value: lastRhr.bpm,
+          // Baseline = median of the preceding nights, never the night itself.
+          baseline: median(
+            (src.restingHr ?? [])
+              .filter((x) => x.date < lastRhr.date && x.date >= shift(lastRhr.date, -21))
+              .map((x) => x.bpm),
+          ),
+          series: rhr.map((x) => x.bpm),
+        }
       : null,
     sleep: lastSleep
       ? {

@@ -19,7 +19,6 @@ import {
   fmtDow,
   hm,
   km1,
-  monthOf,
   pace,
   shift,
   weekday,
@@ -713,93 +712,6 @@ export function RecoveryChart({
           onPointerDown={cross.onMove}
           onPointerLeave={cross.onLeave}
         />
-      </svg>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------- heatmap
-
-const ramp = (km: number) =>
-  km <= 0
-    ? 'rgba(var(--ink-rgb) / 0.06)'
-    : km < 9
-      ? 'var(--ramp-1)'
-      : km < 12
-        ? 'var(--ramp-2)'
-        : km < 16
-          ? 'var(--ramp-3)'
-          : 'var(--ramp-4)';
-
-export function Heatmap({
-  days,
-  today,
-}: {
-  days: { date: string; km: number; tip: string }[];
-  today: string;
-}) {
-  const [ref, W] = useWidth<HTMLDivElement>();
-  const weeks = Math.ceil(days.length / 7);
-  const lw = 26;
-  const gap = 3;
-  const top = 16;
-  const cs = Math.max(7, Math.min(28, Math.floor((W - lw - gap * (weeks - 1)) / weeks)));
-  const H = top + 7 * cs + 6 * gap;
-  if (W < 160) return <div ref={ref} className="chart" style={{ height: 160 }} />;
-  let lastMonth = '';
-  return (
-    <div ref={ref} className="chart">
-      <svg width={lw + weeks * (cs + gap)} height={H} aria-hidden="true">
-        {['M', '', 'W', '', 'F', '', 'S'].map((l, r) =>
-          l ? (
-            <text key={l} x={0} y={top + r * (cs + gap) + cs - 2} {...AX}>
-              {l}
-            </text>
-          ) : null,
-        )}
-        {Array.from({ length: weeks }, (_, w) => {
-          const x = lw + w * (cs + gap);
-          const first = days[w * 7];
-          const month = monthOf(first.date);
-          const showMonth = month !== lastMonth && w < weeks - 1;
-          lastMonth = month;
-          return (
-            <g key={first.date}>
-              {showMonth && (
-                <text x={x} y={10} {...AX}>
-                  {month}
-                </text>
-              )}
-              {days
-                .slice(w * 7, w * 7 + 7)
-                .map((d, r) =>
-                  d.date > today ? (
-                    <rect
-                      key={d.date}
-                      x={x + 0.5}
-                      y={top + r * (cs + gap) + 0.5}
-                      width={cs - 1}
-                      height={cs - 1}
-                      rx={3}
-                      fill="none"
-                      stroke="rgba(var(--ink-rgb) / 0.1)"
-                    />
-                  ) : (
-                    <rect
-                      key={d.date}
-                      x={x}
-                      y={top + r * (cs + gap)}
-                      width={cs}
-                      height={cs}
-                      rx={3}
-                      fill={ramp(d.km)}
-                      data-tip={`${fmtDow(d.date)}|${d.tip}`}
-                    />
-                  ),
-                )}
-            </g>
-          );
-        })}
       </svg>
     </div>
   );
