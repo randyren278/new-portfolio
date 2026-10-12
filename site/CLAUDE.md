@@ -91,9 +91,10 @@ were stretching to 800px and the bio ran 120 characters a line.
   narrow, which happens in both the 3-col and 2-col grids.
 
 - **Mobile (`@media (max-width: 720px)`):** stacks to one column. Index stays
-  first; Contact, Projects, Strava, Photo-A, Photo-B, and Résumé shuffle per
-  visit, with the two photographs never adjacent. **No cell caps its own
-  height.** `.cell-projects` used to sit at `max-height: 70dvh`, which made
+  first; the other sections vary by visit, with Projects among the first three
+  after Index. Both photographs form one section with a sticky Shuffle control,
+  and the header links to that section. The DOM follows the visual order.
+  **No cell caps its own height.** `.cell-projects` used to sit at `max-height: 70dvh`, which made
   `.projects-list` a nested scroller and hid the last three projects; cells
   grow to their content and the page does the scrolling.
 - **Cell chrome:** 1px hairline border in `var(--rule)`, 2px radius, 26px

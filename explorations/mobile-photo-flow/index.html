@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mobile photo flow — portfolio mockup</title>
+    <style>
+      @font-face { font-family: Plex; src: url('/site/public/puff-intro/assets/fonts/plex-mono.ttf'); }
+      @font-face { font-family: Instrument; src: url('/site/public/puff-intro/assets/fonts/instrument-serif.ttf'); }
+      :root { color-scheme: dark; --bg:#181917; --ink:#eee7d7; --muted:#a5a69b; --rule:#3a3d35; --accent:#d99177; }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin:0; background:#10110f; color:var(--ink); font-family:Plex, Menlo, monospace; }
+      button, a { font:inherit; }
+      button { cursor:pointer; }
+      button:focus-visible, a:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+      .workspace { min-height:100vh; display:grid; grid-template-columns:minmax(260px, 355px) 390px; justify-content:center; align-items:start; gap:76px; padding:35px 35px 60px; }
+      .notes { position:sticky; top:48px; padding-top:52px; }
+      .eyebrow, .kicker, .meta, .phone-label { color:var(--muted); font-size:10px; letter-spacing:.09em; text-transform:uppercase; }
+      .eyebrow { color:var(--accent); }
+      .notes h1 { margin:18px 0 12px; font:normal 52px/.94 Instrument, Georgia, serif; letter-spacing:-.02em; }
+      .notes p { color:#c3c2b9; line-height:1.7; font-size:13px; margin:0 0 26px; }
+      .note-list { padding:0; margin:0 0 30px; list-style:none; border-top:1px solid var(--rule); }
+      .note-list li { display:grid; grid-template-columns:26px 1fr; gap:12px; padding:13px 0; border-bottom:1px solid var(--rule); color:#c3c2b9; font-size:11px; line-height:1.6; }
+      .note-list b { color:var(--accent); font-weight:400; }
+      .try-order { border:1px solid #797a70; border-radius:40px; padding:12px 17px; background:transparent; color:var(--ink); font-size:11px; }
+      .try-order:hover { background:#292b26; }
+      .device { width:390px; padding:6px; border:1px solid #55594e; border-radius:29px; background:#090a09; box-shadow:0 30px 70px #0009; }
+      .phone { height:min(845px, calc(100vh - 85px)); min-height:580px; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; scrollbar-color:#55594e transparent; border-radius:23px; background:var(--bg); scroll-behavior:smooth; }
+      .phone::-webkit-scrollbar { width:5px; }
+      .phone::-webkit-scrollbar-thumb { background:#55594e; border-radius:6px; }
+      .phone-inner { padding:20px 15px 28px; }
+      .topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:18px; color:var(--muted); font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
+      .brand { color:var(--ink); white-space:nowrap; }
+      .top-link { color:var(--muted); text-decoration:none; border-bottom:1px solid transparent; white-space:nowrap; }
+      .top-link:hover { color:var(--ink); border-color:var(--ink); }
+      .stack { display:grid; gap:13px; }
+      .cell { min-width:0; border:1px solid var(--rule); border-radius:15px; padding:18px 15px; background:var(--bg); }
+      .kicker { margin:0 0 18px; font-weight:400; }
+      .name h2 { margin:0 0 14px; font-size:14px; font-weight:400; letter-spacing:.04em; }
+      .bio { margin:0 0 24px; font:italic 18px/1.32 Georgia, serif; }
+      .name .meta { margin:0; font-size:9px; }
+      .projects { padding-bottom:10px; }
+      .project { display:grid; grid-template-columns:24px 1fr; gap:10px; padding:11px 2px; border-top:1px solid var(--rule); font-size:11px; }
+      .project strong { display:block; color:var(--ink); font-weight:400; }
+      .project small { display:block; margin-top:3px; color:var(--muted); font-size:9px; line-height:1.5; }
+      .project-number { color:var(--ink); }
+      .projects .meta { padding:12px 2px 0; border-top:1px solid var(--rule); font-size:9px; }
+      .contact-list { display:grid; grid-template-columns:64px 1fr; gap:19px 10px; font-size:10px; align-items:baseline; }
+      .contact-list span { color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+      .contact-list a { color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
+      .contact-list b { font-weight:400; }
+      .resume-body { display:flex; gap:16px; align-items:start; }
+      .resume-body img { width:70px; border:1px solid var(--rule); box-shadow:5px 6px #7774; }
+      .resume-body p { margin:0; font-size:11px; line-height:1.6; }
+      .resume-actions { display:flex; gap:9px; justify-content:flex-end; margin-top:24px; }
+      .pill { display:inline-flex; align-items:center; justify-content:center; min-height:36px; border:1px solid #44483f; border-radius:30px; padding:0 15px; background:#252821; color:var(--ink); font-size:10px; text-decoration:none; white-space:nowrap; }
+      .pill:hover { background:#34382f; }
+      .activity-art { display:grid; place-items:center; height:156px; }
+      .activity-art svg { width:145px; height:145px; overflow:visible; }
+      .activity-copy { color:var(--muted); font-size:10px; line-height:1.8; }
+      .activity .pill { float:right; margin-top:8px; }
+      .activity::after { content:''; display:block; clear:both; }
+      .gallery { padding:0; border:0; border-radius:0; background:none; }
+      .gallery-head { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:9px; min-height:56px; padding:9px 10px; border:1px solid var(--rule); border-radius:15px; background:#22241fef; backdrop-filter:blur(14px); }
+      .gallery-head .kicker { margin:0; color:var(--ink); font-size:9px; }
+      .gallery-head button { flex:none; border:1px solid #777a6d; border-radius:30px; min-height:36px; padding:0 12px; background:#35382f; color:var(--ink); font-size:10px; }
+      .gallery-head button:hover { background:#454a3e; }
+      .gallery-head button:disabled { opacity:.65; cursor:wait; }
+      .gallery-intro { margin:10px 2px 12px; color:var(--muted); font-size:10px; line-height:1.5; }
+      .photo-pair { display:grid; gap:13px; }
+      .photo-card { position:relative; height:350px; overflow:hidden; border:1px solid var(--rule); border-radius:15px; background:#2a2c27; }
+      .photo-card img { width:100%; height:100%; display:block; object-fit:cover; }
+      .photo-card img.reveal { animation:reveal .6s cubic-bezier(.22,.8,.2,1) both; }
+      @keyframes reveal { from { transform:translateY(100%); } to { transform:translateY(0); } }
+      .photo-fname { position:absolute; top:14px; left:14px; color:white; font-size:9px; letter-spacing:.06em; text-shadow:0 1px 6px #000; }
+      .photo-details { position:absolute; bottom:16px; right:16px; border:1px solid #ffffff65; border-radius:30px; padding:9px 13px; background:#28302bbd; color:#fff; font-size:10px; backdrop-filter:blur(9px); }
+      .photo-details:hover { background:#3b473ed9; }
+      .gallery-foot { margin:12px 2px 2px; color:var(--muted); font-size:9px; line-height:1.6; }
+      .footer { display:flex; justify-content:space-between; margin-top:28px; color:var(--muted); font-size:9px; text-transform:uppercase; }
+      .footer a { color:inherit; text-decoration:none; }
+      dialog { width:min(340px, calc(100vw - 32px)); border:1px solid #66695e; border-radius:16px; padding:20px; background:#242720; color:var(--ink); box-shadow:0 20px 70px #000a; }
+      dialog::backdrop { background:#0009; }
+      dialog h2 { margin:0 0 12px; font:normal 32px Instrument, Georgia, serif; }
+      dialog p { color:var(--muted); font-size:11px; line-height:1.7; }
+      dialog img { display:block; width:100%; max-height:280px; object-fit:contain; margin:10px 0; }
+      .dialog-close { float:right; border:0; background:transparent; color:var(--ink); font-size:13px; }
+      .mobile-note { display:none; }
+      @media (max-width:800px) {
+        body { background:var(--bg); }
+        .workspace { display:block; min-height:100vh; padding:0; }
+        .notes { display:none; }
+        .device { width:100%; border:0; border-radius:0; padding:0; box-shadow:none; }
+        .phone { height:auto; min-height:100vh; overflow:visible; border-radius:0; }
+        .phone-inner { max-width:470px; margin:auto; padding:20px 15px 35px; }
+        .mobile-note { display:block; margin:24px 0 0; padding:15px; border:1px dashed var(--rule); border-radius:12px; color:var(--muted); font-size:10px; line-height:1.6; }
+        .mobile-note button { display:block; margin-top:10px; border:0; padding:0; background:none; color:var(--ink); text-decoration:underline; }
+      }
+      @media (prefers-reduced-motion: reduce) { html, .phone { scroll-behavior:auto; } .photo-card img.reveal { animation:none; } }
+    </style>
+  </head>
+  <body>
+    <div class="workspace">
+      <aside class="notes">
+        <div class="eyebrow">Standalone interaction sketch · 01</div>
+        <h1>Photos, where<br />you are.</h1>
+        <p>The Index remains first. The two photo cards travel together, and their Shuffle control stays close while you view either frame.</p>
+        <ol class="note-list">
+          <li><b>01</b><span>“Photos ↓” in the header jumps to the pair.</span></li>
+          <li><b>02</b><span>Shuffle stays at the top of the photo section while you scroll through both images.</span></li>
+          <li><b>03</b><span>Other sections vary between visits. Projects stays within the first three positions after Index.</span></li>
+        </ol>
+        <button class="try-order" type="button" data-order-button>Try another visit order ↻</button>
+        <p class="phone-label" style="margin-top:22px">390 × 844 phone preview · use the scroll area</p>
+      </aside>
+      <div class="device">
+        <div class="phone" id="phone">
+          <div class="phone-inner">
+            <header class="topbar">
+              <span class="brand">RANDY REN · PORTFOLIO</span>
+              <a class="top-link" href="#photos">Photos ↓</a>
+            </header>
+            <main class="stack" id="stack">
+              <section class="cell name" data-section="index" aria-label="Index">
+                <p class="kicker">§ INDEX</p>
+                <h2>RANDY REN</h2>
+                <p class="bio">Randy is a design oriented engineer studying at the University of British Columbia. Currently focused on making agents feel like real collaborators; the kind you'd actually want to work with, not the kind that eats your afternoon.</p>
+                <p class="meta">VANCOUVER, BC · PT/GMT-8</p>
+              </section>
+              <section class="cell projects" data-section="projects" aria-label="Projects">
+                <h2 class="kicker">§ PROJECTS</h2>
+                <div class="project"><span class="project-number">01</span><div><strong>SILL</strong><small>react, supabase, sensor + ml · 2025</small></div></div>
+                <div class="project"><span class="project-number">02</span><div><strong>STRAITS</strong><small>ais, timescaledb, webgl · 2025</small></div></div>
+                <div class="project"><span class="project-number">03</span><div><strong>BODE</strong><small>typescript, react, control theory · 2026</small></div></div>
+                <div class="project"><span class="project-number">04</span><div><strong>HERA</strong><small>python, sqlite fts5 + vec, ollama · 2026</small></div></div>
+                <div class="project"><span class="project-number">05</span><div><strong>IRIS</strong><small>python, slack socket mode, macos launchd · 2026</small></div></div>
+                <div class="project"><span class="project-number">06</span><div><strong>LIMINAL</strong><small>rust, swift, sqlite · 2026</small></div></div>
+                <div class="project"><span class="project-number">07</span><div><strong>HEPHAESTUS</strong><small>rust, git worktrees, macos sandboxing · 2026</small></div></div>
+                <div class="project"><span class="project-number">08</span><div><strong>IDIOLECT</strong><small>python, mlx, qwen3 lora · 2026</small></div></div>
+                <p class="meta">08 PROJECTS · 2025–2026</p>
+              </section>
+              <section class="gallery" data-section="photos" id="photos" aria-label="Photographs">
+                <div class="gallery-head">
+                  <h2 class="kicker">§ PHOTOGRAPHS · 02</h2>
+                  <button id="shuffle" type="button">Shuffle photos ↻</button>
+                </div>
+                <p class="gallery-intro">Two photographs chosen as a pair. Shuffle here to see another pair.</p>
+                <div class="photo-pair">
+                  <article class="photo-card"><img id="photo-a" src="/site/public/photos/photo-28.jpg" alt="Photograph by Randy Ren" /><span class="photo-fname" id="name-a">PHOTO-28.JPG</span><button class="photo-details" type="button" data-photo="0">Photo details ↗</button></article>
+                  <article class="photo-card"><img id="photo-b" src="/site/public/photos/photo-35.jpg" alt="Photograph by Randy Ren" /><span class="photo-fname" id="name-b">PHOTO-35.JPG</span><button class="photo-details" type="button" data-photo="1">Photo details ↗</button></article>
+                </div>
+                <p class="gallery-foot" id="photo-status" role="status" aria-live="polite">Both photos change in place. The page stays where you are.</p>
+              </section>
+              <section class="cell contact" data-section="contact" aria-label="Correspondence">
+                <h2 class="kicker">§ CORRESPONDENCE</h2>
+                <div class="contact-list"><span>Email</span><a href="mailto:randyren278@gmail.com">randyren278@gmail.com</a><span>GitHub</span><a href="https://github.com/randyren278">randyren278</a><span>LinkedIn</span><a href="https://linkedin.com/in/randyren278">/in/randyren278</a><span>Location</span><b>VANCOUVER, BC</b></div>
+              </section>
+              <section class="cell resume" data-section="resume" aria-label="Résumé">
+                <h2 class="kicker">§ RÉSUMÉ / ONE PAGE</h2>
+                <div class="resume-body"><img src="/site/public/resume/Randy_Ren_Resume-preview.jpg" alt="Résumé preview" /><p>Experience across agent systems, machine learning, infrastructure, and project delivery.</p></div>
+                <div class="resume-actions"><a class="pill" href="/site/public/resume/Randy_Ren_Resume.pdf" target="_blank">View résumé ↗</a><a class="pill" href="/site/public/resume/Randy_Ren_Resume.pdf" download>Download ↓</a></div>
+              </section>
+              <section class="cell activity" data-section="activity" aria-label="Latest activity">
+                <h2 class="kicker">§ LATEST ACTIVITY</h2>
+                <div class="activity-art"><svg viewBox="0 0 145 145" aria-hidden="true"><path d="M62 10 L61 36 L66 35 L67 49 L58 55 L62 63 L55 70 L60 77 L53 84 L64 92 L63 101 L73 108 L76 122 L83 133" fill="none" stroke="#d99177" stroke-width="1.5" stroke-linejoin="round" /></svg></div>
+                <div class="activity-copy">15.4 KM · 1:09:16 · RUN<br />4:30 /KM</div>
+                <a class="pill" href="https://www.randyren.org/training" target="_blank">Training status →</a>
+              </section>
+            </main>
+            <footer class="footer"><span>randyren.org</span><a href="#phone">Back to top ↑</a></footer>
+            <div class="mobile-note">Mockup: Index stays first; the remaining sections vary on each visit. The photo pair moves together.<button type="button" data-order-button>Try another visit order ↻</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <dialog id="details"><button class="dialog-close" type="button" aria-label="Close photo details">✕</button><h2>Photograph</h2><img alt="" /><p></p></dialog>
+    <script>
+      const stack = document.querySelector('#stack');
+      const section = Object.fromEntries([...stack.children].map((el) => [el.dataset.section, el]));
+      const photos = document.querySelector('#photos');
+      const phone = document.querySelector('#phone');
+      const manifestUrl = '/site/src/bento/photos.manifest.json';
+      const photoBase = '/site/public/photos/';
+      let manifest = [];
+      let current = ['photo-28.jpg', 'photo-35.jpg'];
+      let count = 0;
+
+      function shuffled(items) {
+        const result = [...items];
+        for (let i = result.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [result[i], result[j]] = [result[j], result[i]];
+        }
+        return result;
+      }
+
+      function anotherOrder() {
+        const rest = shuffled(['projects', 'photos', 'contact', 'resume', 'activity']);
+        const at = rest.indexOf('projects');
+        if (at > 2) {
+          rest.splice(at, 1);
+          rest.splice(Math.floor(Math.random() * 3), 0, 'projects');
+        }
+        stack.replaceChildren(section.index, ...rest.map((key) => section[key]));
+        document.querySelectorAll('[data-order-button]').forEach((button) => {
+          button.textContent = 'Try another visit order ↻';
+        });
+      }
+
+      function choosePair() {
+        const available = manifest.filter((item) => !current.includes(item.file)).sort((a,b) => a.hue - b.hue);
+        const start = Math.floor(Math.random() * Math.max(1, available.length - 1));
+        return available.slice(start, start + 2);
+      }
+
+      function readyImage(file) {
+        return new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = async () => { try { await image.decode(); resolve(image); } catch (error) { reject(error); } };
+          image.onerror = reject;
+          image.src = photoBase + file;
+        });
+      }
+
+      async function shufflePhotos() {
+        const button = document.querySelector('#shuffle');
+        const status = document.querySelector('#photo-status');
+        if (button.disabled) return;
+        if (!manifest.length) { status.textContent = 'Photo list is unavailable. The current pair stays in place.'; return; }
+        button.disabled = true;
+        button.textContent = 'Loading photos…';
+        status.textContent = 'Loading the next pair…';
+        const next = choosePair();
+        try {
+          await Promise.all(next.map((item) => readyImage(item.file)));
+          const scrollBefore = window.innerWidth <= 800 ? window.scrollY : phone.scrollTop;
+          next.forEach((item, index) => {
+            const key = index ? 'b' : 'a';
+            const img = document.querySelector(`#photo-${key}`);
+            img.classList.remove('reveal');
+            img.src = photoBase + item.file;
+            document.querySelector(`#name-${key}`).textContent = item.file.toUpperCase();
+            void img.offsetWidth;
+            img.classList.add('reveal');
+          });
+          current = next.map((item) => item.file);
+          count++;
+          status.textContent = `Pair ${count + 1}: two new photographs. Scroll position kept.`;
+          if (window.innerWidth <= 800) window.scrollTo({top: scrollBefore, behavior:'instant'});
+          else phone.scrollTop = scrollBefore;
+        } catch {
+          status.textContent = 'The next pair could not load. Keeping these photographs.';
+        } finally {
+          button.disabled = false;
+          button.textContent = 'Shuffle photos ↻';
+        }
+      }
+
+      document.querySelectorAll('[data-order-button]').forEach((button) => button.addEventListener('click', anotherOrder));
+      document.querySelector('#shuffle').addEventListener('click', shufflePhotos);
+      document.querySelector('.top-link').addEventListener('click', (event) => {
+        event.preventDefault();
+        photos.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block:'start'});
+        history.replaceState(null, '', '#photos');
+      });
+      document.querySelectorAll('[data-photo]').forEach((button) => button.addEventListener('click', () => {
+        const file = current[Number(button.dataset.photo)];
+        const dialog = document.querySelector('#details');
+        dialog.querySelector('h2').textContent = file.toUpperCase();
+        dialog.querySelector('img').src = photoBase + file;
+        dialog.querySelector('p').textContent = 'Photographed by Randy Ren · paired with the other frame in this section.';
+        dialog.showModal();
+      }));
+      document.querySelector('.dialog-close').addEventListener('click', () => document.querySelector('#details').close());
+      document.querySelector('#details').addEventListener('click', (event) => { if (event.target.id === 'details') event.target.close(); });
+      anotherOrder();
+      fetch(manifestUrl).then((response) => response.json()).then((data) => { manifest = data; }).catch(() => {});
+    </script>
+  </body>
+</html>

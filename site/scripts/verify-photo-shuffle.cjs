@@ -13,10 +13,23 @@ const url = process.env.BASE_URL || 'http://127.0.0.1:4390';
       await page.locator('iframe.is-ready').waitFor();
       await page.frameLocator('iframe').locator('.explore-button').click();
       await page.locator('iframe').waitFor({ state: 'detached' });
-      const button = page.locator('.photo-shuffle');
-      const wait = () => page.waitForFunction(() => !document.querySelector('.photo-shuffle').disabled);
+      const button = page.locator('.photo-shuffle:visible');
+      const wait = () => page.waitForFunction(() =>
+        [...document.querySelectorAll('.photo-shuffle')].some(el => el.getClientRects().length && !el.disabled));
       const names = () => page.locator('.photo-fname').allTextContents();
       await wait();
+      if (viewport.width <= 720) {
+        const order = await page.locator('.bento-grid > *').evaluateAll(nodes =>
+          nodes.map(node => node.classList.contains('photo-gallery') ? 'photos' :
+            [...node.classList].find(name => name.startsWith('cell-'))));
+        assert.equal(order[0], 'cell-name');
+        assert(order.indexOf('cell-projects') <= 3);
+        assert.equal(await page.locator('.photo-gallery > .cell-photo').count(), 2);
+        await page.locator('.photo-jump').click();
+        await page.locator('.cell-photo-b').scrollIntoViewIfNeeded();
+        assert((await page.locator('.photo-gallery-head').boundingBox()).y <= 21);
+        console.log(`${viewport.width}px: Index first, Projects early, photo pair and sticky control`);
+      }
       await page.evaluate(() => {
         window.emptyPhotoFrames = [];
         window.shuffleAnimations = [];
@@ -90,7 +103,11 @@ const url = process.env.BASE_URL || 'http://127.0.0.1:4390';
       await page.waitForTimeout(700);
       assert.equal(await page.locator('.cell-photo.flipped').count(), 1);
       // Native .click() in one task exercises the immediate ref-based lock.
-      await page.evaluate(() => { for (let i = 0; i < 8; i++) document.querySelector('.photo-shuffle').click(); });
+      await page.evaluate(() => {
+        const visible = [...document.querySelectorAll('.photo-shuffle')]
+          .find(el => el.getClientRects().length);
+        for (let i = 0; i < 8; i++) visible.click();
+      });
       await wait();
       assert.equal(await page.locator('.cell-photo.flipped').count(), 0);
       assert.equal(await page.locator('.photo-current').count(), 2);

@@ -2,7 +2,7 @@
 
 import type { ShellContent } from '@/content/types';
 import { consumeReturnToHome } from '@/training/returnFlag';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import './bento.css';
 import './puff.css';
@@ -30,16 +30,33 @@ import { useResizeTreatment } from './useResizeTreatment';
  * in the photo-fit review). Photos are 2 per visit; the color-band
  * shuffle picks which two from the manifest.
  *
- * JSX source order is the stable mobile reading and keyboard order.
- * Desktop uses explicit grid-column and grid-row placement.
+ * Desktop uses explicit grid placement. Mobile reorders the sections in the
+ * DOM once per visit, so reading and keyboard order follow the visible order.
  *
  * Hydration story: SSR + first client paint render `INITIAL_SLOTS`
  * (deterministic, first 2 photos from the manifest). A useEffect swaps
  * in a decoded pair, retaining the bundled starting photos until ready.
  *
- * Mobile: Name, Contact, Projects, Photo A, Résumé, Activity, Photo B.
- * Only the photo selection changes between visits.
+ * Mobile keeps Name first and both photos together. Projects stays among the
+ * first three sections after Name; the remaining sections vary by visit.
  */
+const DEFAULT_ORDER = ['name', 'contact', 'projects', 'photos', 'resume', 'activity'] as const;
+type Section = (typeof DEFAULT_ORDER)[number];
+
+function mobileOrder(): Section[] {
+  const rest: Section[] = ['contact', 'projects', 'photos', 'resume', 'activity'];
+  for (let i = rest.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [rest[i], rest[j]] = [rest[j], rest[i]];
+  }
+  const projects = rest.indexOf('projects');
+  if (projects > 2) {
+    rest.splice(projects, 1);
+    rest.splice(Math.floor(Math.random() * 3), 0, 'projects');
+  }
+  return ['name', ...rest];
+}
+
 export function BentoHome({
   content,
   strava,
@@ -52,6 +69,22 @@ export function BentoHome({
   const [scene, setScene] = useState<string | null>(null);
   const photos = usePhotoShuffle();
   const { slots } = photos;
+  const [sectionOrder, setSectionOrder] = useState<readonly Section[]>(DEFAULT_ORDER);
+  useLayoutEffect(() => {
+    const mobile = matchMedia('(max-width: 720px)');
+    let visitOrder: Section[] | null = null;
+    const update = () => {
+      if (mobile.matches) {
+        visitOrder ??= mobileOrder();
+        setSectionOrder(visitOrder);
+      } else {
+        setSectionOrder(DEFAULT_ORDER);
+      }
+    };
+    update();
+    mobile.addEventListener('change', update);
+    return () => mobile.removeEventListener('change', update);
+  }, []);
   useEffect(() => {
     // Coming back from /training: the visitor has already been welcomed.
     if (consumeReturnToHome()) {
@@ -148,7 +181,7 @@ export function BentoHome({
         <header className="bento-topbar">
           <div className="brand">RANDY REN · PORTFOLIO</div>
           <button
-            className="bento-text-button photo-shuffle"
+            className="bento-text-button photo-shuffle photo-shuffle-top"
             type="button"
             onClick={photos.shuffle}
             disabled={photos.busy}
@@ -156,6 +189,9 @@ export function BentoHome({
           >
             Shuffle photos <span aria-hidden="true">↻</span>
           </button>
+          <a className="bento-text-button photo-jump" href="#photos">
+            Photos <span aria-hidden="true">↓</span>
+          </a>
           <output className="puff-sr-only">{photos.message}</output>
         </header>
 
@@ -166,35 +202,76 @@ export function BentoHome({
           className="bento-grid"
           data-photo-count={slots.length}
         >
-          <NameCell aboutText={content.ABOUT_TEXT} />
-          <ContactCell contactText={content.CONTACT_TEXT} puff />
-          <ProjectsCell
-            order={content.ORDER}
-            mediums={content.MEDIUMS}
-            plates={content.PLATE_DATA}
-          />
-          {slots[0] && (
-            <PhotoCell
-              slot={slots[0]}
-              incoming={photos.incoming?.[0]}
-              onSettled={photos.onSettled}
-              delay={0}
-              areaClass="cell-photo-a"
-              caption={content.PHOTO_CAPTIONS[slots[0].photo.file]}
-            />
-          )}
-          <ResumeCell resume={content.RESUME} />
-          <StravaCell strava={strava} />
-          {slots[1] && (
-            <PhotoCell
-              slot={slots[1]}
-              incoming={photos.incoming?.[1]}
-              onSettled={photos.onSettled}
-              delay={90}
-              areaClass="cell-photo-b"
-              caption={content.PHOTO_CAPTIONS[slots[1].photo.file]}
-            />
-          )}
+          {sectionOrder.map((section) => {
+            switch (section) {
+              case 'name':
+                return <NameCell key={section} aboutText={content.ABOUT_TEXT} />;
+              case 'contact':
+                return <ContactCell key={section} contactText={content.CONTACT_TEXT} puff />;
+              case 'projects':
+                return (
+                  <ProjectsCell
+                    key={section}
+                    order={content.ORDER}
+                    mediums={content.MEDIUMS}
+                    plates={content.PLATE_DATA}
+                  />
+                );
+              case 'photos':
+                return (
+                  <section
+                    key={section}
+                    className="photo-gallery"
+                    id="photos"
+                    aria-label="Photographs"
+                  >
+                    <div className="photo-gallery-head">
+                      <h2 className="kicker">§ PHOTOGRAPHS · 02</h2>
+                      <button
+                        className="glass-pill photo-shuffle photo-gallery-shuffle"
+                        type="button"
+                        onClick={photos.shuffle}
+                        disabled={photos.busy}
+                        aria-busy={photos.busy}
+                      >
+                        Shuffle photos <span aria-hidden="true">↻</span>
+                      </button>
+                    </div>
+                    {slots[0] && (
+                      <PhotoCell
+                        slot={slots[0]}
+                        incoming={photos.incoming?.[0]}
+                        onSettled={photos.onSettled}
+                        delay={0}
+                        areaClass="cell-photo-a"
+                        caption={content.PHOTO_CAPTIONS[slots[0].photo.file]}
+                      />
+                    )}
+                    {slots[1] && (
+                      <PhotoCell
+                        slot={slots[1]}
+                        incoming={photos.incoming?.[1]}
+                        onSettled={photos.onSettled}
+                        delay={90}
+                        areaClass="cell-photo-b"
+                        caption={content.PHOTO_CAPTIONS[slots[1].photo.file]}
+                      />
+                    )}
+                    <p className="photo-gallery-status">
+                      {photos.busy
+                        ? 'Loading the next photographs…'
+                        : photos.message.startsWith('Keeping')
+                          ? photos.message
+                          : 'Two photographs chosen as a pair. Shuffle here to see another pair.'}
+                    </p>
+                  </section>
+                );
+              case 'resume':
+                return <ResumeCell key={section} resume={content.RESUME} />;
+              case 'activity':
+                return <StravaCell key={section} strava={strava} />;
+            }
+          })}
         </main>
 
         <footer className="bento-topbar">

@@ -7,7 +7,7 @@ export function useResizeTreatment(ref: RefObject<HTMLElement | null>) {
     if (!grid) return;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     const animations = new Map<HTMLElement, Animation>();
-    let previous: { x: number; y: number }[] = [];
+    let previous: { x: number; y: number; width: number }[] = [];
     let columns = 0;
     let width = window.innerWidth;
     let frame = 0;
@@ -48,7 +48,8 @@ export function useResizeTreatment(ref: RefObject<HTMLElement | null>) {
           cells.forEach((cell, i) => {
             const old = previous[i];
             const target = measured[i];
-            if (!old) return;
+            // display: contents has no box on desktop; its mobile gallery does.
+            if (!old?.width || !target.width) return;
             const dx = Math.max(
               -target.x,
               Math.min(

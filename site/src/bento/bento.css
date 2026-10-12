@@ -110,6 +110,17 @@ body {
   min-height: 0; /* let children shrink */
 }
 
+/* The pair is one mobile section. display: contents keeps its two cards in
+   their existing desktop/tablet grid positions. */
+.photo-gallery {
+  display: contents;
+}
+.photo-gallery-head,
+.photo-gallery-status,
+.photo-jump {
+  display: none;
+}
+
 .cell {
   border: 1px solid var(--rule);
   border-radius: 2px;
@@ -1066,7 +1077,7 @@ body {
   margin-top: 4px;
 }
 
-/* ----- Mobile: 2-column stack ----- */
+/* ----- Mobile: single-column stack ----- */
 
 @media (max-width: 720px) {
   body {
@@ -1080,24 +1091,74 @@ body {
   }
   .bento-grid {
     grid-template-columns: 1fr;
-    grid-template-rows: repeat(7, minmax(180px, auto));
+    grid-template-rows: none;
+    grid-auto-rows: auto;
     grid-auto-flow: row;
   }
-  /* Single-column stack. Name (§ INDEX) is always first; the six cells
-     below it shuffle per visit via a client-injected <style> block (see
-     BentoHome.tsx). Rule below is the JS-off fallback: Contact, Projects,
-     Strava, Photo-A, Résumé, Photo-B — reasonable narrative order with
-     photos not adjacent. `grid-row: auto !important` overrides desktop
-     grid-row placement so mobile stacks by CSS `order` instead. */
-  .bento-grid > .cell {
+  /* React reorders the sections themselves, keeping keyboard and reading
+     order aligned with the visible layout. */
+  .bento-grid > .cell,
+  .photo-gallery {
     grid-column: 1 !important;
     grid-row: auto !important;
   }
-  .cell-name {
-    order: 1;
+  .photo-shuffle-top {
+    display: none;
   }
-  .cell-contact {
-    order: 2;
+  .photo-jump {
+    display: inline-flex;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .photo-jump:hover,
+  .photo-jump:focus-visible {
+    color: var(--ink);
+  }
+  .photo-gallery {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    min-width: 0;
+    scroll-margin-top: 20px;
+  }
+  .photo-gallery-head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 56px;
+    padding: 8px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    background: rgba(var(--bg-rgb) / 0.94);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+  .photo-gallery-head .kicker {
+    margin: 0;
+    color: var(--ink);
+  }
+  .photo-gallery-shuffle {
+    min-height: 44px;
+    font-size: 11px;
+  }
+  .photo-gallery-shuffle:disabled {
+    cursor: wait;
+  }
+  .photo-gallery-status {
+    display: block;
+    margin: 0 2px;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.6;
+  }
+  .photo-gallery > .cell {
+    grid-column: 1 !important;
+    grid-row: auto !important;
   }
   /* No max-height. Capping the cell at 70dvh turned .projects-list into a
      nested scroll region inside an already-scrolling page, and the last
@@ -1134,9 +1195,6 @@ body {
   .contact-val a:hover {
     text-decoration-color: var(--ink);
   }
-  .cell-projects {
-    order: 3;
-  }
   .cell-projects .projects-list {
     overflow-y: visible;
   }
@@ -1152,18 +1210,6 @@ body {
   }
   .projects-blb {
     grid-column: 2;
-  }
-  .cell-strava {
-    order: 4;
-  }
-  .cell-photo-a {
-    order: 5;
-  }
-  .cell-resume {
-    order: 6;
-  }
-  .cell-photo-b {
-    order: 7;
   }
   /* Photo cells become portrait-shaped on mobile so 3:4 photos crop
      mildly on the long axis (object-fit: cover). aspect-ratio wins
@@ -1463,9 +1509,6 @@ body {
     grid-template-rows: none;
     grid-auto-rows: auto;
   }
-  .bento-grid > .cell {
-    order: 0;
-  }
   .cell-photo {
     aspect-ratio: auto;
     height: clamp(350px, 90vw, 460px);
@@ -1514,10 +1557,10 @@ body {
   overflow-x: clip;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .bento-grid > .cell-photo .photo-img {
+  .bento-grid .cell-photo .photo-img {
     transition: opacity 220ms ease, filter 160ms ease-out;
   }
-  .bento-grid.is-resizing > .cell-photo .photo-img {
+  .bento-grid.is-resizing .cell-photo .photo-img {
     filter: blur(0.8px);
     transition-duration: 220ms, 60ms;
   }
