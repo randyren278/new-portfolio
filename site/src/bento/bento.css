@@ -1107,6 +1107,7 @@ body {
   }
   .photo-jump {
     display: inline-flex;
+    align-items: center;
     color: var(--muted);
     text-decoration: none;
   }
@@ -1546,56 +1547,6 @@ body {
   .glass-pill,
   .projects-plate {
     background: var(--bg);
-  }
-}
-
-/* A small optical softening masks line-wrap changes during a width drag.
-   Photos soften less than text; card surfaces and controls stay sharp. */
-.bento-page {
-  /* A running glide must not create a scrollbar when the window narrows.
-     clip preserves the page's normal scrolling and does not add a scroller. */
-  overflow-x: clip;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .bento-grid .cell-photo .photo-img {
-    transition: opacity 220ms ease, filter 160ms ease-out;
-  }
-  .bento-grid.is-resizing .cell-photo .photo-img {
-    filter: blur(0.8px);
-    transition-duration: 220ms, 60ms;
-  }
-  .bento-grid
-    > .cell
-    :is(
-      .kicker,
-      .name-wordmark,
-      .name-bio,
-      .name-meta,
-      .contact-rows,
-      .projects-list,
-      .resume-summary,
-      .resume-actions,
-      .strava-cap,
-      .strava-sub
-    ) {
-    transition: filter 160ms ease-out;
-  }
-  .bento-grid.is-resizing
-    > .cell:not(.cell-photo):not(:focus-within)
-    :is(
-      .kicker,
-      .name-wordmark,
-      .name-bio,
-      .name-meta,
-      .contact-rows,
-      .projects-list,
-      .resume-summary,
-      .resume-actions,
-      .strava-cap,
-      .strava-sub
-    ) {
-    filter: blur(1.4px);
-    transition-duration: 60ms;
   }
 }
 

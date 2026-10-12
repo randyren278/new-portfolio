@@ -89,7 +89,7 @@ function assert(cond, label) {
 
   const pillLook = () =>
     page.$$eval('.bento-grid .glass-pill', (els) =>
-      els.map((el) => {
+      els.filter((el) => el.getClientRects().length > 0).map((el) => {
         const c = getComputedStyle(el);
         return {
           label: el.textContent.replace(/\s+/g, ' ').trim(),
@@ -556,16 +556,12 @@ function assert(cond, label) {
       `viewport meta contains viewport-fit=cover (got "${viewportMeta}")`,
     );
 
-    // Cells stack top-to-bottom via CSS `order`. Read each cell's y
-    // position and derive the stack sequence. Rules under test:
-    //   1. .cell-name is first (§ INDEX anchored to the top).
-    //   2. photo-a and photo-b are never adjacent in the stack.
-    // We pick the LONGEST `cell-*` class so `cell-photo-a` wins over
-    // the shared `cell-photo` on the photo cells.
-    const stack = await page.$$eval('.bento-grid > .cell', (els) =>
+    // The DOM follows the randomized visual order. Index remains first,
+    // Projects stays near the top, and both photos share one section.
+    const stack = await page.$$eval('.bento-grid > *', (els) =>
       els
         .map((el) => ({
-          cls: [...el.classList]
+          cls: el.classList.contains('photo-gallery') ? 'photos' : [...el.classList]
             .filter((c) => c.startsWith('cell-') && c !== 'cell')
             .sort((a, b) => b.length - a.length)[0],
           y: el.getBoundingClientRect().top,
@@ -575,19 +571,17 @@ function assert(cond, label) {
     );
     assert(stack[0] === 'cell-name', `Name card stacks first on mobile (got "${stack[0]}")`);
     assert(
-      stack.join(',') ===
-        'cell-name,cell-contact,cell-projects,cell-photo-a,cell-resume,cell-strava,cell-photo-b',
-      'mobile reading order is predictable and prioritizes work and contact',
-    );
-    const photoAIdx = stack.indexOf('cell-photo-a');
-    const photoBIdx = stack.indexOf('cell-photo-b');
-    assert(
-      photoAIdx !== -1 && photoBIdx !== -1,
-      `both photo cells present in mobile stack (a:${photoAIdx}, b:${photoBIdx})`,
+      stack.indexOf('cell-projects') > 0 && stack.indexOf('cell-projects') <= 3,
+      `Projects stays near the top on mobile (${stack.join(',')})`,
     );
     assert(
-      Math.abs(photoAIdx - photoBIdx) > 1,
-      `photos never back-to-back on mobile (a:${photoAIdx}, b:${photoBIdx}, stack:${stack.join(',')})`,
+      stack.filter((section) => section === 'photos').length === 1,
+      `one photo section appears in the mobile stack (${stack.join(',')})`,
+    );
+    const photos = await page.$$eval('.photo-gallery > .cell-photo', (els) => els.length);
+    assert(
+      photos === 2,
+      `both photo cells stay together on mobile (got ${photos})`,
     );
   }
 
@@ -733,8 +727,8 @@ function assert(cond, label) {
     `the H1 leads the document order (first heading is H${headings[0]?.level})`,
   );
   assert(
-    headings.filter((h) => h.level === 2).length === 4,
-    `the four labelled cells carry H2s (got ${headings.filter((h) => h.level === 2).length})`,
+    headings.filter((h) => h.level === 2).length === 5,
+    `the labelled sections carry H2s (got ${headings.filter((h) => h.level === 2).length})`,
   );
   const skipped = headings
     .slice(1)
@@ -1146,7 +1140,8 @@ function assert(cond, label) {
         };
         for (const bar of document.querySelectorAll('.bento-topbar')) {
           const left = bar.firstElementChild;
-          const right = bar.querySelector('button');
+          const right = [...bar.querySelectorAll('button, a')].find((el) =>
+            el !== left && el.getClientRects().length > 0);
           if (left && right && Math.abs(baseline(left) - baseline(right)) > 1)
             off.push(
               `${bar.tagName.toLowerCase()} baselines ${baseline(left).toFixed(1)} vs ${baseline(right).toFixed(1)}`,

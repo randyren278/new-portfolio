@@ -14,7 +14,6 @@ import { ProjectsCell } from './cells/ProjectsCell';
 import { ResumeCell } from './cells/ResumeCell';
 import { StravaCell, type StravaData } from './cells/StravaCell';
 import { usePhotoShuffle } from './usePhotoShuffle';
-import { useResizeTreatment } from './useResizeTreatment';
 
 /**
  * Top-level bento home. Composes the asymmetric grid:
@@ -148,7 +147,6 @@ export function BentoHome({
     replaying.current = false;
   }
   const gridRef = useRef<HTMLElement>(null);
-  useResizeTreatment(gridRef);
   useEffect(() => {
     // Hand focus to the grid unless the visitor already moved it (e.g. opened
     // the training plate during the fade-in).

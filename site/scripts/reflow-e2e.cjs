@@ -21,7 +21,7 @@ const assert = require('node:assert/strict');
       await page.setViewportSize({ width, height: 900 });
       await page.waitForTimeout(650);
       const metrics = await page.evaluate(() => {
-        const cells = [...document.querySelectorAll('.bento-grid > .cell')];
+        const cells = [...document.querySelectorAll('.bento-grid .cell')];
         const rects = cells.map((cell) => cell.getBoundingClientRect());
         const overlap = rects.some((a, i) => rects.slice(i + 1).some((b) =>
           a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1));
@@ -46,48 +46,40 @@ const assert = require('node:assert/strict');
     await page.waitForTimeout(400);
     await page.setViewportSize({ width: 1100, height: 900 });
     await page.waitForTimeout(50);
-    assert.equal(await page.evaluate(() => [...document.querySelectorAll('.bento-grid > .cell')].some((cell) => cell.getAnimations().length)), true, 'column crossing glides');
-    assert.notEqual(await page.locator('.name-bio').evaluate((el) => getComputedStyle(el).filter), 'none', 'text softens while resizing');
-    assert.notEqual(await page.locator('.photo-img').first().evaluate((el) => getComputedStyle(el).filter), 'none', 'photos soften during resize');
+    assert.equal(await page.evaluate(() => [...document.querySelectorAll('.bento-grid .cell')].some((cell) => getComputedStyle(cell).transform !== 'none')), false, 'column crossing keeps cards still');
+    assert.equal(await page.locator('.name-bio').evaluate((el) => getComputedStyle(el).filter), 'none', 'text stays sharp while resizing');
+    assert.equal(await page.locator('.photo-img').first().evaluate((el) => getComputedStyle(el).filter), 'none', 'photos stay sharp while resizing');
     assert.equal(await page.locator('.photo-glass-label').first().evaluate((el) => getComputedStyle(el).filter), 'none', 'glass control stays sharp');
     assert.ok(await page.evaluate(() => [...document.querySelectorAll('.cell-photo')].every((cell) => getComputedStyle(cell).opacity === '1')), 'photos remain opaque during reflow');
     const dragWidths = [];
-    await page.evaluate(() => {
-      window.cardAnimationStarts = 0;
-      const animate = Element.prototype.animate;
-      Element.prototype.animate = function (...args) {
-        if (this.matches('.bento-grid > .cell')) window.cardAnimationStarts++;
-        return animate.apply(this, args);
-      };
-    });
     for (let width = 1440; width >= 640; width -= 10) dragWidths.push(width);
     for (let width = 640; width <= 1440; width += 10) dragWidths.push(width);
     dragWidths.push(1101, 1099, 1102, 719, 722, 720);
     for (const width of dragWidths) {
       await page.setViewportSize({ width, height: 900 });
       const drag = await page.evaluate(() => {
-        const cells = [...document.querySelectorAll('.bento-grid > .cell')];
+        const cells = [...document.querySelectorAll('.bento-grid .cell')];
         const rects = cells.map((cell) => cell.getBoundingClientRect());
         return {
-          animating: cells.some((cell) => cell.getAnimations().length > 0 || getComputedStyle(cell).transform !== 'none'),
+          animating: cells.some((cell) => getComputedStyle(cell).transform !== 'none'),
           overlap: rects.some((a, i) => rects.slice(i + 1).some((b) => a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1)),
           overflow: document.documentElement.scrollWidth > innerWidth,
         };
       });
-      // Moving cards can cross during a glide; no overlap is allowed after settling.
+      assert.equal(drag.animating, false, `cards animate during resize at ${width}`);
+      assert.equal(drag.overlap, false, `cards overlap during resize at ${width}`);
       assert.equal(drag.overflow, false, `continuous resize overflow at ${width}`);
     }
     await page.waitForTimeout(700);
-    assert.ok(await page.evaluate(() => window.cardAnimationStarts < 100), 'glides do not restart on every drag step');
     assert.equal(await page.locator('.name-bio').evaluate((el) => getComputedStyle(el).filter), 'none', 'text returns fully sharp');
     assert.equal(await page.locator('.photo-img').first().evaluate((el) => getComputedStyle(el).filter), 'none', 'photos return fully sharp');
-    assert.equal(await page.evaluate(() => [...document.querySelectorAll('.bento-grid > .cell')].flatMap((cell) => cell.getAnimations()).length), 0, 'rapid reversals settle');
+    assert.equal(await page.evaluate(() => [...document.querySelectorAll('.bento-grid .cell')].flatMap((cell) => cell.getAnimations()).length), 0, 'rapid reversals settle');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.setViewportSize({ width: 721, height: 900 });
     await page.waitForTimeout(50);
     assert.equal(await page.locator('.name-bio').evaluate((el) => getComputedStyle(el).filter), 'none', 'reduced motion keeps text sharp');
     assert.equal(await page.locator('.photo-img').first().evaluate((el) => getComputedStyle(el).filter), 'none', 'reduced motion keeps photos sharp');
-    assert.equal(await page.evaluate(() => [...document.querySelectorAll('.bento-grid > .cell')].flatMap((cell) => cell.getAnimations()).length), 0, 'reduced motion skips reflow');
+    assert.equal(await page.evaluate(() => [...document.querySelectorAll('.bento-grid .cell')].flatMap((cell) => cell.getAnimations()).length), 0, 'reduced motion skips reflow');
     await page.locator('.cell-photo-a .photo-flip').click();
     assert.equal(await page.locator('.cell-photo-a .photo-front').evaluate((el) => el.inert), true);
     await page.keyboard.press('Escape');
@@ -107,7 +99,7 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('.bento-page').evaluate((el) => el.inert), false);
     assert.deepEqual(errors, []);
     console.log(JSON.stringify(sizes, null, 2));
-    console.log(`PASS: ${dragWidths.length} continuous resize steps, breakpoints, reduced motion, photo faces, modal resize and keyboard return`);
+    console.log(`PASS: ${dragWidths.length} continuous resize steps without overlap, breakpoints, reduced motion, photo faces, modal resize and keyboard return`);
   } finally {
     await browser.close();
   }
