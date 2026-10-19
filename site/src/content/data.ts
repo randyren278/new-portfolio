@@ -109,12 +109,15 @@ github    randyren278
 linkedin  /in/randyren278
 location  VANCOUVER, BC, PT/GMT-8`;
 
+const RESUME_VERSION = '389a5fff0693';
+
 export const RESUME = {
   name: 'Randy Ren',
   summary:
     'Experience across agent systems, machine learning, infrastructure, and project delivery.',
-  pdfHref: '/resume/Randy_Ren_Resume.pdf',
-  previewSrc: '/resume/Randy_Ren_Resume-preview.webp',
+  pdfHref: `/resume/Randy_Ren_Resume.pdf?v=${RESUME_VERSION}`,
+  previewSrc: `/resume/Randy_Ren_Resume-preview.webp?v=${RESUME_VERSION}`,
+  downloadHref: `/api/resume/download?v=${RESUME_VERSION}`,
   downloadName: 'Randy_Ren_Resume.pdf',
 };
 

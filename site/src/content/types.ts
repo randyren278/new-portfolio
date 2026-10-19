@@ -26,6 +26,7 @@ export type ResumeContent = {
   summary: string;
   pdfHref: string;
   previewSrc: string;
+  downloadHref: string;
   downloadName: string;
 };
 

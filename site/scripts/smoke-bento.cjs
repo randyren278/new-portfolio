@@ -183,7 +183,7 @@ function assert(cond, label) {
   const resumeViewName = await page.getAttribute('.resume-view', 'aria-label');
   const resumeDownloadAccessibleName = await page.getAttribute('.resume-download', 'aria-label');
   assert(
-    resumeViewHref === '/resume/Randy_Ren_Resume.pdf',
+    new URL(resumeViewHref, BASE_URL).pathname === '/resume/Randy_Ren_Resume.pdf',
     `résumé view link targets the public PDF (got "${resumeViewHref}")`,
   );
   assert(
@@ -191,7 +191,7 @@ function assert(cond, label) {
     `résumé view link opens a new tab (got "${resumeViewTarget}")`,
   );
   assert(
-    resumeDownloadHref === '/api/resume/download',
+    new URL(resumeDownloadHref, BASE_URL).pathname === '/api/resume/download',
     `résumé download uses the attachment endpoint (got "${resumeDownloadHref}")`,
   );
   assert(

@@ -1166,23 +1166,21 @@ body {
      three projects sat below its internal fold with no affordance saying
      so — a third of the catalogue, invisible. The cell grows to its
      content instead and the page does the scrolling. */
-  /* 14px of block padding takes the 17px line box to a 45px target.
-     Inline padding does not grow the line box, so the rows only need
-     enough row-gap that adjacent targets stop overlapping. The rule
-     moves from border-bottom to a text underline: a border sits on the
-     padding edge and would float 13px under the word. */
+  /* Keep mobile contact rows compact, with separate targets and the same
+     minimum height for linked values and the plain-text location. */
   .contact-rows {
-    row-gap: 24px;
+    row-gap: 6px;
+  }
+  .contact-val {
+    display: flex;
+    align-items: center;
+    min-height: 32px;
   }
   .contact-val a {
-    /* padding-block on an inline element paints but does not reserve
-       line-box space, so two 45px-tall padded links stacked 24px apart
-       physically overlapped: their padding regions painted over each
-       other and a tap in that band could hit either link depending on
-       paint order. inline-block makes the box participate in layout for
-       real, so the row genuinely grows and the next row is pushed down. */
-    display: inline-block;
-    padding-block: 14px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding-block: 4px;
     border-bottom: 0;
     text-decoration: underline;
     text-decoration-color: var(--muted);
@@ -1516,9 +1514,6 @@ body {
   }
   .cell-resume {
     min-height: 280px;
-  }
-  .contact-rows {
-    row-gap: 6px;
   }
   .cell-strava {
     min-height: 240px;

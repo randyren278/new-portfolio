@@ -42,7 +42,7 @@ export function ResumeCell({ resume }: { resume: ResumeContent }) {
         </a>
         <a
           className="resume-action glass-pill resume-download"
-          href="/api/resume/download"
+          href={resume.downloadHref}
           download={resume.downloadName}
           aria-label={`Download ${resume.name} résumé (PDF)`}
         >
