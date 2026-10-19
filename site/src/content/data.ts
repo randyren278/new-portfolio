@@ -14,6 +14,13 @@ export const NOTES = {
 };
 
 export const MEDIUMS = {
+  umbra: {
+    title: 'UMBRA',
+    year: 2026,
+    medium: 'swift, webkit, cli + mcp',
+    dim: 'one browser, persistent signed-in tabs',
+    blurb: 'A browser for agents that leaves my screen alone.',
+  },
   sill: {
     title: 'SILL',
     year: 2025,
@@ -79,14 +86,15 @@ export const MEDIUMS = {
 };
 
 export const ORDER = [
-  'sill',
+  'umbra',
   'straits',
-  'bode',
   'hera',
-  'iris',
-  'liminal',
   'hephaestus',
+  'liminal',
   'idiolect',
+  'sill',
+  'iris',
+  'bode',
 ];
 
 // Optional per-photo captions, keyed by filename. Sparse on purpose — a
@@ -188,8 +196,25 @@ export const MAN = {
 };
 
 export const PLATE_DATA = {
-  sill: {
+  umbra: {
     number: '01',
+    title: 'Umbra',
+    year: 2026,
+    marker: 'PLATE',
+    meta: [
+      { lab: 'YEAR', val: '2026' },
+      { lab: 'ROLE', val: 'EVERYTHING' },
+      { lab: 'CLIENT', val: 'SELF' },
+      { lab: 'DISCIPLINE', val: 'AGENTS · BROWSER · MACOS' },
+    ],
+    links: [{ lab: 'CODE', href: 'https://github.com/randyren278/umbra' }],
+    essay: [
+      'A browser for agents that leaves my screen alone. Umbra keeps signed-in tabs alive between commands, so an agent can read a page, click through it, and come back later in the same session.',
+      'I built it in Swift on native WebKit, with a command-line interface and MCP server sharing the same browser. It stays out of the way until I need to sign in or take over a page.',
+    ],
+  },
+  sill: {
+    number: '07',
     title: 'Sill',
     year: 2025,
     marker: 'PLATE',
@@ -229,7 +254,7 @@ export const PLATE_DATA = {
     ],
   },
   bode: {
-    number: '03',
+    number: '09',
     title: 'Bode',
     year: 2026,
     marker: 'PLATE',
@@ -249,7 +274,7 @@ export const PLATE_DATA = {
     ],
   },
   hera: {
-    number: '04',
+    number: '03',
     title: 'Hera',
     year: 2026,
     marker: 'PLATE',
@@ -266,7 +291,7 @@ export const PLATE_DATA = {
     ],
   },
   iris: {
-    number: '05',
+    number: '08',
     title: 'Iris',
     year: 2026,
     marker: 'PLATE',
@@ -283,7 +308,7 @@ export const PLATE_DATA = {
     ],
   },
   liminal: {
-    number: '06',
+    number: '05',
     title: 'Liminal',
     year: 2026,
     marker: 'PLATE',
@@ -300,7 +325,7 @@ export const PLATE_DATA = {
     ],
   },
   hephaestus: {
-    number: '07',
+    number: '04',
     title: 'Hephaestus',
     year: 2026,
     marker: 'PLATE',
@@ -317,7 +342,7 @@ export const PLATE_DATA = {
     ],
   },
   idiolect: {
-    number: '08',
+    number: '06',
     title: 'Idiolect',
     year: 2026,
     marker: 'PLATE',

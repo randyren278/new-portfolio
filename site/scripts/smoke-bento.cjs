@@ -314,14 +314,15 @@ function assert(cond, label) {
     els.map((e) => e.textContent?.trim()),
   );
   const expectedProjectTitles = [
-    'SILL',
+    'UMBRA',
     'STRAITS',
-    'BODE',
     'HERA',
-    'IRIS',
-    'LIMINAL',
     'HEPHAESTUS',
+    'LIMINAL',
     'IDIOLECT',
+    'SILL',
+    'IRIS',
+    'BODE',
   ];
 
   assert(
