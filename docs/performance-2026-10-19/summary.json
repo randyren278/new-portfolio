@@ -1,0 +1,118 @@
+{
+  "desktop": {
+    "baseline": {
+      "readyMs": [
+        1507,
+        1490,
+        1190,
+        1135,
+        1087
+      ],
+      "medianMs": 1190,
+      "rangeMs": [
+        1087,
+        1507
+      ],
+      "spriteScriptMs": [
+        1358,
+        1226,
+        1082,
+        1034,
+        976
+      ],
+      "scenes": [
+        "pool",
+        "kite",
+        "pool",
+        "space",
+        "space"
+      ]
+    },
+    "candidate": {
+      "readyMs": [
+        139,
+        134,
+        229,
+        118,
+        108
+      ],
+      "medianMs": 134,
+      "rangeMs": [
+        108,
+        229
+      ],
+      "spriteScriptMs": [
+        1,
+        1,
+        0,
+        0,
+        1
+      ],
+      "scenes": [
+        "pool",
+        "space",
+        "space",
+        "kite",
+        "kite"
+      ]
+    }
+  },
+  "mobile": {
+    "baseline": {
+      "readyMs": [
+        1071,
+        1183,
+        1086,
+        1011,
+        1073
+      ],
+      "medianMs": 1073,
+      "rangeMs": [
+        1011,
+        1183
+      ],
+      "spriteScriptMs": [
+        970,
+        1076,
+        983,
+        927,
+        988
+      ],
+      "scenes": [
+        "space",
+        "kite",
+        "kite",
+        "pool",
+        "space"
+      ]
+    },
+    "candidate": {
+      "readyMs": [
+        81,
+        105,
+        110,
+        84,
+        83
+      ],
+      "medianMs": 84,
+      "rangeMs": [
+        81,
+        110
+      ],
+      "spriteScriptMs": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "scenes": [
+        "space",
+        "kite",
+        "kite",
+        "kite",
+        "pool"
+      ]
+    }
+  }
+}

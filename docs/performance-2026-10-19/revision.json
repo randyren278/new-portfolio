@@ -1,0 +1,188 @@
+{
+  "baseRevision": "63b4678b925f80bb8e699250f7d8b336eac70a0d",
+  "candidateBuildId": "xGIwr-XTuuTAZp3rwzzpY",
+  "baselineBuildId": "e8-rb00ndrA3wjbOY4vsy",
+  "candidateFilesDigest": "d3fa4baa8b0e7e01796af5f0f94c20e289fff8215b226f81ae00742205616e12",
+  "files": [
+    {
+      "file": "site/public/fonts/README.md",
+      "sha256": "617f5d0fa2e5ec352c8d50200b7c5e3ed661fee23733d05544c0973eeb1f0f7e",
+      "bytes": 1050
+    },
+    {
+      "file": "site/public/fonts/dmsans-OFL.txt",
+      "sha256": "9af36190332437f5ecd09974de43c1f7c77a310a996cdd8ceb25628b458840e1",
+      "bytes": 4482
+    },
+    {
+      "file": "site/public/fonts/ibm-plex-mono-normal-400.woff2",
+      "sha256": "c36f509c0a8f9f85f29cb44bc8701d8a9e0b14c499e77a884f789ead7093a7ac",
+      "bytes": 10052
+    },
+    {
+      "file": "site/public/fonts/ibm-plex-mono-normal-500.woff2",
+      "sha256": "a76f53ca6612e7b3828eec2311098675b7f9849ae4169a8bcef6302aec02a6c0",
+      "bytes": 10060
+    },
+    {
+      "file": "site/public/fonts/ibm-plex-serif-italic-400.woff2",
+      "sha256": "9daa6f3da3e4917e5da8537fe9b42a1d764f967e40920ef91cb1b01e069bd241",
+      "bytes": 16024
+    },
+    {
+      "file": "site/public/fonts/ibmplexmono-OFL.txt",
+      "sha256": "7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da",
+      "bytes": 4456
+    },
+    {
+      "file": "site/public/fonts/ibmplexserif-OFL.txt",
+      "sha256": "7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da",
+      "bytes": 4456
+    },
+    {
+      "file": "site/public/fonts/instrument-serif-italic-400.woff2",
+      "sha256": "6ee678c33f388dd7ba59700ebea635deb98821baafd817b09891f7927177f702",
+      "bytes": 15684
+    },
+    {
+      "file": "site/public/fonts/instrument-serif-normal-400.woff2",
+      "sha256": "60c06664b5a95c7de6cc3e00d1f9034d78bd1e40b564016b241674449a067d4d",
+      "bytes": 15040
+    },
+    {
+      "file": "site/public/fonts/instrumentserif-OFL.txt",
+      "sha256": "129ed7618959716959f2941fdd5b49e0ad6e6c1d78726761786a00253d865521",
+      "bytes": 4405
+    },
+    {
+      "file": "site/public/fonts/newsreader-OFL.txt",
+      "sha256": "fdfad38143ec470553cae82a1e45320bdd1b9ec70415d37bd0171051d8a4ded8",
+      "bytes": 4394
+    },
+    {
+      "file": "site/public/fonts/newsreader-italic-400.woff2",
+      "sha256": "3d758e1a71e13c8ee5199b070828c7da29b1ea54c4ac0588117b7c8c77455d86",
+      "bytes": 24344
+    },
+    {
+      "file": "site/public/photo-fallbacks/photo-01-e43a2c0cb0.jpg",
+      "sha256": "e43a2c0cb09e7a8ae09da6dd941cd357964d00fe8ab936207862b0947bcc356a",
+      "bytes": 15635
+    },
+    {
+      "file": "site/public/photo-fallbacks/photo-02-97c6a9c4c9.jpg",
+      "sha256": "97c6a9c4c99080cdfdb933749af09b160a62d86ada6e767d98b7018cf1fb4b6c",
+      "bytes": 31984
+    },
+    {
+      "file": "site/public/puff-intro/assets/fonts/dm-sans.woff2",
+      "sha256": "91b4e35a8d14951a8565c2d99dd472b7b9658ec12ec5ccd1930a134519369cd4",
+      "bytes": 19104
+    },
+    {
+      "file": "site/public/puff-intro/assets/fonts/instrument-serif.woff2",
+      "sha256": "b644fa631f014a9c60a78c9232c151546bd4dc47834fb2e18bdd8b6d2457457c",
+      "bytes": 25220
+    },
+    {
+      "file": "site/public/puff-intro/assets/fonts/plex-mono.woff2",
+      "sha256": "e9d455c1360d215e703d031178db4e5a982ad1b8823e1dbbc0a0adaba3016a76",
+      "bytes": 37204
+    },
+    {
+      "file": "site/public/puff-intro/base.css",
+      "sha256": "185470c30baad9ec8164bfc3971f17df7dd2eabaf8ae1821f339c6e36c27e156",
+      "bytes": 24367
+    },
+    {
+      "file": "site/public/puff-intro/puff-pixels.js",
+      "sha256": "ae2c0ed8bbb27797c4bdc20a328a2b5407ede1b4ee99b8cf8cb1db53c6306133",
+      "bytes": 15843
+    },
+    {
+      "file": "site/public/resume/Randy_Ren_Resume-preview.webp",
+      "sha256": "f2cb454cc7fd0cdd4b332a26670229bd60aa2ccd972e6e168c5d4f634b0491d7",
+      "bytes": 58934
+    },
+    {
+      "file": "site/scripts/performance-umbra.mjs",
+      "sha256": "a751a47271415bce6c5cf1b1438b340671a0f454a5b2d6477ba888b8077738e8",
+      "bytes": 6001
+    },
+    {
+      "file": "site/scripts/training-cache.test.cjs",
+      "sha256": "3829f1c71a017a19674f2c9132a979d54513d050cd964720d9557087059ea3fb",
+      "bytes": 9548
+    },
+    {
+      "file": "site/scripts/verify-site-umbra.mjs",
+      "sha256": "2786e1e0cfac8113a3d2a2d0cbfdba73d93d979fbd50c87f6e95425ffb74cf40",
+      "bytes": 10065
+    },
+    {
+      "file": "site/src/app/api/strava/latest/route.ts",
+      "sha256": "0cd5173fc17ee295d3f6deef4277c89e0f6c31591d31cad3c61d81aaa17fd2e6",
+      "bytes": 226
+    },
+    {
+      "file": "site/src/app/fonts.css",
+      "sha256": "6238b977d59769f084a7ed4e948c593a040e32e7f5e71c36812b6c613830d5b0",
+      "bytes": 2319
+    },
+    {
+      "file": "site/src/app/layout.tsx",
+      "sha256": "80b1e33dc96f86773725ad56693856fb08fb86c93b392851ca4688707fb01cb3",
+      "bytes": 1502
+    },
+    {
+      "file": "site/src/app/page.tsx",
+      "sha256": "2c25b7abbbf5948f17a856fe36fe36aae17305ba9e4bf4ea47a7a7e6fe50a978",
+      "bytes": 346
+    },
+    {
+      "file": "site/src/bento/BentoHome.tsx",
+      "sha256": "707ddbb47afebec13da7c47c20bafd00646cfa6fcf76e02af1bc137b2683f27f",
+      "bytes": 10894
+    },
+    {
+      "file": "site/src/bento/PuffEntrance.tsx",
+      "sha256": "6a599a1eb9a54b396cfd042249e1b2954bae7d46547cd34ca5ad855438fcae19",
+      "bytes": 3701
+    },
+    {
+      "file": "site/src/bento/cells/ResumeCell.tsx",
+      "sha256": "cf37569b2dc11b0690a53bfbb38a6869591948222e645a3678c48581a965df84",
+      "bytes": 1685
+    },
+    {
+      "file": "site/src/bento/cells/StravaCell.tsx",
+      "sha256": "74e8ae55ab42be9e8ac076fe782aa93c7dcd645cca69a62cae70bb7f67521ece",
+      "bytes": 6234
+    },
+    {
+      "file": "site/src/bento/photo-fallbacks.json",
+      "sha256": "653662c33d07647f8b3162acd368e1fd7613d520b85b73381af7538eaded8a04",
+      "bytes": 127
+    },
+    {
+      "file": "site/src/bento/usePhotoShuffle.ts",
+      "sha256": "cadc9cc2a5393c833f3da94c8e0a77e34563fb625b952b69d479e7bf750d87ef",
+      "bytes": 4623
+    },
+    {
+      "file": "site/src/content/data.ts",
+      "sha256": "a206bf329450fdae9820bd150bc2cde46f9cd7622df79b7c80daf4250bd996e9",
+      "bytes": 18647
+    },
+    {
+      "file": "site/src/strava/latest.ts",
+      "sha256": "bd20c39bbb40cce6c5065fd6b8a6402aa0cde49aa237211ffba16408cd4cdfd0",
+      "bytes": 878
+    },
+    {
+      "file": "site/src/training/cache.ts",
+      "sha256": "29e2bb5709c802766fa6eb24b011bec4924ae34033415b6eb18f5e7f1b9d8371",
+      "bytes": 6183
+    }
+  ]
+}

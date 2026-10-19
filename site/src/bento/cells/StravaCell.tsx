@@ -3,8 +3,8 @@
 /**
  * Strava cell — middle-right of the bento.
  *
- * Server-provided prop: either a real activity (loaded in app/page.tsx)
- * or null (no tokens / fetch error). Never a broken cell — when strava
+ * Optional live data loads independently of the entrance and portfolio.
+ * The API projects the activity; null means no tokens / fetch error. When strava
  * is null we render a hand-drawn fallback polyline in the same visual
  * language as the mockup, plus a muted "not connected" caption.
  *
@@ -12,7 +12,7 @@
  * route handler; this cell just drops it into <path d={...}>.
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { TrainingAsk } from '../TrainingAsk';
 
 export type StravaData = {
@@ -72,7 +72,33 @@ const FALLBACK_PATH = `M 34 46
   C 62 112, 54 92, 44 74
   C 38 64, 34 54, 34 46 Z`;
 
-export function StravaCell({ strava }: { strava: StravaData | null }) {
+export function StravaCell({
+  strava: initial,
+  live = false,
+}: { strava: StravaData | null; live?: boolean }) {
+  const [strava, setStrava] = useState(initial);
+  const [loading, setLoading] = useState(live);
+  useEffect(() => {
+    if (!live) return;
+    let active = true;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    fetch('/api/strava/latest', { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((activity: StravaData | null) => {
+        if (!controller.signal.aborted) setStrava(activity);
+      })
+      .catch(() => {})
+      .finally(() => {
+        clearTimeout(timer);
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [live]);
   const usingFallback = strava === null;
   // The whole cell is the doorway to /training: one real button laid over
   // it, asking first (TrainingAsk) rather than navigating on a stray tap.
@@ -109,8 +135,12 @@ export function StravaCell({ strava }: { strava: StravaData | null }) {
       <div className="strava-foot">
         {usingFallback ? (
           <div>
-            <div className="strava-cap">— NO RECENT ACTIVITY —</div>
-            <div className="strava-sub">strava not connected</div>
+            <div className="strava-cap">
+              {loading ? '— LATEST ACTIVITY —' : '— NO RECENT ACTIVITY —'}
+            </div>
+            <div className="strava-sub">
+              {loading ? 'loading activity' : 'strava not connected'}
+            </div>
           </div>
         ) : (
           <div>

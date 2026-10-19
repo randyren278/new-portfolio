@@ -12,7 +12,7 @@ import { NameCell } from './cells/NameCell';
 import { PhotoCell } from './cells/PhotoCell';
 import { ProjectsCell } from './cells/ProjectsCell';
 import { ResumeCell } from './cells/ResumeCell';
-import { StravaCell, type StravaData } from './cells/StravaCell';
+import { StravaCell } from './cells/StravaCell';
 import { usePhotoShuffle } from './usePhotoShuffle';
 
 /**
@@ -58,15 +58,14 @@ function mobileOrder(): Section[] {
 
 export function BentoHome({
   content,
-  strava,
 }: {
   content: ShellContent;
-  strava: StravaData | null;
 }) {
   const [intro, setIntro] = useState(true);
   const [entering, setEntering] = useState(false);
   const [scene, setScene] = useState<string | null>(null);
-  const photos = usePhotoShuffle();
+  const [introReady, setIntroReady] = useState(false);
+  const photos = usePhotoShuffle(introReady || !intro);
   const { slots } = photos;
   const [sectionOrder, setSectionOrder] = useState<readonly Section[]>(DEFAULT_ORDER);
   useLayoutEffect(() => {
@@ -87,6 +86,7 @@ export function BentoHome({
   useEffect(() => {
     // Coming back from /training: the visitor has already been welcomed.
     if (consumeReturnToHome()) {
+      setIntroReady(true);
       setIntro(false);
       return;
     }
@@ -164,6 +164,7 @@ export function BentoHome({
           released={visible}
           onEntering={() => setEntering(true)}
           onEntered={finishIntro}
+          onReady={() => setIntroReady(true)}
         />
       )}
       <div
@@ -267,7 +268,7 @@ export function BentoHome({
               case 'resume':
                 return <ResumeCell key={section} resume={content.RESUME} />;
               case 'activity':
-                return <StravaCell key={section} strava={strava} />;
+                return <StravaCell key={section} strava={null} live />;
             }
           })}
         </main>

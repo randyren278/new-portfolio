@@ -1,0 +1,325 @@
+diff --git a/site/src/training/cache.ts b/site/src/training/cache.ts
+index 136ae3f..5ba6024 100644
+--- a/site/src/training/cache.ts
++++ b/site/src/training/cache.ts
+@@ -44,11 +44,18 @@ function db(): pg.Pool | null {
+ 
+ const msg = (err: unknown) => (err instanceof Error ? err.message : String(err));
+ 
+-export async function cached<T>(
+-  key: string,
+-  maxAgeSec: number,
+-  fetch: () => Promise<T>,
+-): Promise<T> {
++const pending = new Map<string, Promise<unknown>>();
++
++/** Share the whole read/populate operation among same-process callers. */
++export function cached<T>(key: string, maxAgeSec: number, fetch: () => Promise<T>): Promise<T> {
++  const hit = pending.get(key);
++  if (hit) return hit as Promise<T>;
++  const value = readCached(key, maxAgeSec, fetch).finally(() => pending.delete(key));
++  pending.set(key, value);
++  return value;
++}
++
++async function readCached<T>(key: string, maxAgeSec: number, fetch: () => Promise<T>): Promise<T> {
+   const conn = db();
+   if (!conn) return local(key, maxAgeSec, fetch);
+   let row: { value: T; stale: boolean } | undefined;
+diff --git a/site/scripts/training-cache.test.cjs b/site/scripts/training-cache.test.cjs
+new file mode 100644
+index 0000000..792df1e
+--- /dev/null
++++ b/site/scripts/training-cache.test.cjs
+@@ -0,0 +1,291 @@
++/**
++ * Behavioral cache tests with isolated Postgres/Next stubs. No credentials,
++ * real database, network access, or framework request context are used.
++ *
++ *   node --test scripts/training-cache.test.cjs
++ */
++const assert = require('node:assert/strict');
++const { readFileSync } = require('node:fs');
++const { join } = require('node:path');
++const { test } = require('node:test');
++const vm = require('node:vm');
++const ts = require('typescript');
++
++const filename = join(__dirname, '../src/training/cache.ts');
++const compiled = ts.transpileModule(readFileSync(filename, 'utf8'), {
++  compilerOptions: {
++    target: ts.ScriptTarget.ES2022,
++    module: ts.ModuleKind.CommonJS,
++    esModuleInterop: true,
++  },
++}).outputText;
++
++function deferred() {
++  let resolve;
++  let reject;
++  const promise = new Promise((yes, no) => {
++    resolve = yes;
++    reject = no;
++  });
++  return { promise, resolve, reject };
++}
++
++function harness({ database = true, failRead = false, failWrite = false } = {}) {
++  const rows = new Map();
++  const statements = [];
++  const background = [];
++  const errors = [];
++  let now = 1_000_000;
++  class Clock extends Date {
++    static now() {
++      return now;
++    }
++  }
++  class Pool {
++    constructor(config) {
++      assert.equal(config.connectionString, 'stub://training-cache');
++    }
++    on() {}
++    async query(sql, args) {
++      const key = args[0];
++      const operation = sql.trim().split(/\s+/)[0];
++      statements.push({ operation, key });
++      if (operation === 'select') {
++        if (failRead) throw new Error('stub read unavailable');
++        const row = rows.get(key);
++        return { rows: row ? [{ value: row.value, stale: row.stale }] : [] };
++      }
++      if (operation === 'insert') {
++        if (failWrite) throw new Error('stub write unavailable');
++        rows.set(key, { value: JSON.parse(args[1]), stale: false });
++        return { rows: [], rowCount: 1 };
++      }
++      if (operation === 'update') {
++        const row = rows.get(key);
++        if (!row?.stale || row.claimed) return { rows: [], rowCount: 0 };
++        row.claimed = true;
++        return { rows: [], rowCount: 1 };
++      }
++      throw new Error(`Unexpected SQL operation: ${operation}`);
++    }
++  }
++  const module = { exports: {} };
++  vm.runInNewContext(
++    compiled,
++    {
++      module,
++      exports: module.exports,
++      require(id) {
++        if (id === 'next/server') return { after: (fn) => background.push(fn) };
++        if (id === 'pg') return { Pool };
++        throw new Error(`Real module import forbidden in cache harness: ${id}`);
++      },
++      process: { env: database ? { TRAINING_CACHE_URL: 'stub://training-cache' } : {} },
++      console: { error: (...args) => errors.push(args) },
++      Date: Clock,
++    },
++    { filename },
++  );
++  return {
++    cached: module.exports.cached,
++    rows,
++    background,
++    errors,
++    statements,
++    advance: (ms) => {
++      now += ms;
++    },
++    drain: () => Promise.all(background.splice(0).map((fn) => fn())),
++  };
++}
++
++const count = (h, operation, key) =>
++  h.statements.filter((s) => s.operation === operation && s.key === key).length;
++
++test('concurrent cold requests share one source fetch and populate write', async () => {
++  const h = harness();
++  const gate = deferred();
++  const started = deferred();
++  let calls = 0;
++  const fetch = () => {
++    calls++;
++    started.resolve();
++    return gate.promise;
++  };
++  const first = h.cached('coros', 900, fetch);
++  const second = h.cached('coros', 900, fetch);
++  await started.promise;
++  assert.equal(calls, 1);
++  assert.equal(count(h, 'select', 'coros'), 1);
++  const payload = { sessions: [1, 2] };
++  gate.resolve(payload);
++  const [a, b] = await Promise.all([first, second]);
++  assert.deepEqual(a, payload);
++  assert.deepEqual(b, payload);
++  assert.equal(count(h, 'insert', 'coros'), 1);
++  assert.deepEqual(h.rows.get('coros').value, payload);
++});
++
++test('independent keys start their source fetches concurrently', async () => {
++  const h = harness();
++  const release = deferred();
++  const bothStarted = deferred();
++  const started = new Set();
++  const fetch = (key) => () => {
++    started.add(key);
++    if (started.size === 2) bothStarted.resolve();
++    return release.promise.then(() => key);
++  };
++  const a = h.cached('coros', 900, fetch('coros'));
++  const b = h.cached('strava', 900, fetch('strava'));
++  await bothStarted.promise;
++  assert.equal(started.size, 2);
++  release.resolve();
++  assert.deepEqual(await Promise.all([a, b]), ['coros', 'strava']);
++});
++
++test('failed shared source rejects both callers and a later call retries', async () => {
++  const h = harness();
++  const gate = deferred();
++  let calls = 0;
++  const fetch = () => {
++    calls++;
++    return gate.promise;
++  };
++  const first = h.cached('coros', 900, fetch);
++  const second = h.cached('coros', 900, fetch);
++  const results = Promise.allSettled([first, second]);
++  gate.reject(new Error('stub source failed'));
++  const settled = await results;
++  assert.equal(calls, 1);
++  assert.deepEqual(
++    settled.map((result) => result.status),
++    ['rejected', 'rejected'],
++  );
++  assert.match(settled[0].reason.message, /stub source failed/);
++  assert.equal(count(h, 'insert', 'coros'), 0);
++  const recovered = await h.cached('coros', 900, async () => {
++    calls++;
++    return { recovered: true };
++  });
++  assert.deepEqual(recovered, { recovered: true });
++  assert.equal(calls, 2);
++  assert.equal(count(h, 'insert', 'coros'), 1);
++});
++
++test('fresh durable data is served without fetching upstream', async () => {
++  const h = harness();
++  h.rows.set('coros', { value: { cached: true }, stale: false });
++  const fetch = () => assert.fail('fresh data must not fetch');
++  const results = await Promise.all([h.cached('coros', 900, fetch), h.cached('coros', 900, fetch)]);
++  assert.deepEqual(results, [{ cached: true }, { cached: true }]);
++  assert.equal(h.background.length, 0);
++  assert.equal(count(h, 'insert', 'coros'), 0);
++});
++
++test('stale durable data returns immediately and refreshes after response', async () => {
++  const h = harness();
++  h.rows.set('coros', { value: { version: 'stale' }, stale: true });
++  const gate = deferred();
++  const started = deferred();
++  let calls = 0;
++  const fetch = () => {
++    calls++;
++    started.resolve();
++    return gate.promise;
++  };
++  const values = await Promise.all([h.cached('coros', 900, fetch), h.cached('coros', 900, fetch)]);
++  assert.deepEqual(values, [{ version: 'stale' }, { version: 'stale' }]);
++  assert.equal(calls, 0);
++  const refresh = h.drain();
++  await started.promise;
++  assert.equal(calls, 1);
++  gate.resolve({ version: 'fresh' });
++  await refresh;
++  assert.deepEqual(h.rows.get('coros').value, { version: 'fresh' });
++  assert.equal(count(h, 'insert', 'coros'), 1);
++});
++
++test('existing stale refresh claim prevents a competing source fetch', async () => {
++  const h = harness();
++  h.rows.set('coros', { value: { cached: true }, stale: true, claimed: true });
++  const value = await h.cached('coros', 900, () => assert.fail('claim holder owns refresh'));
++  assert.deepEqual(value, { cached: true });
++  await h.drain();
++  assert.equal(count(h, 'insert', 'coros'), 0);
++});
++
++test('failed durable refresh retains last good data', async () => {
++  const h = harness();
++  h.rows.set('coros', { value: { version: 'last-good' }, stale: true });
++  const value = await h.cached('coros', 900, async () => {
++    throw new Error('stub refresh failed');
++  });
++  assert.deepEqual(value, { version: 'last-good' });
++  await h.drain();
++  assert.deepEqual(h.rows.get('coros').value, { version: 'last-good' });
++  assert.equal(h.errors.length, 1);
++});
++
++test('local cache shares cold work, serves warm data, and expires at its existing TTL', async () => {
++  const h = harness({ database: false });
++  const gate = deferred();
++  let calls = 0;
++  const fetch = () => {
++    calls++;
++    return gate.promise;
++  };
++  const first = h.cached('coros', 900, fetch);
++  const second = h.cached('coros', 900, fetch);
++  assert.equal(calls, 1);
++  gate.resolve('first');
++  assert.deepEqual(await Promise.all([first, second]), ['first', 'first']);
++  h.advance(899_999);
++  assert.equal(await h.cached('coros', 900, () => assert.fail('still fresh')), 'first');
++  h.advance(1);
++  assert.equal(
++    await h.cached('coros', 900, async () => {
++      calls++;
++      return 'second';
++    }),
++    'second',
++  );
++  assert.equal(calls, 2);
++  assert.equal(h.statements.length, 0);
++});
++
++test('failed local fetch does not poison the next request', async () => {
++  const h = harness({ database: false });
++  await assert.rejects(
++    h.cached('coros', 900, async () => {
++      throw new Error('stub local failure');
++    }),
++    /stub local failure/,
++  );
++  assert.equal(await h.cached('coros', 900, async () => 'retry'), 'retry');
++});
++
++test('database read failure still uses the existing local cache fallback', async () => {
++  const h = harness({ failRead: true });
++  let calls = 0;
++  const fetch = async () => {
++    calls++;
++    return 'fallback';
++  };
++  assert.deepEqual(
++    await Promise.all([h.cached('coros', 900, fetch), h.cached('coros', 900, fetch)]),
++    ['fallback', 'fallback'],
++  );
++  assert.equal(await h.cached('coros', 900, fetch), 'fallback');
++  assert.equal(calls, 1);
++  assert.equal(count(h, 'insert', 'coros'), 0);
++});
++
++test('durable write failure remains best effort and releases the pending entry', async () => {
++  const h = harness({ failWrite: true });
++  let calls = 0;
++  const fetch = async () => ++calls;
++  assert.equal(await h.cached('coros', 900, fetch), 1);
++  assert.equal(await h.cached('coros', 900, fetch), 2);
++  assert.equal(h.errors.length, 2);
++});

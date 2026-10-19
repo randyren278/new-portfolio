@@ -14,7 +14,14 @@ export function ResumeCell({ resume }: { resume: ResumeContent }) {
 
       <div className="resume-layout">
         <div className="resume-preview" aria-hidden="true">
-          <img src={resume.previewSrc} alt="" width="935" height="1210" />
+          <img
+            src={resume.previewSrc}
+            alt=""
+            width="935"
+            height="1210"
+            decoding="async"
+            fetchPriority="low"
+          />
           <span>1 / 1</span>
         </div>
 

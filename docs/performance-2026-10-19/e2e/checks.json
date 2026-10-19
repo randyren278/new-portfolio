@@ -1,0 +1,454 @@
+{
+  "base": "http://127.0.0.1:4321",
+  "profile": "scratch-portfolio-e2e-83940",
+  "results": [
+    {
+      "label": "desktop: intro covers inert portfolio",
+      "observed": true
+    },
+    {
+      "label": "desktop/space: renderer paints",
+      "observed": true
+    },
+    {
+      "label": "desktop/space: lighting works",
+      "observed": "ember"
+    },
+    {
+      "label": "desktop: controls respond during landing",
+      "observed": true
+    },
+    {
+      "label": "desktop/space: trusted Explore enters",
+      "observed": true
+    },
+    {
+      "label": "desktop/space: portfolio released",
+      "observed": true
+    },
+    {
+      "label": "desktop/space: intro unmounted",
+      "observed": 0
+    },
+    {
+      "label": "desktop/pool: renderer paints",
+      "observed": true
+    },
+    {
+      "label": "desktop/pool: lighting works",
+      "observed": "ember"
+    },
+    {
+      "label": "desktop/pool: trusted Explore enters",
+      "observed": true
+    },
+    {
+      "label": "desktop/pool: portfolio released",
+      "observed": true
+    },
+    {
+      "label": "desktop/pool: intro unmounted",
+      "observed": 0
+    },
+    {
+      "label": "desktop/kite: renderer paints",
+      "observed": true
+    },
+    {
+      "label": "desktop/kite: lighting works",
+      "observed": "ember"
+    },
+    {
+      "label": "desktop/kite: trusted Explore enters",
+      "observed": true
+    },
+    {
+      "label": "desktop/kite: portfolio released",
+      "observed": true
+    },
+    {
+      "label": "desktop/kite: intro unmounted",
+      "observed": 0
+    },
+    {
+      "label": "desktop: no horizontal overflow",
+      "observed": true
+    },
+    {
+      "label": "desktop: images decoded",
+      "observed": true
+    },
+    {
+      "label": "desktop: local font loaded",
+      "observed": true
+    },
+    {
+      "label": "desktop: no external fonts requested",
+      "observed": true
+    },
+    {
+      "label": "desktop: full project catalogue",
+      "observed": true
+    },
+    {
+      "label": "desktop: project 1 opens",
+      "observed": true
+    },
+    {
+      "label": "desktop: project 2 opens",
+      "observed": true
+    },
+    {
+      "label": "desktop: project 3 opens",
+      "observed": true
+    },
+    {
+      "label": "desktop: project 4 opens",
+      "observed": true
+    },
+    {
+      "label": "desktop: project 5 opens",
+      "observed": true
+    },
+    {
+      "label": "desktop: project 6 opens",
+      "observed": true
+    },
+    {
+      "label": "desktop: project 7 opens",
+      "observed": true
+    },
+    {
+      "label": "desktop: project 8 opens",
+      "observed": true
+    },
+    {
+      "label": "desktop: project 9 opens",
+      "observed": true
+    },
+    {
+      "label": "desktop: photo verso",
+      "observed": true
+    },
+    {
+      "label": "desktop: shuffle replaces both photos",
+      "observed": true
+    },
+    {
+      "label": "desktop: training summary ready",
+      "observed": true
+    },
+    {
+      "label": "desktop: training charts",
+      "observed": true
+    },
+    {
+      "label": "desktop: training no horizontal overflow",
+      "observed": true
+    },
+    {
+      "label": "desktop-training: no browser errors",
+      "observed": 0
+    },
+    {
+      "label": "desktop: return bypasses intro",
+      "observed": true
+    },
+    {
+      "label": "desktop: replay after training keeps photos live",
+      "observed": true
+    },
+    {
+      "label": "desktop-home: no browser errors",
+      "observed": 0
+    },
+    {
+      "label": "desktop: direct training entry",
+      "observed": true
+    },
+    {
+      "label": "mobile: intro covers inert portfolio",
+      "observed": true
+    },
+    {
+      "label": "mobile/space: renderer paints",
+      "observed": true
+    },
+    {
+      "label": "mobile/space: lighting works",
+      "observed": "ember"
+    },
+    {
+      "label": "mobile: controls respond during landing",
+      "observed": true
+    },
+    {
+      "label": "mobile/space: trusted Explore enters",
+      "observed": true
+    },
+    {
+      "label": "mobile/space: portfolio released",
+      "observed": true
+    },
+    {
+      "label": "mobile/space: intro unmounted",
+      "observed": 0
+    },
+    {
+      "label": "mobile/pool: renderer paints",
+      "observed": true
+    },
+    {
+      "label": "mobile/pool: lighting works",
+      "observed": "ember"
+    },
+    {
+      "label": "mobile/pool: trusted Explore enters",
+      "observed": true
+    },
+    {
+      "label": "mobile/pool: portfolio released",
+      "observed": true
+    },
+    {
+      "label": "mobile/pool: intro unmounted",
+      "observed": 0
+    },
+    {
+      "label": "mobile/kite: renderer paints",
+      "observed": true
+    },
+    {
+      "label": "mobile/kite: lighting works",
+      "observed": "ember"
+    },
+    {
+      "label": "mobile/kite: trusted Explore enters",
+      "observed": true
+    },
+    {
+      "label": "mobile/kite: portfolio released",
+      "observed": true
+    },
+    {
+      "label": "mobile/kite: intro unmounted",
+      "observed": 0
+    },
+    {
+      "label": "mobile: no horizontal overflow",
+      "observed": true
+    },
+    {
+      "label": "mobile: images decoded",
+      "observed": true
+    },
+    {
+      "label": "mobile: local font loaded",
+      "observed": true
+    },
+    {
+      "label": "mobile: no external fonts requested",
+      "observed": true
+    },
+    {
+      "label": "mobile: full project catalogue",
+      "observed": true
+    },
+    {
+      "label": "mobile: project 1 opens",
+      "observed": true
+    },
+    {
+      "label": "mobile: project 2 opens",
+      "observed": true
+    },
+    {
+      "label": "mobile: project 3 opens",
+      "observed": true
+    },
+    {
+      "label": "mobile: project 4 opens",
+      "observed": true
+    },
+    {
+      "label": "mobile: project 5 opens",
+      "observed": true
+    },
+    {
+      "label": "mobile: project 6 opens",
+      "observed": true
+    },
+    {
+      "label": "mobile: project 7 opens",
+      "observed": true
+    },
+    {
+      "label": "mobile: project 8 opens",
+      "observed": true
+    },
+    {
+      "label": "mobile: project 9 opens",
+      "observed": true
+    },
+    {
+      "label": "mobile: photo verso",
+      "observed": true
+    },
+    {
+      "label": "mobile: shuffle replaces both photos",
+      "observed": true
+    },
+    {
+      "label": "mobile: training summary ready",
+      "observed": true
+    },
+    {
+      "label": "mobile: training charts",
+      "observed": true
+    },
+    {
+      "label": "mobile: training no horizontal overflow",
+      "observed": true
+    },
+    {
+      "label": "mobile-training: no browser errors",
+      "observed": 0
+    },
+    {
+      "label": "mobile: return bypasses intro",
+      "observed": true
+    },
+    {
+      "label": "mobile: replay after training keeps photos live",
+      "observed": true
+    },
+    {
+      "label": "mobile-home: no browser errors",
+      "observed": 0
+    },
+    {
+      "label": "mobile: direct training entry",
+      "observed": true
+    },
+    {
+      "label": "preview has working intro and noindex",
+      "observed": true
+    },
+    {
+      "label": "preview enters portfolio",
+      "observed": true
+    },
+    {
+      "label": "/preview: HTTP 200",
+      "observed": 200
+    },
+    {
+      "label": "/preview: response",
+      "bytes": 40726,
+      "ms": 124.4697909999959,
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "label": "/training: HTTP 200",
+      "observed": 200
+    },
+    {
+      "label": "/training: response",
+      "bytes": 55664,
+      "ms": 35.66791600000579,
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "label": "/api/training/summary: HTTP 200",
+      "observed": 200
+    },
+    {
+      "label": "/api/training/summary: response",
+      "bytes": 50,
+      "ms": 10.093625000001339,
+      "type": "application/json"
+    },
+    {
+      "label": "/api/strava/latest: HTTP 200",
+      "observed": 200
+    },
+    {
+      "label": "/api/strava/latest: response",
+      "bytes": 167,
+      "ms": 5.10554100000445,
+      "type": "application/json"
+    },
+    {
+      "label": "/robots.txt: HTTP 200",
+      "observed": 200
+    },
+    {
+      "label": "/robots.txt: response",
+      "bytes": 105,
+      "ms": 4.436207999999169,
+      "type": "text/plain"
+    },
+    {
+      "label": "/sitemap.xml: HTTP 200",
+      "observed": 200
+    },
+    {
+      "label": "/sitemap.xml: response",
+      "bytes": 329,
+      "ms": 3.2894169999999576,
+      "type": "application/xml"
+    },
+    {
+      "label": "/favicon.svg: HTTP 200",
+      "observed": 200
+    },
+    {
+      "label": "/favicon.svg: response",
+      "bytes": 591,
+      "ms": 1.9397079999980633,
+      "type": "image/svg+xml"
+    },
+    {
+      "label": "/resume/Randy_Ren_Resume.pdf: HTTP 200",
+      "observed": 200
+    },
+    {
+      "label": "/resume/Randy_Ren_Resume.pdf: response",
+      "bytes": 1298108,
+      "ms": 10.376250000001164,
+      "type": "application/pdf"
+    },
+    {
+      "label": "/api/resume/download: HTTP 200",
+      "observed": 200
+    },
+    {
+      "label": "/api/resume/download: response",
+      "bytes": 1298108,
+      "ms": 12.425499999997555,
+      "type": "application/pdf"
+    },
+    {
+      "label": "résumé attachment header",
+      "observed": true
+    },
+    {
+      "label": "/resume/Randy_Ren_Resume-preview.webp: HTTP 200",
+      "observed": 200
+    },
+    {
+      "label": "/resume/Randy_Ren_Resume-preview.webp: response",
+      "bytes": 58934,
+      "ms": 2.5284580000006827,
+      "type": "image/webp"
+    },
+    {
+      "label": "unknown route: HTTP 404",
+      "observed": 404
+    },
+    {
+      "label": "résumé download preserves original PDF bytes",
+      "observed": true
+    }
+  ]
+}

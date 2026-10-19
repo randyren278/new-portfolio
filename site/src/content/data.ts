@@ -114,7 +114,7 @@ export const RESUME = {
   summary:
     'Experience across agent systems, machine learning, infrastructure, and project delivery.',
   pdfHref: '/resume/Randy_Ren_Resume.pdf',
-  previewSrc: '/resume/Randy_Ren_Resume-preview.jpg',
+  previewSrc: '/resume/Randy_Ren_Resume-preview.webp',
   downloadName: 'Randy_Ren_Resume.pdf',
 };
 

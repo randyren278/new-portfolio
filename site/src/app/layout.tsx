@@ -1,9 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-
-// Fonts come from Google via a raw <link> tag because the shell CSS
-// references named families by string; using next/font would require
-// refactoring those declarations without benefit.
+import './fonts.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.randyren.org'),
@@ -49,14 +46,6 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="puff-theme">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital@1&family=Instrument+Serif:ital@0;1&family=Newsreader:ital@1&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body>{children}</body>
     </html>
   );

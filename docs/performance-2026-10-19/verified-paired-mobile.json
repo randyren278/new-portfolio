@@ -1,0 +1,4802 @@
+{
+  "base": "http://127.0.0.1:4317",
+  "comparisonBase": "http://127.0.0.1:4321",
+  "device": "mobile",
+  "profile": "scratch-portfolio-perf-92317",
+  "results": [
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 25,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 26,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 31,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 1311,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 1312,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 1312,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 1314,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 1314,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 1314,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 1314,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 1315,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 1315,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 1315,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 1315,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 1316,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 1316,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 1316,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 1334,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 1,
+          "connectStart": 1,
+          "decodedBodySize": 3218,
+          "deliveryType": "",
+          "domainLookupEnd": 1,
+          "domainLookupStart": 1,
+          "domComplete": 1368,
+          "domContentLoadedEventEnd": 1334,
+          "domContentLoadedEventStart": 1334,
+          "domInteractive": 13,
+          "duration": 1368,
+          "encodedBodySize": 3230,
+          "entryType": "navigation",
+          "fetchStart": 1,
+          "finalResponseHeadersStart": 8,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 1368,
+          "loadEventStart": 1368,
+          "name": "http://127.0.0.1:56465/puff-intro/index.html?scene=pool",
+          "nextHopProtocol": "http/1.1",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 2,
+          "responseEnd": 8,
+          "responseStart": 8,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 3530,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 1117,
+            "end": 24,
+            "name": "/puff-intro/runtime.js",
+            "start": 12
+          },
+          {
+            "bytes": 24383,
+            "end": 24,
+            "name": "/puff-intro/base.css",
+            "start": 12
+          },
+          {
+            "bytes": 15539,
+            "end": 27,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 12
+          },
+          {
+            "bytes": 14789,
+            "end": 28,
+            "name": "/puff-intro/fields.js",
+            "start": 12
+          },
+          {
+            "bytes": 13324,
+            "end": 33,
+            "name": "/puff-intro/scene.css",
+            "start": 13
+          },
+          {
+            "bytes": 42853,
+            "end": 34,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 13
+          },
+          {
+            "bytes": 8065,
+            "end": 35,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 13
+          },
+          {
+            "bytes": 6238,
+            "end": 35,
+            "name": "/puff-intro/fish.js",
+            "start": 13
+          },
+          {
+            "bytes": 15239,
+            "end": 36,
+            "name": "/puff-intro/transit.js",
+            "start": 13
+          },
+          {
+            "bytes": 12180,
+            "end": 36,
+            "name": "/puff-intro/scene.js",
+            "start": 13
+          },
+          {
+            "bytes": 1267,
+            "end": 37,
+            "name": "/puff-intro/bridge.js",
+            "start": 13
+          },
+          {
+            "bytes": 18600,
+            "end": 37,
+            "name": "/puff-intro/redesign.css",
+            "start": 13
+          },
+          {
+            "bytes": 48293,
+            "end": 1358,
+            "name": "/puff-intro/assets/fonts/dm-sans.ttf",
+            "start": 1355
+          },
+          {
+            "bytes": 62297,
+            "end": 1359,
+            "name": "/puff-intro/assets/fonts/instrument-serif.ttf",
+            "start": 1355
+          },
+          {
+            "bytes": 128840,
+            "end": 1360,
+            "name": "/puff-intro/assets/fonts/plex-mono.ttf",
+            "start": 1355
+          }
+        ],
+        "scene": "pool",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 2,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 0,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 265,
+        "introPaintOpportunity": 1660,
+        "introReady": 1644
+      },
+      "nav": {
+        "connectEnd": 2,
+        "connectStart": 2,
+        "decodedBodySize": 167957,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 1642,
+        "domContentLoadedEventEnd": 182,
+        "domContentLoadedEventStart": 182,
+        "domInteractive": 182,
+        "duration": 1642,
+        "encodedBodySize": 168041,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 93,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 1642,
+        "loadEventStart": 1642,
+        "name": "http://127.0.0.1:56465/?perf-sample=0",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 5,
+        "responseEnd": 97,
+        "responseStart": 93,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 168341,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 264260,
+          "end": 108,
+          "name": "/resume/Randy_Ren_Resume-preview.jpg",
+          "start": 99,
+          "transfer": 264560
+        },
+        {
+          "bytes": 29750,
+          "end": 109,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 101,
+          "transfer": 30050
+        },
+        {
+          "bytes": 3426,
+          "end": 112,
+          "name": "/_next/static/chunks/webpack-78861ced4c2b51f4.js",
+          "start": 101,
+          "transfer": 3726
+        },
+        {
+          "bytes": 173049,
+          "end": 112,
+          "name": "/_next/static/chunks/e6f5057d-c716d57de6fa8683.js",
+          "start": 101,
+          "transfer": 173349
+        },
+        {
+          "bytes": 569,
+          "end": 113,
+          "name": "/_next/static/chunks/main-app-6ec2d13da9b39258.js",
+          "start": 101,
+          "transfer": 869
+        },
+        {
+          "bytes": 103420,
+          "end": 115,
+          "name": "/_next/static/chunks/552-8a01719556785716.js",
+          "start": 101,
+          "transfer": 103720
+        },
+        {
+          "bytes": 139,
+          "end": 115,
+          "name": "/_next/static/chunks/app/page-10fe7e7a3933fc45.js",
+          "start": 101,
+          "transfer": 439
+        },
+        {
+          "bytes": 173402,
+          "end": 115,
+          "name": "/_next/static/chunks/480-7ca2259c6469b172.js",
+          "start": 101,
+          "transfer": 173702
+        },
+        {
+          "bytes": 0,
+          "end": 178,
+          "name": "/css2",
+          "start": 103,
+          "transfer": 0
+        },
+        {
+          "bytes": 282688,
+          "end": 269,
+          "name": "/photos/photo-27.jpg",
+          "start": 260,
+          "transfer": 282988
+        },
+        {
+          "bytes": 609305,
+          "end": 274,
+          "name": "/photos/photo-07.jpg",
+          "start": 260,
+          "transfer": 609605
+        },
+        {
+          "bytes": 3230,
+          "end": 279,
+          "name": "/puff-intro/index.html",
+          "start": 273,
+          "transfer": 3530
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4317",
+      "sample": 0
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 25,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 25,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 26,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 27,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 27,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 27,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 27,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 27,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 28,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 28,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 28,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 28,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 28,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 28,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 28,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 28,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 31,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 38,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 1,
+          "connectStart": 1,
+          "decodedBodySize": 3218,
+          "deliveryType": "",
+          "domainLookupEnd": 1,
+          "domainLookupStart": 1,
+          "domComplete": 48,
+          "domContentLoadedEventEnd": 38,
+          "domContentLoadedEventStart": 38,
+          "domInteractive": 10,
+          "duration": 48,
+          "encodedBodySize": 3230,
+          "entryType": "navigation",
+          "fetchStart": 1,
+          "finalResponseHeadersStart": 3,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 48,
+          "loadEventStart": 48,
+          "name": "http://127.0.0.1:56466/puff-intro/index.html?scene=space",
+          "nextHopProtocol": "http/1.1",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 1,
+          "responseEnd": 3,
+          "responseStart": 3,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 3530,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 24380,
+            "end": 24,
+            "name": "/puff-intro/base.css",
+            "start": 10
+          },
+          {
+            "bytes": 1117,
+            "end": 24,
+            "name": "/puff-intro/runtime.js",
+            "start": 10
+          },
+          {
+            "bytes": 15974,
+            "end": 25,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 10
+          },
+          {
+            "bytes": 14789,
+            "end": 25,
+            "name": "/puff-intro/fields.js",
+            "start": 10
+          },
+          {
+            "bytes": 13324,
+            "end": 25,
+            "name": "/puff-intro/scene.css",
+            "start": 10
+          },
+          {
+            "bytes": 42853,
+            "end": 26,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 10
+          },
+          {
+            "bytes": 8065,
+            "end": 27,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 10
+          },
+          {
+            "bytes": 6238,
+            "end": 27,
+            "name": "/puff-intro/fish.js",
+            "start": 10
+          },
+          {
+            "bytes": 12180,
+            "end": 27,
+            "name": "/puff-intro/scene.js",
+            "start": 11
+          },
+          {
+            "bytes": 15239,
+            "end": 28,
+            "name": "/puff-intro/transit.js",
+            "start": 11
+          },
+          {
+            "bytes": 18600,
+            "end": 29,
+            "name": "/puff-intro/redesign.css",
+            "start": 11
+          },
+          {
+            "bytes": 1267,
+            "end": 29,
+            "name": "/puff-intro/bridge.js",
+            "start": 11
+          },
+          {
+            "bytes": 25233,
+            "end": 38,
+            "name": "/puff-intro/assets/fonts/instrument-serif.woff2",
+            "start": 34
+          },
+          {
+            "bytes": 37217,
+            "end": 38,
+            "name": "/puff-intro/assets/fonts/plex-mono.woff2",
+            "start": 34
+          },
+          {
+            "bytes": 19117,
+            "end": 39,
+            "name": "/puff-intro/assets/fonts/dm-sans.woff2",
+            "start": 34
+          }
+        ],
+        "scene": "space",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 0,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 1,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 99,
+        "introPaintOpportunity": 163,
+        "introReady": 151
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 40697,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 76,
+        "domContentLoadedEventEnd": 40,
+        "domContentLoadedEventStart": 40,
+        "domInteractive": 40,
+        "duration": 76,
+        "encodedBodySize": 40763,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 21,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 76,
+        "loadEventStart": 76,
+        "name": "http://127.0.0.1:56466/?perf-sample=0",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 22,
+        "responseStart": 21,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 41063,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 15648,
+          "end": 29,
+          "name": "/photo-fallbacks/photo-01-e43a2c0cb0.jpg",
+          "start": 25,
+          "transfer": 15948
+        },
+        {
+          "bytes": 31997,
+          "end": 33,
+          "name": "/photo-fallbacks/photo-02-97c6a9c4c9.jpg",
+          "start": 25,
+          "transfer": 32297
+        },
+        {
+          "bytes": 3435,
+          "end": 35,
+          "name": "/_next/static/chunks/webpack-6f02932872b752a4.js",
+          "start": 25,
+          "transfer": 3735
+        },
+        {
+          "bytes": 173369,
+          "end": 36,
+          "name": "/_next/static/chunks/560-80582d608f7c20d7.js",
+          "start": 25,
+          "transfer": 173669
+        },
+        {
+          "bytes": 1910,
+          "end": 36,
+          "name": "/_next/static/css/64f1fc6b84a4e994.css",
+          "start": 25,
+          "transfer": 2210
+        },
+        {
+          "bytes": 29750,
+          "end": 37,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 25,
+          "transfer": 30050
+        },
+        {
+          "bytes": 567,
+          "end": 37,
+          "name": "/_next/static/chunks/main-app-90553329a8d65c93.js",
+          "start": 25,
+          "transfer": 867
+        },
+        {
+          "bytes": 173055,
+          "end": 38,
+          "name": "/_next/static/chunks/a039cd8b-eb14cb2c2aa5162d.js",
+          "start": 25,
+          "transfer": 173355
+        },
+        {
+          "bytes": 139,
+          "end": 38,
+          "name": "/_next/static/chunks/app/page-25e2f3771d4ad197.js",
+          "start": 25,
+          "transfer": 439
+        },
+        {
+          "bytes": 40566,
+          "end": 39,
+          "name": "/_next/static/chunks/111-bc2bac4103a1166d.js",
+          "start": 25,
+          "transfer": 40866
+        },
+        {
+          "bytes": 58947,
+          "end": 40,
+          "name": "/resume/Randy_Ren_Resume-preview.webp",
+          "start": 26,
+          "transfer": 59247
+        },
+        {
+          "bytes": 10073,
+          "end": 55,
+          "name": "/fonts/ibm-plex-mono-normal-500.woff2",
+          "start": 52,
+          "transfer": 10373
+        },
+        {
+          "bytes": 10065,
+          "end": 55,
+          "name": "/fonts/ibm-plex-mono-normal-400.woff2",
+          "start": 52,
+          "transfer": 10365
+        },
+        {
+          "bytes": 24357,
+          "end": 55,
+          "name": "/fonts/newsreader-italic-400.woff2",
+          "start": 52,
+          "transfer": 24657
+        },
+        {
+          "bytes": 178,
+          "end": 99,
+          "name": "/api/strava/latest",
+          "start": 95,
+          "transfer": 478
+        },
+        {
+          "bytes": 3230,
+          "end": 102,
+          "name": "/puff-intro/index.html",
+          "start": 99,
+          "transfer": 3530
+        },
+        {
+          "bytes": 398888,
+          "end": 157,
+          "name": "/photos/photo-20.jpg",
+          "start": 153,
+          "transfer": 399188
+        },
+        {
+          "bytes": 440147,
+          "end": 158,
+          "name": "/photos/photo-25.jpg",
+          "start": 153,
+          "transfer": 440447
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4321",
+      "sample": 0
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 15,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 16,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 16,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 16,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 0,
+          "connectStart": 0,
+          "decodedBodySize": 0,
+          "deliveryType": "cache",
+          "domainLookupEnd": 0,
+          "domainLookupStart": 0,
+          "domComplete": 30,
+          "domContentLoadedEventEnd": 24,
+          "domContentLoadedEventStart": 24,
+          "domInteractive": 7,
+          "duration": 30,
+          "encodedBodySize": 0,
+          "entryType": "navigation",
+          "fetchStart": 0,
+          "finalResponseHeadersStart": 0,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 30,
+          "loadEventStart": 30,
+          "name": "http://127.0.0.1:56466/puff-intro/index.html?scene=space",
+          "nextHopProtocol": "",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 0,
+          "responseEnd": 7,
+          "responseStart": 0,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 0,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 0,
+            "end": 13,
+            "name": "/puff-intro/base.css",
+            "start": 6
+          },
+          {
+            "bytes": 0,
+            "end": 13,
+            "name": "/puff-intro/runtime.js",
+            "start": 6
+          },
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/fields.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 15,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 15,
+            "name": "/puff-intro/scene.css",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/fish.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/scene.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/transit.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/redesign.css",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/bridge.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 24,
+            "name": "/puff-intro/assets/fonts/instrument-serif.woff2",
+            "start": 21
+          },
+          {
+            "bytes": 0,
+            "end": 24,
+            "name": "/puff-intro/assets/fonts/plex-mono.woff2",
+            "start": 22
+          },
+          {
+            "bytes": 0,
+            "end": 24,
+            "name": "/puff-intro/assets/fonts/dm-sans.woff2",
+            "start": 22
+          }
+        ],
+        "scene": "space",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 0,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 1,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 45,
+        "introPaintOpportunity": 102,
+        "introReady": 81
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 40697,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 33,
+        "domContentLoadedEventEnd": 13,
+        "domContentLoadedEventStart": 13,
+        "domInteractive": 13,
+        "duration": 33,
+        "encodedBodySize": 40763,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 7,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 33,
+        "loadEventStart": 33,
+        "name": "http://127.0.0.1:56466/?perf-sample=1",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 8,
+        "responseStart": 7,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 41063,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 0,
+          "end": 10,
+          "name": "/photo-fallbacks/photo-01-e43a2c0cb0.jpg",
+          "start": 10,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 10,
+          "name": "/photo-fallbacks/photo-02-97c6a9c4c9.jpg",
+          "start": 10,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/css/64f1fc6b84a4e994.css",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/webpack-6f02932872b752a4.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/a039cd8b-eb14cb2c2aa5162d.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/560-80582d608f7c20d7.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/main-app-90553329a8d65c93.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/111-bc2bac4103a1166d.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/app/page-25e2f3771d4ad197.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/resume/Randy_Ren_Resume-preview.webp",
+          "start": 12,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 26,
+          "name": "/fonts/ibm-plex-mono-normal-400.woff2",
+          "start": 24,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 26,
+          "name": "/fonts/ibm-plex-mono-normal-500.woff2",
+          "start": 24,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 27,
+          "name": "/fonts/newsreader-italic-400.woff2",
+          "start": 24,
+          "transfer": 300
+        },
+        {
+          "bytes": 178,
+          "end": 51,
+          "name": "/api/strava/latest",
+          "start": 43,
+          "transfer": 478
+        },
+        {
+          "bytes": 263277,
+          "end": 92,
+          "name": "/photos/photo-11.jpg",
+          "start": 88,
+          "transfer": 263577
+        },
+        {
+          "bytes": 404418,
+          "end": 93,
+          "name": "/photos/photo-19.jpg",
+          "start": 88,
+          "transfer": 404718
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4321",
+      "sample": 1
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 18,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 988,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 1001,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 1007,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 1,
+          "connectStart": 1,
+          "decodedBodySize": 3218,
+          "deliveryType": "",
+          "domainLookupEnd": 1,
+          "domainLookupStart": 1,
+          "domComplete": 1029,
+          "domContentLoadedEventEnd": 1007,
+          "domContentLoadedEventStart": 1007,
+          "domInteractive": 7,
+          "duration": 1029,
+          "encodedBodySize": 3230,
+          "entryType": "navigation",
+          "fetchStart": 1,
+          "finalResponseHeadersStart": 4,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 1029,
+          "loadEventStart": 1029,
+          "name": "http://127.0.0.1:56465/puff-intro/index.html?scene=space",
+          "nextHopProtocol": "http/1.1",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 1,
+          "responseEnd": 4,
+          "responseStart": 4,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 3530,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 0,
+            "end": 13,
+            "name": "/puff-intro/base.css",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 13,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 13,
+            "name": "/puff-intro/runtime.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 13,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/scene.css",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 15,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/fields.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/fish.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/scene.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 21,
+            "name": "/puff-intro/transit.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 21,
+            "name": "/puff-intro/bridge.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 21,
+            "name": "/puff-intro/redesign.css",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 1024,
+            "name": "/puff-intro/assets/fonts/instrument-serif.ttf",
+            "start": 1018
+          },
+          {
+            "bytes": 0,
+            "end": 1024,
+            "name": "/puff-intro/assets/fonts/dm-sans.ttf",
+            "start": 1018
+          },
+          {
+            "bytes": 0,
+            "end": 1026,
+            "name": "/puff-intro/assets/fonts/plex-mono.ttf",
+            "start": 1018
+          }
+        ],
+        "scene": "space",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 0,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 1,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 38,
+        "introPaintOpportunity": 1071,
+        "introReady": 1071
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 167957,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 31,
+        "domContentLoadedEventEnd": 19,
+        "domContentLoadedEventStart": 19,
+        "domInteractive": 19,
+        "duration": 31,
+        "encodedBodySize": 168041,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 11,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 31,
+        "loadEventStart": 31,
+        "name": "http://127.0.0.1:56465/?perf-sample=1",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 13,
+        "responseStart": 11,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 168341,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 0,
+          "end": 15,
+          "name": "/resume/Randy_Ren_Resume-preview.jpg",
+          "start": 15,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 16,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 16,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 16,
+          "name": "/_next/static/chunks/webpack-78861ced4c2b51f4.js",
+          "start": 16,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 16,
+          "name": "/_next/static/chunks/e6f5057d-c716d57de6fa8683.js",
+          "start": 16,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 16,
+          "name": "/_next/static/chunks/480-7ca2259c6469b172.js",
+          "start": 16,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 16,
+          "name": "/_next/static/chunks/main-app-6ec2d13da9b39258.js",
+          "start": 16,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 16,
+          "name": "/_next/static/chunks/552-8a01719556785716.js",
+          "start": 16,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 16,
+          "name": "/_next/static/chunks/app/page-10fe7e7a3933fc45.js",
+          "start": 16,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 16,
+          "name": "/css2",
+          "start": 16,
+          "transfer": 0
+        },
+        {
+          "bytes": 478227,
+          "end": 43,
+          "name": "/photos/photo-06.jpg",
+          "start": 37,
+          "transfer": 478527
+        },
+        {
+          "bytes": 305874,
+          "end": 44,
+          "name": "/photos/photo-32.jpg",
+          "start": 37,
+          "transfer": 306174
+        },
+        {
+          "bytes": 3230,
+          "end": 45,
+          "name": "/puff-intro/index.html",
+          "start": 41,
+          "transfer": 3530
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4317",
+      "sample": 1
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 17,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 1093,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 1094,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 1094,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 1094,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 1094,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 1094,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 1094,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 1094,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 1094,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 1094,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 1095,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 1095,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 1095,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 1095,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 1101,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 1,
+          "connectStart": 1,
+          "decodedBodySize": 3218,
+          "deliveryType": "",
+          "domainLookupEnd": 1,
+          "domainLookupStart": 1,
+          "domComplete": 1131,
+          "domContentLoadedEventEnd": 1101,
+          "domContentLoadedEventStart": 1101,
+          "domInteractive": 10,
+          "duration": 1131,
+          "encodedBodySize": 3230,
+          "entryType": "navigation",
+          "fetchStart": 1,
+          "finalResponseHeadersStart": 7,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 1131,
+          "loadEventStart": 1131,
+          "name": "http://127.0.0.1:56465/puff-intro/index.html?scene=kite",
+          "nextHopProtocol": "http/1.1",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 1,
+          "responseEnd": 7,
+          "responseStart": 7,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 3530,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/runtime.js",
+            "start": 10
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 11
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/base.css",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/fields.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 21,
+            "name": "/puff-intro/scene.css",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 25,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 25,
+            "name": "/puff-intro/fish.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 25,
+            "name": "/puff-intro/scene.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 25,
+            "name": "/puff-intro/transit.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 25,
+            "name": "/puff-intro/bridge.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 29,
+            "name": "/puff-intro/redesign.css",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 1113,
+            "name": "/puff-intro/assets/fonts/dm-sans.ttf",
+            "start": 1109
+          },
+          {
+            "bytes": 0,
+            "end": 1114,
+            "name": "/puff-intro/assets/fonts/instrument-serif.ttf",
+            "start": 1109
+          },
+          {
+            "bytes": 0,
+            "end": 1114,
+            "name": "/puff-intro/assets/fonts/plex-mono.ttf",
+            "start": 1109
+          }
+        ],
+        "scene": "kite",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 0,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 0,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 41,
+        "introPaintOpportunity": 1196,
+        "introReady": 1183
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 167957,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 34,
+        "domContentLoadedEventEnd": 23,
+        "domContentLoadedEventStart": 23,
+        "domInteractive": 23,
+        "duration": 34,
+        "encodedBodySize": 168041,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 14,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 34,
+        "loadEventStart": 34,
+        "name": "http://127.0.0.1:56465/?perf-sample=2",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 16,
+        "responseStart": 14,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 168341,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 0,
+          "end": 19,
+          "name": "/resume/Randy_Ren_Resume-preview.jpg",
+          "start": 19,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 20,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 20,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 20,
+          "name": "/_next/static/chunks/webpack-78861ced4c2b51f4.js",
+          "start": 20,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 20,
+          "name": "/_next/static/chunks/e6f5057d-c716d57de6fa8683.js",
+          "start": 20,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 20,
+          "name": "/_next/static/chunks/480-7ca2259c6469b172.js",
+          "start": 20,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 20,
+          "name": "/_next/static/chunks/main-app-6ec2d13da9b39258.js",
+          "start": 20,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 20,
+          "name": "/_next/static/chunks/552-8a01719556785716.js",
+          "start": 20,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 20,
+          "name": "/_next/static/chunks/app/page-10fe7e7a3933fc45.js",
+          "start": 20,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 20,
+          "name": "/css2",
+          "start": 20,
+          "transfer": 0
+        },
+        {
+          "bytes": 395459,
+          "end": 55,
+          "name": "/photos/photo-09.jpg",
+          "start": 45,
+          "transfer": 395759
+        },
+        {
+          "bytes": 321313,
+          "end": 54,
+          "name": "/photos/photo-29.jpg",
+          "start": 46,
+          "transfer": 321613
+        },
+        {
+          "bytes": 3230,
+          "end": 55,
+          "name": "/puff-intro/index.html",
+          "start": 48,
+          "transfer": 3530
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4317",
+      "sample": 2
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 15,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 23,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 35,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 1,
+          "connectStart": 1,
+          "decodedBodySize": 3218,
+          "deliveryType": "",
+          "domainLookupEnd": 1,
+          "domainLookupStart": 1,
+          "domComplete": 36,
+          "domContentLoadedEventEnd": 35,
+          "domContentLoadedEventStart": 35,
+          "domInteractive": 8,
+          "duration": 36,
+          "encodedBodySize": 3230,
+          "entryType": "navigation",
+          "fetchStart": 1,
+          "finalResponseHeadersStart": 4,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 36,
+          "loadEventStart": 36,
+          "name": "http://127.0.0.1:56466/puff-intro/index.html?scene=kite",
+          "nextHopProtocol": "http/1.1",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 1,
+          "responseEnd": 4,
+          "responseStart": 4,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 3530,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/runtime.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/base.css",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/fields.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/scene.css",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 19,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/scene.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/fish.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/transit.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/bridge.js",
+            "start": 10
+          },
+          {
+            "bytes": 0,
+            "end": 21,
+            "name": "/puff-intro/redesign.css",
+            "start": 10
+          },
+          {
+            "bytes": 0,
+            "end": 45,
+            "name": "/puff-intro/assets/fonts/instrument-serif.woff2",
+            "start": 40
+          },
+          {
+            "bytes": 0,
+            "end": 46,
+            "name": "/puff-intro/assets/fonts/plex-mono.woff2",
+            "start": 40
+          },
+          {
+            "bytes": 0,
+            "end": 46,
+            "name": "/puff-intro/assets/fonts/dm-sans.woff2",
+            "start": 40
+          }
+        ],
+        "scene": "kite",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 0,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 0,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 49,
+        "introPaintOpportunity": 127,
+        "introReady": 105
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 40697,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 35,
+        "domContentLoadedEventEnd": 15,
+        "domContentLoadedEventStart": 15,
+        "domInteractive": 15,
+        "duration": 35,
+        "encodedBodySize": 40770,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 8,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 35,
+        "loadEventStart": 35,
+        "name": "http://127.0.0.1:56466/?perf-sample=2",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 11,
+        "responseStart": 8,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 41070,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/photo-fallbacks/photo-01-e43a2c0cb0.jpg",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/photo-fallbacks/photo-02-97c6a9c4c9.jpg",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/css/64f1fc6b84a4e994.css",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/chunks/webpack-6f02932872b752a4.js",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/chunks/a039cd8b-eb14cb2c2aa5162d.js",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/chunks/560-80582d608f7c20d7.js",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/chunks/main-app-90553329a8d65c93.js",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/chunks/111-bc2bac4103a1166d.js",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/chunks/app/page-25e2f3771d4ad197.js",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 18,
+          "name": "/resume/Randy_Ren_Resume-preview.webp",
+          "start": 15,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 30,
+          "name": "/fonts/ibm-plex-mono-normal-400.woff2",
+          "start": 27,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 30,
+          "name": "/fonts/ibm-plex-mono-normal-500.woff2",
+          "start": 27,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 30,
+          "name": "/fonts/newsreader-italic-400.woff2",
+          "start": 27,
+          "transfer": 300
+        },
+        {
+          "bytes": 178,
+          "end": 58,
+          "name": "/api/strava/latest",
+          "start": 52,
+          "transfer": 478
+        },
+        {
+          "bytes": 3230,
+          "end": 60,
+          "name": "/puff-intro/index.html",
+          "start": 56,
+          "transfer": 3530
+        },
+        {
+          "bytes": 286388,
+          "end": 115,
+          "name": "/photos/photo-08.jpg",
+          "start": 107,
+          "transfer": 286688
+        },
+        {
+          "bytes": 429130,
+          "end": 116,
+          "name": "/photos/photo-28.jpg",
+          "start": 108,
+          "transfer": 429430
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4321",
+      "sample": 2
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 21,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 21,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 21,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 21,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 22,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 22,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 22,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 22,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 23,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 23,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 23,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 23,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 23,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 24,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 25,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 39,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 0,
+          "connectStart": 0,
+          "decodedBodySize": 0,
+          "deliveryType": "cache",
+          "domainLookupEnd": 0,
+          "domainLookupStart": 0,
+          "domComplete": 40,
+          "domContentLoadedEventEnd": 39,
+          "domContentLoadedEventStart": 39,
+          "domInteractive": 7,
+          "duration": 40,
+          "encodedBodySize": 0,
+          "entryType": "navigation",
+          "fetchStart": 0,
+          "finalResponseHeadersStart": 0,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 40,
+          "loadEventStart": 40,
+          "name": "http://127.0.0.1:56466/puff-intro/index.html?scene=kite",
+          "nextHopProtocol": "",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 0,
+          "responseEnd": 7,
+          "responseStart": 0,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 0,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 0,
+            "end": 19,
+            "name": "/puff-intro/base.css",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/runtime.js",
+            "start": 14
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 14
+          },
+          {
+            "bytes": 0,
+            "end": 21,
+            "name": "/puff-intro/fields.js",
+            "start": 14
+          },
+          {
+            "bytes": 0,
+            "end": 21,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 14
+          },
+          {
+            "bytes": 0,
+            "end": 22,
+            "name": "/puff-intro/scene.css",
+            "start": 14
+          },
+          {
+            "bytes": 0,
+            "end": 23,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 14
+          },
+          {
+            "bytes": 0,
+            "end": 23,
+            "name": "/puff-intro/fish.js",
+            "start": 14
+          },
+          {
+            "bytes": 0,
+            "end": 23,
+            "name": "/puff-intro/scene.js",
+            "start": 14
+          },
+          {
+            "bytes": 0,
+            "end": 23,
+            "name": "/puff-intro/transit.js",
+            "start": 14
+          },
+          {
+            "bytes": 0,
+            "end": 24,
+            "name": "/puff-intro/redesign.css",
+            "start": 15
+          },
+          {
+            "bytes": 0,
+            "end": 24,
+            "name": "/puff-intro/bridge.js",
+            "start": 15
+          },
+          {
+            "bytes": 0,
+            "end": 31,
+            "name": "/puff-intro/assets/fonts/instrument-serif.woff2",
+            "start": 28
+          },
+          {
+            "bytes": 0,
+            "end": 31,
+            "name": "/puff-intro/assets/fonts/plex-mono.woff2",
+            "start": 28
+          },
+          {
+            "bytes": 0,
+            "end": 32,
+            "name": "/puff-intro/assets/fonts/dm-sans.woff2",
+            "start": 28
+          }
+        ],
+        "scene": "kite",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 0,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 0,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 47,
+        "introPaintOpportunity": 124,
+        "introReady": 110
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 40697,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 65,
+        "domContentLoadedEventEnd": 20,
+        "domContentLoadedEventStart": 20,
+        "domInteractive": 20,
+        "duration": 65,
+        "encodedBodySize": 40763,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 10,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 65,
+        "loadEventStart": 65,
+        "name": "http://127.0.0.1:56466/?perf-sample=3",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 14,
+        "responseStart": 10,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 41063,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 0,
+          "end": 17,
+          "name": "/photo-fallbacks/photo-01-e43a2c0cb0.jpg",
+          "start": 17,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 17,
+          "name": "/photo-fallbacks/photo-02-97c6a9c4c9.jpg",
+          "start": 17,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 18,
+          "name": "/_next/static/css/64f1fc6b84a4e994.css",
+          "start": 18,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 18,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 18,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 18,
+          "name": "/_next/static/chunks/webpack-6f02932872b752a4.js",
+          "start": 18,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 18,
+          "name": "/_next/static/chunks/a039cd8b-eb14cb2c2aa5162d.js",
+          "start": 18,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 18,
+          "name": "/_next/static/chunks/560-80582d608f7c20d7.js",
+          "start": 18,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 18,
+          "name": "/_next/static/chunks/main-app-90553329a8d65c93.js",
+          "start": 18,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 18,
+          "name": "/_next/static/chunks/111-bc2bac4103a1166d.js",
+          "start": 18,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 18,
+          "name": "/_next/static/chunks/app/page-25e2f3771d4ad197.js",
+          "start": 18,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 24,
+          "name": "/resume/Randy_Ren_Resume-preview.webp",
+          "start": 19,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 37,
+          "name": "/fonts/ibm-plex-mono-normal-400.woff2",
+          "start": 31,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 40,
+          "name": "/fonts/ibm-plex-mono-normal-500.woff2",
+          "start": 32,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 42,
+          "name": "/fonts/newsreader-italic-400.woff2",
+          "start": 32,
+          "transfer": 300
+        },
+        {
+          "bytes": 178,
+          "end": 59,
+          "name": "/api/strava/latest",
+          "start": 54,
+          "transfer": 478
+        },
+        {
+          "bytes": 553591,
+          "end": 124,
+          "name": "/photos/photo-39.jpg",
+          "start": 114,
+          "transfer": 553891
+        },
+        {
+          "bytes": 382865,
+          "end": 125,
+          "name": "/photos/photo-37.jpg",
+          "start": 114,
+          "transfer": 383165
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4321",
+      "sample": 3
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 19,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 19,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 19,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 1002,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 1011,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 1011,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 1011,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 1011,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 1011,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 1011,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 1011,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 1013,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 1014,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 1014,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 1014,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 1014,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 1014,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 1025,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 0,
+          "connectStart": 0,
+          "decodedBodySize": 0,
+          "deliveryType": "cache",
+          "domainLookupEnd": 0,
+          "domainLookupStart": 0,
+          "domComplete": 1028,
+          "domContentLoadedEventEnd": 1025,
+          "domContentLoadedEventStart": 1025,
+          "domInteractive": 10,
+          "duration": 1028,
+          "encodedBodySize": 0,
+          "entryType": "navigation",
+          "fetchStart": 0,
+          "finalResponseHeadersStart": 0,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 1028,
+          "loadEventStart": 1028,
+          "name": "http://127.0.0.1:56465/puff-intro/index.html?scene=kite",
+          "nextHopProtocol": "",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 0,
+          "responseEnd": 10,
+          "responseStart": 0,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 0,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/base.css",
+            "start": 11
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/runtime.js",
+            "start": 11
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 11
+          },
+          {
+            "bytes": 0,
+            "end": 19,
+            "name": "/puff-intro/scene.css",
+            "start": 11
+          },
+          {
+            "bytes": 0,
+            "end": 19,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 19,
+            "name": "/puff-intro/fields.js",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 22,
+            "name": "/puff-intro/fish.js",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 22,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 22,
+            "name": "/puff-intro/scene.js",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 23,
+            "name": "/puff-intro/transit.js",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 23,
+            "name": "/puff-intro/redesign.css",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 23,
+            "name": "/puff-intro/bridge.js",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 1020,
+            "name": "/puff-intro/assets/fonts/dm-sans.ttf",
+            "start": 1018
+          },
+          {
+            "bytes": 0,
+            "end": 1020,
+            "name": "/puff-intro/assets/fonts/instrument-serif.ttf",
+            "start": 1018
+          },
+          {
+            "bytes": 0,
+            "end": 1021,
+            "name": "/puff-intro/assets/fonts/plex-mono.ttf",
+            "start": 1018
+          }
+        ],
+        "scene": "kite",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 0,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 0,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 40,
+        "introPaintOpportunity": 1091,
+        "introReady": 1086
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 167957,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 33,
+        "domContentLoadedEventEnd": 16,
+        "domContentLoadedEventStart": 16,
+        "domInteractive": 16,
+        "duration": 33,
+        "encodedBodySize": 168041,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 9,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 33,
+        "loadEventStart": 33,
+        "name": "http://127.0.0.1:56465/?perf-sample=3",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 10,
+        "responseStart": 9,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 168341,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 0,
+          "end": 12,
+          "name": "/resume/Randy_Ren_Resume-preview.jpg",
+          "start": 12,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/chunks/webpack-78861ced4c2b51f4.js",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/chunks/e6f5057d-c716d57de6fa8683.js",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/chunks/480-7ca2259c6469b172.js",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/chunks/main-app-6ec2d13da9b39258.js",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/chunks/552-8a01719556785716.js",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/_next/static/chunks/app/page-10fe7e7a3933fc45.js",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 13,
+          "name": "/css2",
+          "start": 13,
+          "transfer": 0
+        },
+        {
+          "bytes": 214594,
+          "end": 42,
+          "name": "/photos/photo-14.jpg",
+          "start": 38,
+          "transfer": 214894
+        },
+        {
+          "bytes": 344906,
+          "end": 42,
+          "name": "/photos/photo-35.jpg",
+          "start": 38,
+          "transfer": 345206
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4317",
+      "sample": 3
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 18,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 945,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 946,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 955,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 0,
+          "connectStart": 0,
+          "decodedBodySize": 0,
+          "deliveryType": "cache",
+          "domainLookupEnd": 0,
+          "domainLookupStart": 0,
+          "domComplete": 972,
+          "domContentLoadedEventEnd": 956,
+          "domContentLoadedEventStart": 956,
+          "domInteractive": 11,
+          "duration": 972,
+          "encodedBodySize": 0,
+          "entryType": "navigation",
+          "fetchStart": 0,
+          "finalResponseHeadersStart": 0,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 972,
+          "loadEventStart": 972,
+          "name": "http://127.0.0.1:56465/puff-intro/index.html?scene=pool",
+          "nextHopProtocol": "",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 0,
+          "responseEnd": 11,
+          "responseStart": 0,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 0,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/runtime.js",
+            "start": 11
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 11
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/base.css",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 19,
+            "name": "/puff-intro/fields.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 19,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 19,
+            "name": "/puff-intro/scene.css",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 22,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 22,
+            "name": "/puff-intro/fish.js",
+            "start": 12
+          },
+          {
+            "bytes": 0,
+            "end": 23,
+            "name": "/puff-intro/scene.js",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 23,
+            "name": "/puff-intro/transit.js",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 24,
+            "name": "/puff-intro/redesign.css",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 25,
+            "name": "/puff-intro/bridge.js",
+            "start": 13
+          },
+          {
+            "bytes": 0,
+            "end": 955,
+            "name": "/puff-intro/assets/fonts/instrument-serif.ttf",
+            "start": 951
+          },
+          {
+            "bytes": 0,
+            "end": 955,
+            "name": "/puff-intro/assets/fonts/plex-mono.ttf",
+            "start": 951
+          },
+          {
+            "bytes": 0,
+            "end": 955,
+            "name": "/puff-intro/assets/fonts/dm-sans.ttf",
+            "start": 951
+          }
+        ],
+        "scene": "pool",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 1,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 0,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 33,
+        "introPaintOpportunity": 1016,
+        "introReady": 1011
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 167957,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 26,
+        "domContentLoadedEventEnd": 15,
+        "domContentLoadedEventStart": 15,
+        "domInteractive": 15,
+        "duration": 27,
+        "encodedBodySize": 168041,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 8,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 27,
+        "loadEventStart": 27,
+        "name": "http://127.0.0.1:56465/?perf-sample=4",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 9,
+        "responseStart": 8,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 168341,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 0,
+          "end": 12,
+          "name": "/resume/Randy_Ren_Resume-preview.jpg",
+          "start": 12,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 12,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 12,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 12,
+          "name": "/_next/static/chunks/webpack-78861ced4c2b51f4.js",
+          "start": 12,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 12,
+          "name": "/_next/static/chunks/e6f5057d-c716d57de6fa8683.js",
+          "start": 12,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 12,
+          "name": "/_next/static/chunks/480-7ca2259c6469b172.js",
+          "start": 12,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 12,
+          "name": "/_next/static/chunks/main-app-6ec2d13da9b39258.js",
+          "start": 12,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 12,
+          "name": "/_next/static/chunks/552-8a01719556785716.js",
+          "start": 12,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 12,
+          "name": "/_next/static/chunks/app/page-10fe7e7a3933fc45.js",
+          "start": 12,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 12,
+          "name": "/css2",
+          "start": 12,
+          "transfer": 0
+        },
+        {
+          "bytes": 437744,
+          "end": 37,
+          "name": "/photos/photo-23.jpg",
+          "start": 31,
+          "transfer": 438044
+        },
+        {
+          "bytes": 440154,
+          "end": 37,
+          "name": "/photos/photo-25.jpg",
+          "start": 31,
+          "transfer": 440454
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4317",
+      "sample": 4
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 16,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 16,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 16,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 19,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 19,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 19,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 19,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 27,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 0,
+          "connectStart": 0,
+          "decodedBodySize": 0,
+          "deliveryType": "cache",
+          "domainLookupEnd": 0,
+          "domainLookupStart": 0,
+          "domComplete": 27,
+          "domContentLoadedEventEnd": 27,
+          "domContentLoadedEventStart": 27,
+          "domInteractive": 6,
+          "duration": 27,
+          "encodedBodySize": 0,
+          "entryType": "navigation",
+          "fetchStart": 0,
+          "finalResponseHeadersStart": 0,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 27,
+          "loadEventStart": 27,
+          "name": "http://127.0.0.1:56466/puff-intro/index.html?scene=kite",
+          "nextHopProtocol": "",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 0,
+          "responseEnd": 6,
+          "responseStart": 0,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 0,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/runtime.js",
+            "start": 6
+          },
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 6
+          },
+          {
+            "bytes": 0,
+            "end": 15,
+            "name": "/puff-intro/base.css",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 15,
+            "name": "/puff-intro/fields.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/scene.css",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/fish.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/scene.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/transit.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/bridge.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/redesign.css",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 37,
+            "name": "/puff-intro/assets/fonts/instrument-serif.woff2",
+            "start": 32
+          },
+          {
+            "bytes": 0,
+            "end": 38,
+            "name": "/puff-intro/assets/fonts/dm-sans.woff2",
+            "start": 32
+          },
+          {
+            "bytes": 0,
+            "end": 39,
+            "name": "/puff-intro/assets/fonts/plex-mono.woff2",
+            "start": 32
+          }
+        ],
+        "scene": "kite",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 0,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 0,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 43,
+        "introPaintOpportunity": 102,
+        "introReady": 84
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 40697,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 31,
+        "domContentLoadedEventEnd": 12,
+        "domContentLoadedEventStart": 12,
+        "domInteractive": 12,
+        "duration": 31,
+        "encodedBodySize": 40763,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 7,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 31,
+        "loadEventStart": 31,
+        "name": "http://127.0.0.1:56466/?perf-sample=4",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 8,
+        "responseStart": 7,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 41063,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 0,
+          "end": 10,
+          "name": "/photo-fallbacks/photo-01-e43a2c0cb0.jpg",
+          "start": 10,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 10,
+          "name": "/photo-fallbacks/photo-02-97c6a9c4c9.jpg",
+          "start": 10,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 10,
+          "name": "/_next/static/css/64f1fc6b84a4e994.css",
+          "start": 10,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 10,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 10,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/webpack-6f02932872b752a4.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/a039cd8b-eb14cb2c2aa5162d.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/560-80582d608f7c20d7.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/main-app-90553329a8d65c93.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/111-bc2bac4103a1166d.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/app/page-25e2f3771d4ad197.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/resume/Randy_Ren_Resume-preview.webp",
+          "start": 12,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 25,
+          "name": "/fonts/ibm-plex-mono-normal-400.woff2",
+          "start": 22,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 25,
+          "name": "/fonts/ibm-plex-mono-normal-500.woff2",
+          "start": 23,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 26,
+          "name": "/fonts/newsreader-italic-400.woff2",
+          "start": 23,
+          "transfer": 300
+        },
+        {
+          "bytes": 178,
+          "end": 49,
+          "name": "/api/strava/latest",
+          "start": 44,
+          "transfer": 478
+        },
+        {
+          "bytes": 194107,
+          "end": 95,
+          "name": "/photos/photo-26.jpg",
+          "start": 86,
+          "transfer": 194407
+        },
+        {
+          "bytes": 540674,
+          "end": 97,
+          "name": "/photos/photo-41.jpg",
+          "start": 86,
+          "transfer": 540974
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4321",
+      "sample": 4
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 15,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 15,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 16,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 16,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 17,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 18,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 28,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 1,
+          "connectStart": 1,
+          "decodedBodySize": 3218,
+          "deliveryType": "",
+          "domainLookupEnd": 1,
+          "domainLookupStart": 1,
+          "domComplete": 28,
+          "domContentLoadedEventEnd": 28,
+          "domContentLoadedEventStart": 28,
+          "domInteractive": 7,
+          "duration": 28,
+          "encodedBodySize": 3230,
+          "entryType": "navigation",
+          "fetchStart": 1,
+          "finalResponseHeadersStart": 4,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 28,
+          "loadEventStart": 28,
+          "name": "http://127.0.0.1:56466/puff-intro/index.html?scene=pool",
+          "nextHopProtocol": "http/1.1",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 1,
+          "responseEnd": 4,
+          "responseStart": 4,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 3530,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 0,
+            "end": 13,
+            "name": "/puff-intro/base.css",
+            "start": 6
+          },
+          {
+            "bytes": 0,
+            "end": 13,
+            "name": "/puff-intro/runtime.js",
+            "start": 6
+          },
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/fields.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 14,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 7
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/scene.css",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/fish.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/scene.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/redesign.css",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/transit.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/bridge.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 24,
+            "name": "/puff-intro/assets/fonts/instrument-serif.woff2",
+            "start": 22
+          },
+          {
+            "bytes": 0,
+            "end": 25,
+            "name": "/puff-intro/assets/fonts/plex-mono.woff2",
+            "start": 22
+          },
+          {
+            "bytes": 0,
+            "end": 25,
+            "name": "/puff-intro/assets/fonts/dm-sans.woff2",
+            "start": 22
+          }
+        ],
+        "scene": "pool",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 1,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 0,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 46,
+        "introPaintOpportunity": 108,
+        "introReady": 83
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 40697,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 34,
+        "domContentLoadedEventEnd": 13,
+        "domContentLoadedEventStart": 13,
+        "domInteractive": 13,
+        "duration": 34,
+        "encodedBodySize": 40763,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 7,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 34,
+        "loadEventStart": 34,
+        "name": "http://127.0.0.1:56466/?perf-sample=5",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 8,
+        "responseStart": 7,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 41063,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 0,
+          "end": 10,
+          "name": "/photo-fallbacks/photo-01-e43a2c0cb0.jpg",
+          "start": 10,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 10,
+          "name": "/photo-fallbacks/photo-02-97c6a9c4c9.jpg",
+          "start": 10,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/css/64f1fc6b84a4e994.css",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/webpack-6f02932872b752a4.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/a039cd8b-eb14cb2c2aa5162d.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/560-80582d608f7c20d7.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/main-app-90553329a8d65c93.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/111-bc2bac4103a1166d.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 11,
+          "name": "/_next/static/chunks/app/page-25e2f3771d4ad197.js",
+          "start": 11,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/resume/Randy_Ren_Resume-preview.webp",
+          "start": 12,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 30,
+          "name": "/fonts/ibm-plex-mono-normal-400.woff2",
+          "start": 24,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 30,
+          "name": "/fonts/ibm-plex-mono-normal-500.woff2",
+          "start": 24,
+          "transfer": 300
+        },
+        {
+          "bytes": 0,
+          "end": 30,
+          "name": "/fonts/newsreader-italic-400.woff2",
+          "start": 24,
+          "transfer": 300
+        },
+        {
+          "bytes": 178,
+          "end": 53,
+          "name": "/api/strava/latest",
+          "start": 47,
+          "transfer": 478
+        },
+        {
+          "bytes": 3230,
+          "end": 54,
+          "name": "/puff-intro/index.html",
+          "start": 50,
+          "transfer": 3530
+        },
+        {
+          "bytes": 321320,
+          "end": 89,
+          "name": "/photos/photo-29.jpg",
+          "start": 84,
+          "transfer": 321620
+        },
+        {
+          "bytes": 478234,
+          "end": 90,
+          "name": "/photos/photo-06.jpg",
+          "start": 84,
+          "transfer": 478534
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4321",
+      "sample": 5
+    },
+    {
+      "activity": "4:00 /KM",
+      "frame": {
+        "marks": [
+          {
+            "at": 16,
+            "name": "/puff-intro/runtime.js:start"
+          },
+          {
+            "at": 16,
+            "name": "/puff-intro/runtime.js:end"
+          },
+          {
+            "at": 16,
+            "name": "/puff-intro/puff-pixels.js:start"
+          },
+          {
+            "at": 1004,
+            "name": "/puff-intro/puff-pixels.js:end"
+          },
+          {
+            "at": 1005,
+            "name": "/puff-intro/fields.js:start"
+          },
+          {
+            "at": 1005,
+            "name": "/puff-intro/fields.js:end"
+          },
+          {
+            "at": 1005,
+            "name": "/puff-intro/puff-engine.js:start"
+          },
+          {
+            "at": 1005,
+            "name": "/puff-intro/puff-engine.js:end"
+          },
+          {
+            "at": 1005,
+            "name": "/puff-intro/kite-actor.js:start"
+          },
+          {
+            "at": 1005,
+            "name": "/puff-intro/kite-actor.js:end"
+          },
+          {
+            "at": 1005,
+            "name": "/puff-intro/fish.js:start"
+          },
+          {
+            "at": 1005,
+            "name": "/puff-intro/fish.js:end"
+          },
+          {
+            "at": 1005,
+            "name": "/puff-intro/scene.js:start"
+          },
+          {
+            "at": 1006,
+            "name": "/puff-intro/scene.js:end"
+          },
+          {
+            "at": 1006,
+            "name": "/puff-intro/transit.js:start"
+          },
+          {
+            "at": 1006,
+            "name": "/puff-intro/transit.js:end"
+          },
+          {
+            "at": 1006,
+            "name": "/puff-intro/bridge.js:start"
+          },
+          {
+            "at": 1011,
+            "name": "/puff-intro/bridge.js:end"
+          }
+        ],
+        "nav": {
+          "connectEnd": 0,
+          "connectStart": 0,
+          "decodedBodySize": 0,
+          "deliveryType": "cache",
+          "domainLookupEnd": 0,
+          "domainLookupStart": 0,
+          "domComplete": 1029,
+          "domContentLoadedEventEnd": 1011,
+          "domContentLoadedEventStart": 1011,
+          "domInteractive": 6,
+          "duration": 1029,
+          "encodedBodySize": 0,
+          "entryType": "navigation",
+          "fetchStart": 0,
+          "finalResponseHeadersStart": 0,
+          "firstInterimResponseStart": 0,
+          "initiatorType": "navigation",
+          "loadEventEnd": 1029,
+          "loadEventStart": 1029,
+          "name": "http://127.0.0.1:56465/puff-intro/index.html?scene=space",
+          "nextHopProtocol": "",
+          "redirectCount": 0,
+          "redirectEnd": 0,
+          "redirectStart": 0,
+          "requestStart": 0,
+          "responseEnd": 6,
+          "responseStart": 0,
+          "secureConnectionStart": 0,
+          "serverTiming": [],
+          "startTime": 0,
+          "transferSize": 0,
+          "type": "navigate",
+          "unloadEventEnd": 0,
+          "unloadEventStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerFinalRouterSource": "",
+          "workerMatchedRouterSource": "",
+          "workerRouterEvaluationStart": 0,
+          "workerStart": 0
+        },
+        "resources": [
+          {
+            "bytes": 0,
+            "end": 15,
+            "name": "/puff-intro/runtime.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 15,
+            "name": "/puff-intro/puff-pixels.js",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 16,
+            "name": "/puff-intro/base.css",
+            "start": 8
+          },
+          {
+            "bytes": 0,
+            "end": 17,
+            "name": "/puff-intro/fields.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 18,
+            "name": "/puff-intro/scene.css",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 19,
+            "name": "/puff-intro/puff-engine.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 19,
+            "name": "/puff-intro/kite-actor.js",
+            "start": 9
+          },
+          {
+            "bytes": 0,
+            "end": 20,
+            "name": "/puff-intro/scene.js",
+            "start": 10
+          },
+          {
+            "bytes": 0,
+            "end": 21,
+            "name": "/puff-intro/transit.js",
+            "start": 10
+          },
+          {
+            "bytes": 0,
+            "end": 21,
+            "name": "/puff-intro/fish.js",
+            "start": 10
+          },
+          {
+            "bytes": 0,
+            "end": 24,
+            "name": "/puff-intro/redesign.css",
+            "start": 10
+          },
+          {
+            "bytes": 0,
+            "end": 25,
+            "name": "/puff-intro/bridge.js",
+            "start": 10
+          },
+          {
+            "bytes": 0,
+            "end": 1012,
+            "name": "/puff-intro/assets/fonts/instrument-serif.ttf",
+            "start": 1010
+          },
+          {
+            "bytes": 0,
+            "end": 1013,
+            "name": "/puff-intro/assets/fonts/plex-mono.ttf",
+            "start": 1010
+          },
+          {
+            "bytes": 0,
+            "end": 1013,
+            "name": "/puff-intro/assets/fonts/dm-sans.ttf",
+            "start": 1010
+          }
+        ],
+        "scene": "space",
+        "sprites": {
+          "bike": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "car": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "kite": {
+            "canvases": 0,
+            "frames": 192
+          },
+          "pool": {
+            "canvases": 0,
+            "frames": 44
+          },
+          "scooter": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "skate": {
+            "canvases": 0,
+            "frames": 80
+          },
+          "space": {
+            "canvases": 1,
+            "frames": 131
+          },
+          "walk": {
+            "canvases": 0,
+            "frames": 108
+          }
+        }
+      },
+      "marks": {
+        "frameCreated": 37,
+        "introPaintOpportunity": 1078,
+        "introReady": 1073
+      },
+      "nav": {
+        "connectEnd": 1,
+        "connectStart": 1,
+        "decodedBodySize": 167957,
+        "deliveryType": "",
+        "domainLookupEnd": 1,
+        "domainLookupStart": 1,
+        "domComplete": 29,
+        "domContentLoadedEventEnd": 17,
+        "domContentLoadedEventStart": 17,
+        "domInteractive": 17,
+        "duration": 29,
+        "encodedBodySize": 168041,
+        "entryType": "navigation",
+        "fetchStart": 1,
+        "finalResponseHeadersStart": 10,
+        "firstInterimResponseStart": 0,
+        "initiatorType": "navigation",
+        "loadEventEnd": 29,
+        "loadEventStart": 29,
+        "name": "http://127.0.0.1:56465/?perf-sample=5",
+        "nextHopProtocol": "http/1.1",
+        "redirectCount": 0,
+        "redirectEnd": 0,
+        "redirectStart": 0,
+        "requestStart": 1,
+        "responseEnd": 11,
+        "responseStart": 10,
+        "secureConnectionStart": 0,
+        "serverTiming": [],
+        "startTime": 0,
+        "transferSize": 168341,
+        "type": "navigate",
+        "unloadEventEnd": 0,
+        "unloadEventStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerFinalRouterSource": "",
+        "workerMatchedRouterSource": "",
+        "workerRouterEvaluationStart": 0,
+        "workerStart": 0
+      },
+      "resources": [
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/resume/Randy_Ren_Resume-preview.jpg",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/css/95062e0769afedab.css",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/chunks/webpack-78861ced4c2b51f4.js",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/chunks/e6f5057d-c716d57de6fa8683.js",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/chunks/480-7ca2259c6469b172.js",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/chunks/main-app-6ec2d13da9b39258.js",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/chunks/552-8a01719556785716.js",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/_next/static/chunks/app/page-10fe7e7a3933fc45.js",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 0,
+          "end": 14,
+          "name": "/css2",
+          "start": 14,
+          "transfer": 0
+        },
+        {
+          "bytes": 428591,
+          "end": 43,
+          "name": "/photos/photo-22.jpg",
+          "start": 35,
+          "transfer": 428891
+        },
+        {
+          "bytes": 427268,
+          "end": 42,
+          "name": "/photos/photo-31.jpg",
+          "start": 36,
+          "transfer": 427568
+        }
+      ],
+      "url": "/",
+      "base": "http://127.0.0.1:4317",
+      "sample": 5
+    }
+  ]
+}

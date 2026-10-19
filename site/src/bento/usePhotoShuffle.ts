@@ -29,6 +29,7 @@ function loadPhoto(photo: PhotoMeta, signal: AbortSignal): Promise<HTMLImageElem
     if (signal.aborted) return abort();
     image.alt = '';
     image.decoding = 'async';
+    image.fetchPriority = 'low';
     image.onerror = () => finish(new Error('Photo unavailable'));
     image.onload = () => {
       image.decode().then(
@@ -40,7 +41,7 @@ function loadPhoto(photo: PhotoMeta, signal: AbortSignal): Promise<HTMLImageElem
   });
 }
 
-export function usePhotoShuffle() {
+export function usePhotoShuffle(enabled = true) {
   const [slots, setSlots] = useState<readonly PhotoSlot[]>(INITIAL_SLOTS);
   const [incoming, setIncoming] = useState<ReadyPhoto[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -112,12 +113,13 @@ export function usePhotoShuffle() {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     void shuffle();
     return () => {
       active.current?.abort();
       active.current = null;
     };
-  }, [shuffle]);
+  }, [shuffle, enabled]);
 
   return { slots, incoming, busy, message, shuffle, onSettled };
 }

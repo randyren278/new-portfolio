@@ -44,11 +44,18 @@ function db(): pg.Pool | null {
 
 const msg = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
-export async function cached<T>(
-  key: string,
-  maxAgeSec: number,
-  fetch: () => Promise<T>,
-): Promise<T> {
+const pending = new Map<string, Promise<unknown>>();
+
+/** Share the whole read/populate operation among same-process callers. */
+export function cached<T>(key: string, maxAgeSec: number, fetch: () => Promise<T>): Promise<T> {
+  const hit = pending.get(key);
+  if (hit) return hit as Promise<T>;
+  const value = readCached(key, maxAgeSec, fetch).finally(() => pending.delete(key));
+  pending.set(key, value);
+  return value;
+}
+
+async function readCached<T>(key: string, maxAgeSec: number, fetch: () => Promise<T>): Promise<T> {
   const conn = db();
   if (!conn) return local(key, maxAgeSec, fetch);
   let row: { value: T; stale: boolean } | undefined;

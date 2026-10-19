@@ -1,0 +1,205 @@
+{
+  "status": "PASS",
+  "framesCompared": 795,
+  "canvasComparisons": 337,
+  "mismatches": [],
+  "helloPass": true,
+  "helloBaseline": {
+    "allMappedReferencesCorrect": true,
+    "initialArrayStayedIntact": true,
+    "mappedIsArray": true,
+    "mappedLength": 131,
+    "restoredReferencesCorrect": true,
+    "savedIsArray": true,
+    "savedLength": 131
+  },
+  "helloCandidate": {
+    "allMappedReferencesCorrect": true,
+    "initialArrayStayedIntact": true,
+    "mappedIsArray": true,
+    "mappedLength": 131,
+    "restoredReferencesCorrect": true,
+    "savedIsArray": true,
+    "savedLength": 131
+  },
+  "baselineSourceSha256": "7f9ad7bf8c519f83f9167038569577b5bd7556d09d7a7bc7084b9ec9bf1fc6f6",
+  "candidateSourceSha256": "ae2c0ed8bbb27797c4bdc20a328a2b5407ede1b4ee99b8cf8cb1db53c6306133",
+  "currentSourceSha256": "ae2c0ed8bbb27797c4bdc20a328a2b5407ede1b4ee99b8cf8cb1db53c6306133",
+  "beforeBaseline": {
+    "kiteBody": {
+      "getters": 0,
+      "length": 48,
+      "missing": 0,
+      "values": 48
+    },
+    "kiteSail": "value",
+    "sprites": {
+      "bike": {
+        "getters": 0,
+        "length": 80,
+        "missing": 0,
+        "values": 80
+      },
+      "car": {
+        "getters": 0,
+        "length": 80,
+        "missing": 0,
+        "values": 80
+      },
+      "kite": {
+        "getters": 0,
+        "length": 192,
+        "missing": 0,
+        "values": 192
+      },
+      "pool": {
+        "getters": 0,
+        "length": 44,
+        "missing": 0,
+        "values": 44
+      },
+      "scooter": {
+        "getters": 0,
+        "length": 80,
+        "missing": 0,
+        "values": 80
+      },
+      "skate": {
+        "getters": 0,
+        "length": 80,
+        "missing": 0,
+        "values": 80
+      },
+      "space": {
+        "getters": 0,
+        "length": 131,
+        "missing": 0,
+        "values": 131
+      },
+      "walk": {
+        "getters": 0,
+        "length": 108,
+        "missing": 0,
+        "values": 108
+      }
+    }
+  },
+  "beforeCandidate": {
+    "kiteBody": {
+      "getters": 48,
+      "length": 48,
+      "missing": 0,
+      "values": 0
+    },
+    "kiteSail": "getter",
+    "sprites": {
+      "bike": {
+        "getters": 80,
+        "length": 80,
+        "missing": 0,
+        "values": 0
+      },
+      "car": {
+        "getters": 80,
+        "length": 80,
+        "missing": 0,
+        "values": 0
+      },
+      "kite": {
+        "getters": 192,
+        "length": 192,
+        "missing": 0,
+        "values": 0
+      },
+      "pool": {
+        "getters": 44,
+        "length": 44,
+        "missing": 0,
+        "values": 0
+      },
+      "scooter": {
+        "getters": 80,
+        "length": 80,
+        "missing": 0,
+        "values": 0
+      },
+      "skate": {
+        "getters": 80,
+        "length": 80,
+        "missing": 0,
+        "values": 0
+      },
+      "space": {
+        "getters": 90,
+        "length": 131,
+        "missing": 0,
+        "values": 41
+      },
+      "walk": {
+        "getters": 108,
+        "length": 108,
+        "missing": 0,
+        "values": 0
+      }
+    }
+  },
+  "afterCandidate": {
+    "kiteBody": {
+      "getters": 0,
+      "length": 48,
+      "missing": 0,
+      "values": 48
+    },
+    "kiteSail": "value",
+    "sprites": {
+      "bike": {
+        "getters": 0,
+        "length": 80,
+        "missing": 0,
+        "values": 80
+      },
+      "car": {
+        "getters": 0,
+        "length": 80,
+        "missing": 0,
+        "values": 80
+      },
+      "kite": {
+        "getters": 0,
+        "length": 192,
+        "missing": 0,
+        "values": 192
+      },
+      "pool": {
+        "getters": 0,
+        "length": 44,
+        "missing": 0,
+        "values": 44
+      },
+      "scooter": {
+        "getters": 0,
+        "length": 80,
+        "missing": 0,
+        "values": 80
+      },
+      "skate": {
+        "getters": 0,
+        "length": 80,
+        "missing": 0,
+        "values": 80
+      },
+      "space": {
+        "getters": 0,
+        "length": 131,
+        "missing": 0,
+        "values": 131
+      },
+      "walk": {
+        "getters": 0,
+        "length": 108,
+        "missing": 0,
+        "values": 108
+      }
+    }
+  }
+}
