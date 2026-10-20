@@ -75,8 +75,16 @@ try {
     );
     const time = read('return performance.now()');
     wait(`performance.now()>${time + 1200}`);
+    // Measure the title the instant the invitation opens, before any font fetch
+    // can land, then on every frame after.
+    read(
+      'window.inviteWidths=[];new MutationObserver((_,o)=>{const d=document.getElementById("invite");if(!d?.open)return;o.disconnect();const r=document.createRange(),t=performance.now(),f=()=>{r.selectNodeContents(d.querySelector("h2"));inviteWidths.push(Math.round(r.getBoundingClientRect().width));if(performance.now()-t<1500)requestAnimationFrame(f);else window.inviteSampled=true};f()}).observe(document.body,{subtree:true,attributeFilter:["open"]})',
+    );
     cmd('click', '.correspondence-puff');
     wait('window.puffUp?.state==="invite"');
+    wait('window.inviteSampled');
+    const widths = read('return [...new Set(inviteWidths)]');
+    check(name + ': invitation title opens at its final size', widths.length === 1, widths);
     const focus = read(
       'return {id:document.activeElement.id,play:getComputedStyle(document.getElementById("play")).outlineStyle,mounted:window.puffUp.gameMounted}',
     );

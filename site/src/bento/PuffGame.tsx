@@ -59,8 +59,11 @@ export default function PuffGame({
     };
     addEventListener('popstate', pop);
     const source = '/puff-up/entry.js';
-    import(/* webpackIgnore: true */ source)
-      .then(({ mountGame }) => {
+    // Nothing on the page uses this face before the invitation, so without this
+    // the title opens in Georgia and visibly shrinks when Instrument Serif lands.
+    const titleFont = document.fonts.load('48px "Instrument Serif"').catch(() => {});
+    Promise.all([import(/* webpackIgnore: true */ source), titleFont])
+      .then(([{ mountGame }]) => {
         if (!live || !root.current) return;
         controller = mountGame(root.current, {
           portfolio: document.querySelector('.bento-page'),
