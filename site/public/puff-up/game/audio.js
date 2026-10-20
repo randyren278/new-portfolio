@@ -1,9 +1,13 @@
 // Synthesized sound: no files to load. The AudioContext is made on the first Start and
-// suspended while paused or after a climb. A browser can still hold it suspended when the
-// portfolio starts the game for the player, so any later tap or key resumes it. The mute choice
-// persists like the best height.
+// suspended while paused; after a climb the music fades out before it is suspended. A browser
+// can still hold it suspended when the portfolio starts the game for the player, so any later
+// tap or key resumes it. The mute choice persists like the best height and silences everything.
+import { createMusic } from './music.js';
 const MUTE_KEY = 'puff-up:muted:v1';
-const PENTATONIC = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
+const LEVEL = 0.42;
+// The music sits just under the effects.
+const MUSIC_LEVEL = 3.2;
+const hz = (midi) => 440 * 2 ** ((midi - 69) / 12);
 
 /** Cue names for what changed between two consecutive run states. Pure, so it is testable. */
 export function cuesFor(previous, run) {
@@ -22,6 +26,8 @@ export function cuesFor(previous, run) {
 export function createSound() {
   let ctx = null,
     master = null,
+    music = null,
+    resting = null,
     droneGain = null,
     noiseBuffer = null,
     droneLevel = 0,
@@ -36,8 +42,9 @@ export function createSound() {
     if (!Context) return false;
     ctx = new Context();
     master = ctx.createGain();
-    master.gain.value = muted ? 0 : 0.42;
+    master.gain.value = muted ? 0 : LEVEL;
     master.connect(ctx.destination);
+    music = createMusic(ctx, master);
     noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
@@ -87,9 +94,14 @@ export function createSound() {
     src.stop(t + decay + 0.02);
   }
   const play = {
+    // A faint soft note from the chord the music is on, climbing it with the streak.
     hop: (streak) => {
-      const step = PENTATONIC[Math.min(streak, PENTATONIC.length - 1)];
-      tone(392 * 2 ** (step / 12), { type: 'triangle', gain: 0.07, decay: 0.09 });
+      const tones = music.chordTones(),
+        step = Math.min(streak, tones.length * 2 - 1);
+      tone(hz(tones[step % tones.length] + 12 * (1 + Math.floor(step / tones.length))), {
+        gain: 0.04,
+        decay: 0.16,
+      });
     },
     crack: () => burst({ frequency: 2200, gain: 0.16, decay: 0.09 }),
     boing: () => tone(220, { gain: 0.14, decay: 0.22, slide: 3 }),
@@ -119,7 +131,17 @@ export function createSound() {
     /** Call from a user gesture; resumes a paused context. */
     start() {
       paused = false;
-      if (ready() && ctx.state !== 'running') ctx.resume().catch(() => {});
+      clearTimeout(resting);
+      if (!ready()) return;
+      if (ctx.state !== 'running') ctx.resume().catch(() => {});
+      music.start(MUSIC_LEVEL);
+    },
+    /** After a climb: let the music fade, then suspend. */
+    rest() {
+      paused = true;
+      music?.stop(1.5);
+      clearTimeout(resting);
+      resting = setTimeout(() => ctx?.state === 'running' && ctx.suspend().catch(() => {}), 1700);
     },
     /** Resume a context the browser held suspended; never creates one. */
     unlock() {
@@ -147,7 +169,7 @@ export function createSound() {
       try {
         localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
       } catch {}
-      if (master) master.gain.setTargetAtTime(muted ? 0 : 0.42, ctx.currentTime, 0.02);
+      if (master) master.gain.setTargetAtTime(muted ? 0 : LEVEL, ctx.currentTime, 0.02);
       return muted;
     },
   };

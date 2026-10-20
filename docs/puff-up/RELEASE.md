@@ -74,9 +74,14 @@ on the band they cover at every phase, so no hop depends on arrival time. A fork
 merge is certified from the lane too, or the lane is withdrawn before it is
 visible. A clean climb gains at least 20% on the fastest line.
 
-Feel: synthesized sound (hop notes that rise with a climbing streak, crack, boing,
-kick, spark, zone chime, new best, a drone as the line nears; M or SOUND mutes and
-persists), zone title cards below Puff, a dashed best-height line, an off-screen
+Feel: synthesized sound. An original generative space track (`game/music.js`: soft
+pads and a mid drone in C major / A minor colours, a felt piano that comes and goes in
+8-bar waves, rare bells, long reverb) starts with the climb, pauses with it and fades
+when Puff is caught. It was tuned against a reference by measurement: about 64 BPM,
+brightness 750–860 Hz, almost nothing under 130 Hz. Effects: a faint bounce note
+taken from the chord the music is on, rising with a climbing streak, plus crack,
+boing, kick, spark, zone chime, new best and a drone as the line nears. M or SOUND
+mutes everything and persists. Also zone title cards below Puff, a dashed best-height line, an off-screen
 line gauge, landing squash and dust, shake for springs, kicks and breaks only, and
 a 700 ms hit beat before the results (none of the motion under reduced motion).
 

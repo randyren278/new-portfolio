@@ -477,7 +477,6 @@ function tick(now) {
     }
     running = false;
     endedAt = null;
-    sound.pause();
     stopFrames();
     saveBest();
     syncUI();
@@ -503,6 +502,8 @@ function tick(now) {
       previous = run;
       accumulator = 0;
       sound.danger(0);
+      // The music fades through the hit beat and the context suspends once it is quiet.
+      sound.rest();
       break;
     }
   }

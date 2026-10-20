@@ -135,7 +135,8 @@ then a remix. Optional spark lanes pause the line for 2.5 s. The game never spee
 up; challenge comes from the ledges. Every generated ledge carries a reachability
 certificate, and `pnpm test:puff:bot` sends a search bot through every zone.
 Broken red platforms rebuild after 3 seconds in the first zone and 1 second longer
-in each zone above, if still visible. Sound is synthesized; M mutes it.
+in each zone above, if still visible. Sound is synthesized live, including an
+original ambient space track; M mutes everything.
 
 ## Material
 
