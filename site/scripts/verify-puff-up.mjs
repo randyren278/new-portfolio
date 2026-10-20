@@ -196,11 +196,11 @@ try {
     wait('window.puffUp?.state==="game"');
     cmd('open', base + '/robots.txt');
     cmd('back');
-    wait('!!document.querySelector(".bento-page")');
+    wait('location.pathname==="/game"&&window.puffUp?.state==="game"');
     check(
-      name + ': browser Back does not restore a trapped game',
+      name + ': browser Back restores the playable game route',
       read(
-        'return !window.puffUp&&(!document.querySelector(".puff-game")||document.querySelector(".puff-game").hidden)&&(!document.querySelector(".bento-page").inert||!!document.querySelector(".puff-entrance"))',
+        'return window.puffUp.gameMounted&&window.puffUp.gameRunning&&document.querySelector(".bento-page").inert',
       ),
     );
     const errors = cmd('console', '--level', 'error');

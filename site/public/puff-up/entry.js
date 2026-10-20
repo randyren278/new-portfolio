@@ -1,5 +1,8 @@
 import { renderPuff, samplePose } from './game/puff-motion.js';
-export function mountGame(root, { portfolio, trigger, onClose }) {
+export function mountGame(
+  root,
+  { portfolio, trigger, onClose, onEntering, onEntered, onReturned, direct = false },
+) {
   root.hidden = false;
   const $ = (id) => root.querySelector('#' + id),
     page = portfolio,
@@ -290,8 +293,69 @@ export function mountGame(root, { portfolio, trigger, onClose }) {
       heroRAF = requestAnimationFrame(tick);
     });
   }
+  async function revealGame(api, token) {
+    $('loading').hidden = true;
+    phase = 'world-reveal';
+    if (!sky) throw Error('The sky did not open');
+    space.style.opacity = '1';
+    page.style.opacity = '0';
+    page.style.transform = 'scale(1.09)';
+    frame.contentDocument.body.removeAttribute('data-handoff');
+    api.start();
+    await Promise.all([
+      animate($('veil'), [{ opacity: 1 }, { opacity: 0 }], {
+        duration: reducedQuery.matches ? 120 : 320,
+        easing: 'ease-out',
+      }),
+      animate(
+        gameWrap,
+        [
+          { opacity: 0, transform: 'translateY(10px)' },
+          { opacity: 1, transform: 'translateY(0)' },
+        ],
+        { duration: reducedQuery.matches ? 120 : 320, easing: 'ease-out' },
+      ),
+    ]);
+    if (token !== serial) return;
+    $('veil').hidden = true;
+    $('veil').style.opacity = '0';
+    gameWrap.style.opacity = '1';
+    gameWrap.style.pointerEvents = '';
+    update('game');
+    phase = 'playing';
+    scheduleMeteor();
+    scheduleTwinkle();
+    onEntered();
+  }
+  async function enterDirect() {
+    const token = ++serial;
+    update('entering');
+    phase = 'world-load';
+    page.inert = true;
+    page.style.opacity = '0';
+    page.style.pointerEvents = 'none';
+    $('veil').hidden = false;
+    $('veil').style.opacity = '1';
+    $('back').hidden = false;
+    $('back').focus({ preventScroll: true });
+    $('loading').hidden = false;
+    gameWrap.hidden = false;
+    gameWrap.style.opacity = '0';
+    gameWrap.style.pointerEvents = 'none';
+    space.style.opacity = '1';
+    try {
+      const [api] = await Promise.all([loadGame(token), prepareSky()]);
+      if (token !== serial || !api) return;
+      await revealGame(api, token);
+    } catch (error) {
+      if (token !== serial) return;
+      console.error(error.message);
+      await returnToPortfolio();
+    }
+  }
   async function enter() {
     if (disposed || state !== 'invite') return;
+    onEntering();
     const from = rect(portrait.getBoundingClientRect()),
       token = ++serial;
     $('veil').hidden = false;
@@ -340,37 +404,7 @@ export function mountGame(root, { portfolio, trigger, onClose }) {
       });
       const [api] = await Promise.all([gameReady, skyReady, motion]);
       if (token !== serial || !api) return;
-      $('loading').hidden = true;
-      phase = 'world-reveal';
-      if (!sky) throw Error('The sky did not open');
-      space.style.opacity = '1';
-      page.style.opacity = '0';
-      page.style.transform = 'scale(1.09)';
-      frame.contentDocument.body.removeAttribute('data-handoff');
-      api.start();
-      await Promise.all([
-        animate($('veil'), [{ opacity: 1 }, { opacity: 0 }], {
-          duration: reducedQuery.matches ? 120 : 320,
-          easing: 'ease-out',
-        }),
-        animate(
-          gameWrap,
-          [
-            { opacity: 0, transform: 'translateY(10px)' },
-            { opacity: 1, transform: 'translateY(0)' },
-          ],
-          { duration: reducedQuery.matches ? 120 : 320, easing: 'ease-out' },
-        ),
-      ]);
-      if (token !== serial) return;
-      $('veil').hidden = true;
-      $('veil').style.opacity = '0';
-      gameWrap.style.opacity = '1';
-      gameWrap.style.pointerEvents = '';
-      update('game');
-      phase = 'playing';
-      scheduleMeteor();
-      scheduleTwinkle();
+      await revealGame(api, token);
     } catch (error) {
       if (token !== serial) return;
       console.error(error.message);
@@ -378,6 +412,10 @@ export function mountGame(root, { portfolio, trigger, onClose }) {
     }
   }
   async function returnToPortfolio() {
+    if (state === 'invite') {
+      closeInvite();
+      return;
+    }
     if (disposed || !['entering', 'game'].includes(state)) return;
     ++serial;
     ++skyGeneration;
@@ -446,7 +484,7 @@ export function mountGame(root, { portfolio, trigger, onClose }) {
     trigger?.focus({ preventScroll: true });
     update('portfolio');
     phase = 'idle';
-    onClose();
+    onReturned();
   }
   $('play').addEventListener('click', enter, { signal });
   $('back').addEventListener(
@@ -518,7 +556,10 @@ export function mountGame(root, { portfolio, trigger, onClose }) {
     },
     oldInert = page.inert;
   document.body.style.overflow = 'hidden';
-  invite();
+  if (direct) {
+    returnScroll = { x: window.scrollX, y: window.scrollY };
+    enterDirect();
+  } else invite();
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -546,5 +587,5 @@ export function mountGame(root, { portfolio, trigger, onClose }) {
     trigger?.focus({ preventScroll: true });
     delete window.puffUp;
   }
-  return dispose;
+  return { dispose, returnToPortfolio };
 }

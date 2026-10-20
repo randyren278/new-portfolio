@@ -60,15 +60,51 @@ function mobileOrder(): Section[] {
 
 export function BentoHome({
   content,
+  initialGame = false,
 }: {
   content: ShellContent;
+  initialGame?: boolean;
 }) {
-  const [intro, setIntro] = useState(true);
+  const [intro, setIntro] = useState(!initialGame);
   const [entering, setEntering] = useState(false);
   const [scene, setScene] = useState<string | null>(null);
-  const [introReady, setIntroReady] = useState(false);
-  const [gameTrigger, setGameTrigger] = useState<HTMLButtonElement | null>(null);
-  const closeGame = useCallback(() => setGameTrigger(null), []);
+  const [introReady, setIntroReady] = useState(initialGame);
+  const gameVisit = useRef(0);
+  const [game, setGame] = useState<{
+    trigger: HTMLButtonElement | null;
+    direct: boolean;
+    visit: number;
+  } | null>(initialGame ? { trigger: null, direct: true, visit: 0 } : null);
+  const [gameOpening, setGameOpening] = useState(initialGame);
+  const closeGame = useCallback(() => {
+    setGame(null);
+    setGameOpening(false);
+  }, []);
+  const gameEntered = useCallback(() => setGameOpening(false), []);
+  const openGame = useCallback(
+    (trigger: HTMLButtonElement) => setGame({ trigger, direct: false, visit: ++gameVisit.current }),
+    [],
+  );
+  useEffect(() => {
+    const forward = () => {
+      const activeGame = document.querySelector<HTMLElement>('.puff-game:not([hidden])');
+      if (location.pathname !== '/game' || (activeGame && activeGame.dataset.state !== 'returning'))
+        return;
+      setIntro(false);
+      setGameOpening(true);
+      setGame({
+        trigger: document.querySelector<HTMLButtonElement>('.correspondence-puff'),
+        direct: true,
+        visit: ++gameVisit.current,
+      });
+    };
+    addEventListener('popstate', forward);
+    addEventListener('pageshow', forward);
+    return () => {
+      removeEventListener('popstate', forward);
+      removeEventListener('pageshow', forward);
+    };
+  }, []);
   const photos = usePhotoShuffle(introReady || !intro);
   const { slots } = photos;
   const [sectionOrder, setSectionOrder] = useState<readonly Section[]>(DEFAULT_ORDER);
@@ -88,14 +124,15 @@ export function BentoHome({
     return () => mobile.removeEventListener('change', update);
   }, []);
   useEffect(() => {
-    // Coming back from /training: the visitor has already been welcomed.
+    if (initialGame) return;
+    // Returning from another world: the visitor has already been welcomed.
     if (consumeReturnToHome()) {
       setIntroReady(true);
       setIntro(false);
       return;
     }
     setScene(['space', 'pool', 'kite'][Math.floor(Math.random() * 3)]);
-  }, []);
+  }, [initialGame]);
   // The portfolio is live from the moment it starts fading in (the landing
   // animation's start, after its delay) — not before, or a double-click on
   // the invitation lands on invisible controls; and not after the transit
@@ -172,7 +209,7 @@ export function BentoHome({
         />
       )}
       <div
-        className={`bento-page puff-bento${intro && !entering ? ' awaiting-intro' : ''}${entering ? ' bento-landing' : ''}`}
+        className={`bento-page puff-bento${intro && !entering ? ' awaiting-intro' : ''}${entering ? ' bento-landing' : ''}${gameOpening ? ' game-opening' : ''}`}
         inert={covered}
         onAnimationStart={(e) => {
           if (e.target === e.currentTarget && e.animationName === 'bento-land') setVisible(true);
@@ -215,7 +252,7 @@ export function BentoHome({
                     key={section}
                     contactText={content.CONTACT_TEXT}
                     puff
-                    onPuffPlay={setGameTrigger}
+                    onPuffPlay={openGame}
                   />
                 );
               case 'projects':
@@ -291,7 +328,16 @@ export function BentoHome({
           </button>
         </footer>
       </div>
-      {gameTrigger && <PuffGame trigger={gameTrigger} onClose={closeGame} />}
+      {game && (
+        <PuffGame
+          key={game.visit}
+          trigger={game.trigger}
+          direct={game.direct}
+          directPage={initialGame}
+          onEntered={gameEntered}
+          onClose={closeGame}
+        />
+      )}
     </>
   );
 }

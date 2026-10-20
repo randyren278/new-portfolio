@@ -41,6 +41,14 @@ Object.defineProperty(window, 'puffClimb', {
       visual: Object.freeze(sampleGameVisual(run)),
       run: Object.freeze({
         ...run,
+        brokenPlatforms: Object.freeze(
+          run.brokenPlatforms.map((repair) =>
+            Object.freeze({
+              readyAt: repair.readyAt,
+              platform: Object.freeze({ ...repair.platform }),
+            }),
+          ),
+        ),
         player: Object.freeze({ ...run.player, events: Object.freeze([...run.player.events]) }),
         platforms: Object.freeze(run.platforms.map((p) => Object.freeze({ ...p }))),
         lastLanding: run.lastLanding ? Object.freeze({ ...run.lastLanding }) : null,

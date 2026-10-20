@@ -1,5 +1,7 @@
 'use client';
 
+import { markReturnToHome } from '@/training/returnFlag';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './puff-game.css';
@@ -7,28 +9,76 @@ import './puff-game.css';
 export default function PuffGame({
   trigger,
   onClose,
-}: { trigger: HTMLButtonElement; onClose: () => void }) {
+  onEntered,
+  direct,
+  directPage,
+}: {
+  trigger: HTMLButtonElement | null;
+  onClose: () => void;
+  onEntered: () => void;
+  direct: boolean;
+  directPage: boolean;
+}) {
+  const router = useRouter();
   const root = useRef<HTMLDivElement>(null);
   const [error, setError] = useState(false);
   useEffect(() => {
     let live = true;
-    let dispose: (() => void) | undefined;
+    let controller: { dispose: () => void; returnToPortfolio: () => void } | undefined;
+    const returnUrl =
+      location.pathname === '/game'
+        ? (history.state?.puffReturnUrl ?? '/')
+        : location.pathname + location.search + location.hash;
+    // Push during the trusted Play click so Safari includes it in Back/Forward.
+    const entering = () => {
+      if (location.pathname !== '/game')
+        history.pushState({ puffGame: true, puffReturnUrl: returnUrl }, '', '/game');
+    };
+    const entered = () => {
+      document.title = 'Puff Up · Randy Ren';
+      onEntered();
+    };
+    const returned = () => {
+      document.title = 'Randy Ren';
+      if (location.pathname === '/game') {
+        if (directPage) {
+          markReturnToHome();
+          router.replace('/');
+        } else if (history.state?.puffGame) history.back();
+        else history.replaceState(null, '', returnUrl);
+      }
+      onClose();
+    };
+    const pop = () => {
+      if (location.pathname === '/game') return;
+      if (controller) controller.returnToPortfolio();
+      else {
+        live = false;
+        onClose();
+      }
+    };
+    addEventListener('popstate', pop);
     const source = '/puff-up/entry.js';
     import(/* webpackIgnore: true */ source)
       .then(({ mountGame }) => {
         if (!live || !root.current) return;
-        dispose = mountGame(root.current, {
+        controller = mountGame(root.current, {
           portfolio: document.querySelector('.bento-page'),
           trigger,
           onClose,
+          direct,
+          onEntering: entering,
+          onEntered: entered,
+          onReturned: returned,
         });
       })
       .catch(() => live && setError(true));
     return () => {
       live = false;
-      dispose?.();
+      removeEventListener('popstate', pop);
+      controller?.dispose();
     };
-  }, [trigger, onClose]);
+  }, [trigger, onClose, onEntered, direct, directPage, router]);
 
   return createPortal(
     <div className="puff-game" ref={root} data-modality="pointer">
@@ -66,7 +116,16 @@ export default function PuffGame({
       {error && (
         <dialog open className="puff-game-error" aria-labelledby="game-error-title">
           <h2 id="game-error-title">The climb couldn’t open.</h2>
-          <button type="button" onClick={onClose}>
+          <button
+            type="button"
+            onClick={() => {
+              if (location.pathname === '/game') {
+                markReturnToHome();
+                router.replace(history.state?.puffReturnUrl ?? '/');
+              }
+              onClose();
+            }}
+          >
             Back to portfolio
           </button>
         </dialog>

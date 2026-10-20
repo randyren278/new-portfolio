@@ -380,3 +380,7 @@ html.puff-theme body {
   background: var(--surface-page);
   pointer-events: auto;
 }
+
+.puff-bento.game-opening {
+  visibility: hidden;
+}

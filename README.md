@@ -127,7 +127,9 @@ Tap Puff in Correspondence twice within five seconds to discover the endless
 climb. On a phone, hold the left or right half of the screen to steer; slide
 across the midpoint to change direction. Desktop supports arrow keys or A/D,
 Escape to pause and Space to resume. Back returns to the same portfolio.
-The game loads on demand and preserves the page underneath.
+Playing updates the address to `/game`; that link also opens the game directly
+and survives a refresh. The game loads on demand and preserves the page underneath.
+Broken red platforms rebuild after five seconds of active play if still visible.
 
 ## Material
 

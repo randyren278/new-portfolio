@@ -186,6 +186,7 @@ export function createRun(seed = 0x50554646) {
     landings: 0,
     lastLanding: null,
     effects: [],
+    brokenPlatforms: [],
   };
 }
 export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height + 80) {
@@ -193,6 +194,13 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
   const delta = Number.isFinite(dt) ? clamp(dt, 0, 1 / 30) : 0;
   const now = run.player.timeMs + delta * 1000;
   let platforms = run.platforms.map((p) => platformAtTime(p, now));
+  const brokenPlatforms = [];
+  for (const repair of run.brokenPlatforms ?? []) {
+    if (repair.platform.y < run.cameraY) continue;
+    if (now >= repair.readyAt) {
+      if (repair.platform.y <= run.cameraY + WORLD.height) platforms.push({ ...repair.platform });
+    } else brokenPlatforms.push(repair);
+  }
   let player = step(run.player, { ...input, autoHop: true }, delta, DEFAULT_TUNING, platforms);
   const effects = (run.effects ?? []).filter((e) => now - e.at < 650);
   let lastLanding = run.lastLanding,
@@ -216,6 +224,7 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     };
     landings++;
     if (contact?.kind === 'crumble') {
+      brokenPlatforms.push({ platform: { ...contact }, readyAt: player.timeMs + 5000 });
       addEffect('break', contact);
       platforms = platforms.filter((p) => p.id !== contact.id);
     }
@@ -239,6 +248,7 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     landings,
     lastLanding,
     effects: effects.slice(-8),
+    brokenPlatforms: brokenPlatforms.filter((repair) => repair.platform.y >= cameraY),
     status: player.y - cameraY > fallLimit ? 'over' : 'playing',
   };
 }

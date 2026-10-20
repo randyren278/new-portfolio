@@ -1,5 +1,5 @@
 /**
- * Set (in sessionStorage) when leaving for /training; the bento consumes
+ * Set (in sessionStorage) when returning from training or the game; the bento consumes
  * it on mount and skips the Puff intro, so coming back doesn't replay it.
  */
 const KEY = 'rr-return-from-training';

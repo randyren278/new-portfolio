@@ -509,3 +509,65 @@ test('desktop canvas clicks and ended runs do not capture steering', () => {
     assert.equal(f.starts, 0);
   }
 });
+
+test('broken red platforms restore at five seconds, keeping their original geometry', () => {
+  const original = createRun(17),
+    red = original.platforms.find((p) => p.kind === 'crumble' && p.id !== 'floor');
+  const impact = {
+    ...original,
+    player: {
+      ...original.player,
+      x: red.x + red.width / 2,
+      y: red.y - 1,
+      vy: 300,
+      grounded: false,
+      platformId: null,
+    },
+  };
+  const broken = stepRun(impact);
+  assert.ok(!broken.platforms.some((p) => p.id === red.id));
+  const repair = broken.brokenPlatforms.find((r) => r.platform.id === red.id);
+  assert.equal(repair.readyAt, broken.player.timeMs + 5000);
+  const at = (timeMs) =>
+    stepRun(
+      {
+        ...broken,
+        player: { ...broken.player, x: 24, y: broken.cameraY + 500, vy: 0, grounded: true, timeMs },
+      },
+      {},
+      0,
+    );
+  assert.ok(!at(repair.readyAt - 1).platforms.some((p) => p.id === red.id));
+  const restored = at(repair.readyAt);
+  assert.deepEqual(
+    restored.platforms.find((p) => p.id === red.id),
+    red,
+  );
+  assert.equal(restored.brokenPlatforms.length, 0);
+  assert.ok(!broken.platforms.some((p) => p.id === red.id), 'previous state stays unchanged');
+});
+test('scrolled-off red platforms and the initial launch pad never regenerate', () => {
+  const original = createRun(17),
+    red = original.platforms.find((p) => p.kind === 'crumble' && p.id !== 'floor');
+  const broken = stepRun({
+    ...original,
+    player: {
+      ...original.player,
+      x: red.x + red.width / 2,
+      y: red.y - 1,
+      vy: 300,
+      grounded: false,
+      platformId: null,
+    },
+  });
+  const due = broken.brokenPlatforms[0].readyAt,
+    cameraY = red.y - 700;
+  const ended = stepRun(
+    { ...broken, cameraY, player: { ...broken.player, y: cameraY + 500, timeMs: due } },
+    {},
+    0,
+  );
+  assert.ok(!ended.platforms.some((p) => p.id === red.id));
+  assert.equal(ended.brokenPlatforms.length, 0);
+  assert.equal(stepRun(createRun(17)).brokenPlatforms.length, 0);
+});
