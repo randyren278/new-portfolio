@@ -13,7 +13,12 @@ const hz = (midi) => 440 * 2 ** ((midi - 69) / 12);
 export function cuesFor(previous, run) {
   const cues = [];
   if (run.status === 'over' && previous.status !== 'over') return ['caught'];
-  if (run.status === 'rescue' && previous.status !== 'rescue') return ['ufo'];
+  // A rescue opens with the same catch as an ending; the UFO comes once Puff has fallen away.
+  if (run.status === 'rescue') {
+    if (previous.status !== 'rescue') return ['caught'];
+    const arrives = run.rescue.at + run.rescue.fallMs;
+    return previous.player.timeMs < arrives && run.player.timeMs >= arrives ? ['ufo'] : [];
+  }
   const fresh = (type) => run.effects.some((e) => e.at === run.player.timeMs && e.type === type);
   if (run.player.landed) cues.push('hop');
   if (fresh('break')) cues.push('crack');

@@ -12,12 +12,21 @@ import {
   CALM_MS,
   STARS_FOR_RESCUE,
   RESCUE_MS,
+  FALL_MIN_MS,
+  FALL_CAP_MS,
+  fallenY,
   HAZARD_LAG,
   platformAtTime,
   SPRING_SPEED,
 } from '../public/puff-up/game/climb.js';
 import { playBot } from './puff-bot.mjs';
-import { FIXED_DT, DEFAULT_TUNING, createState, step } from '../public/puff-up/game/physics.js';
+import {
+  FIXED_DT,
+  DEFAULT_TUNING,
+  WORLD,
+  createState,
+  step,
+} from '../public/puff-up/game/physics.js';
 const center = (p) => p.x + p.width / 2;
 const steer = (p, x) => {
   const v = (x - p.x) * 0.035 - p.vx * 0.012;
@@ -822,6 +831,7 @@ test('landing on a spark pauses the rising line for 2.5 s and spends the spark',
   assert.equal(run.hazardY, held, 'the line holds while calm');
 });
 import { cuesFor } from '../public/puff-up/game/audio.js';
+import { ufoAt } from '../public/puff-up/game/feedback.js';
 test('sound cues follow what happened in each step', () => {
   const landOn = (kind, extra = {}) => {
     let run = {
@@ -933,15 +943,40 @@ test('with three stars a fall calls the UFO, which sets Puff back on the track',
   assert.equal(run.status, 'rescue');
   assert.equal(run.stars, 0);
   assert.ok(run.effects.some((e) => e.type === 'ufo'));
-  const { to } = run.rescue,
-    ledge = run.platforms.find((p) => p.id === to.id);
+  const { from, to, at, fallMs } = run.rescue,
+    ledge = run.platforms.find((p) => p.id === to.id),
+    caughtLine = run.hazardY;
   // A main-path ledge on screen, no higher than Puff's best ledge, set down from its certificate.
   assert.ok(/^\d+$/.test(to.id) && ledge.witness.some((w) => w.x === to.x && w.vx === to.vx));
   assert.ok(to.y >= run.peakY + 100 && to.y - run.cameraY < 560, JSON.stringify(to));
-  assert.ok(run.hazardY >= to.y + 300);
-  assert.deepEqual(cuesFor(falling, run), ['ufo']);
+  // It opens like an ending: the catch, then Puff falls out of view under the game's gravity
+  // while the line holds where it caught him.
+  assert.deepEqual(cuesFor(falling, run), ['caught']);
+  assert.ok(fallMs >= FALL_MIN_MS && fallMs <= FALL_CAP_MS, String(fallMs));
+  assert.equal(from.y, run.player.y);
+  let cues = [];
+  while (run.player.timeMs + FIXED_DT * 1000 < at + fallMs) {
+    const before = run;
+    run = stepRun(run);
+    cues.push(...cuesFor(before, run));
+    assert.equal(run.status, 'rescue');
+    assert.equal(run.hazardY, caughtLine);
+    assert.ok(Math.abs(run.player.y - fallenY(from.y, from.vy, run.player.timeMs - at)) < 1e-6);
+  }
+  assert.deepEqual(cues, []);
+  // Then the UFO comes, once, and the line drops back below the ledge while it works.
+  for (let t = 0; t < 4; t++) {
+    const before = run;
+    run = stepRun(run);
+    cues.push(...cuesFor(before, run));
+  }
+  assert.deepEqual(cues, ['ufo']);
+  // The beam lifts him from just below the view, not from wherever the fall left him.
+  assert.ok(run.player.y - run.cameraY <= WORLD.height + 80 + 1e-6, String(run.player.y));
   const score = run.score;
-  for (let t = 0; t < (RESCUE_MS / 1000) * 120 + 2; t++) run = stepRun(run);
+  while (run.player.timeMs < at + fallMs + RESCUE_MS * 0.9) run = stepRun(run);
+  assert.ok(run.hazardY >= to.y + 300);
+  while (run.status === 'rescue') run = stepRun(run);
   assert.equal(run.status, 'playing');
   assert.equal(run.lastLanding.id, to.id);
   assert.equal(run.score, score, 'a rescue never adds height');
@@ -949,6 +984,44 @@ test('with three stars a fall calls the UFO, which sets Puff back on the track',
   // Puff takes off from the ledge and the line holds while he gets going.
   for (let t = 0; t < 240; t++) run = stepRun(run);
   assert.equal(run.status, 'playing');
+});
+test('a rescue falls like an ending: until Puff is out of view, within the same bounds', () => {
+  const climbing = midClimb(4, 300);
+  for (const depth of [100, 300, 400, 650, 900]) {
+    const run = stepRun({
+      ...climbing,
+      stars: 3,
+      hazardY: climbing.cameraY + depth - 5,
+      player: {
+        ...climbing.player,
+        y: climbing.cameraY + depth,
+        grounded: false,
+        platformId: null,
+      },
+    });
+    assert.equal(run.status, 'rescue', String(depth));
+    const { from, fallMs } = run.rescue,
+      outY = run.cameraY + WORLD.height + 80,
+      out = fallenY(from.y, from.vy, fallMs);
+    assert.ok(fallMs >= FALL_MIN_MS && fallMs <= FALL_CAP_MS, `${depth}: ${fallMs}`);
+    if (fallMs > FALL_MIN_MS) assert.ok(Math.abs(out - outY) < 1e-6, `${depth}: ${out}`);
+    else assert.ok(out >= outY - 1e-6, `${depth}: ${out}`);
+  }
+});
+test('the UFO comes only once Puff has fallen away, and hovers above the controls', () => {
+  const rescue = { at: 1000, fallMs: 600, from: { x: 300, y: 500, vy: 0 }, to: { x: 320, y: 400 } },
+    arrives = 1000 + 600;
+  assert.equal(ufoAt(rescue, arrives - 1, 300, 900, 0, 560), null);
+  assert.ok(ufoAt(rescue, arrives, 300, 900, 0, 560));
+  // While Puff is still below the view it waits 70 px above the floor with the beam on.
+  assert.deepEqual(ufoAt(rescue, arrives + RESCUE_MS * 0.5, 300, 900, 0, 560), {
+    x: 300,
+    y: 490,
+    beam: true,
+  });
+  // Once he is up in view it rides 150 px above him.
+  assert.equal(ufoAt(rescue, arrives + RESCUE_MS * 0.5, 300, 420, 0, 560).y, 270);
+  assert.equal(ufoAt(rescue, arrives + RESCUE_MS + 1, 320, 400, 0, 560), null);
 });
 test('without three stars a fall still ends the climb', () => {
   const climbing = midClimb(4, 300);

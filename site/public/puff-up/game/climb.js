@@ -141,6 +141,19 @@ export const CALM_MS = 2500;
 export const STARS_FOR_RESCUE = 3;
 /** How long the UFO takes to beam Puff back onto the track. */
 export const RESCUE_MS = 1700;
+/** When the line catches Puff he drops under the game's gravity until he is out of view, at most
+ * FALL_CAP_MS. It usually catches him at the bottom edge, half out of view, so the fall runs at
+ * least FALL_MIN_MS to be seen. An ending and a rescue open with the same fall. */
+export const FALL_MIN_MS = 550,
+  FALL_CAP_MS = 1500;
+/** Puff's feet `ms` into a fall that began at `y` dropping at `vy`. */
+export const fallenY = (y, vy, ms) =>
+  y + (vy * ms) / 1000 + 0.5 * DEFAULT_TUNING.gravity * (ms / 1000) ** 2;
+function fallDuration(y, vy, outY) {
+  const g = DEFAULT_TUNING.gravity,
+    ms = ((-vy + Math.sqrt(vy * vy + 2 * g * Math.max(0, outY - y))) / g) * 1000;
+  return clamp(ms, FALL_MIN_MS, FALL_CAP_MS);
+}
 const smooth = (u) => u * u * (3 - 2 * u);
 // Where a rescued Puff is set down: a main-path ledge on screen, the highest no higher than his
 // best ledge (the rescue then drops the line below it), so a rescue never gains him height.
@@ -153,25 +166,43 @@ function rescueLedge(platforms, { cameraY, peakY }) {
   if (behind.length) return behind.reduce((a, b) => (b.y < a.y ? b : a));
   return onScreen.reduce((a, b) => (b.y > a.y ? b : a), onScreen[0]) ?? null;
 }
-// One step of a rescue: the UFO lifts Puff from where he fell to the ledge, then sets him down
-// as if he had just landed there, from one of its certified takeoff states.
+// One step of a rescue: Puff first falls out of view as when a climb ends, then the UFO lifts
+// him from below to the ledge and sets him down as if he had just landed there, from one of its
+// certified takeoff states.
 function stepRescue(run, dt) {
   const delta = Number.isFinite(dt) ? clamp(dt, 0, 1 / 30) : 0,
     now = run.player.timeMs + delta * 1000,
-    { from, to, at } = run.rescue,
-    progress = (now - at) / RESCUE_MS;
+    { from, to, at, fallMs, outY, line } = run.rescue,
+    progress = (now - at - fallMs) / RESCUE_MS;
   let platforms = run.platforms.map((p) => platformAtTime(p, now));
   const effects = (run.effects ?? []).filter((e) => now - e.at < 650);
-  if (progress < 1) {
-    const lift = smooth(clamp((progress - 0.3) / 0.55, 0, 1));
+  if (progress < 0)
     return {
       ...run,
       platforms,
       effects,
       player: {
         ...run.player,
+        y: fallenY(from.y, from.vy, now - at),
+        vy: from.vy + (DEFAULT_TUNING.gravity * (now - at)) / 1000,
+        timeMs: now,
+      },
+    };
+  if (progress < 1) {
+    // The beam lifts him from just out of view, however far he has fallen, so he shows soon.
+    const low = Math.min(fallenY(from.y, from.vy, fallMs), outY),
+      lift = smooth(clamp((progress - 0.3) / 0.55, 0, 1));
+    return {
+      ...run,
+      platforms,
+      effects,
+      // The line cools and drops back below the ledge while the UFO swoops in, and holds.
+      hazardY: line[0] + (line[1] - line[0]) * smooth(clamp(progress / 0.3, 0, 1)),
+      calmUntil: at + fallMs + RESCUE_MS + CALM_MS,
+      player: {
+        ...run.player,
         x: from.x + (to.x - from.x) * lift,
-        y: from.y + (to.y - from.y) * lift,
+        y: low + (to.y - low) * lift,
         vx: 0,
         vy: 0,
         grounded: false,
@@ -737,17 +768,23 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
   // A fall with three stars calls the UFO instead of ending the climb.
   const ledge = stars >= STARS_FOR_RESCUE && rescueLedge(next.platforms, next);
   if (!ledge) return { ...next, status: 'over' };
-  const from = { x: player.x, y: Math.min(player.y, cameraY + WORLD.height + 40) },
+  const from = { x: player.x, y: player.y, vy: Math.max(0, player.vy) },
     takeoff = ledge.witness[0];
   return {
     ...next,
     status: 'rescue',
     stars: 0,
-    rescue: { from, to: { id: ledge.id, x: takeoff.x, vx: takeoff.vx, y: ledge.y }, at: now },
-    // The line drops back below the ledge and holds while the UFO works.
-    hazardY: Math.max(hazardY, ledge.y + 300),
-    calmUntil: now + RESCUE_MS + CALM_MS,
-    player: { ...player, ...from, vx: 0, vy: 0, grounded: false, landed: false, events: [] },
+    rescue: {
+      from,
+      to: { id: ledge.id, x: takeoff.x, vx: takeoff.vx, y: ledge.y },
+      at: now,
+      // Where his sprite has just left the view, and how long his fall takes to get there.
+      outY: cameraY + fallLimit,
+      fallMs: fallDuration(from.y, from.vy, cameraY + fallLimit),
+      // Where the line caught him, and where it drops to once the UFO comes.
+      line: [hazardY, Math.max(hazardY, ledge.y + 300)],
+    },
+    player: { ...player, vx: 0, vy: from.vy, grounded: false, landed: false, events: [] },
     effects: [...next.effects, { type: 'ufo', x: from.x, y: from.y, width: 0, at: now }],
   };
 }

@@ -1,5 +1,13 @@
 import { WORLD, DEFAULT_TUNING, FIXED_DT } from './physics.js';
-import { createRun, stepRun, platformAtTime, rebuildMs } from './climb.js';
+import {
+  createRun,
+  stepRun,
+  platformAtTime,
+  rebuildMs,
+  fallenY,
+  FALL_MIN_MS,
+  FALL_CAP_MS,
+} from './climb.js';
 import { ANIMATIONS, renderPuff, samplePose } from './puff-motion.js';
 import { sampleFlightMotion } from './flight-pose.js';
 import { sampleGameVisual } from './game-visual.js';
@@ -48,19 +56,12 @@ let bestAtStart = 0,
   endedAt = null,
   // Where Puff was and how fast he was falling when the climb ended.
   fallFrom = null;
-// The line usually catches a falling Puff at the bottom edge, half out of view, so the ending
-// always runs long enough to see him drop away before the results come up.
 // Local testing only: ?stars=3 on localhost starts each climb with a charged rescue.
 const testStars =
   location.hostname === 'localhost'
     ? Math.min(3, Number(new URLSearchParams(location.search).get('stars')) || 0)
     : 0;
-const ENDING_MIN_MS = 550,
-  ENDING_CAP_MS = 1500,
-  sound = createSound();
-// After a climb ends Puff drops under the game's own gravity until he is out of view.
-const fallenY = (ms) =>
-  fallFrom.y + (fallFrom.vy * ms) / 1000 + 0.5 * DEFAULT_TUNING.gravity * (ms / 1000) ** 2;
+const sound = createSound();
 let raf = null,
   lastTime = null,
   accumulator = 0,
@@ -160,16 +161,21 @@ function draw() {
     player = run.player,
     ending = endedAt === null ? 0 : performance.now() - endedAt,
     puffX = mix(previous.player.x, player.x, a),
-    puffY = endedAt === null ? mix(previous.player.y, player.y, a) : fallenY(ending);
+    puffY =
+      endedAt === null
+        ? mix(previous.player.y, player.y, a)
+        : fallenY(fallFrom.y, fallFrom.vy, ending),
+    // How long since the line caught Puff, for the jolt as he goes: an ending or a rescue.
+    caughtAge = endedAt !== null ? ending : run.rescue ? t - run.rescue.at : null;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cssWidth, cssHeight);
   ctx.translate(left, top);
   ctx.scale(scale, scale);
   const [shakeX, shakeY] = shake(run.effects, t, reduced),
-    caught = reduced || ending > 300 ? 0 : 6 * (1 - ending / 300) ** 2;
+    caught = reduced || caughtAge === null || caughtAge > 300 ? 0 : 6 * (1 - caughtAge / 300) ** 2;
   ctx.translate(
-    shakeX + Math.sin(ending * 0.09) * caught,
-    shakeY + Math.cos(ending * 0.11) * caught,
+    shakeX + Math.sin(caughtAge * 0.09) * caught,
+    shakeY + Math.cos(caughtAge * 0.11) * caught,
   );
   ctx.imageSmoothingEnabled = false;
   ctx.font = '9px Plex,monospace';
@@ -337,7 +343,7 @@ function draw() {
     }
   }
   drawDust(ctx, run.lastLanding, t, cameraY);
-  const ufo = ufoAt(run.rescue, t, puffX, puffY, cameraY);
+  const ufo = ufoAt(run.rescue, t, puffX, puffY, cameraY, (gaugeTop - top) / scale);
   drawBeam(ctx, ufo, puffX, puffY, cameraY, t);
   const falling = endedAt !== null,
     v = falling ? { animation: 'fall', time: player.timeMs + ending } : sampleGameVisual(run),
@@ -509,10 +515,10 @@ function tick(now) {
   // After a climb ends Puff falls out of view (a jolt as he goes), then the results show.
   if (endedAt !== null) {
     const { scale, top } = viewTransform(),
-      spriteTop = fallenY(now - endedAt) - 144 - run.cameraY,
+      spriteTop = fallenY(fallFrom.y, fallFrom.vy, now - endedAt) - 144 - run.cameraY,
       inView = spriteTop < (cssHeight - top) / scale;
     const elapsed = now - endedAt;
-    if (!reduced && (inView || elapsed < ENDING_MIN_MS) && elapsed < ENDING_CAP_MS) {
+    if (!reduced && (inView || elapsed < FALL_MIN_MS) && elapsed < FALL_CAP_MS) {
       draw();
       raf = requestAnimationFrame(tick);
       return;
@@ -554,7 +560,9 @@ function tick(now) {
       break;
     }
   }
-  if (endedAt === null) sound.danger(danger(run.hazardY, run.player.y));
+  // Quiet while Puff falls away and the UFO works, as after an ending.
+  if (endedAt === null)
+    sound.danger(run.status === 'rescue' ? 0 : danger(run.hazardY, run.player.y));
   draw();
   if (running) raf = requestAnimationFrame(tick);
 }

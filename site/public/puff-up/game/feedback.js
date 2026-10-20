@@ -181,14 +181,16 @@ export function squash(landing, t, reduced) {
 }
 
 const ease = (u) => u * u * (3 - 2 * u);
-/** Where the rescue UFO is at blended time `t`: it swoops in, hovers over Puff while the beam
- * lifts him, then leaves up and away. Returns null outside a rescue. */
-export function ufoAt(rescue, t, puffX, puffY, cameraY) {
+/** Where the rescue UFO is at blended time `t`: once Puff has fallen out of view it swoops in,
+ * hovers over him while the beam lifts him back into view and up to the ledge, then leaves up
+ * and away. It stays above `floor`, the bottom of the clear view, while he is still below it.
+ * Returns null outside the UFO's part of a rescue. */
+export function ufoAt(rescue, t, puffX, puffY, cameraY, floor) {
   if (!rescue) return null;
-  const p = (t - rescue.at) / RESCUE_MS;
+  const p = (t - rescue.at - rescue.fallMs) / RESCUE_MS;
   if (p < 0 || p > 1) return null;
-  const hover = (x, y) => ({ x, y: y - 150 }),
-    from = hover(rescue.from.x, rescue.from.y),
+  const hover = (x, y) => ({ x, y: Math.min(y - 150, cameraY + floor - 70) }),
+    from = hover(puffX, puffY),
     to = hover(rescue.to.x, rescue.to.y);
   if (p < 0.3) {
     const u = ease(p / 0.3);
