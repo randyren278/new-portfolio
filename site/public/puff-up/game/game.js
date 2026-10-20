@@ -317,7 +317,6 @@ function syncUI() {
   $('overlay-kicker').textContent = over ? 'THIS CLIMB' : started ? 'PAUSED' : 'PUFF UP';
   $('run-results').hidden = !over;
   $('result-height').textContent = run.score;
-  $('result-landings').textContent = run.landings;
   $('overlay-title').hidden = over;
   $('overlay-copy').hidden = over;
   document.querySelector('.height-hud').hidden = over;
