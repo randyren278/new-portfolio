@@ -83,7 +83,8 @@ taken from the chord the music is on, rising with a climbing streak, plus crack,
 boing, kick, spark, zone chime, new best and a drone as the line nears. M or SOUND
 mutes everything and persists. Also zone title cards below Puff, a dashed best-height line, an off-screen
 line gauge, landing squash and dust, shake for springs, kicks and breaks only, and
-a 700 ms hit beat before the results (none of the motion under reduced motion).
+Puff falling out of view under the game's gravity before the results (no fall or
+shake under reduced motion).
 
 Frames: the simulation stays fixed-step and drawing blends the last two steps, so
 motion is even at any refresh rate; Puff redraws into one reused canvas.

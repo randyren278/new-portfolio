@@ -41,9 +41,14 @@ let bestAtStart = 0,
   streak = 0,
   lastLandY = 575,
   newBestAt = null,
-  endedAt = null;
-const ENDING_MS = 700,
+  endedAt = null,
+  // Where Puff was and how fast he was falling when the climb ended.
+  fallFrom = null;
+const ENDING_CAP_MS = 1500,
   sound = createSound();
+// After a climb ends Puff drops under the game's own gravity until he is out of view.
+const fallenY = (ms) =>
+  fallFrom.y + (fallFrom.vy * ms) / 1000 + 0.5 * DEFAULT_TUNING.gravity * (ms / 1000) ** 2;
 let raf = null,
   lastTime = null,
   accumulator = 0,
@@ -140,14 +145,14 @@ function draw() {
     t = mix(previous.player.timeMs, run.player.timeMs, a),
     cameraY = mix(previous.cameraY, run.cameraY, a),
     player = run.player,
+    ending = endedAt === null ? 0 : performance.now() - endedAt,
     puffX = mix(previous.player.x, player.x, a),
-    puffY = mix(previous.player.y, player.y, a);
+    puffY = endedAt === null ? mix(previous.player.y, player.y, a) : fallenY(ending);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cssWidth, cssHeight);
   ctx.translate(left, top);
   ctx.scale(scale, scale);
-  const ending = endedAt === null ? 0 : performance.now() - endedAt,
-    [shakeX, shakeY] = shake(run.effects, t, reduced),
+  const [shakeX, shakeY] = shake(run.effects, t, reduced),
     caught = reduced || ending > 300 ? 0 : 6 * (1 - ending / 300) ** 2;
   ctx.translate(
     shakeX + Math.sin(ending * 0.09) * caught,
@@ -319,10 +324,13 @@ function draw() {
     }
   }
   drawDust(ctx, run.lastLanding, t, cameraY);
-  const v =
-      endedAt === null || reduced ? sampleGameVisual(run) : { animation: 'hit', time: ending },
+  const falling = endedAt !== null,
+    v = falling ? { animation: 'fall', time: player.timeMs + ending } : sampleGameVisual(run),
     flight = ['jump', 'fall'].includes(v.animation)
-      ? sampleFlightMotion(player, DEFAULT_TUNING)
+      ? sampleFlightMotion(
+          falling ? { vx: 0, vy: fallFrom.vy + (DEFAULT_TUNING.gravity * ending) / 1000 } : player,
+          DEFAULT_TUNING,
+        )
       : null,
     image = sprite(v.animation, v.time, player.facing, flight),
     [sx, sy] = squash(run.lastLanding, t, reduced),
@@ -468,9 +476,12 @@ function tick(now) {
   if (lastTime !== null) accumulator += Math.min(0.1, (now - lastTime) / 1000);
   lastTime = now;
   let steps = 0;
-  // After a fall the scene holds for a beat (Puff's hit, a jolt) before the results.
+  // After a climb ends Puff falls out of view (a jolt as he goes), then the results show.
   if (endedAt !== null) {
-    if (now - endedAt < ENDING_MS) {
+    const { scale, top } = viewTransform(),
+      spriteTop = fallenY(now - endedAt) - 144 - run.cameraY,
+      inView = spriteTop < (cssHeight - top) / scale;
+    if (!reduced && inView && now - endedAt < ENDING_CAP_MS) {
       draw();
       raf = requestAnimationFrame(tick);
       return;
@@ -499,10 +510,11 @@ function tick(now) {
     }
     if (run.status === 'over') {
       endedAt = now;
+      fallFrom = { y: run.player.y, vy: Math.max(0, run.player.vy) };
       previous = run;
       accumulator = 0;
       sound.danger(0);
-      // The music fades through the hit beat and the context suspends once it is quiet.
+      // The music fades as Puff falls away and the context suspends once it is quiet.
       sound.rest();
       break;
     }
