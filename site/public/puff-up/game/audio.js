@@ -1,5 +1,7 @@
-// Synthesized sound: no files to load. The AudioContext is made on the first Start (a user
-// gesture), suspended while paused, and the mute choice persists like the best height.
+// Synthesized sound: no files to load. The AudioContext is made on the first Start and
+// suspended while paused or after a climb. A browser can still hold it suspended when the
+// portfolio starts the game for the player, so any later tap or key resumes it. The mute choice
+// persists like the best height.
 const MUTE_KEY = 'puff-up:muted:v1';
 const PENTATONIC = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
 
@@ -23,6 +25,7 @@ export function createSound() {
     droneGain = null,
     noiseBuffer = null,
     droneLevel = 0,
+    paused = false,
     muted = false;
   try {
     muted = localStorage.getItem(MUTE_KEY) === '1';
@@ -115,10 +118,16 @@ export function createSound() {
     },
     /** Call from a user gesture; resumes a paused context. */
     start() {
-      if (ready() && ctx.state !== 'running') ctx.resume();
+      paused = false;
+      if (ready() && ctx.state !== 'running') ctx.resume().catch(() => {});
+    },
+    /** Resume a context the browser held suspended; never creates one. */
+    unlock() {
+      if (ctx && ctx.state === 'suspended' && !paused) ctx.resume().catch(() => {});
     },
     pause() {
-      if (ctx && ctx.state === 'running') ctx.suspend();
+      paused = true;
+      if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
     },
     cue(name, streak = 0) {
       if (ctx && !muted && ctx.state === 'running') play[name]?.(streak);

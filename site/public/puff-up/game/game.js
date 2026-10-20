@@ -9,6 +9,7 @@ import {
   danger,
   drawBanner,
   drawBest,
+  CALLOUT_Y,
   drawCallout,
   drawDust,
   drawGateLabel,
@@ -318,7 +319,8 @@ function draw() {
     }
   }
   drawDust(ctx, run.lastLanding, t, cameraY);
-  const v = endedAt === null ? sampleGameVisual(run) : { animation: 'hit', time: ending },
+  const v =
+      endedAt === null || reduced ? sampleGameVisual(run) : { animation: 'hit', time: ending },
     flight = ['jump', 'fall'].includes(v.animation)
       ? sampleFlightMotion(player, DEFAULT_TUNING)
       : null,
@@ -332,7 +334,9 @@ function draw() {
   ctx.drawImage(image, -104, -144, 208, 224);
   ctx.restore();
   drawBanner(ctx, run.banner, t);
-  if (newBestAt !== null) drawCallout(ctx, 'PAST YOUR BEST', 'New best', t - newBestAt, 1800);
+  // Below the zone card, so a best just past a gate never overlaps it.
+  if (newBestAt !== null)
+    drawCallout(ctx, 'PAST YOUR BEST', 'New best', t - newBestAt, 1800, CALLOUT_Y + 80);
   // Writing the HUD invalidates its layout and paint even when the text is unchanged.
   if (run.score !== shownScore) {
     shownScore = run.score;
@@ -473,6 +477,7 @@ function tick(now) {
     }
     running = false;
     endedAt = null;
+    sound.pause();
     stopFrames();
     saveBest();
     syncUI();
@@ -521,13 +526,15 @@ const touch = bindTouchSteering(canvas, {
 $('play-toggle').addEventListener('click', () => (running ? pause() : start()));
 function syncSound() {
   $('sound-toggle').textContent = sound.muted ? 'SOUND OFF' : 'SOUND ON';
-  $('sound-toggle').setAttribute('aria-pressed', String(sound.muted));
 }
 $('sound-toggle').addEventListener('click', () => {
   sound.toggle();
   syncSound();
-  if (running) canvas.focus({ preventScroll: true });
+  // Hand focus back so Space keeps meaning start/resume, not "press this button again".
+  canvas.focus({ preventScroll: true });
 });
+// A context the browser held suspended (no gesture at start) resumes on the next real input.
+for (const type of ['pointerdown', 'keydown']) addEventListener(type, () => sound.unlock(), true);
 addEventListener('keydown', (e) => {
   if (e.code !== 'KeyM' || e.metaKey || e.ctrlKey || e.altKey) return;
   sound.toggle();

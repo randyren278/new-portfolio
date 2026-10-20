@@ -71,8 +71,8 @@ export function drawGateLabel(ctx, p, y) {
 
 /** A title card that fades in, holds and fades out. It sits below Puff, over ledges already
  * climbed, so it never hides what is coming. */
-const CALLOUT_Y = 455;
-export function drawCallout(ctx, kicker, title, age, durationMs = 2400) {
+export const CALLOUT_Y = 455;
+export function drawCallout(ctx, kicker, title, age, durationMs = 2400, y = CALLOUT_Y) {
   if (age < 0 || age > durationMs) return;
   ctx.save();
   ctx.globalAlpha = Math.min(1, age / 220, (durationMs - age) / 600);
@@ -80,14 +80,16 @@ export function drawCallout(ctx, kicker, title, age, durationMs = 2400) {
   const width = Math.max(ctx.measureText(title).width, kicker.length * 5.6) + 44;
   ctx.fillStyle = 'rgba(24,24,24,0.88)';
   ctx.beginPath();
-  ctx.roundRect(WORLD.width / 2 - width / 2, CALLOUT_Y - 26, width, 66, 14);
+  // roundRect is missing before Safari 16; a square card is better than a frozen frame.
+  if (ctx.roundRect) ctx.roundRect(WORLD.width / 2 - width / 2, y - 26, width, 66, 14);
+  else ctx.rect(WORLD.width / 2 - width / 2, y - 26, width, 66);
   ctx.fill();
   ctx.textAlign = 'center';
   ctx.fillStyle = '#eee7d7';
-  ctx.fillText(title, WORLD.width / 2, CALLOUT_Y + 28);
+  ctx.fillText(title, WORLD.width / 2, y + 28);
   ctx.fillStyle = '#a5a69b';
   ctx.font = '9px Plex,monospace';
-  ctx.fillText(kicker, WORLD.width / 2, CALLOUT_Y - 6);
+  ctx.fillText(kicker, WORLD.width / 2, y - 6);
   ctx.restore();
 }
 

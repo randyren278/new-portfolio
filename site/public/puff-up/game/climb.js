@@ -468,9 +468,10 @@ function extend(platforms, cameraY, rng, nextId, plan) {
           95,
           545,
         ),
-        // Keep both landing zones apart so a landing is never ambiguous.
+        // Keep both landing zones apart at every phase, so a landing is never ambiguous.
         apart =
-          laneCentre !== null && Math.abs(laneCentre - center) >= (width + laneWidth) / 2 + 60,
+          laneCentre !== null &&
+          Math.abs(laneCentre - center) >= (width + laneWidth) / 2 + amplitude + 60,
         laneWitness = apart
           ? certify(from, rise, source.y - y, laneCentre - laneHalf, laneCentre + laneHalf)
           : [];
@@ -599,7 +600,9 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
       addEffect('break', contact);
       platforms = platforms.filter((p) => p.id !== contact.id);
     }
-    if (contact?.gate !== undefined) banner = { zone: contact.gate, at: player.timeMs };
+    // A gate names its zone once, not on every bounce.
+    if (contact?.gate !== undefined && banner?.zone !== contact.gate)
+      banner = { zone: contact.gate, at: player.timeMs };
     if (contact) player = launch(player, contact);
     if (contact?.spark) {
       calmUntil = player.timeMs + CALM_MS;

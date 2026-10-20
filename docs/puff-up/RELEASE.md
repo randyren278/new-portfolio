@@ -14,7 +14,8 @@ Browser Back/Forward, including reversing an in-progress return, follows the lat
 navigation. The history entry is pushed in the trusted Play click for WebKit.
 
 Red crumble platforms return in their original position after 3 seconds in the first
-zone, 1 second longer per zone above (real time), while still visible. This uses simulation time: pause freezes the countdown,
+zone and 1 second longer per zone above, while still visible. The game never runs
+faster than real time, so these are real seconds of play; pause freezes the countdown,
 restart clears pending repairs, and the initial launch pad never regenerates.
 
 Mobile touch input uses the screen midpoint. Pointer capture supports sliding
@@ -53,27 +54,48 @@ OS preference emulation and long endurance were not exercised for this release.
 
 ## Zones
 
-Every 200 m is a step up, driven by the one `ZONES` table in `game/climb.js`; past
-the table the last zone repeats. Per zone: the rising line's speed (2.5 → 12 m per
-game second), the game speed (1.0× → 1.4× real time), the solid/crumble/moving/spring
-mix (stone 40% → 10%), ledge widths, and mover swing and period (peak 70 → 234 px
-per game second). The line trails 460 px below the peak while Puff outclimbs it;
-touching it ends the climb.
+Every 200 m is a step up, driven by the `ZONES` and `SEGMENTS` tables in
+`game/climb.js`; past the table the last zone remixes every signature. The game
+speed never changes. Per zone: the rising line's speed (2.5 → 12 m/s), the
+solid/crumble/moving/spring/kicker mix, ledge widths, and mover swing and period.
+
+Each zone is an arc. A gate (two wide stones, the line slowed to 40%) names the
+zone; its signature is taught on wider ledges, then alternates with mixed stretches
+(line ×1.05), and a twist combines it with another mechanic near the top (×1.1).
+Signatures: crumble runs, mover chains, kickers (fling Puff sideways at full speed),
+switchbacks. From zone 1 a fork can open: a narrow crumble lane beside the path
+with a spark that pauses the line for 2.5 s, merging on wide stone. Springs keep
+their skip inside the run they start in, and gaps vary from 112 to 134 px.
 
 Every generated ledge carries a certificate (`witness`): takeoff states Puff really
 reaches on it, each replayable from a state on its source ledge with one steering
-switch. Movers are certified on the band they cover at every phase, so no certified
-hop depends on arrival time, and a clean climb outpaces the fastest line by more
-than 30%. A ledge that cannot be certified is moved, then made a plain stone.
+switch, using the same `launch()` rule as the game and the bot. Movers are certified
+on the band they cover at every phase, so no hop depends on arrival time. A fork's
+merge is certified from the lane too, or the lane is withdrawn before it is
+visible. A clean climb gains at least 20% on the fastest line.
+
+Feel: synthesized sound (hop notes that rise with a climbing streak, crack, boing,
+kick, spark, zone chime, new best, a drone as the line nears; M or SOUND mutes and
+persists), zone title cards below Puff, a dashed best-height line, an off-screen
+line gauge, landing squash and dust, shake for springs, kicks and breaks only, and
+a 700 ms hit beat before the results (none of the motion under reduced motion).
+
+Frames: the simulation stays fixed-step and drawing blends the last two steps, so
+motion is even at any refresh rate; Puff redraws into one reused canvas.
 
 Validation:
 
-- `pnpm test:puff`: 27 tests passed, including a replay of 56,922 certified hops
-  (41 seeds to 1400 m, eight phases per mover) under the real physics, per-zone
-  rebuild times, the line catching an idle Puff, and the search bot clearing every
-  zone of the default course.
-- `pnpm test:puff:bot`: the search bot plays the real `stepRun`; 140/140 seeds
-  cleared 1200 m (zones 0–5).
-- Umbra, local dev at 1440×1000 and 390×844: the line renders and rises, zone 0
-  runs at 1.000× real time, an idle Puff is caught at 14.47 s of game time, and the
-  results screen shows. Zones above 0 were not reached in the browser.
+- `pnpm test:puff`: 34 tests passed. They include a replay of every certified hop
+  (41 seeds to 1400 m, 53,299 hops, 177 fork merges, eight phases per mover, with
+  the other ledge of a fork row present) under the real physics, gates/teach/runs per zone, forks, sparks, kickers, cue
+  mapping, rebuild times, and the bot clearing the default course.
+- `node scripts/puff-bot.mjs 100 1250`: 100/100 seeds cleared 1250 m (zones 0–6)
+  through `stepRun`. `pnpm test:puff:bot` runs the same sweep on 40 seeds.
+- Frame pacing (WebKit, virtual 60/120/144 Hz, paced, two seeds to 1000 m): 0
+  frames off smooth after warm-up in every zone; 0 canvases created after warm-up.
+  Per-frame JS p99 0.3–0.6 ms below 600 m and 1.0–2.2 ms above. Occasional 5–20 ms
+  frames appeared equally in builds without the new drawing under a host load of
+  5–8, so the 6 ms ceiling is not proven on this machine.
+- Umbra at 1280×900 and 390×844: banners, gate labels, kickers, sparks, rebuild
+  ghosts, gauge, best line, death beat, results and mute checked with no console
+  errors. Not checked: a physical 120 Hz display, Chrome/Firefox, real iOS.

@@ -101,9 +101,6 @@ canvas {
   font-size: 9px;
   letter-spacing: 0.1em;
 }
-.sound-toggle[aria-pressed='true'] {
-  color: #a5a69b80;
-}
 .height-hud > span {
   font-size: 28px;
   line-height: 1;

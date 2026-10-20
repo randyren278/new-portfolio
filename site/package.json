@@ -13,7 +13,7 @@
     "db:push": "node --env-file=.env.local scripts/db-push.mjs",
     "db:seed": "node --env-file=.env.local scripts/db-seed.mjs",
     "test:puff": "node --test scripts/puff-up.test.mjs",
-    "test:puff:bot": "node scripts/puff-bot.mjs 40 1200"
+    "test:puff:bot": "node scripts/puff-bot.mjs 40 1250"
   },
   "dependencies": {
     "@vercel/edge-config": "^1.4.3",

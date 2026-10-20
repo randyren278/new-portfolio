@@ -302,33 +302,46 @@ test('every certified takeoff replays from its source with real physics at every
   const id = (n) => String(n).padStart(2, '0');
   for (const seed of [...Array.from({ length: 40 }, (_, i) => i), 0x50554646]) {
     const ledges = course(seed, 1400);
-    const replay = (source, ledge, states) => {
+    // A fork puts two ledges in one row; the other one is present (first, so it wins any tie)
+    // and Puff must land clear of it at every phase of either.
+    const replay = (source, ledge, states, beside = null) => {
       assert.ok(states.length > 0, `seed ${seed}: ${ledge.id} has a certificate`);
       for (const w of states)
-        for (const phase of ledge.kind === 'moving' ? PHASES : [0]) {
-          const from = source.witness[w.parent],
-            target = ledge.kind === 'moving' ? { ...ledge, phase } : ledge;
-          let p = {
-            ...createState(),
-            x: from.x,
-            vx: launch(from, source).vx,
-            y: source.y,
-            vy: launch({ vy: -DEFAULT_TUNING.jumpSpeed }, source).vy,
-            grounded: false,
-            platformId: null,
-            coyoteMsLeft: 0,
-          };
-          for (let t = 0; t < 240 && !p.landed; t++)
-            p = step(p, { axis: t < w.k ? w.a : w.b, autoHop: true }, FIXED_DT, DEFAULT_TUNING, [
-              platformAtTime(target, p.timeMs + FIXED_DT * 1000),
-            ]);
-          hops++;
-          assert.deepEqual(
-            [p.landed && p.y === ledge.y, p.x, p.vx],
-            [true, w.x, w.vx],
-            `seed ${seed}: ${source.id}→${ledge.id} witness ${JSON.stringify(w)} phase ${phase}`,
-          );
-        }
+        for (const phase of ledge.kind === 'moving' ? PHASES : [0])
+          for (const besidePhase of beside?.kind === 'moving' ? PHASES : [0]) {
+            const from = source.witness[w.parent],
+              target = ledge.kind === 'moving' ? { ...ledge, phase } : ledge,
+              other = beside?.kind === 'moving' ? { ...beside, phase: besidePhase } : beside;
+            let p = {
+              ...createState(),
+              x: from.x,
+              vx: launch(from, source).vx,
+              y: source.y,
+              vy: launch({ vy: -DEFAULT_TUNING.jumpSpeed }, source).vy,
+              grounded: false,
+              platformId: null,
+              coyoteMsLeft: 0,
+            };
+            for (let t = 0; t < 240 && !p.landed; t++) {
+              const at = p.timeMs + FIXED_DT * 1000;
+              p = step(p, { axis: t < w.k ? w.a : w.b, autoHop: true }, FIXED_DT, DEFAULT_TUNING, [
+                ...(other ? [platformAtTime(other, at)] : []),
+                platformAtTime(target, at),
+              ]);
+            }
+            hops++;
+            const near = other && platformAtTime(other, p.timeMs);
+            assert.deepEqual(
+              [
+                p.landed && p.y === ledge.y,
+                p.x,
+                p.vx,
+                !!near && p.x + 28 > near.x && p.x - 28 < near.x + near.width,
+              ],
+              [true, w.x, w.vx, false],
+              `seed ${seed}: ${source.id}→${ledge.id} witness ${JSON.stringify(w)} phase ${phase}/${besidePhase}`,
+            );
+          }
     };
     for (const [key, ledge] of ledges) {
       if (key === 'floor') continue;
@@ -341,7 +354,12 @@ test('every certified takeoff replays from its source with real physics at every
             : below?.kind === 'spring' && !ledge.lane
               ? below
               : ledges.get(id(n - 1));
-      replay(source, ledge, ledge.witness);
+      const mate = ledge.lane ? ledges.get(key.slice(0, -1)) : ledges.get(`${key}L`),
+        merge = ledges.get(id(n + 1)),
+        // A lane withdrawn before its merge was never in play beside its row-mate.
+        beside =
+          mate && (ledge.lane ? merge?.fromLane : ledges.get(id(n + 1))?.fromLane) ? mate : null;
+      replay(source, ledge, ledge.witness, beside);
       if (ledge.fromLane) {
         forks++;
         replay(ledges.get(`${id(n - 1)}L`), ledge, ledge.fromLane);
@@ -832,4 +850,33 @@ test('sound cues follow what happened in each step', () => {
   assert.deepEqual(landOn('solid', { gate: 2 }), ['hop', 'chime']);
   const over = { ...createRun(1), status: 'over' };
   assert.deepEqual(cuesFor(createRun(1), over), ['caught']);
+});
+test('a gate names its zone once, however often Puff bounces on it', () => {
+  let run = {
+      ...createRun(1),
+      platforms: [
+        { id: 'g', x: 80, y: 465, width: 160, kind: 'solid', gate: 2, pace: 0.4 },
+        { id: 'ahead', x: 400, y: 0, width: 100, kind: 'solid' },
+      ],
+      player: {
+        ...createState(),
+        x: 160,
+        y: 460,
+        vy: 200,
+        grounded: false,
+        platformId: null,
+        coyoteMsLeft: 0,
+      },
+    },
+    chimes = 0,
+    landings = 0;
+  for (let i = 0; i < 600 && landings < 5; i++) {
+    const previous = run;
+    run = stepRun(run);
+    if (run.player.landed) landings++;
+    chimes += cuesFor(previous, run).filter((c) => c === 'chime').length;
+  }
+  assert.equal(landings, 5);
+  assert.equal(chimes, 1);
+  assert.equal(run.banner.zone, 2);
 });

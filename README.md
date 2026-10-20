@@ -129,11 +129,13 @@ across the midpoint to change direction. Desktop supports arrow keys or A/D,
 Escape to pause and Space to resume. Back returns to the same portfolio.
 Playing updates the address to `/game`; that link also opens the game directly
 and survives a refresh. The game loads on demand and preserves the page underneath.
-Every 200 m is a harder zone: a faster rising line, faster play, fewer stone
-ledges, narrower ledges and quicker, wider movers. Every generated ledge carries
-a reachability certificate, and `pnpm test:puff:bot` sends a search bot through
-every zone. Broken red platforms rebuild after 3 seconds in the first zone and
-1 second longer in each zone above, if still visible.
+A rising line chases Puff, and every 200 m opens a harder zone at a wide gate
+stone: crumble runs, mover chains, kickers that fling Puff sideways, switchbacks,
+then a remix. Optional spark lanes pause the line for 2.5 s. The game never speeds
+up; challenge comes from the ledges. Every generated ledge carries a reachability
+certificate, and `pnpm test:puff:bot` sends a search bot through every zone.
+Broken red platforms rebuild after 3 seconds in the first zone and 1 second longer
+in each zone above, if still visible. Sound is synthesized; M mutes it.
 
 ## Material
 
