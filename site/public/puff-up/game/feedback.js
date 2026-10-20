@@ -204,47 +204,116 @@ export function ufoAt(rescue, t, puffX, puffY, cameraY, floor) {
   const u = ease((p - 0.85) / 0.15);
   return { x: to.x + (-80 - to.x) * u, y: to.y + (cameraY - 80 - to.y) * u, beam: p < 0.88 };
 }
-/** The tractor beam, drawn behind Puff. */
+/** The tractor beam, drawn behind Puff: a dithered column of 2 px cells on Puff's pixel grid,
+ * shimmering upward, with gold motes rising through it. */
+let checks = null;
 export function drawBeam(ctx, ufo, puffX, puffY, cameraY, t) {
   if (!ufo?.beam) return;
-  const top = ufo.y - cameraY + 8,
-    bottom = puffY - cameraY + 6,
-    glow = ctx.createLinearGradient(0, top, 0, bottom);
-  glow.addColorStop(0, 'rgba(155,203,225,0.42)');
-  glow.addColorStop(1, 'rgba(155,203,225,0.06)');
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.moveTo(ufo.x - 14, top);
-  ctx.lineTo(ufo.x + 14, top);
-  ctx.lineTo(puffX + 44, bottom);
-  ctx.lineTo(puffX - 44, bottom);
-  ctx.fill();
-  // Motes drifting up the beam.
-  ctx.fillStyle = 'rgba(221,240,248,0.7)';
+  // Two 2 px checkerboards, one each way round; swapping them makes the beam shimmer.
+  if (!checks)
+    checks = [0, 2].map((offset) => {
+      const tile = document.createElement('canvas');
+      tile.width = tile.height = 4;
+      const g = tile.getContext('2d');
+      g.fillStyle = 'rgba(238,229,210,0.18)';
+      g.fillRect(offset, 0, 2, 2);
+      g.fillRect(2 - offset, 2, 2, 2);
+      return ctx.createPattern(tile, 'repeat');
+    });
+  const top = Math.round((ufo.y - cameraY + 12) / 2) * 2,
+    bottom = Math.round((puffY - cameraY + 6) / 2) * 2,
+    inner = checks[Math.floor(t / 110) % 2];
+  for (let y = top; y < bottom; y += 2) {
+    const u = (y - top) / (bottom - top),
+      half = Math.round((10 + 34 * u) / 2) * 2,
+      cx = Math.round((ufo.x + (puffX - ufo.x) * u) / 2) * 2;
+    ctx.fillStyle = inner;
+    ctx.fillRect(cx - half + 2, y, half * 2 - 4, 2);
+    ctx.fillStyle = 'rgba(238,229,210,0.4)';
+    ctx.fillRect(cx - half, y, 2, 2);
+    ctx.fillRect(cx + half - 2, y, 2, 2);
+  }
+  ctx.fillStyle = '#e9be76';
   for (let i = 0; i < 5; i++) {
-    const u = ((t / 600 + i / 5) % 1) ** 1.2,
+    const u = (t / 700 + i / 5) % 1,
       y = bottom + (top - bottom) * u,
-      x = puffX + (ufo.x - puffX) * u + Math.sin(t / 180 + i * 2) * (1 - u) * 18;
-    ctx.fillRect(Math.round(x), Math.round(y), 2, 2);
+      x = puffX + (ufo.x - puffX) * u + Math.round(Math.sin(i * 2.3) * 8) * 2 * (1 - u);
+    ctx.fillRect(Math.round(x / 2) * 2, Math.round(y / 2) * 2, 2, 2);
   }
 }
-/** The saucer: a silver disc, a pale dome and blinking rim lights. */
+
+// The saucer is pixel art drawn like Puff: a 1× sprite on its own canvas, scaled 2× without
+// smoothing. Local (32, 30) is the saucer's centre.
+const inside = (x, y, cx, cy, rx, ry) =>
+  ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1;
+function oval(g, cx, cy, rx, ry, color, keep = () => true, rim = false) {
+  const at = (x, y) => inside(x, y, cx, cy, rx, ry);
+  g.fillStyle = color;
+  for (let y = Math.floor(cy - ry); y <= cy + ry; y++)
+    for (let x = Math.floor(cx - rx); x <= cx + rx; x++)
+      if (
+        at(x, y) &&
+        keep(x, y) &&
+        (!rim || !(at(x - 1, y) && at(x + 1, y) && at(x, y - 1) && at(x, y + 1)))
+      )
+        g.fillRect(x, y, 1, 1);
+}
+// The beacon on the dome: a small gold star that twinkles brighter now and then. It is drawn in
+// world cells rather than on the sprite so it centres on the dome, which sits between two pixels.
+const BEACON = ['..#..', '.d#d.', '##o##', '.d#d.', '..#..'];
+// Each look (eyes up or down, which light is lit) is painted once and kept.
+const saucers = new Map();
+function saucer(look, light) {
+  const key = look * 3 + light;
+  if (saucers.has(key)) return saucers.get(key);
+  const sprite = document.createElement('canvas');
+  sprite.width = 64;
+  sprite.height = 48;
+  const g = sprite.getContext('2d'),
+    px = (x, y, color, w = 1, h = 1) => {
+      g.fillStyle = color;
+      g.fillRect(x, y, w, h);
+    };
+  // The friend, then the glass over it, then the hull over the glass's foot.
+  oval(g, 32, 23.5, 6, 4.5, '#d3c8b3');
+  oval(g, 32, 23, 6, 4, '#eee5d2');
+  px(29, 22 + look, '#282723', 1, 2);
+  px(34, 22 + look, '#282723', 1, 2);
+  oval(g, 32, 26, 11, 11, '#c9c5b9', (x, y) => y <= 27, true);
+  for (const [x, y] of [
+    [36, 17],
+    [37, 17],
+    [38, 18],
+    [39, 19],
+    [39, 20],
+    [40, 22],
+  ])
+    px(x, y, '#f7efd9');
+  oval(g, 32, 30, 22, 5, '#ada28c');
+  oval(g, 32, 30, 22, 5, '#d3c8b3', (x, y) => y <= 30);
+  px(17, 30, '#eee5d2', 4, 1);
+  for (let i = 0; i < 3; i++) px(23 + i * 8, 32, i === light ? '#f7efd9' : '#e9be76', 2, 1);
+  saucers.set(key, sprite);
+  return sprite;
+}
+/** The rescue saucer: Puff's kin. A small friend sits under the same helmet glass as Puff's
+ * and looks down at him while the beam is on; three gold lights chase round the hull for the
+ * three stars spent, and a star on the dome twinkles. */
 export function drawUfo(ctx, ufo, cameraY, t) {
   if (!ufo) return;
   const x = Math.round(ufo.x),
     y = Math.round(ufo.y - cameraY);
-  ctx.fillStyle = 'rgba(155,203,225,0.85)';
-  ctx.beginPath();
-  ctx.ellipse(x, y - 4, 13, 11, 0, Math.PI, 0);
-  ctx.fill();
-  ctx.fillStyle = '#d8d4e4';
-  ctx.beginPath();
-  ctx.ellipse(x, y + 2, 30, 8, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#8f8aa3';
-  ctx.fillRect(x - 22, y + 4, 44, 2);
-  for (let i = 0; i < 4; i++) {
-    ctx.fillStyle = Math.floor(t / 160 + i) % 2 ? '#e9be76' : '#d99177';
-    ctx.fillRect(x - 21 + i * 13, y + 1, 3, 3);
-  }
+  ctx.drawImage(saucer(ufo.beam ? 1 : 0, Math.floor(t / 180) % 3), x - 64, y - 60, 128, 96);
+  const colors =
+    t % 1200 < 160
+      ? { '#': '#f7efd9', o: '#f7efd9', d: '#e9be76' }
+      : { '#': '#e9be76', o: '#f7efd9', d: '#9c8457' };
+  // Sprite row 15, the top of the dome, is 30 world px above the saucer's centre.
+  BEACON.forEach((row, r) =>
+    [...row].forEach((k, c) => {
+      if (k === '.') return;
+      ctx.fillStyle = colors[k];
+      ctx.fillRect(x - 5 + c * 2, y - 40 + r * 2, 2, 2);
+    }),
+  );
 }
