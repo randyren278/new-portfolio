@@ -2,7 +2,8 @@
 
 import type { ShellContent } from '@/content/types';
 import { consumeReturnToHome } from '@/training/returnFlag';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import './bento.css';
 import './puff.css';
@@ -41,6 +42,7 @@ import { usePhotoShuffle } from './usePhotoShuffle';
  */
 const DEFAULT_ORDER = ['name', 'contact', 'projects', 'photos', 'resume', 'activity'] as const;
 type Section = (typeof DEFAULT_ORDER)[number];
+const PuffGame = dynamic(() => import('./PuffGame'), { ssr: false });
 
 function mobileOrder(): Section[] {
   const rest: Section[] = ['contact', 'projects', 'photos', 'resume', 'activity'];
@@ -65,6 +67,8 @@ export function BentoHome({
   const [entering, setEntering] = useState(false);
   const [scene, setScene] = useState<string | null>(null);
   const [introReady, setIntroReady] = useState(false);
+  const [gameTrigger, setGameTrigger] = useState<HTMLButtonElement | null>(null);
+  const closeGame = useCallback(() => setGameTrigger(null), []);
   const photos = usePhotoShuffle(introReady || !intro);
   const { slots } = photos;
   const [sectionOrder, setSectionOrder] = useState<readonly Section[]>(DEFAULT_ORDER);
@@ -206,7 +210,14 @@ export function BentoHome({
               case 'name':
                 return <NameCell key={section} aboutText={content.ABOUT_TEXT} />;
               case 'contact':
-                return <ContactCell key={section} contactText={content.CONTACT_TEXT} puff />;
+                return (
+                  <ContactCell
+                    key={section}
+                    contactText={content.CONTACT_TEXT}
+                    puff
+                    onPuffPlay={setGameTrigger}
+                  />
+                );
               case 'projects':
                 return (
                   <ProjectsCell
@@ -280,6 +291,7 @@ export function BentoHome({
           </button>
         </footer>
       </div>
+      {gameTrigger && <PuffGame trigger={gameTrigger} onClose={closeGame} />}
     </>
   );
 }

@@ -39,12 +39,13 @@ function parseContact(text: string): Row[] {
 export function ContactCell({
   contactText,
   puff = false,
-}: { contactText: string; puff?: boolean }) {
+  onPuffPlay,
+}: { contactText: string; puff?: boolean; onPuffPlay?: (trigger: HTMLButtonElement) => void }) {
   const rows = parseContact(contactText);
   return (
     <section className="cell cell-contact" aria-label="Contact">
       <h2 className="kicker">§ CORRESPONDENCE</h2>
-      {puff && <CorrespondencePuff />}
+      {puff && <CorrespondencePuff onPlay={onPuffPlay} />}
       <div className="contact-rows">
         {rows.map((r) => (
           <div key={r.lab} style={{ display: 'contents' }}>

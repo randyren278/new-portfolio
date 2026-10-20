@@ -1,0 +1,10 @@
+<!doctype html><html lang="en" data-modality="pointer"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><title>Puff Up</title><link rel="stylesheet" href="climb.css"></head><body>
+<main aria-label="Puff climbing game">
+<section class="arena" aria-label="Climb"><canvas id="game-canvas" tabindex="0" aria-label="Puff hops automatically. Hold the left or right side of the screen to steer, or use arrow keys or A and D. Escape pauses. Space resumes."></canvas>
+<div class="height-hud"><span id="height-score">0</span><small>m</small></div>
+<div id="pause-label" class="pause-label"><span id="overlay-kicker">PUFF UP</span><p id="overlay-title">Puff Up.</p><small id="overlay-copy">← → to steer. Puff hops.</small><div id="run-results" class="run-results" hidden><div><strong id="result-height">0</strong><span>METERS UP</span></div><div class="result-landings"><strong id="result-landings">0</strong><span>LANDINGS</span></div></div><button id="play-toggle" class="primary" aria-label="Start climbing">Start climbing ↑</button></div>
+</section>
+<div class="touch-controls"><div class="steering"><button id="left-control" aria-label="Move left">←</button><button id="right-control" aria-label="Move right">→</button></div><span class="touch-hint">Hold either side to steer</span><button id="restart" aria-label="Retry the climb">Retry ↺</button></div>
+<div class="keyboard-hint"><span><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> steer</span><span><kbd>SPACE</kbd> start / resume</span><span><kbd>ESC</kbd> pause</span></div>
+<output id="run-announcement" class="sr-only" aria-live="polite"></output>
+</main><script type="module" src="game.js"></script></body></html>

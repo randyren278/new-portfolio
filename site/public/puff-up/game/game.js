@@ -1,0 +1,481 @@
+import { WORLD, DEFAULT_TUNING, FIXED_DT } from './physics.js';
+import { createRun, stepRun } from './climb.js';
+import { ANIMATIONS, renderPuff, samplePose } from './puff-motion.js';
+import { sampleFlightMotion } from './flight-pose.js';
+import { sampleGameVisual } from './game-visual.js';
+import { bindTouchSteering } from './touch-steering.js';
+
+const $ = (id) => document.getElementById(id),
+  canvas = $('game-canvas'),
+  ctx = canvas.getContext('2d');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const bestKey = 'puff-up:challenge-best:v1';
+function nextSeed(previous) {
+  const value = crypto.getRandomValues(new Uint32Array(1))[0];
+  return value === previous ? (value + 1) >>> 0 : value;
+}
+let run = createRun(nextSeed()),
+  running = false,
+  started = false,
+  best = 0;
+let raf = null,
+  lastTime = null,
+  accumulator = 0,
+  pointerAxis = 0,
+  pulseAxis = 0,
+  pulseUntil = 0;
+const keys = new Set(),
+  sprites = new Map();
+try {
+  const saved = Number(localStorage.getItem(bestKey));
+  if (Number.isSafeInteger(saved) && saved >= 0) best = saved;
+} catch {}
+
+Object.defineProperty(window, 'puffClimb', {
+  get: () =>
+    Object.freeze({
+      running,
+      started,
+      best,
+      cacheEntries: sprites.size,
+      visual: Object.freeze(sampleGameVisual(run)),
+      run: Object.freeze({
+        ...run,
+        player: Object.freeze({ ...run.player, events: Object.freeze([...run.player.events]) }),
+        platforms: Object.freeze(run.platforms.map((p) => Object.freeze({ ...p }))),
+        lastLanding: run.lastLanding ? Object.freeze({ ...run.lastLanding }) : null,
+        effects: Object.freeze(run.effects.map((e) => Object.freeze({ ...e }))),
+      }),
+      inputs: Object.freeze({
+        keys: Object.freeze([...keys]),
+        pointerAxis,
+        pulseAxis: performance.now() < pulseUntil ? pulseAxis : 0,
+        screenAxis: touch.axis,
+        screenPointers: touch.count,
+      }),
+    }),
+});
+
+function sprite(animation, timeMs, direction, flight = null) {
+  const clip = ANIMATIONS.find((a) => a.id === animation),
+    count = Math.ceil((clip.durationMs * clip.fps) / 1000);
+  const frame = Math.max(
+    0,
+    Math.min(
+      count - 1,
+      Math.floor(((clip.loop ? timeMs % clip.durationMs : timeMs) * clip.fps) / 1000),
+    ),
+  );
+  const key = [
+    animation,
+    frame,
+    direction,
+    flight?.horizontal ?? 'rest',
+    flight?.vertical ?? 'rest',
+  ].join(':');
+  if (sprites.has(key)) {
+    const image = sprites.get(key);
+    sprites.delete(key);
+    sprites.set(key, image);
+    return image;
+  }
+  const image = document.createElement('canvas');
+  image.width = 104;
+  image.height = 112;
+  const time = (frame * 1000) / clip.fps,
+    pose = samplePose(animation, time, { direction }),
+    airborne = ['jump', 'fall', 'boost'].includes(animation);
+  renderPuff(image.getContext('2d'), {
+    animation,
+    timeMs: time,
+    x: 24 - (airborne ? pose.offsetX : 0),
+    y: 32 - (airborne ? pose.offsetY : 0),
+    scale: 1,
+    direction,
+    flight,
+  });
+  sprites.set(key, image);
+  if (sprites.size > 160) sprites.delete(sprites.keys().next().value);
+  return image;
+}
+let cssWidth = 640,
+  cssHeight = 620,
+  dpr = 1;
+function viewTransform() {
+  const scale = Math.min(cssWidth / WORLD.width, cssHeight / WORLD.height, 1.25),
+    left = (cssWidth - WORLD.width * scale) / 2,
+    top = (cssHeight - WORLD.height * scale) / 2;
+  // Wait until the entire sprite texture has passed the real viewport bottom.
+  return { scale, left, top, fallLimit: (cssHeight - top) / scale + 144 };
+}
+function draw() {
+  const { scale, left, top } = viewTransform();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+  ctx.translate(left, top);
+  ctx.scale(scale, scale);
+  ctx.imageSmoothingEnabled = false;
+  ctx.font = '9px Plex,monospace';
+  const first = Math.max(0, Math.ceil((575 - (run.cameraY + 620)) / 100)),
+    last = Math.floor((575 - run.cameraY) / 100);
+  for (let n = first; n <= last; n++) {
+    const y = Math.round(575 - n * 100 - run.cameraY);
+    ctx.fillStyle = '#a5a69b70';
+    ctx.fillRect(0, y, 7, 1);
+    ctx.fillText(`${n * 10}m`, 14, y - 5);
+  }
+  for (const p of run.platforms) {
+    const y = Math.round(p.y - run.cameraY);
+    if (y < -20 || y > 620) continue;
+    const moving = p.kind === 'moving',
+      crumble = p.kind === 'crumble',
+      spring = p.kind === 'spring';
+    if (moving) {
+      ctx.strokeStyle = '#82b5cb40';
+      ctx.setLineDash([3, 6]);
+      ctx.beginPath();
+      ctx.moveTo(p.baseX - p.amplitude, y + 14);
+      ctx.lineTo(p.baseX + p.amplitude + p.width, y + 14);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.fillStyle = moving ? '#476e86' : crumble ? '#785543' : spring ? '#6d8763' : '#676a52';
+    ctx.fillRect(Math.round(p.x) + 4, y + 4, p.width - 8, 7);
+    ctx.fillStyle = moving ? '#82b5cb' : crumble ? '#c89568' : spring ? '#b8c5a6' : '#d6cbb4';
+    ctx.fillRect(Math.round(p.x), y, p.width, 4);
+    ctx.fillStyle = moving ? '#59879f' : crumble ? '#a77555' : spring ? '#7d9b70' : '#929779';
+    ctx.fillRect(Math.round(p.x) + 6, y + 5, p.width - 12, 2);
+    if (crumble) {
+      const c = Math.round(p.x + p.width * 0.52);
+      ctx.strokeStyle = '#3a3029';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(c - 5, y);
+      ctx.lineTo(c + 1, y + 3);
+      ctx.lineTo(c - 3, y + 6);
+      ctx.lineTo(c + 5, y + 10);
+      ctx.stroke();
+    }
+    if (moving) {
+      ctx.fillStyle = '#9bcbe1';
+      ctx.fillText('‹', p.x - 10, y + 5);
+      ctx.fillText('›', p.x + p.width + 4, y + 5);
+    }
+    if (spring) {
+      const c = Math.round(p.x + p.width / 2);
+      ctx.strokeStyle = '#e9be76';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(c - 9, y);
+      ctx.lineTo(c + 7, y - 3);
+      ctx.lineTo(c - 7, y - 6);
+      ctx.lineTo(c + 7, y - 9);
+      ctx.lineTo(c - 7, y - 12);
+      ctx.lineTo(c + 9, y - 15);
+      ctx.stroke();
+      ctx.fillStyle = '#eee7d7';
+      ctx.fillRect(c - 10, y - 17, 20, 3);
+    }
+    if (p.id === 'floor') {
+      ctx.fillStyle = '#a5a69b';
+      ctx.fillText('LIFT-OFF', p.x + 25, y + 29);
+    }
+  }
+  for (const effect of run.effects) {
+    const age = (run.player.timeMs - effect.at) / 650;
+    if (age < 0 || age > 1) continue;
+    ctx.save();
+    ctx.globalAlpha = 1 - age;
+    if (effect.type === 'break') {
+      ctx.fillStyle = '#c89568';
+      for (let i = 0; i < 4; i++) {
+        const w = effect.width / 4 - 3,
+          x = effect.x + (i * effect.width) / 4 + (i - 1.5) * age * 24,
+          y = effect.y - run.cameraY + age * age * 100 + i * age * 3;
+        ctx.fillRect(Math.round(x), Math.round(y), w, 4);
+        ctx.fillStyle = '#785543';
+        ctx.fillRect(Math.round(x) + 2, Math.round(y) + 4, w - 4, 3);
+        ctx.fillStyle = '#c89568';
+      }
+    } else if (effect.type === 'spring') {
+      ctx.strokeStyle = '#e9be76';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(
+        effect.x + effect.width / 2,
+        effect.y - run.cameraY,
+        12 + age * 25,
+        3 + age * 7,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  const player = run.player,
+    support = run.platforms
+      .filter((p) => p.y >= player.y - 1 && player.x >= p.x && player.x <= p.x + p.width)
+      .sort((a, b) => a.y - b.y)[0];
+  if (support) {
+    const distance = support.y - player.y;
+    ctx.fillStyle = `rgba(184,197,166,${Math.max(0.04, 0.2 - distance / 900)})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      Math.round(player.x),
+      Math.round(support.y - run.cameraY + 3),
+      Math.max(9, 32 - distance * 0.06),
+      2,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  if (run.lastLanding && !reduced) {
+    const l = run.lastLanding,
+      age = player.timeMs - l.at;
+    if (age < 300) {
+      ctx.strokeStyle = `rgba(233,190,118,${(1 - age / 300) * 0.35})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(l.x, l.y - run.cameraY + 2, 16 + age * 0.065, 3 + age * 0.006, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+  const v = sampleGameVisual(run),
+    flight = ['jump', 'fall'].includes(v.animation)
+      ? sampleFlightMotion(player, DEFAULT_TUNING)
+      : null,
+    image = sprite(v.animation, v.time, player.facing, flight);
+  ctx.drawImage(
+    image,
+    Math.round(player.x - 104),
+    Math.round(player.y - run.cameraY - 144),
+    208,
+    224,
+  );
+  $('height-score').textContent = run.score;
+}
+new ResizeObserver(() => {
+  const r = canvas.getBoundingClientRect();
+  cssWidth = r.width;
+  cssHeight = r.height;
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  canvas.width = Math.round(cssWidth * dpr);
+  canvas.height = Math.round(cssHeight * dpr);
+  draw();
+}).observe(canvas);
+document.fonts.ready.then(draw);
+function clearInputs() {
+  touch.clear();
+  keys.clear();
+  pointerAxis = 0;
+  pulseAxis = 0;
+  pulseUntil = 0;
+}
+function axis() {
+  return (
+    Number(keys.has('ArrowRight') || keys.has('KeyD')) -
+      Number(keys.has('ArrowLeft') || keys.has('KeyA')) ||
+    touch.axis ||
+    pointerAxis ||
+    (performance.now() < pulseUntil ? pulseAxis : 0)
+  );
+}
+function saveBest() {
+  try {
+    localStorage.setItem(bestKey, String(best));
+  } catch {}
+}
+function syncUI() {
+  const over = run.status === 'over';
+  $('play-toggle').innerHTML = running
+    ? 'Pause <span aria-hidden="true">Ⅱ</span>'
+    : `${over ? 'Try again' : started ? 'Resume' : 'Start climbing'} <span aria-hidden="true">${over ? '↺' : '↑'}</span>`;
+  $('play-toggle').setAttribute(
+    'aria-label',
+    running
+      ? 'Pause climb'
+      : over
+        ? 'Try the climb again'
+        : started
+          ? 'Resume climb'
+          : 'Start climbing',
+  );
+  $('pause-label').hidden = running;
+  $('pause-label').classList.toggle('over', over);
+  $('overlay-kicker').textContent = over ? 'THIS CLIMB' : started ? 'PAUSED' : 'PUFF UP';
+  $('run-results').hidden = !over;
+  $('result-height').textContent = run.score;
+  $('result-landings').textContent = run.landings;
+  $('overlay-title').hidden = over;
+  $('overlay-copy').hidden = over;
+  document.querySelector('.height-hud').hidden = over;
+  $('overlay-title').textContent = started ? 'Paused.' : 'Puff Up.';
+  $('overlay-copy').textContent = started ? 'Space to resume.' : '← → to steer. Puff hops.';
+  $('run-announcement').textContent = over
+    ? `Climb ended at ${run.score} metres. Try again to retry.`
+    : running
+      ? 'Climbing. Puff hops automatically.'
+      : started
+        ? 'Climb paused.'
+        : 'Ready to climb.';
+}
+function stopFrames() {
+  if (raf !== null) cancelAnimationFrame(raf);
+  raf = null;
+  lastTime = null;
+  accumulator = 0;
+  clearInputs();
+}
+function pause() {
+  running = false;
+  stopFrames();
+  saveBest();
+  syncUI();
+  draw();
+}
+function reset() {
+  stopFrames();
+  saveBest();
+  run = createRun(nextSeed(run.seed));
+  running = false;
+  started = false;
+}
+function start() {
+  if (running) return;
+  if (run.status === 'over') reset();
+  running = true;
+  started = true;
+  lastTime = null;
+  accumulator = 0;
+  syncUI();
+  canvas.focus({ preventScroll: true });
+  raf = requestAnimationFrame(tick);
+}
+function tick(now) {
+  raf = null;
+  if (!running) return;
+  if (lastTime !== null) accumulator += Math.min(0.1, (now - lastTime) / 1000);
+  lastTime = now;
+  let steps = 0;
+  while (accumulator >= FIXED_DT && steps < 12) {
+    run = stepRun(run, { axis: axis() }, FIXED_DT, viewTransform().fallLimit);
+    best = Math.max(best, run.score);
+    accumulator -= FIXED_DT;
+    steps++;
+    if (run.status === 'over') {
+      running = false;
+      stopFrames();
+      saveBest();
+      syncUI();
+      break;
+    }
+  }
+  draw();
+  if (running) raf = requestAnimationFrame(tick);
+}
+const touch = bindTouchSteering(canvas, {
+  enabled: (e) =>
+    e.pointerType === 'touch' || matchMedia('(max-width:720px), (pointer:coarse)').matches,
+  canSteer: () => run.status !== 'over',
+  onStart: () => {
+    if (!running) start();
+    canvas.focus({ preventScroll: true });
+  },
+  onTap: (direction) => {
+    pulseAxis = direction;
+    pulseUntil = performance.now() + 90;
+  },
+});
+$('play-toggle').addEventListener('click', () => (running ? pause() : start()));
+$('restart').addEventListener('click', () => {
+  reset();
+  start();
+});
+const gameKeys = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'KeyA', 'KeyD', 'Space']);
+canvas.addEventListener('keydown', (e) => {
+  if (e.code === 'Escape') {
+    e.preventDefault();
+    if (running) pause();
+    return;
+  }
+  if (!gameKeys.has(e.code)) return;
+  e.preventDefault();
+  if (run.status === 'over' && e.code !== 'Space') return;
+  if (!running) start();
+  if (['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].includes(e.code)) keys.add(e.code);
+});
+addEventListener('keyup', (e) => keys.delete(e.code));
+canvas.addEventListener('blur', clearInputs);
+for (const [id, direction] of [
+  ['left-control', -1],
+  ['right-control', 1],
+]) {
+  const button = $(id);
+  let pressedAt = 0,
+    activePointer = null;
+  button.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (run.status === 'over') return;
+    if (!running) start();
+    canvas.focus({ preventScroll: true });
+    pressedAt = performance.now();
+    activePointer = e.pointerId;
+    pointerAxis = direction;
+    button.setPointerCapture(e.pointerId);
+  });
+  button.addEventListener('pointerup', (e) => {
+    if (e.pointerId !== activePointer) return;
+    pointerAxis = 0;
+    if (performance.now() - pressedAt < 100) {
+      pulseAxis = direction;
+      pulseUntil = performance.now() + 90;
+    }
+    activePointer = null;
+  });
+  const cancel = () => {
+    pointerAxis = 0;
+    pulseAxis = 0;
+    pulseUntil = 0;
+    activePointer = null;
+  };
+  button.addEventListener('pointercancel', cancel);
+  button.addEventListener('lostpointercapture', () => {
+    if (activePointer !== null) cancel();
+  });
+  button.addEventListener('click', (e) => {
+    if (e.detail === 0 && run.status !== 'over') {
+      if (!running) start();
+      canvas.focus({ preventScroll: true });
+      pulseAxis = direction;
+      pulseUntil = performance.now() + 90;
+    }
+  });
+}
+addEventListener('blur', () => {
+  if (running) pause();
+  else clearInputs();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pause();
+});
+addEventListener('pagehide', pause);
+window.puffDemoGame = Object.freeze({ start, pause, reset });
+document.addEventListener(
+  'pointerdown',
+  () => (document.documentElement.dataset.modality = 'pointer'),
+  true,
+);
+document.addEventListener(
+  'keydown',
+  (e) => {
+    if (e.key === 'Tab') document.documentElement.dataset.modality = 'keyboard';
+    else if (gameKeys.has(e.code)) document.documentElement.dataset.modality = 'game';
+  },
+  true,
+);
+syncUI();
+draw();

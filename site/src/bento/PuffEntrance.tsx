@@ -41,8 +41,9 @@ export function PuffEntrance({
   );
 }
 
-export function CorrespondencePuff() {
+export function CorrespondencePuff({ onPlay }: { onPlay?: (trigger: HTMLButtonElement) => void }) {
   const [curious, setCurious] = useState(false);
+  const lastTap = useRef<number | null>(null);
   useEffect(() => {
     if (!curious) return;
     const timer = setTimeout(() => setCurious(false), 1800);
@@ -53,7 +54,19 @@ export function CorrespondencePuff() {
       className={`correspondence-puff${curious ? ' is-curious' : ''}`}
       type="button"
       aria-label="Say hello to Puff"
-      onClick={() => setCurious(true)}
+      onClick={(event) => {
+        const now = performance.now();
+        if (
+          onPlay &&
+          (event.detail === 0 || (lastTap.current !== null && now - lastTap.current <= 5000))
+        ) {
+          lastTap.current = null;
+          onPlay(event.currentTarget);
+        } else {
+          lastTap.current = now;
+          setCurious(true);
+        }
+      }}
     >
       <PuffArt />
       <output className="puff-greeting">{curious ? 'Hello!' : ''}</output>

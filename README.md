@@ -121,6 +121,14 @@ showing broken-image chrome.
 
 <p align="right"><a href="#readme-top">back to top ↑</a></p>
 
+### Puff Up
+
+Tap Puff in Correspondence twice within five seconds to discover the endless
+climb. On a phone, hold the left or right half of the screen to steer; slide
+across the midpoint to change direction. Desktop supports arrow keys or A/D,
+Escape to pause and Space to resume. Back returns to the same portfolio.
+The game loads on demand and preserves the page underneath.
+
 ## Material
 
 The site uses a small material vocabulary and repeats it everywhere.
