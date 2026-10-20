@@ -1,5 +1,5 @@
 import { WORLD, DEFAULT_TUNING, FIXED_DT } from './physics.js';
-import { createRun, stepRun } from './climb.js';
+import { createRun, stepRun, platformAtTime } from './climb.js';
 import { ANIMATIONS, renderPuff, samplePose } from './puff-motion.js';
 import { sampleFlightMotion } from './flight-pose.js';
 import { sampleGameVisual } from './game-visual.js';
@@ -14,7 +14,9 @@ function nextSeed(previous) {
   const value = crypto.getRandomValues(new Uint32Array(1))[0];
   return value === previous ? (value + 1) >>> 0 : value;
 }
+// draw() blends `previous` (the state before the latest fixed step) into `run`.
 let run = createRun(nextSeed()),
+  previous = run,
   running = false,
   started = false,
   best = 0;
@@ -24,8 +26,7 @@ let raf = null,
   pointerAxis = 0,
   pulseAxis = 0,
   pulseUntil = 0;
-const keys = new Set(),
-  sprites = new Map();
+const keys = new Set();
 try {
   const saved = Number(localStorage.getItem(bestKey));
   if (Number.isSafeInteger(saved) && saved >= 0) best = saved;
@@ -37,7 +38,6 @@ Object.defineProperty(window, 'puffClimb', {
       running,
       started,
       best,
-      cacheEntries: sprites.size,
       visual: Object.freeze(sampleGameVisual(run)),
       run: Object.freeze({
         ...run,
@@ -64,6 +64,11 @@ Object.defineProperty(window, 'puffClimb', {
     }),
 });
 
+// Puff is redrawn every frame at 1× into this one canvas, then scaled up 2× without smoothing.
+const puff = document.createElement('canvas');
+puff.width = 104;
+puff.height = 112;
+const puffCtx = puff.getContext('2d');
 function sprite(animation, timeMs, direction, flight = null) {
   const clip = ANIMATIONS.find((a) => a.id === animation),
     count = Math.ceil((clip.durationMs * clip.fps) / 1000);
@@ -74,26 +79,11 @@ function sprite(animation, timeMs, direction, flight = null) {
       Math.floor(((clip.loop ? timeMs % clip.durationMs : timeMs) * clip.fps) / 1000),
     ),
   );
-  const key = [
-    animation,
-    frame,
-    direction,
-    flight?.horizontal ?? 'rest',
-    flight?.vertical ?? 'rest',
-  ].join(':');
-  if (sprites.has(key)) {
-    const image = sprites.get(key);
-    sprites.delete(key);
-    sprites.set(key, image);
-    return image;
-  }
-  const image = document.createElement('canvas');
-  image.width = 104;
-  image.height = 112;
   const time = (frame * 1000) / clip.fps,
     pose = samplePose(animation, time, { direction }),
     airborne = ['jump', 'fall', 'boost'].includes(animation);
-  renderPuff(image.getContext('2d'), {
+  puffCtx.clearRect(0, 0, 104, 112);
+  renderPuff(puffCtx, {
     animation,
     timeMs: time,
     x: 24 - (airborne ? pose.offsetX : 0),
@@ -102,13 +92,13 @@ function sprite(animation, timeMs, direction, flight = null) {
     direction,
     flight,
   });
-  sprites.set(key, image);
-  if (sprites.size > 160) sprites.delete(sprites.keys().next().value);
-  return image;
+  return puff;
 }
+const mix = (from, to, a) => from + (to - from) * a;
 let cssWidth = 640,
   cssHeight = 620,
-  dpr = 1;
+  dpr = 1,
+  shownScore = null;
 function viewTransform() {
   const scale = Math.min(cssWidth / WORLD.width, cssHeight / WORLD.height, 1.25),
     left = (cssWidth - WORLD.width * scale) / 2,
@@ -117,23 +107,32 @@ function viewTransform() {
   return { scale, left, top, fallLimit: (cssHeight - top) / scale + 144 };
 }
 function draw() {
-  const { scale, left, top } = viewTransform();
+  // The simulation runs in fixed 1/120 s steps; the frame shows the moment `accumulator` past the
+  // previous step, so motion stays even at any refresh rate. Poses come from the latest step.
+  const { scale, left, top } = viewTransform(),
+    a = Math.min(1, accumulator / FIXED_DT),
+    t = mix(previous.player.timeMs, run.player.timeMs, a),
+    cameraY = mix(previous.cameraY, run.cameraY, a),
+    player = run.player,
+    puffX = mix(previous.player.x, player.x, a),
+    puffY = mix(previous.player.y, player.y, a);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cssWidth, cssHeight);
   ctx.translate(left, top);
   ctx.scale(scale, scale);
   ctx.imageSmoothingEnabled = false;
   ctx.font = '9px Plex,monospace';
-  const first = Math.max(0, Math.ceil((575 - (run.cameraY + 620)) / 100)),
-    last = Math.floor((575 - run.cameraY) / 100);
+  const first = Math.max(0, Math.ceil((575 - (cameraY + 620)) / 100)),
+    last = Math.floor((575 - cameraY) / 100);
   for (let n = first; n <= last; n++) {
-    const y = Math.round(575 - n * 100 - run.cameraY);
+    const y = Math.round(575 - n * 100 - cameraY);
     ctx.fillStyle = '#a5a69b70';
     ctx.fillRect(0, y, 7, 1);
     ctx.fillText(`${n * 10}m`, 14, y - 5);
   }
-  for (const p of run.platforms) {
-    const y = Math.round(p.y - run.cameraY);
+  for (const ledge of run.platforms) {
+    const p = platformAtTime(ledge, t),
+      y = Math.round(p.y - cameraY);
     if (y < -20 || y > 620) continue;
     const moving = p.kind === 'moving',
       crumble = p.kind === 'crumble',
@@ -190,8 +189,9 @@ function draw() {
     }
   }
   for (const effect of run.effects) {
-    const age = (run.player.timeMs - effect.at) / 650;
-    if (age < 0 || age > 1) continue;
+    // An effect born in the latest step holds its first frame until the blend reaches it.
+    const age = Math.max(0, (t - effect.at) / 650);
+    if (age > 1) continue;
     ctx.save();
     ctx.globalAlpha = 1 - age;
     if (effect.type === 'break') {
@@ -199,7 +199,7 @@ function draw() {
       for (let i = 0; i < 4; i++) {
         const w = effect.width / 4 - 3,
           x = effect.x + (i * effect.width) / 4 + (i - 1.5) * age * 24,
-          y = effect.y - run.cameraY + age * age * 100 + i * age * 3;
+          y = effect.y - cameraY + age * age * 100 + i * age * 3;
         ctx.fillRect(Math.round(x), Math.round(y), w, 4);
         ctx.fillStyle = '#785543';
         ctx.fillRect(Math.round(x) + 2, Math.round(y) + 4, w - 4, 3);
@@ -211,7 +211,7 @@ function draw() {
       ctx.beginPath();
       ctx.ellipse(
         effect.x + effect.width / 2,
-        effect.y - run.cameraY,
+        effect.y - cameraY,
         12 + age * 25,
         3 + age * 7,
         0,
@@ -223,7 +223,7 @@ function draw() {
     ctx.restore();
   }
   // The rising line: touch it and the climb ends.
-  const hazard = Math.round(run.hazardY - run.cameraY),
+  const hazard = Math.round(mix(previous.hazardY, run.hazardY, a) - cameraY),
     bottom = (cssHeight - top) / scale;
   if (hazard < bottom) {
     const haze = ctx.createLinearGradient(0, hazard, 0, hazard + 160);
@@ -234,17 +234,19 @@ function draw() {
     ctx.fillStyle = '#d99177';
     ctx.fillRect(0, hazard, WORLD.width, 2);
   }
-  const player = run.player,
-    support = run.platforms
-      .filter((p) => p.y >= player.y - 1 && player.x >= p.x && player.x <= p.x + p.width)
-      .sort((a, b) => a.y - b.y)[0];
+  let support = null;
+  for (const ledge of run.platforms) {
+    const p = platformAtTime(ledge, t);
+    if (p.y >= puffY - 1 && puffX >= p.x && puffX <= p.x + p.width && (!support || p.y < support.y))
+      support = p;
+  }
   if (support) {
-    const distance = support.y - player.y;
+    const distance = support.y - puffY;
     ctx.fillStyle = `rgba(184,197,166,${Math.max(0.04, 0.2 - distance / 900)})`;
     ctx.beginPath();
     ctx.ellipse(
-      Math.round(player.x),
-      Math.round(support.y - run.cameraY + 3),
+      Math.round(puffX),
+      Math.round(support.y - cameraY + 3),
       Math.max(9, 32 - distance * 0.06),
       2,
       0,
@@ -255,12 +257,12 @@ function draw() {
   }
   if (run.lastLanding && !reduced) {
     const l = run.lastLanding,
-      age = player.timeMs - l.at;
-    if (age < 300) {
+      age = t - l.at;
+    if (age >= 0 && age < 300) {
       ctx.strokeStyle = `rgba(233,190,118,${(1 - age / 300) * 0.35})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.ellipse(l.x, l.y - run.cameraY + 2, 16 + age * 0.065, 3 + age * 0.006, 0, 0, Math.PI * 2);
+      ctx.ellipse(l.x, l.y - cameraY + 2, 16 + age * 0.065, 3 + age * 0.006, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
   }
@@ -269,14 +271,12 @@ function draw() {
       ? sampleFlightMotion(player, DEFAULT_TUNING)
       : null,
     image = sprite(v.animation, v.time, player.facing, flight);
-  ctx.drawImage(
-    image,
-    Math.round(player.x - 104),
-    Math.round(player.y - run.cameraY - 144),
-    208,
-    224,
-  );
-  $('height-score').textContent = run.score;
+  ctx.drawImage(image, Math.round(puffX - 104), Math.round(puffY - cameraY - 144), 208, 224);
+  // Writing the HUD invalidates its layout and paint even when the text is unchanged.
+  if (run.score !== shownScore) {
+    shownScore = run.score;
+    $('height-score').textContent = shownScore;
+  }
 }
 new ResizeObserver(() => {
   const r = canvas.getBoundingClientRect();
@@ -347,6 +347,7 @@ function stopFrames() {
   raf = null;
   lastTime = null;
   accumulator = 0;
+  previous = run;
   clearInputs();
 }
 function pause() {
@@ -359,7 +360,7 @@ function pause() {
 function reset() {
   stopFrames();
   saveBest();
-  run = createRun(nextSeed(run.seed));
+  run = previous = createRun(nextSeed(run.seed));
   running = false;
   started = false;
 }
@@ -381,6 +382,7 @@ function tick(now) {
   lastTime = now;
   let steps = 0;
   while (accumulator >= FIXED_DT && steps < 12) {
+    previous = run;
     run = stepRun(run, { axis: axis() }, FIXED_DT, viewTransform().fallLimit);
     best = Math.max(best, run.score);
     accumulator -= FIXED_DT;
