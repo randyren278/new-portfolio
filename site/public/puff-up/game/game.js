@@ -44,7 +44,10 @@ let bestAtStart = 0,
   endedAt = null,
   // Where Puff was and how fast he was falling when the climb ended.
   fallFrom = null;
-const ENDING_CAP_MS = 1500,
+// The line usually catches a falling Puff at the bottom edge, half out of view, so the ending
+// always runs long enough to see him drop away before the results come up.
+const ENDING_MIN_MS = 550,
+  ENDING_CAP_MS = 1500,
   sound = createSound();
 // After a climb ends Puff drops under the game's own gravity until he is out of view.
 const fallenY = (ms) =>
@@ -481,7 +484,8 @@ function tick(now) {
     const { scale, top } = viewTransform(),
       spriteTop = fallenY(now - endedAt) - 144 - run.cameraY,
       inView = spriteTop < (cssHeight - top) / scale;
-    if (!reduced && inView && now - endedAt < ENDING_CAP_MS) {
+    const elapsed = now - endedAt;
+    if (!reduced && (inView || elapsed < ENDING_MIN_MS) && elapsed < ENDING_CAP_MS) {
       draw();
       raf = requestAnimationFrame(tick);
       return;
