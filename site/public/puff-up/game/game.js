@@ -222,6 +222,18 @@ function draw() {
     }
     ctx.restore();
   }
+  // The rising line: touch it and the climb ends.
+  const hazard = Math.round(run.hazardY - run.cameraY),
+    bottom = (cssHeight - top) / scale;
+  if (hazard < bottom) {
+    const haze = ctx.createLinearGradient(0, hazard, 0, hazard + 160);
+    haze.addColorStop(0, 'rgba(217,145,119,0.24)');
+    haze.addColorStop(1, 'rgba(217,145,119,0.05)');
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, hazard, WORLD.width, bottom - hazard);
+    ctx.fillStyle = '#d99177';
+    ctx.fillRect(0, hazard, WORLD.width, 2);
+  }
   const player = run.player,
     support = run.platforms
       .filter((p) => p.y >= player.y - 1 && player.x >= p.x && player.x <= p.x + p.width)

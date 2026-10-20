@@ -4,10 +4,14 @@ import {
   createRun,
   stepRun,
   scoreForPeak,
-  difficultyForScore,
+  zoneForScore,
+  ZONES,
+  rebuildMs,
+  HAZARD_LAG,
   platformAtTime,
   SPRING_SPEED,
 } from '../public/puff-up/game/climb.js';
+import { playBot } from './puff-bot.mjs';
 import { FIXED_DT, DEFAULT_TUNING, createState, step } from '../public/puff-up/game/physics.js';
 const center = (p) => p.x + p.width / 2;
 const steer = (p, x) => {
@@ -166,9 +170,24 @@ test('movers are analytic, bounded, deterministic and participate in actual coll
   assert.equal(hit.platformId, 'm');
   assert.equal(hit.y, 470);
 });
-test('difficulty narrows ledges and raises gaps, with all four mechanics introduced early', () => {
-  assert.ok(difficultyForScore(200).width < difficultyForScore(0).width);
-  assert.ok(difficultyForScore(200).gap > difficultyForScore(0).gap);
+test('zones step up every 200 m, then the last zone repeats, with all four mechanics introduced early', () => {
+  assert.deepEqual(
+    [0, 199, 200, 399, 400, 800, 5000].map((m) => zoneForScore(m).index),
+    [0, 0, 1, 1, 2, 4, 25],
+  );
+  assert.deepEqual(zoneForScore(5000).scroll, ZONES.at(-1).scroll);
+  for (let z = 1; z < ZONES.length; z++) {
+    const [easier, harder] = [ZONES[z - 1], ZONES[z]];
+    assert.ok(harder.scroll > easier.scroll);
+    assert.ok(harder.mix[0] < easier.mix[0] && harder.mix[3] <= easier.mix[3]);
+    assert.ok(harder.width < easier.width && harder.turnWidth < easier.turnWidth);
+    const speed = (zone) => zone.amplitude / zone.periodMs[1];
+    assert.ok(speed(harder) > speed(easier));
+    assert.equal(
+      harder.mix.reduce((a, b) => a + b),
+      100,
+    );
+  }
   const kinds = new Set(createRun().platforms.map((p) => p.kind));
   assert.deepEqual(kinds, new Set(['crumble', 'solid', 'moving', 'spring']));
   assert.equal(scoreForPeak(365), 21);
@@ -180,6 +199,7 @@ test('score/camera stay monotonic, effects/platforms bounded, and supports remai
     const p = target(run);
     run = stepRun(run, { axis: p ? steer(run.player, center(p)) : 0 });
     assert.ok(run.score >= old.score && run.cameraY <= old.cameraY && run.peakY <= old.peakY);
+    assert.ok(run.hazardY <= old.hazardY && run.hazardY <= run.peakY + HAZARD_LAG);
     assert.ok(run.platforms.length < 20 && run.effects.length <= 8);
     assert.ok(run.platforms.every((p) => p.y <= run.cameraY + 620));
     assert.ok(run.effects.every((e) => run.player.timeMs - e.at < 650));
@@ -257,58 +277,61 @@ function collectLater(seed) {
       .sort((a, b) => Number(a.id) - Number(b.id)),
   };
 }
-test('later generated course edges remain reachable with digital controls at mover phase extremes', () => {
-  let cases = 0;
-  for (const seed of [...Array.from({ length: 31 }, (_, i) => i), 0x50554646]) {
-    const { platforms } = collectLater(seed);
-    const springs = platforms.filter((p) => p.kind === 'spring');
-    for (let s = 1; s < springs.length; s++)
-      assert.ok(Number(springs[s].id) - Number(springs[s - 1].id) >= 4);
-    for (let edge = 0; edge < platforms.length - 1; edge++) {
-      const source = platforms[edge],
-        destination = platforms[edge + 1];
-      for (const fromPhase of source.kind === 'moving'
-        ? [0, Math.PI / 2, Math.PI, Math.PI * 1.5]
-        : [source.phase])
-        for (const toPhase of destination.kind === 'moving'
-          ? [0, Math.PI / 2, Math.PI, Math.PI * 1.5]
-          : [destination.phase]) {
-          const from = platformAtTime(
-            source.kind === 'moving' ? { ...source, phase: fromPhase } : source,
-            0,
+// Generate a course without playing it: lift Puff 100 px per update so the camera keeps rising.
+function course(seed, metres) {
+  let run = createRun(seed);
+  const seen = new Map(run.platforms.map((p) => [p.id, p]));
+  while (run.score < metres) {
+    run = stepRun({ ...run, player: { ...run.player, y: run.player.y - 100 } }, {}, 0);
+    for (const ledge of run.platforms) seen.set(ledge.id, ledge);
+  }
+  return seen;
+}
+const PHASES = Array.from({ length: 8 }, (_, i) => (i * Math.PI) / 4);
+test('every certified takeoff replays from its source with real physics at every mover phase', () => {
+  let hops = 0;
+  for (const seed of [...Array.from({ length: 40 }, (_, i) => i), 0x50554646]) {
+    const ledges = course(seed, 1400);
+    for (const [id, ledge] of ledges) {
+      if (id === 'floor') continue;
+      const below = ledges.get(String(Number(id) - 2).padStart(2, '0'));
+      const source =
+        id === '01'
+          ? ledges.get('floor')
+          : below?.kind === 'spring'
+            ? below
+            : ledges.get(String(Number(id) - 1).padStart(2, '0'));
+      assert.ok(ledge.witness.length > 0, `seed ${seed}: ${id} has a certificate`);
+      for (const w of ledge.witness)
+        for (const phase of ledge.kind === 'moving' ? PHASES : [0]) {
+          const from = source.witness[w.parent],
+            target = ledge.kind === 'moving' ? { ...ledge, phase } : ledge;
+          let p = {
+            ...createState(),
+            x: from.x,
+            vx: from.vx,
+            y: source.y,
+            vy: source.kind === 'spring' ? -SPRING_SPEED : -DEFAULT_TUNING.jumpSpeed,
+            grounded: false,
+            platformId: null,
+            coyoteMsLeft: 0,
+          };
+          for (let t = 0; t < 240 && !p.landed; t++)
+            p = step(p, { axis: t < w.k ? w.a : w.b, autoHop: true }, FIXED_DT, DEFAULT_TUNING, [
+              platformAtTime(target, p.timeMs + FIXED_DT * 1000),
+            ]);
+          hops++;
+          assert.deepEqual(
+            [p.landed && p.y === ledge.y, p.x, p.vx],
+            [true, w.x, w.vx],
+            `seed ${seed}: ${source.id}→${id} witness ${JSON.stringify(w)} phase ${phase}`,
           );
-          const to =
-            destination.kind === 'moving' ? { ...destination, phase: toPhase } : destination;
-          let hit = false;
-          cases++;
-          for (const policy of [0.008, 0.004, 0.012, 'constant']) {
-            let p = { ...createState(), x: center(from), y: from.y, platformId: from.id };
-            const dir = Math.sign(center(platformAtTime(to, 500)) - p.x);
-            for (let i = 0; i < 150; i++) {
-              const now = p.timeMs + FIXED_DT * 1000;
-              const axis =
-                policy === 'constant'
-                  ? dir
-                  : steerWith(p, center(platformAtTime(to, now + 200)), policy);
-              p = step(p, { axis, autoHop: true }, FIXED_DT, DEFAULT_TUNING, [
-                from,
-                platformAtTime(to, now),
-              ]);
-              if (p.landed && p.y === to.y) {
-                hit = true;
-                break;
-              }
-              if (p.y > from.y + 5) break;
-            }
-            if (hit) break;
-          }
-          assert.ok(hit, `later seed${seed}: ${from.id}→${to.id}, phases${fromPhase}/${toPhase}`);
         }
     }
   }
   console.log(
-    'LATER_EDGE_CERTIFICATE',
-    JSON.stringify({ seeds: 32, cases, digitalPolicies: 4, passed: cases }),
+    'COURSE_CERTIFICATE',
+    JSON.stringify({ seeds: 41, metres: 1400, hops, passed: hops }),
   );
 });
 
@@ -405,7 +428,7 @@ for (const [width, height] of [
   [1440, 1000],
   [390, 844],
 ])
-  test(`Puff continues falling beyond old cutoff and exits ${width}x${height}`, () => {
+  test(`Puff falls past the old cutoff until the line or the ${width}x${height} view ends the climb`, () => {
     const scale = Math.min(width / 640, height / 620, 1.25),
       top = (height - 620 * scale) / 2,
       limit = (height - top) / scale + 144;
@@ -417,10 +440,10 @@ for (const [width, height] of [
     }
     assert.ok(passedOldLimit);
     assert.equal(run.status, 'over');
-    assert.ok(
-      top + (run.player.y - run.cameraY - 144) * scale > height,
-      'whole sprite texture must leave viewport',
-    );
+    const caught = run.player.y > run.hazardY,
+      gone = top + (run.player.y - run.cameraY - 144) * scale > height;
+    assert.ok(caught || gone, 'the rising line catches Puff or his whole sprite leaves the view');
+    if (caught) assert.ok(run.hazardY - run.cameraY < (height - top) / scale, 'line is on screen');
   });
 test('direction selection preserves random choices until three matching stars, then forces reversal', () => {
   assert.equal(shotDirection([], 0), -1);
@@ -510,7 +533,7 @@ test('desktop canvas clicks and ended runs do not capture steering', () => {
   }
 });
 
-test('broken red platforms restore at five seconds, keeping their original geometry', () => {
+test('broken red platforms restore after three seconds in the first zone, keeping their geometry', () => {
   const original = createRun(17),
     red = original.platforms.find((p) => p.kind === 'crumble' && p.id !== 'floor');
   const impact = {
@@ -527,7 +550,7 @@ test('broken red platforms restore at five seconds, keeping their original geome
   const broken = stepRun(impact);
   assert.ok(!broken.platforms.some((p) => p.id === red.id));
   const repair = broken.brokenPlatforms.find((r) => r.platform.id === red.id);
-  assert.equal(repair.readyAt, broken.player.timeMs + 5000);
+  assert.equal(repair.readyAt, broken.player.timeMs + 3000);
   const at = (timeMs) =>
     stepRun(
       {
@@ -570,4 +593,50 @@ test('scrolled-off red platforms and the initial launch pad never regenerate', (
   assert.ok(!ended.platforms.some((p) => p.id === red.id));
   assert.equal(ended.brokenPlatforms.length, 0);
   assert.equal(stepRun(createRun(17)).brokenPlatforms.length, 0);
+});
+
+test('crumbled ledges take one second longer to return in each higher zone', () => {
+  const at = (metres) => 575 - metres * 10;
+  assert.deepEqual(
+    [50, 250, 450, 650, 850, 1050, 1300].map((m) => rebuildMs(at(m))),
+    [3000, 4000, 5000, 6000, 7000, 8000, 9000],
+  );
+});
+test('the rising line catches a Puff who stops climbing, at the first zone speed', () => {
+  let run = createRun();
+  const first = run.platforms.find((p) => p.id === '01'),
+    peaks = [];
+  while (run.status === 'playing' && run.player.timeMs < 30000) {
+    run = stepRun(run);
+    peaks.push([run.player.timeMs, run.peakY]);
+  }
+  assert.equal(run.lastLanding.id, '01');
+  assert.ok(run.player.y > run.hazardY);
+  // From the first bounce apex the line trails HAZARD_LAG below it and rises 25 px per game
+  // second until it reaches the stone; Puff is caught on the next landing, within one bounce.
+  const apexAt = peaks.find(([, y]) => y === run.peakY)[0],
+    reaches = apexAt + ((HAZARD_LAG - (first.y - run.peakY)) / 25) * 1000;
+  assert.ok(
+    run.player.timeMs >= reaches && run.player.timeMs <= reaches + 850,
+    `${run.player.timeMs}`,
+  );
+});
+test('a clean climb always outpaces the fastest rising line', () => {
+  const fastest = Math.max(...ZONES.map((z) => z.scroll)) * 10;
+  const hop = (rise, gap) => {
+    let p = { ...createState(), y: 0, vy: -rise, grounded: false, platformId: null };
+    for (let ticks = 1; ; ticks++) {
+      const next = step(p, {}, FIXED_DT, DEFAULT_TUNING, [{ id: 'g', x: 0, y: -gap, width: 640 }]);
+      if (next.landed) return (ticks + 1) * FIXED_DT;
+      p = next;
+    }
+  };
+  for (let gap = 104; gap <= 132; gap++)
+    assert.ok(gap / hop(700, gap) > fastest * 1.3, `gap ${gap}`);
+  for (let gap = 208; gap <= 216; gap++)
+    assert.ok(gap / hop(SPRING_SPEED, gap) > fastest * 1.3, `boost ${gap}`);
+});
+test('the search bot clears every zone of the visible default course through the real game', () => {
+  const result = playBot(0x50554646, 1200);
+  assert.ok(result.cleared, JSON.stringify(result));
 });

@@ -26,6 +26,15 @@ const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 const approach = (value, target, amount) =>
   value < target ? Math.min(value + amount, target) : Math.max(value - amount, target);
 const overlaps = (x, p) => x + COLLIDER.halfWidth > p.x && x - COLLIDER.halfWidth < p.x + p.width;
+/** One tick of horizontal motion; shared with the course certificate so both use one rule. */
+export function moveX(x, vx, axis, grounded, dt, t = DEFAULT_TUNING) {
+  const accel =
+    axis === 0 ? t.friction * (grounded ? 1 : 0.3) : grounded ? t.acceleration : t.airAcceleration;
+  const v = approach(vx, axis * t.moveSpeed, accel * dt);
+  const proposed = x + v * dt;
+  const next = clamp(proposed, COLLIDER.halfWidth, WORLD.width - COLLIDER.halfWidth);
+  return next === proposed ? [next, v] : [next, 0];
+}
 export function createState() {
   return {
     x: 140,
@@ -81,16 +90,7 @@ export function step(
   s.jumpBufferMsLeft = input.jumpPressed ? t.jumpBufferMs : Math.max(0, s.jumpBufferMsLeft - ms);
   const previousX = s.x,
     previousY = s.y;
-  const accel =
-    axis === 0
-      ? t.friction * (wasGrounded ? 1 : 0.3)
-      : wasGrounded
-        ? t.acceleration
-        : t.airAcceleration;
-  s.vx = approach(s.vx, axis * t.moveSpeed, accel * dt);
-  const proposedX = s.x + s.vx * dt;
-  s.x = clamp(proposedX, COLLIDER.halfWidth, WORLD.width - COLLIDER.halfWidth);
-  if (s.x !== proposedX) s.vx = 0;
+  [s.x, s.vx] = moveX(s.x, s.vx, axis, wasGrounded, dt, t);
   if (axis !== 0) s.facing = axis > 0 ? 'right' : 'left';
 
   // Ground support is checked after horizontal movement, so walking off an

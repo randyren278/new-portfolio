@@ -129,7 +129,11 @@ across the midpoint to change direction. Desktop supports arrow keys or A/D,
 Escape to pause and Space to resume. Back returns to the same portfolio.
 Playing updates the address to `/game`; that link also opens the game directly
 and survives a refresh. The game loads on demand and preserves the page underneath.
-Broken red platforms rebuild after five seconds of active play if still visible.
+Every 200 m is a harder zone: a faster rising line, faster play, fewer stone
+ledges, narrower ledges and quicker, wider movers. Every generated ledge carries
+a reachability certificate, and `pnpm test:puff:bot` sends a search bot through
+every zone. Broken red platforms rebuild after 3 seconds in the first zone and
+1 second longer in each zone above, if still visible.
 
 ## Material
 
