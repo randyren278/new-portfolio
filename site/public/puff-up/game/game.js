@@ -8,6 +8,7 @@ import { createSound, cuesFor } from './audio.js';
 import {
   danger,
   drawBanner,
+  drawBeam,
   drawBest,
   CALLOUT_Y,
   drawCallout,
@@ -17,8 +18,10 @@ import {
   drawKicker,
   drawRebuild,
   drawSpark,
+  drawUfo,
   shake,
   squash,
+  ufoAt,
 } from './feedback.js';
 
 const $ = (id) => document.getElementById(id),
@@ -41,11 +44,17 @@ let bestAtStart = 0,
   streak = 0,
   lastLandY = 575,
   newBestAt = null,
+  readyAt = null,
   endedAt = null,
   // Where Puff was and how fast he was falling when the climb ended.
   fallFrom = null;
 // The line usually catches a falling Puff at the bottom edge, half out of view, so the ending
 // always runs long enough to see him drop away before the results come up.
+// Local testing only: ?stars=3 on localhost starts each climb with a charged rescue.
+const testStars =
+  location.hostname === 'localhost'
+    ? Math.min(3, Number(new URLSearchParams(location.search).get('stars')) || 0)
+    : 0;
 const ENDING_MIN_MS = 550,
   ENDING_CAP_MS = 1500,
   sound = createSound();
@@ -131,6 +140,7 @@ let cssWidth = 640,
   cssHeight = 620,
   dpr = 1,
   shownScore = null,
+  shownStars = null,
   // CSS px from the canvas top to the bottom controls; the line gauge sits just above them.
   gaugeTop = 620;
 function viewTransform() {
@@ -327,6 +337,8 @@ function draw() {
     }
   }
   drawDust(ctx, run.lastLanding, t, cameraY);
+  const ufo = ufoAt(run.rescue, t, puffX, puffY, cameraY);
+  drawBeam(ctx, ufo, puffX, puffY, cameraY, t);
   const falling = endedAt !== null,
     v = falling ? { animation: 'fall', time: player.timeMs + ending } : sampleGameVisual(run),
     flight = ['jump', 'fall'].includes(v.animation)
@@ -344,14 +356,27 @@ function draw() {
   ctx.scale(sx, sy);
   ctx.drawImage(image, -104, -144, 208, 224);
   ctx.restore();
+  drawUfo(ctx, ufo, cameraY, t);
   drawBanner(ctx, run.banner, t);
   // Below the zone card, so a best just past a gate never overlaps it.
   if (newBestAt !== null)
     drawCallout(ctx, 'PAST YOUR BEST', 'New best', t - newBestAt, 1800, CALLOUT_Y + 80);
+  else if (readyAt !== null)
+    drawCallout(ctx, 'THREE STARS', 'Rescue ready', t - readyAt, 1800, CALLOUT_Y + 80);
   // Writing the HUD invalidates its layout and paint even when the text is unchanged.
   if (run.score !== shownScore) {
     shownScore = run.score;
     $('height-score').textContent = shownScore;
+  }
+  if (run.stars !== shownStars) {
+    shownStars = run.stars;
+    const meter = $('star-meter');
+    meter.textContent = '★'.repeat(shownStars) + '☆'.repeat(3 - shownStars);
+    meter.classList.toggle('charged', shownStars === 3);
+    meter.setAttribute(
+      'aria-label',
+      `${shownStars} of 3 stars${shownStars === 3 ? ', rescue ready' : ''}`,
+    );
   }
 }
 new ResizeObserver(() => {
@@ -463,6 +488,8 @@ function start() {
     streak = 0;
     lastLandY = 575;
     newBestAt = null;
+    readyAt = null;
+    if (testStars) run = previous = { ...run, stars: testStars };
   }
   sound.start();
   running = true;
@@ -508,6 +535,10 @@ function tick(now) {
       lastLandY = run.player.y;
     }
     for (const cue of cuesFor(previous, run)) sound.cue(cue, streak);
+    if (run.stars === 3 && previous.stars < 3) {
+      readyAt = run.player.timeMs;
+      sound.cue('ready');
+    }
     if (newBestAt === null && bestAtStart > 0 && run.score > bestAtStart) {
       newBestAt = run.player.timeMs;
       sound.cue('best');

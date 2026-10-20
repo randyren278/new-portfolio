@@ -1,5 +1,5 @@
 import { WORLD } from './physics.js';
-import { ZONES, ZONE_METRES } from './climb.js';
+import { RESCUE_MS, ZONES, ZONE_METRES } from './climb.js';
 
 // Feedback drawn in world coordinates from run state and the frame's blended time `t` and
 // camera, so it moves as smoothly as the scene and pauses with the game.
@@ -178,4 +178,71 @@ export function squash(landing, t, reduced) {
   if (age < 0 || age > 110) return [1, 1];
   const amount = Math.sin((age / 110) * Math.PI) * 0.13 * Math.min(1, landing.speed / 800);
   return [1 + amount, 1 - amount];
+}
+
+const ease = (u) => u * u * (3 - 2 * u);
+/** Where the rescue UFO is at blended time `t`: it swoops in, hovers over Puff while the beam
+ * lifts him, then leaves up and away. Returns null outside a rescue. */
+export function ufoAt(rescue, t, puffX, puffY, cameraY) {
+  if (!rescue) return null;
+  const p = (t - rescue.at) / RESCUE_MS;
+  if (p < 0 || p > 1) return null;
+  const hover = (x, y) => ({ x, y: y - 150 }),
+    from = hover(rescue.from.x, rescue.from.y),
+    to = hover(rescue.to.x, rescue.to.y);
+  if (p < 0.3) {
+    const u = ease(p / 0.3);
+    return {
+      x: 700 + (from.x - 700) * u,
+      y: cameraY - 80 + (from.y - cameraY + 80) * u,
+      beam: p > 0.22,
+    };
+  }
+  if (p < 0.85) return { ...hover(puffX, puffY), beam: true };
+  const u = ease((p - 0.85) / 0.15);
+  return { x: to.x + (-80 - to.x) * u, y: to.y + (cameraY - 80 - to.y) * u, beam: p < 0.88 };
+}
+/** The tractor beam, drawn behind Puff. */
+export function drawBeam(ctx, ufo, puffX, puffY, cameraY, t) {
+  if (!ufo?.beam) return;
+  const top = ufo.y - cameraY + 8,
+    bottom = puffY - cameraY + 6,
+    glow = ctx.createLinearGradient(0, top, 0, bottom);
+  glow.addColorStop(0, 'rgba(155,203,225,0.42)');
+  glow.addColorStop(1, 'rgba(155,203,225,0.06)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.moveTo(ufo.x - 14, top);
+  ctx.lineTo(ufo.x + 14, top);
+  ctx.lineTo(puffX + 44, bottom);
+  ctx.lineTo(puffX - 44, bottom);
+  ctx.fill();
+  // Motes drifting up the beam.
+  ctx.fillStyle = 'rgba(221,240,248,0.7)';
+  for (let i = 0; i < 5; i++) {
+    const u = ((t / 600 + i / 5) % 1) ** 1.2,
+      y = bottom + (top - bottom) * u,
+      x = puffX + (ufo.x - puffX) * u + Math.sin(t / 180 + i * 2) * (1 - u) * 18;
+    ctx.fillRect(Math.round(x), Math.round(y), 2, 2);
+  }
+}
+/** The saucer: a silver disc, a pale dome and blinking rim lights. */
+export function drawUfo(ctx, ufo, cameraY, t) {
+  if (!ufo) return;
+  const x = Math.round(ufo.x),
+    y = Math.round(ufo.y - cameraY);
+  ctx.fillStyle = 'rgba(155,203,225,0.85)';
+  ctx.beginPath();
+  ctx.ellipse(x, y - 4, 13, 11, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = '#d8d4e4';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 2, 30, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#8f8aa3';
+  ctx.fillRect(x - 22, y + 4, 44, 2);
+  for (let i = 0; i < 4; i++) {
+    ctx.fillStyle = Math.floor(t / 160 + i) % 2 ? '#e9be76' : '#d99177';
+    ctx.fillRect(x - 21 + i * 13, y + 1, 3, 3);
+  }
 }

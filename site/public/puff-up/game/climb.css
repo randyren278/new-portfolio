@@ -109,6 +109,18 @@ canvas {
   font-size: 10px;
   color: var(--muted);
 }
+.star-meter {
+  margin-left: 6px;
+  padding-left: 9px;
+  border-left: 1px solid #aaaaaa25;
+  color: #e9be7690;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+.star-meter.charged {
+  color: #f3e3a6;
+  text-shadow: 0 0 8px #e9be7699;
+}
 .pause-label {
   position: absolute;
   left: 50%;

@@ -13,6 +13,7 @@ const hz = (midi) => 440 * 2 ** ((midi - 69) / 12);
 export function cuesFor(previous, run) {
   const cues = [];
   if (run.status === 'over' && previous.status !== 'over') return ['caught'];
+  if (run.status === 'rescue' && previous.status !== 'rescue') return ['ufo'];
   const fresh = (type) => run.effects.some((e) => e.at === run.player.timeMs && e.type === type);
   if (run.player.landed) cues.push('hop');
   if (fresh('break')) cues.push('crack');
@@ -119,6 +120,34 @@ export function createSound() {
     },
     best: () =>
       [1047, 1319, 1568].forEach((f, i) => tone(f, { gain: 0.08, decay: 0.4, delay: i * 0.08 })),
+    // The UFO: a warbling rise, like an old sci-fi saucer arriving.
+    ufo: () => {
+      for (const [f, delay] of [
+        [440, 0],
+        [554, 0.03],
+      ]) {
+        const t = ctx.currentTime + delay,
+          osc = ctx.createOscillator(),
+          wobble = ctx.createOscillator(),
+          depth = ctx.createGain(),
+          env = ctx.createGain();
+        osc.frequency.setValueAtTime(f, t);
+        osc.frequency.exponentialRampToValueAtTime(f * 2, t + 1.1);
+        wobble.frequency.value = 9;
+        depth.gain.value = f * 0.04;
+        wobble.connect(depth).connect(osc.frequency);
+        env.gain.setValueAtTime(0.0001, t);
+        env.gain.exponentialRampToValueAtTime(0.045, t + 0.15);
+        env.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+        osc.connect(env).connect(master);
+        for (const node of [osc, wobble]) {
+          node.start(t);
+          node.stop(t + 1.45);
+        }
+      }
+    },
+    ready: () =>
+      [784, 988, 1175].forEach((f, i) => tone(f, { gain: 0.07, decay: 0.5, delay: i * 0.07 })),
     caught: () => {
       tone(110, { gain: 0.22, decay: 0.42, slide: 0.4 });
       burst({ frequency: 300, type: 'lowpass', gain: 0.18, decay: 0.3 });

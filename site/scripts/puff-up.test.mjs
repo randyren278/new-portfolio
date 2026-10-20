@@ -10,6 +10,8 @@ import {
   rebuildMs,
   launch,
   CALM_MS,
+  STARS_FOR_RESCUE,
+  RESCUE_MS,
   HAZARD_LAG,
   platformAtTime,
   SPRING_SPEED,
@@ -780,7 +782,7 @@ test('forks offer a narrow spark lane beside the path that merges on wide stone'
       forks++;
       assert.equal(lane.y, main.y);
       assert.deepEqual([lane.kind, lane.spark], ['crumble', true]);
-      assert.ok(zoneForScore(scoreForPeak(lane.y)).index >= 1);
+      assert.ok(scoreForPeak(lane.y) >= 100, `${lane.id} opens from 100 m`);
       const gap = Math.abs(lane.x + lane.width / 2 - (main.x + main.width / 2));
       assert.ok(gap >= (lane.width + main.width) / 2 + 60, `${lane.id} clear of ${main.id}`);
       assert.deepEqual(
@@ -879,4 +881,88 @@ test('a gate names its zone once, however often Puff bounces on it', () => {
   assert.equal(landings, 5);
   assert.equal(chimes, 1);
   assert.equal(run.banner.zone, 2);
+});
+
+// A run lifted past a few screens of course, so ledges exist above and below Puff.
+function midClimb(seed, metres) {
+  let run = createRun(seed);
+  while (run.score < metres)
+    run = stepRun({ ...run, player: { ...run.player, y: run.player.y - 100 } }, {}, 0);
+  return run;
+}
+test('sparks count as stars up to three', () => {
+  let run = { ...createRun(1), stars: 2 };
+  for (let landing = 0; landing < 2; landing++) {
+    run = {
+      ...run,
+      lastLanding: null,
+      platforms: [
+        { id: `s${landing}`, x: 80, y: 465, width: 60, kind: 'crumble', spark: true, pace: 1 },
+        { id: 'ahead', x: 400, y: 0, width: 100, kind: 'solid' },
+      ],
+      player: {
+        ...createState(),
+        x: 110,
+        y: 460,
+        vy: 200,
+        grounded: false,
+        platformId: null,
+        coyoteMsLeft: 0,
+        timeMs: run.player.timeMs,
+      },
+    };
+    for (let i = 0; i < 10 && !run.lastLanding; i++) run = stepRun(run);
+  }
+  assert.equal(STARS_FOR_RESCUE, 3);
+  assert.equal(run.stars, 3);
+});
+test('with three stars a fall calls the UFO, which sets Puff back on the track', () => {
+  const climbing = midClimb(4, 300),
+    falling = {
+      ...climbing,
+      stars: 3,
+      player: {
+        ...climbing.player,
+        y: climbing.cameraY + 900,
+        vy: 600,
+        grounded: false,
+        platformId: null,
+      },
+    };
+  let run = stepRun(falling);
+  assert.equal(run.status, 'rescue');
+  assert.equal(run.stars, 0);
+  assert.ok(run.effects.some((e) => e.type === 'ufo'));
+  const { to } = run.rescue,
+    ledge = run.platforms.find((p) => p.id === to.id);
+  // A main-path ledge on screen, no higher than Puff's best ledge, set down from its certificate.
+  assert.ok(/^\d+$/.test(to.id) && ledge.witness.some((w) => w.x === to.x && w.vx === to.vx));
+  assert.ok(to.y >= run.peakY + 100 && to.y - run.cameraY < 560, JSON.stringify(to));
+  assert.ok(run.hazardY >= to.y + 300);
+  assert.deepEqual(cuesFor(falling, run), ['ufo']);
+  const score = run.score;
+  for (let t = 0; t < (RESCUE_MS / 1000) * 120 + 2; t++) run = stepRun(run);
+  assert.equal(run.status, 'playing');
+  assert.equal(run.lastLanding.id, to.id);
+  assert.equal(run.score, score, 'a rescue never adds height');
+  assert.ok(run.calmUntil >= run.player.timeMs + CALM_MS - 20);
+  // Puff takes off from the ledge and the line holds while he gets going.
+  for (let t = 0; t < 240; t++) run = stepRun(run);
+  assert.equal(run.status, 'playing');
+});
+test('without three stars a fall still ends the climb', () => {
+  const climbing = midClimb(4, 300);
+  const run = stepRun({
+    ...climbing,
+    stars: 2,
+    player: {
+      ...climbing.player,
+      y: climbing.cameraY + 900,
+      vy: 600,
+      grounded: false,
+      platformId: null,
+    },
+  });
+  assert.equal(run.status, 'over');
+  assert.equal(run.stars, 2);
 });

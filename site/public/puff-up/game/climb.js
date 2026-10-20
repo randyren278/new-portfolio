@@ -137,6 +137,92 @@ export function launch(player, ledge) {
 }
 /** A spark pauses the rising line for this long. */
 export const CALM_MS = 2500;
+/** Sparks are the stars; three charge one rescue from a fall. */
+export const STARS_FOR_RESCUE = 3;
+/** How long the UFO takes to beam Puff back onto the track. */
+export const RESCUE_MS = 1700;
+const smooth = (u) => u * u * (3 - 2 * u);
+// Where a rescued Puff is set down: a main-path ledge on screen, the highest no higher than his
+// best ledge (the rescue then drops the line below it), so a rescue never gains him height.
+// Only if none is on screen does he go to the lowest ledge above.
+function rescueLedge(platforms, { cameraY, peakY }) {
+  const onScreen = platforms.filter(
+    (p) => /^\d+$/.test(p.id) && p.witness?.length && p.y > cameraY + 120 && p.y < cameraY + 560,
+  );
+  const behind = onScreen.filter((p) => p.y >= peakY + 100);
+  if (behind.length) return behind.reduce((a, b) => (b.y < a.y ? b : a));
+  return onScreen.reduce((a, b) => (b.y > a.y ? b : a), onScreen[0]) ?? null;
+}
+// One step of a rescue: the UFO lifts Puff from where he fell to the ledge, then sets him down
+// as if he had just landed there, from one of its certified takeoff states.
+function stepRescue(run, dt) {
+  const delta = Number.isFinite(dt) ? clamp(dt, 0, 1 / 30) : 0,
+    now = run.player.timeMs + delta * 1000,
+    { from, to, at } = run.rescue,
+    progress = (now - at) / RESCUE_MS;
+  let platforms = run.platforms.map((p) => platformAtTime(p, now));
+  const effects = (run.effects ?? []).filter((e) => now - e.at < 650);
+  if (progress < 1) {
+    const lift = smooth(clamp((progress - 0.3) / 0.55, 0, 1));
+    return {
+      ...run,
+      platforms,
+      effects,
+      player: {
+        ...run.player,
+        x: from.x + (to.x - from.x) * lift,
+        y: from.y + (to.y - from.y) * lift,
+        vx: 0,
+        vy: 0,
+        grounded: false,
+        landed: false,
+        events: [],
+        timeMs: now,
+      },
+    };
+  }
+  const ledge = platforms.find((p) => p.id === to.id) ?? { id: to.id, kind: 'solid', pace: 1 };
+  const brokenPlatforms = [...(run.brokenPlatforms ?? [])];
+  if (ledge.kind === 'crumble') {
+    brokenPlatforms.push({ platform: { ...ledge }, readyAt: now + rebuildMs(ledge.y) });
+    effects.push({ type: 'break', x: ledge.x, y: ledge.y, width: ledge.width, at: now });
+    platforms = platforms.filter((p) => p.id !== ledge.id);
+  }
+  return {
+    ...run,
+    status: 'playing',
+    rescue: null,
+    platforms,
+    effects,
+    brokenPlatforms,
+    calmUntil: now + CALM_MS,
+    lastLanding: {
+      id: ledge.id,
+      kind: ledge.kind,
+      x: to.x,
+      y: to.y,
+      speed: 0,
+      at: now,
+      pace: ledge.pace ?? 1,
+    },
+    player: launch(
+      {
+        ...run.player,
+        x: to.x,
+        y: to.y,
+        vx: to.vx,
+        vy: -DEFAULT_TUNING.jumpSpeed,
+        grounded: false,
+        platformId: null,
+        coyoteMsLeft: 0,
+        landed: true,
+        events: ['land', 'jump'],
+        timeMs: now,
+      },
+      ledge,
+    ),
+  };
+}
 /** While Puff outclimbs the rising line it trails this far below the peak. */
 export const HAZARD_LAG = 460;
 export function platformAtTime(platform, timeMs) {
@@ -444,18 +530,18 @@ function extend(platforms, cameraY, rng, nextId, plan) {
       };
     }
     platforms.push(top);
-    // A fork: now and then a narrow crumble lane opens on the far side carrying a spark.
+    // A fork: from 100 m, often a narrow crumble lane opens on the far side carrying a spark (a
+    // star). Three stars charge a rescue, so they come about twice per zone.
     rng = random(rng);
     if (
       plan.name === 'mixed' &&
       plan.left >= 1 &&
-      zone.index >= 1 &&
+      scoreForPeak(top.y) >= 100 &&
       !skipSource &&
       !lane &&
       source.kind !== 'spring' &&
       kind !== 'spring' &&
-      nextId - plan.forkAt >= 7 &&
-      rng % 100 < 45
+      nextId - plan.forkAt >= 4
     ) {
       const laneWidth = zone.minWidth,
         laneHalf = landingHalf(laneWidth, 0),
@@ -545,12 +631,15 @@ export function createRun(seed = 0x50554646) {
     lastLanding: null,
     banner: null,
     calmUntil: 0,
+    stars: 0,
+    rescue: null,
     effects: [],
     brokenPlatforms: [],
   };
 }
 export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height + 80) {
   if (run.status === 'over') return run;
+  if (run.status === 'rescue') return stepRescue(run, dt);
   const delta = Number.isFinite(dt) ? clamp(dt, 0, 1 / 30) : 0;
   const now = run.player.timeMs + delta * 1000;
   let platforms = run.platforms.map((p) => platformAtTime(p, now));
@@ -566,7 +655,8 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
   let lastLanding = run.lastLanding,
     landings = run.landings,
     banner = run.banner,
-    calmUntil = run.calmUntil ?? 0;
+    calmUntil = run.calmUntil ?? 0,
+    stars = run.stars ?? 0;
   const addEffect = (type, p) =>
     effects.push({ type, x: p.x, y: p.y, width: p.width, at: player.timeMs });
   if (run.player.grounded && run.player.platformId === 'floor' && player.events.includes('jump')) {
@@ -606,6 +696,7 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     if (contact) player = launch(player, contact);
     if (contact?.spark) {
       calmUntil = player.timeMs + CALM_MS;
+      stars = Math.min(STARS_FOR_RESCUE, stars + 1);
       addEffect('spark', contact);
     }
     if (contact?.kind === 'kicker') addEffect('kick', contact);
@@ -624,7 +715,7 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     );
   platforms = platforms.filter((p) => p.y <= cameraY + WORLD.height);
   const generated = extend(platforms, cameraY, run.rng, run.nextId, run.plan);
-  return {
+  const next = {
     ...run,
     player,
     ...generated,
@@ -637,8 +728,26 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     lastLanding,
     banner,
     calmUntil,
+    stars,
     effects: effects.slice(-8),
     brokenPlatforms: brokenPlatforms.filter((repair) => repair.platform.y >= cameraY),
-    status: player.y > hazardY || player.y - cameraY > fallLimit ? 'over' : 'playing',
+    status: 'playing',
+  };
+  if (!(player.y > hazardY || player.y - cameraY > fallLimit)) return next;
+  // A fall with three stars calls the UFO instead of ending the climb.
+  const ledge = stars >= STARS_FOR_RESCUE && rescueLedge(next.platforms, next);
+  if (!ledge) return { ...next, status: 'over' };
+  const from = { x: player.x, y: Math.min(player.y, cameraY + WORLD.height + 40) },
+    takeoff = ledge.witness[0];
+  return {
+    ...next,
+    status: 'rescue',
+    stars: 0,
+    rescue: { from, to: { id: ledge.id, x: takeoff.x, vx: takeoff.vx, y: ledge.y }, at: now },
+    // The line drops back below the ledge and holds while the UFO works.
+    hazardY: Math.max(hazardY, ledge.y + 300),
+    calmUntil: now + RESCUE_MS + CALM_MS,
+    player: { ...player, ...from, vx: 0, vy: 0, grounded: false, landed: false, events: [] },
+    effects: [...next.effects, { type: 'ufo', x: from.x, y: from.y, width: 0, at: now }],
   };
 }
