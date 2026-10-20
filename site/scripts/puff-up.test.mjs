@@ -6,6 +6,7 @@ import {
   scoreForPeak,
   zoneForScore,
   ZONES,
+  SEGMENTS,
   rebuildMs,
   HAZARD_LAG,
   platformAtTime,
@@ -176,7 +177,12 @@ test('zones step up every 200 m, then the last zone repeats, with all four mecha
     [0, 0, 1, 1, 2, 4, 25],
   );
   assert.deepEqual(zoneForScore(5000).scroll, ZONES.at(-1).scroll);
-  for (let z = 1; z < ZONES.length; z++) {
+  // The last zone remixes every signature at the top difficulty.
+  assert.deepEqual(
+    { ...ZONES.at(-1), name: 0, signature: 0, twist: 0 },
+    { ...ZONES.at(-2), name: 0, signature: 0, twist: 0 },
+  );
+  for (let z = 1; z < ZONES.length - 1; z++) {
     const [easier, harder] = [ZONES[z - 1], ZONES[z]];
     assert.ok(harder.scroll > easier.scroll);
     assert.ok(harder.mix[0] < easier.mix[0] && harder.mix[3] <= easier.mix[3]);
@@ -309,7 +315,7 @@ test('every certified takeoff replays from its source with real physics at every
           let p = {
             ...createState(),
             x: from.x,
-            vx: from.vx,
+            vx: source.kind === 'kicker' ? source.push * DEFAULT_TUNING.moveSpeed : from.vx,
             y: source.y,
             vy: source.kind === 'spring' ? -SPRING_SPEED : -DEFAULT_TUNING.jumpSpeed,
             grounded: false,
@@ -621,8 +627,11 @@ test('the rising line catches a Puff who stops climbing, at the first zone speed
     `${run.player.timeMs}`,
   );
 });
-test('a clean climb always outpaces the fastest rising line', () => {
-  const fastest = Math.max(...ZONES.map((z) => z.scroll)) * 10;
+test('a clean climb gains at least 20% on the fastest rising line', () => {
+  const fastest =
+    Math.max(...ZONES.map((z) => z.scroll)) *
+    Math.max(...Object.values(SEGMENTS).map((s) => s.pace)) *
+    10;
   const hop = (rise, gap) => {
     let p = { ...createState(), y: 0, vy: -rise, grounded: false, platformId: null };
     for (let ticks = 1; ; ticks++) {
@@ -632,11 +641,97 @@ test('a clean climb always outpaces the fastest rising line', () => {
     }
   };
   for (let gap = 104; gap <= 132; gap++)
-    assert.ok(gap / hop(700, gap) > fastest * 1.3, `gap ${gap}`);
+    assert.ok(gap / hop(700, gap) > fastest * 1.2, `gap ${gap}`);
   for (let gap = 208; gap <= 216; gap++)
-    assert.ok(gap / hop(SPRING_SPEED, gap) > fastest * 1.3, `boost ${gap}`);
+    assert.ok(gap / hop(SPRING_SPEED, gap) > fastest * 1.2, `boost ${gap}`);
 });
 test('the search bot clears every zone of the visible default course through the real game', () => {
   const result = playBot(0x50554646, 1200);
   assert.ok(result.cleared, JSON.stringify(result));
+});
+
+test('each zone opens with a gate, teaches its signature, then runs and twists it', () => {
+  for (const seed of [3, 11, 0x50554646]) {
+    const ledges = [...course(seed, 1250).values()]
+      .filter((p) => p.id !== 'floor')
+      .sort((a, b) => b.y - a.y);
+    const zoneOf = (p) => zoneForScore(scoreForPeak(p.y)).index;
+    for (let z = 1; z <= 5; z++) {
+      const inZone = ledges.filter((p) => zoneOf(p) === z),
+        // The first ledge past a boundary is planned from the zone below, so the gate may
+        // start one ledge in.
+        gate = inZone.findIndex((p) => p.pace === 0.4);
+      assert.ok(gate === 0 || gate === 1, `seed ${seed} zone ${z} gate at ${gate}`);
+      assert.deepEqual(
+        inZone.slice(gate, gate + 2).map((p) => [p.kind, p.pace, p.width >= 100]),
+        [
+          ['solid', 0.4, true],
+          ['solid', 0.4, true],
+        ],
+        `seed ${seed} zone ${z} gate`,
+      );
+      const teach = inZone.slice(gate + 2, gate + 4);
+      assert.ok(
+        teach.every((p) => p.pace === 0.8),
+        `seed ${seed} zone ${z} teaches`,
+      );
+    }
+    const run = (z, kind) => {
+      let best = 0,
+        streak = 0;
+      for (const p of ledges.filter((p) => zoneOf(p) === z)) {
+        streak = p.kind === kind ? streak + 1 : 0;
+        best = Math.max(best, streak);
+      }
+      return best;
+    };
+    assert.ok(run(1, 'crumble') >= 3, `seed ${seed}: zone 1 has a crumble run`);
+    assert.ok(run(2, 'moving') >= 2, `seed ${seed}: zone 2 chains movers`);
+    assert.ok(ledges.filter((p) => zoneOf(p) < 3).every((p) => p.kind !== 'kicker'));
+    assert.ok(
+      ledges.some((p) => zoneOf(p) === 3 && p.kind === 'kicker'),
+      `seed ${seed}: kickers`,
+    );
+  }
+});
+test('a kicker launches Puff sideways at full speed toward the open side', () => {
+  const make = (x) => ({
+    ...createRun(1),
+    platforms: [
+      { id: 'kick', x, y: 465, width: 100, kind: 'kicker', push: x < 270 ? 1 : -1, pace: 1 },
+      { id: 'ahead', x: 270, y: 0, width: 100, kind: 'solid' },
+    ],
+    player: {
+      ...createState(),
+      x: x + 50,
+      y: 460,
+      vy: 200,
+      grounded: false,
+      platformId: null,
+      coyoteMsLeft: 0,
+    },
+  });
+  for (const [x, vx] of [
+    [80, 260],
+    [460, -260],
+  ]) {
+    let run = make(x);
+    for (let i = 0; i < 10 && !run.lastLanding; i++) run = stepRun(run);
+    assert.equal(run.lastLanding.kind, 'kicker');
+    assert.equal(run.player.vx, vx);
+    assert.ok(run.effects.some((e) => e.type === 'kick'));
+  }
+});
+test('the rising line eases to 40% on a gate and presses harder during runs', () => {
+  const rise = (pace) => {
+    const run = {
+      ...createRun(),
+      lastLanding: { id: 'x', kind: 'solid', pace },
+      hazardY: 400,
+      peakY: 0,
+    };
+    return run.hazardY - stepRun(run, {}, 1 / 30).hazardY;
+  };
+  assert.ok(Math.abs(rise(0.4) - (2.5 * 0.4 * 10) / 30) < 1e-9);
+  assert.ok(Math.abs(rise(1.05) - (2.5 * 1.05 * 10) / 30) < 1e-9);
 });

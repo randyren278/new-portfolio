@@ -33,6 +33,7 @@ const planned = (run) => ({
   hazardY: run.hazardY,
   peakY: run.peakY,
   scroll: zoneForScore(run.score).scroll,
+  pace: run.lastLanding?.pace ?? 1,
 });
 // One predicted flight to a landing no lower than takeoff, or null if it falls or is caught.
 function flight(state, plan) {
@@ -50,7 +51,7 @@ function flight(state, plan) {
       [...(t === 0 ? (state.launch ?? []) : []), ...near].map((l) => platformAtTime(l, now)),
     );
     peakY = Math.min(peakY, p.y);
-    hazardY = Math.min(hazardY - state.scroll * 10 * FIXED_DT, peakY + HAZARD_LAG);
+    hazardY = Math.min(hazardY - state.scroll * state.pace * 10 * FIXED_DT, peakY + HAZARD_LAG);
     if (p.y > hazardY || (p.vy > 0 && p.y > from + 1)) return null;
     if (p.landed) {
       const ledge = near.find((l) => Math.abs(l.y - p.y) < 0.000001);
@@ -58,11 +59,17 @@ function flight(state, plan) {
         plan,
         ledge,
         climbs: p.y < from - 1,
-        player: ledge.kind === 'spring' ? { ...p, vy: -SPRING_SPEED } : p,
+        player:
+          ledge.kind === 'spring'
+            ? { ...p, vy: -SPRING_SPEED }
+            : ledge.kind === 'kicker'
+              ? { ...p, vx: ledge.push * DEFAULT_TUNING.moveSpeed }
+              : p,
         ledges: ledge.kind === 'crumble' ? state.ledges.filter((l) => l !== ledge) : state.ledges,
         hazardY,
         peakY,
         scroll: state.scroll,
+        pace: ledge.pace ?? 1,
       };
     }
   }
