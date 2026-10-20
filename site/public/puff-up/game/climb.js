@@ -129,6 +129,14 @@ export function zoneForScore(score) {
 export function rebuildMs(y) {
   return (3 + zoneForScore(scoreForPeak(y)).index) * 1000;
 }
+/** What a ledge does to Puff as he leaves it: springs boost him, kickers throw him sideways. */
+export function launch(player, ledge) {
+  if (ledge.kind === 'spring') return { ...player, vy: -SPRING_SPEED };
+  if (ledge.kind === 'kicker') return { ...player, vx: ledge.push * DEFAULT_TUNING.moveSpeed };
+  return player;
+}
+/** A spark pauses the rising line for this long. */
+export const CALM_MS = 2500;
 /** While Puff outclimbs the rising line it trails this far below the peak. */
 export const HAZARD_LAG = 460;
 export function platformAtTime(platform, timeMs) {
@@ -230,7 +238,15 @@ const KINDS = ['solid', 'crumble', 'moving', 'spring', 'kicker'];
 // stretches alternating with the signature, and one twist in the zone's last quarter.
 function nextSegment(plan, zone, into, rng) {
   if (zone.index > plan.zone)
-    return { zone: zone.index, name: 'gate', left: 2, step: 0, teach: false, twisted: false };
+    return {
+      zone: zone.index,
+      name: 'gate',
+      left: 2,
+      step: 0,
+      teach: false,
+      twisted: false,
+      forkAt: plan.forkAt,
+    };
   const pick = (names) => names[(rng >>> 8) % names.length],
     signature = zone.signature === 'remix' ? pick(SIGNATURES) : zone.signature;
   let name = 'mixed',
@@ -248,6 +264,7 @@ function nextSegment(plan, zone, into, rng) {
     step: 0,
     teach,
     twisted,
+    forkAt: plan.forkAt,
   };
 }
 const OPENING = Object.freeze({
@@ -257,9 +274,10 @@ const OPENING = Object.freeze({
   step: 0,
   teach: false,
   twisted: false,
+  forkAt: 0,
 });
 function extend(platforms, cameraY, rng, nextId, plan) {
-  let top = platforms.reduce((a, b) => (a.y < b.y ? a : b));
+  let top = platforms.filter((p) => !p.lane).reduce((a, b) => (a.y < b.y ? a : b));
   while (top.y > cameraY - 180) {
     const zone = zoneForScore(scoreForPeak(top.y));
     const skipSource = platforms.find((p) => p.kind === 'spring' && Number(p.id) === nextId - 2);
@@ -280,15 +298,20 @@ function extend(platforms, cameraY, rng, nextId, plan) {
     if (nextId === 5) kind = 'spring';
     if (nextId === 6) kind = 'moving';
     if (skipSource) kind = 'solid';
+    // After a fork both lanes merge on wide stone, where a lane taker can bounce to reposition.
+    const lane = platforms.find((p) => p.lane && p.y === top.y);
+    if (lane) kind = 'solid';
+    // Springs stay apart, and their skip stays inside the run they start in.
     if (
       kind === 'spring' &&
-      platforms.some((p) => p.kind === 'spring' && nextId - Number(p.id) < 4)
+      (plan.left < 2 || platforms.some((p) => p.kind === 'spring' && nextId - Number(p.id) < 4))
     )
       kind = 'solid';
     rng = random(rng);
     let width = clamp(zone.width + (rng % 9) - 4, zone.minWidth, 104);
     rng = random(rng);
-    let gap = clamp(zone.gap + (rng % 5) - 2, 114, 132);
+    // Gaps vary enough that hops don't fall into one steady beat.
+    let gap = clamp(zone.gap + (rng % 15) - 7, 112, 134);
     rng = random(rng);
     let direction = rng >>> 31 ? 1 : -1;
     // A kicker throws Puff one way; the next ledge waits in that direction.
@@ -341,18 +364,18 @@ function extend(platforms, cameraY, rng, nextId, plan) {
       width = Math.max(width, 88);
     }
     if (top.kind === 'spring') offset = Math.min(offset, 108);
+    if (lane) width = Math.max(width, 94);
     let amplitude =
       kind === 'moving'
         ? Math.min(nextId === 6 ? 24 : zone.amplitude, landingHalf(width, 0) - BAND)
         : 0;
     // The boost's second ledge is certified from the spring itself, which is the skip.
     const source = skipSource ?? top,
-      rise = source.kind === 'spring' ? SPRING_SPEED : DEFAULT_TUNING.jumpSpeed,
+      rise = -launch({ vy: -DEFAULT_TUNING.jumpSpeed }, source).vy,
       y = top.y - gap,
       // Hand-built ledges without a certificate take off from rest at their centre.
       from = (source.witness ?? [{ x: (source.baseX ?? source.x) + source.width / 2, vx: 0 }]).map(
-        (w) =>
-          source.kind === 'kicker' ? { ...w, vx: source.push * DEFAULT_TUNING.moveSpeed } : w,
+        (w) => ({ ...w, vx: launch(w, source).vx }),
       ),
       want = skipSource ? skipSource.x + skipSource.width / 2 : previousCenter + direction * offset;
     let center = null,
@@ -383,6 +406,17 @@ function extend(platforms, cameraY, rng, nextId, plan) {
       center = coast.impact;
       witness = [{ x: coast.x, vx: coast.vx, parent: 0, a: 0, b: 0, k: 0 }];
     }
+    // The merge must be certified from the lane too, or the lane never opens.
+    const fromLane = lane
+      ? certify(
+          lane.witness,
+          DEFAULT_TUNING.jumpSpeed,
+          lane.y - y,
+          center - landingHalf(width, 0),
+          center + landingHalf(width, 0),
+        )
+      : [];
+    if (lane && !fromLane.length) platforms.splice(platforms.indexOf(lane), 1);
     direction = Math.sign(center - previousCenter) || direction;
     top = {
       id: String(nextId++).padStart(2, '0'),
@@ -395,6 +429,7 @@ function extend(platforms, cameraY, rng, nextId, plan) {
       witness,
     };
     if (kind === 'kicker') top.push = center < WORLD.width / 2 ? 1 : -1;
+    if (fromLane.length) top.fromLane = fromLane;
     // The first gate ledge names the zone it opens.
     if (plan.name === 'gate' && plan.step === 1) top.gate = plan.zone;
     if (kind === 'moving') {
@@ -409,6 +444,52 @@ function extend(platforms, cameraY, rng, nextId, plan) {
       };
     }
     platforms.push(top);
+    // A fork: now and then a narrow crumble lane opens on the far side carrying a spark.
+    rng = random(rng);
+    if (
+      plan.name === 'mixed' &&
+      plan.left >= 1 &&
+      zone.index >= 1 &&
+      !skipSource &&
+      !lane &&
+      source.kind !== 'spring' &&
+      kind !== 'spring' &&
+      nextId - plan.forkAt >= 7 &&
+      rng % 100 < 45
+    ) {
+      const laneWidth = zone.minWidth,
+        laneHalf = landingHalf(laneWidth, 0),
+        laneCentre = reachableCentre(
+          from,
+          rise,
+          source.y - y,
+          previousCenter - direction * (108 + (rng % 9)),
+          laneHalf,
+          95,
+          545,
+        ),
+        // Keep both landing zones apart so a landing is never ambiguous.
+        apart =
+          laneCentre !== null && Math.abs(laneCentre - center) >= (width + laneWidth) / 2 + 60,
+        laneWitness = apart
+          ? certify(from, rise, source.y - y, laneCentre - laneHalf, laneCentre + laneHalf)
+          : [];
+      if (laneWitness.length) {
+        platforms.push({
+          id: `${top.id}L`,
+          x: laneCentre - laneWidth / 2,
+          y,
+          width: laneWidth,
+          kind: 'crumble',
+          travelDir: Math.sign(laneCentre - previousCenter) || -direction,
+          pace: segment.pace,
+          lane: true,
+          spark: true,
+          witness: laneWitness,
+        });
+        plan = { ...plan, forkAt: nextId };
+      }
+    }
   }
   return { platforms, rng, nextId, plan };
 }
@@ -461,6 +542,8 @@ export function createRun(seed = 0x50554646) {
     score: 0,
     landings: 0,
     lastLanding: null,
+    banner: null,
+    calmUntil: 0,
     effects: [],
     brokenPlatforms: [],
   };
@@ -480,7 +563,9 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
   let player = step(run.player, { ...input, autoHop: true }, delta, DEFAULT_TUNING, platforms);
   const effects = (run.effects ?? []).filter((e) => now - e.at < 650);
   let lastLanding = run.lastLanding,
-    landings = run.landings;
+    landings = run.landings,
+    banner = run.banner,
+    calmUntil = run.calmUntil ?? 0;
   const addEffect = (type, p) =>
     effects.push({ type, x: p.x, y: p.y, width: p.width, at: player.timeMs });
   if (run.player.grounded && run.player.platformId === 'floor' && player.events.includes('jump')) {
@@ -489,7 +574,13 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     platforms = platforms.filter((p) => p.id !== 'floor');
   }
   if (player.landed) {
-    const contact = platforms.find((p) => Math.abs(p.y - player.y) < 0.000001);
+    // Two ledges can share a row at a fork, so match the landing by position as well.
+    const contact = platforms.find(
+      (p) =>
+        Math.abs(p.y - player.y) < 0.000001 &&
+        player.x + COLLIDER.halfWidth + 4 > p.x &&
+        player.x - COLLIDER.halfWidth - 4 < p.x + p.width,
+    );
     lastLanding = {
       id: contact?.id ?? 'unknown',
       kind: contact?.kind ?? 'solid',
@@ -502,25 +593,30 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     landings++;
     if (contact?.kind === 'crumble') {
       brokenPlatforms.push({
-        platform: { ...contact },
+        platform: contact.spark ? { ...contact, spark: false } : { ...contact },
         readyAt: player.timeMs + rebuildMs(contact.y),
       });
       addEffect('break', contact);
       platforms = platforms.filter((p) => p.id !== contact.id);
     }
-    if (contact?.kind === 'kicker') {
-      player = { ...player, vx: contact.push * DEFAULT_TUNING.moveSpeed };
-      addEffect('kick', contact);
+    if (contact?.gate !== undefined) banner = { zone: contact.gate, at: player.timeMs };
+    if (contact) player = launch(player, contact);
+    if (contact?.spark) {
+      calmUntil = player.timeMs + CALM_MS;
+      addEffect('spark', contact);
     }
-    if (contact?.kind === 'spring') {
-      player = { ...player, vy: -SPRING_SPEED };
-      addEffect('spring', contact);
-    }
+    if (contact?.kind === 'kicker') addEffect('kick', contact);
+    if (contact?.kind === 'spring') addEffect('spring', contact);
   }
   const peakY = Math.min(run.peakY, player.y),
     cameraY = Math.min(run.cameraY, player.y - 300),
     hazardY = Math.min(
-      run.hazardY - zoneForScore(run.score).scroll * (run.lastLanding?.pace ?? 1) * 10 * delta,
+      run.hazardY -
+        (now < (run.calmUntil ?? 0) ? 0 : 1) *
+          zoneForScore(run.score).scroll *
+          (run.lastLanding?.pace ?? 1) *
+          10 *
+          delta,
       peakY + HAZARD_LAG,
     );
   platforms = platforms.filter((p) => p.y <= cameraY + WORLD.height);
@@ -536,6 +632,8 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     score: scoreForPeak(peakY),
     landings,
     lastLanding,
+    banner,
+    calmUntil,
     effects: effects.slice(-8),
     brokenPlatforms: brokenPlatforms.filter((repair) => repair.platform.y >= cameraY),
     status: player.y > hazardY || player.y - cameraY > fallLimit ? 'over' : 'playing',

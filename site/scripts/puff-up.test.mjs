@@ -8,6 +8,8 @@ import {
   ZONES,
   SEGMENTS,
   rebuildMs,
+  launch,
+  CALM_MS,
   HAZARD_LAG,
   platformAtTime,
   SPRING_SPEED,
@@ -295,29 +297,23 @@ function course(seed, metres) {
 }
 const PHASES = Array.from({ length: 8 }, (_, i) => (i * Math.PI) / 4);
 test('every certified takeoff replays from its source with real physics at every mover phase', () => {
-  let hops = 0;
+  let hops = 0,
+    forks = 0;
+  const id = (n) => String(n).padStart(2, '0');
   for (const seed of [...Array.from({ length: 40 }, (_, i) => i), 0x50554646]) {
     const ledges = course(seed, 1400);
-    for (const [id, ledge] of ledges) {
-      if (id === 'floor') continue;
-      const below = ledges.get(String(Number(id) - 2).padStart(2, '0'));
-      const source =
-        id === '01'
-          ? ledges.get('floor')
-          : below?.kind === 'spring'
-            ? below
-            : ledges.get(String(Number(id) - 1).padStart(2, '0'));
-      assert.ok(ledge.witness.length > 0, `seed ${seed}: ${id} has a certificate`);
-      for (const w of ledge.witness)
+    const replay = (source, ledge, states) => {
+      assert.ok(states.length > 0, `seed ${seed}: ${ledge.id} has a certificate`);
+      for (const w of states)
         for (const phase of ledge.kind === 'moving' ? PHASES : [0]) {
           const from = source.witness[w.parent],
             target = ledge.kind === 'moving' ? { ...ledge, phase } : ledge;
           let p = {
             ...createState(),
             x: from.x,
-            vx: source.kind === 'kicker' ? source.push * DEFAULT_TUNING.moveSpeed : from.vx,
+            vx: launch(from, source).vx,
             y: source.y,
-            vy: source.kind === 'spring' ? -SPRING_SPEED : -DEFAULT_TUNING.jumpSpeed,
+            vy: launch({ vy: -DEFAULT_TUNING.jumpSpeed }, source).vy,
             grounded: false,
             platformId: null,
             coyoteMsLeft: 0,
@@ -330,14 +326,32 @@ test('every certified takeoff replays from its source with real physics at every
           assert.deepEqual(
             [p.landed && p.y === ledge.y, p.x, p.vx],
             [true, w.x, w.vx],
-            `seed ${seed}: ${source.id}→${id} witness ${JSON.stringify(w)} phase ${phase}`,
+            `seed ${seed}: ${source.id}→${ledge.id} witness ${JSON.stringify(w)} phase ${phase}`,
           );
         }
+    };
+    for (const [key, ledge] of ledges) {
+      if (key === 'floor') continue;
+      const n = Number.parseInt(key, 10),
+        below = ledges.get(id(n - 2)),
+        // A spark lane leaves from the same ledge as the main ledge in its row.
+        source =
+          key === '01'
+            ? ledges.get('floor')
+            : below?.kind === 'spring' && !ledge.lane
+              ? below
+              : ledges.get(id(n - 1));
+      replay(source, ledge, ledge.witness);
+      if (ledge.fromLane) {
+        forks++;
+        replay(ledges.get(`${id(n - 1)}L`), ledge, ledge.fromLane);
+      }
     }
   }
+  assert.ok(forks > 40, `${forks} forks`);
   console.log(
     'COURSE_CERTIFICATE',
-    JSON.stringify({ seeds: 41, metres: 1400, hops, passed: hops }),
+    JSON.stringify({ seeds: 41, metres: 1400, forks, hops, passed: hops }),
   );
 });
 
@@ -640,7 +654,7 @@ test('a clean climb gains at least 20% on the fastest rising line', () => {
       p = next;
     }
   };
-  for (let gap = 104; gap <= 132; gap++)
+  for (let gap = 104; gap <= 134; gap++)
     assert.ok(gap / hop(700, gap) > fastest * 1.2, `gap ${gap}`);
   for (let gap = 208; gap <= 216; gap++)
     assert.ok(gap / hop(SPRING_SPEED, gap) > fastest * 1.2, `boost ${gap}`);
@@ -734,4 +748,56 @@ test('the rising line eases to 40% on a gate and presses harder during runs', ()
   };
   assert.ok(Math.abs(rise(0.4) - (2.5 * 0.4 * 10) / 30) < 1e-9);
   assert.ok(Math.abs(rise(1.05) - (2.5 * 1.05 * 10) / 30) < 1e-9);
+});
+
+test('forks offer a narrow spark lane beside the path that merges on wide stone', () => {
+  let forks = 0;
+  for (const seed of [2, 5, 9, 13, 0x50554646]) {
+    const ledges = course(seed, 1250);
+    for (const lane of [...ledges.values()].filter((p) => p.lane)) {
+      const main = ledges.get(lane.id.slice(0, -1)),
+        merge = ledges.get(String(Number(main.id) + 1).padStart(2, '0'));
+      // A lane that cannot reach its merge is withdrawn before it ever reaches the view.
+      if (!merge.fromLane) continue;
+      forks++;
+      assert.equal(lane.y, main.y);
+      assert.deepEqual([lane.kind, lane.spark], ['crumble', true]);
+      assert.ok(zoneForScore(scoreForPeak(lane.y)).index >= 1);
+      const gap = Math.abs(lane.x + lane.width / 2 - (main.x + main.width / 2));
+      assert.ok(gap >= (lane.width + main.width) / 2 + 60, `${lane.id} clear of ${main.id}`);
+      assert.deepEqual(
+        [merge.kind, merge.width >= 94, merge.fromLane.length > 0],
+        ['solid', true, true],
+      );
+    }
+  }
+  assert.ok(forks >= 10, `${forks} forks`);
+});
+test('landing on a spark pauses the rising line for 2.5 s and spends the spark', () => {
+  let run = {
+    ...createRun(1),
+    // Inside the trailing limit (peak + HAZARD_LAG), so only the rise could move the line.
+    hazardY: 700,
+    peakY: 400,
+    platforms: [
+      { id: '30L', x: 80, y: 465, width: 60, kind: 'crumble', lane: true, spark: true, pace: 1 },
+      { id: 'ahead', x: 400, y: 0, width: 100, kind: 'solid' },
+    ],
+    player: {
+      ...createState(),
+      x: 110,
+      y: 460,
+      vy: 200,
+      grounded: false,
+      platformId: null,
+      coyoteMsLeft: 0,
+    },
+  };
+  for (let i = 0; i < 10 && !run.lastLanding; i++) run = stepRun(run);
+  assert.ok(run.effects.some((e) => e.type === 'spark'));
+  assert.equal(run.calmUntil, run.player.timeMs + CALM_MS);
+  assert.equal(run.brokenPlatforms[0].platform.spark, false);
+  const held = run.hazardY;
+  for (let i = 0; i < 120; i++) run = stepRun(run);
+  assert.equal(run.hazardY, held, 'the line holds while calm');
 });

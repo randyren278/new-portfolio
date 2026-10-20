@@ -9,7 +9,7 @@ import {
   platformAtTime,
   zoneForScore,
   HAZARD_LAG,
-  SPRING_SPEED,
+  launch,
 } from '../public/puff-up/game/climb.js';
 import { FIXED_DT, DEFAULT_TUNING, step } from '../public/puff-up/game/physics.js';
 
@@ -54,17 +54,15 @@ function flight(state, plan) {
     hazardY = Math.min(hazardY - state.scroll * state.pace * 10 * FIXED_DT, peakY + HAZARD_LAG);
     if (p.y > hazardY || (p.vy > 0 && p.y > from + 1)) return null;
     if (p.landed) {
-      const ledge = near.find((l) => Math.abs(l.y - p.y) < 0.000001);
+      const ledge = near.find((l) => {
+        const at = platformAtTime(l, p.timeMs);
+        return Math.abs(at.y - p.y) < 0.000001 && p.x + 28 > at.x && p.x - 28 < at.x + at.width;
+      });
       return {
         plan,
         ledge,
         climbs: p.y < from - 1,
-        player:
-          ledge.kind === 'spring'
-            ? { ...p, vy: -SPRING_SPEED }
-            : ledge.kind === 'kicker'
-              ? { ...p, vx: ledge.push * DEFAULT_TUNING.moveSpeed }
-              : p,
+        player: launch(p, ledge),
         ledges: ledge.kind === 'crumble' ? state.ledges.filter((l) => l !== ledge) : state.ledges,
         hazardY,
         peakY,
