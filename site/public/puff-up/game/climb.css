@@ -89,6 +89,21 @@ canvas {
   pointer-events: none;
   font-variant-numeric: tabular-nums;
 }
+.sound-toggle {
+  position: absolute;
+  top: max(24px, env(safe-area-inset-top));
+  right: max(20px, env(safe-area-inset-right));
+  min-width: 44px;
+  padding: 8px 12px;
+  background: rgb(var(--surface-space-rgb) / 0.85);
+  border-color: #aaaaaa25;
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+.sound-toggle[aria-pressed='true'] {
+  color: #a5a69b80;
+}
 .height-hud > span {
   font-size: 28px;
   line-height: 1;

@@ -801,3 +801,35 @@ test('landing on a spark pauses the rising line for 2.5 s and spends the spark',
   for (let i = 0; i < 120; i++) run = stepRun(run);
   assert.equal(run.hazardY, held, 'the line holds while calm');
 });
+import { cuesFor } from '../public/puff-up/game/audio.js';
+test('sound cues follow what happened in each step', () => {
+  const landOn = (kind, extra = {}) => {
+    let run = {
+      ...createRun(1),
+      platforms: [
+        { id: 'x', x: 80, y: 465, width: 100, kind, pace: 1, ...extra },
+        { id: 'ahead', x: 400, y: 0, width: 100, kind: 'solid' },
+      ],
+      player: {
+        ...createState(),
+        x: 130,
+        y: 460,
+        vy: 200,
+        grounded: false,
+        platformId: null,
+        coyoteMsLeft: 0,
+      },
+    };
+    let previous = run;
+    while (!run.player.landed) [previous, run] = [run, stepRun(run)];
+    return cuesFor(previous, run);
+  };
+  assert.deepEqual(landOn('solid'), ['hop']);
+  assert.deepEqual(landOn('crumble'), ['hop', 'crack']);
+  assert.deepEqual(landOn('spring'), ['hop', 'boing']);
+  assert.deepEqual(landOn('kicker', { push: 1 }), ['hop', 'kick']);
+  assert.deepEqual(landOn('crumble', { spark: true, lane: true }), ['hop', 'crack', 'spark']);
+  assert.deepEqual(landOn('solid', { gate: 2 }), ['hop', 'chime']);
+  const over = { ...createRun(1), status: 'over' };
+  assert.deepEqual(cuesFor(createRun(1), over), ['caught']);
+});

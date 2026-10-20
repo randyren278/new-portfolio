@@ -1,9 +1,24 @@
 import { WORLD, DEFAULT_TUNING, FIXED_DT } from './physics.js';
-import { createRun, stepRun, platformAtTime } from './climb.js';
+import { createRun, stepRun, platformAtTime, rebuildMs } from './climb.js';
 import { ANIMATIONS, renderPuff, samplePose } from './puff-motion.js';
 import { sampleFlightMotion } from './flight-pose.js';
 import { sampleGameVisual } from './game-visual.js';
 import { bindTouchSteering } from './touch-steering.js';
+import { createSound, cuesFor } from './audio.js';
+import {
+  danger,
+  drawBanner,
+  drawBest,
+  drawCallout,
+  drawDust,
+  drawGateLabel,
+  drawGauge,
+  drawKicker,
+  drawRebuild,
+  drawSpark,
+  shake,
+  squash,
+} from './feedback.js';
 
 const $ = (id) => document.getElementById(id),
   canvas = $('game-canvas'),
@@ -20,6 +35,14 @@ let run = createRun(nextSeed()),
   running = false,
   started = false,
   best = 0;
+// bestAtStart is the record this climb chases; streak counts consecutive climbing landings.
+let bestAtStart = 0,
+  streak = 0,
+  lastLandY = 575,
+  newBestAt = null,
+  endedAt = null;
+const ENDING_MS = 700,
+  sound = createSound();
 let raf = null,
   lastTime = null,
   accumulator = 0,
@@ -98,7 +121,9 @@ const mix = (from, to, a) => from + (to - from) * a;
 let cssWidth = 640,
   cssHeight = 620,
   dpr = 1,
-  shownScore = null;
+  shownScore = null,
+  // CSS px from the canvas top to the bottom controls; the line gauge sits just above them.
+  gaugeTop = 620;
 function viewTransform() {
   const scale = Math.min(cssWidth / WORLD.width, cssHeight / WORLD.height, 1.25),
     left = (cssWidth - WORLD.width * scale) / 2,
@@ -120,6 +145,13 @@ function draw() {
   ctx.clearRect(0, 0, cssWidth, cssHeight);
   ctx.translate(left, top);
   ctx.scale(scale, scale);
+  const ending = endedAt === null ? 0 : performance.now() - endedAt,
+    [shakeX, shakeY] = shake(run.effects, t, reduced),
+    caught = reduced || ending > 300 ? 0 : 6 * (1 - ending / 300) ** 2;
+  ctx.translate(
+    shakeX + Math.sin(ending * 0.09) * caught,
+    shakeY + Math.cos(ending * 0.11) * caught,
+  );
   ctx.imageSmoothingEnabled = false;
   ctx.font = '9px Plex,monospace';
   const first = Math.max(0, Math.ceil((575 - (cameraY + 620)) / 100)),
@@ -130,10 +162,19 @@ function draw() {
     ctx.fillRect(0, y, 7, 1);
     ctx.fillText(`${n * 10}m`, 14, y - 5);
   }
+  for (const repair of run.brokenPlatforms)
+    if (repair.platform.id !== 'floor')
+      drawRebuild(ctx, repair, t, rebuildMs(repair.platform.y), cameraY);
   for (const ledge of run.platforms) {
     const p = platformAtTime(ledge, t),
       y = Math.round(p.y - cameraY);
     if (y < -20 || y > 620) continue;
+    if (p.gate !== undefined) drawGateLabel(ctx, p, y);
+    if (p.spark) drawSpark(ctx, p, y, t, reduced);
+    if (p.kind === 'kicker') {
+      drawKicker(ctx, p, y);
+      continue;
+    }
     const moving = p.kind === 'moving',
       crumble = p.kind === 'crumble',
       spring = p.kind === 'spring';
@@ -164,9 +205,11 @@ function draw() {
       ctx.stroke();
     }
     if (moving) {
+      // The arrow leads on the side the mover is heading toward.
+      const heading = Math.cos((t / p.periodMs) * Math.PI * 2 + p.phase);
       ctx.fillStyle = '#9bcbe1';
-      ctx.fillText('‹', p.x - 10, y + 5);
-      ctx.fillText('›', p.x + p.width + 4, y + 5);
+      if (heading < 0) ctx.fillText('‹', p.x - 10, y + 5);
+      else ctx.fillText('›', p.x + p.width + 4, y + 5);
     }
     if (spring) {
       const c = Math.round(p.x + p.width / 2);
@@ -222,18 +265,26 @@ function draw() {
     }
     ctx.restore();
   }
-  // The rising line: touch it and the climb ends.
-  const hazard = Math.round(mix(previous.hazardY, run.hazardY, a) - cameraY),
-    bottom = (cssHeight - top) / scale;
+  drawBest(ctx, run.score <= bestAtStart ? bestAtStart : 0, cameraY);
+  // The rising line: touch it and the climb ends. It glows as it closes in, and cools to blue
+  // while a spark holds it.
+  const hazardY = mix(previous.hazardY, run.hazardY, a),
+    hazard = Math.round(hazardY - cameraY),
+    bottom = (cssHeight - top) / scale,
+    close = danger(hazardY, puffY),
+    calm = t < run.calmUntil,
+    rgb = calm ? '130,181,203' : '217,145,119',
+    pulse = reduced || calm ? 0 : close * (0.5 + 0.5 * Math.sin(t / 90));
   if (hazard < bottom) {
     const haze = ctx.createLinearGradient(0, hazard, 0, hazard + 160);
-    haze.addColorStop(0, 'rgba(217,145,119,0.24)');
-    haze.addColorStop(1, 'rgba(217,145,119,0.05)');
+    haze.addColorStop(0, `rgba(${rgb},${0.24 + close * 0.22})`);
+    haze.addColorStop(1, `rgba(${rgb},0.05)`);
     ctx.fillStyle = haze;
     ctx.fillRect(0, hazard, WORLD.width, bottom - hazard);
-    ctx.fillStyle = '#d99177';
-    ctx.fillRect(0, hazard, WORLD.width, 2);
-  }
+    ctx.fillStyle = `rgba(${rgb},${0.85 + pulse * 0.15})`;
+    ctx.fillRect(0, hazard - Math.round(close * 2), WORLD.width, 2 + Math.round(close * 2));
+  } else if (run.status === 'playing')
+    drawGauge(ctx, Math.round((hazardY - puffY) / 10), (gaugeTop - top) / scale - 14);
   let support = null;
   for (const ledge of run.platforms) {
     const p = platformAtTime(ledge, t);
@@ -266,12 +317,22 @@ function draw() {
       ctx.stroke();
     }
   }
-  const v = sampleGameVisual(run),
+  drawDust(ctx, run.lastLanding, t, cameraY);
+  const v = endedAt === null ? sampleGameVisual(run) : { animation: 'hit', time: ending },
     flight = ['jump', 'fall'].includes(v.animation)
       ? sampleFlightMotion(player, DEFAULT_TUNING)
       : null,
-    image = sprite(v.animation, v.time, player.facing, flight);
-  ctx.drawImage(image, Math.round(puffX - 104), Math.round(puffY - cameraY - 144), 208, 224);
+    image = sprite(v.animation, v.time, player.facing, flight),
+    [sx, sy] = squash(run.lastLanding, t, reduced),
+    feetX = Math.round(puffX),
+    feetY = Math.round(puffY - cameraY);
+  ctx.save();
+  ctx.translate(feetX, feetY);
+  ctx.scale(sx, sy);
+  ctx.drawImage(image, -104, -144, 208, 224);
+  ctx.restore();
+  drawBanner(ctx, run.banner, t);
+  if (newBestAt !== null) drawCallout(ctx, 'PAST YOUR BEST', 'New best', t - newBestAt, 1800);
   // Writing the HUD invalidates its layout and paint even when the text is unchanged.
   if (run.score !== shownScore) {
     shownScore = run.score;
@@ -285,6 +346,10 @@ new ResizeObserver(() => {
   dpr = Math.min(devicePixelRatio || 1, 2);
   canvas.width = Math.round(cssWidth * dpr);
   canvas.height = Math.round(cssHeight * dpr);
+  const controls = [...document.querySelectorAll('.touch-controls, .keyboard-hint')]
+    .map((el) => el.getBoundingClientRect())
+    .filter((box) => box.height > 0);
+  gaugeTop = Math.min(r.bottom, ...controls.map((box) => box.top)) - r.top;
   draw();
 }).observe(canvas);
 document.fonts.ready.then(draw);
@@ -326,7 +391,14 @@ function syncUI() {
   );
   $('pause-label').hidden = running;
   $('pause-label').classList.toggle('over', over);
-  $('overlay-kicker').textContent = over ? 'THIS CLIMB' : started ? 'PAUSED' : 'PUFF UP';
+  const beaten = over && bestAtStart > 0 && run.score > bestAtStart;
+  $('overlay-kicker').textContent = over
+    ? beaten
+      ? 'NEW BEST'
+      : 'THIS CLIMB'
+    : started
+      ? 'PAUSED'
+      : 'PUFF UP';
   $('run-results').hidden = !over;
   $('result-height').textContent = run.score;
   $('overlay-title').hidden = over;
@@ -335,7 +407,7 @@ function syncUI() {
   $('overlay-title').textContent = started ? 'Paused.' : 'Puff Up.';
   $('overlay-copy').textContent = started ? 'Space to resume.' : '← → to steer. Puff hops.';
   $('run-announcement').textContent = over
-    ? `Climb ended at ${run.score} metres. Try again to retry.`
+    ? `Climb ended at ${run.score} metres.${beaten ? ' New best.' : ''} Try again to retry.`
     : running
       ? 'Climbing. Puff hops automatically.'
       : started
@@ -352,6 +424,9 @@ function stopFrames() {
 }
 function pause() {
   running = false;
+  endedAt = null;
+  sound.danger(0);
+  sound.pause();
   stopFrames();
   saveBest();
   syncUI();
@@ -363,10 +438,18 @@ function reset() {
   run = previous = createRun(nextSeed(run.seed));
   running = false;
   started = false;
+  endedAt = null;
 }
 function start() {
   if (running) return;
   if (run.status === 'over') reset();
+  if (!started) {
+    bestAtStart = best;
+    streak = 0;
+    lastLandY = 575;
+    newBestAt = null;
+  }
+  sound.start();
   running = true;
   started = true;
   lastTime = null;
@@ -381,20 +464,44 @@ function tick(now) {
   if (lastTime !== null) accumulator += Math.min(0.1, (now - lastTime) / 1000);
   lastTime = now;
   let steps = 0;
+  // After a fall the scene holds for a beat (Puff's hit, a jolt) before the results.
+  if (endedAt !== null) {
+    if (now - endedAt < ENDING_MS) {
+      draw();
+      raf = requestAnimationFrame(tick);
+      return;
+    }
+    running = false;
+    endedAt = null;
+    stopFrames();
+    saveBest();
+    syncUI();
+    return;
+  }
   while (accumulator >= FIXED_DT && steps < 12) {
     previous = run;
     run = stepRun(run, { axis: axis() }, FIXED_DT, viewTransform().fallLimit);
     best = Math.max(best, run.score);
     accumulator -= FIXED_DT;
     steps++;
+    if (run.player.landed) {
+      streak = run.player.y < lastLandY - 1 ? streak + 1 : 0;
+      lastLandY = run.player.y;
+    }
+    for (const cue of cuesFor(previous, run)) sound.cue(cue, streak);
+    if (newBestAt === null && bestAtStart > 0 && run.score > bestAtStart) {
+      newBestAt = run.player.timeMs;
+      sound.cue('best');
+    }
     if (run.status === 'over') {
-      running = false;
-      stopFrames();
-      saveBest();
-      syncUI();
+      endedAt = now;
+      previous = run;
+      accumulator = 0;
+      sound.danger(0);
       break;
     }
   }
+  if (endedAt === null) sound.danger(danger(run.hazardY, run.player.y));
   draw();
   if (running) raf = requestAnimationFrame(tick);
 }
@@ -412,6 +519,21 @@ const touch = bindTouchSteering(canvas, {
   },
 });
 $('play-toggle').addEventListener('click', () => (running ? pause() : start()));
+function syncSound() {
+  $('sound-toggle').textContent = sound.muted ? 'SOUND OFF' : 'SOUND ON';
+  $('sound-toggle').setAttribute('aria-pressed', String(sound.muted));
+}
+$('sound-toggle').addEventListener('click', () => {
+  sound.toggle();
+  syncSound();
+  if (running) canvas.focus({ preventScroll: true });
+});
+addEventListener('keydown', (e) => {
+  if (e.code !== 'KeyM' || e.metaKey || e.ctrlKey || e.altKey) return;
+  sound.toggle();
+  syncSound();
+});
+syncSound();
 $('restart').addEventListener('click', () => {
   reset();
   start();
