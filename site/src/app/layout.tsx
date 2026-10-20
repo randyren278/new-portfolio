@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import './fonts.css';
+import '../../public/surfaces.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.randyren.org'),
@@ -39,7 +40,7 @@ export const viewport: Viewport = {
   // iPhones — every CSS max(14px, env(safe-area-inset-top)) below depends
   // on this flag.
   viewportFit: 'cover',
-  themeColor: '#181917',
+  themeColor: '#181818',
   colorScheme: 'dark',
 };
 

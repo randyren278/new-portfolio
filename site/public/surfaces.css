@@ -1,0 +1,13 @@
+/* Shared by the portfolio and its same-origin intro/game documents. */
+:root {
+  --surface-page: #181818;
+  --surface-page-rgb: 24 24 24;
+  --surface-panel: #181818;
+  --surface-panel-rgb: 24 24 24;
+  --surface-glass-rgb: 32 32 32;
+  --surface-space: #141414;
+  --surface-space-rgb: 20 20 20;
+  --surface-rule: #3a3a3a;
+  --surface-muted: #a5a5a5;
+  --surface-muted-rgb: 165 165 165;
+}

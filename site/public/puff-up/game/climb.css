@@ -11,8 +11,8 @@
 :root {
   color-scheme: dark;
   --ink: #eee7d7;
-  --muted: #a5a69b;
-  --line: #353832;
+  --muted: var(--surface-muted);
+  --line: var(--surface-rule);
   --mono: Plex, monospace;
   --serif: Instrument, serif;
 }
@@ -83,8 +83,8 @@ canvas {
   align-items: baseline;
   gap: 6px;
   padding: 7px 12px;
-  background: #111211d9;
-  border: 1px solid #9eac8b25;
+  background: rgb(var(--surface-space-rgb) / 0.85);
+  border: 1px solid #aaaaaa25;
   border-radius: 20px;
   pointer-events: none;
   font-variant-numeric: tabular-nums;
@@ -103,12 +103,12 @@ canvas {
   top: 42%;
   transform: translate(-50%, -50%);
   padding: 30px 26px;
-  background: #181818f5;
+  background: var(--surface-panel);
   border: 1px solid #eee7d72a;
   border-radius: 18px;
   width: min(390px, 90%);
   text-align: center;
-  box-shadow: 0 20px 80px #0004;
+  box-shadow: none;
 }
 .pause-label > span {
   font-size: 8px;
@@ -131,7 +131,7 @@ canvas {
   min-height: 48px;
   min-width: 168px;
   background: var(--ink);
-  color: #20221e;
+  color: var(--surface-panel);
   border-color: var(--ink);
   border-radius: 24px;
 }
@@ -198,7 +198,7 @@ canvas {
   border-color: var(--line);
 }
 .steering button:active {
-  border-color: #6b705f;
+  border-color: #6b6b6b;
   background: #eee7d706;
 }
 #restart {
@@ -278,5 +278,13 @@ kbd {
   }
   .run-results .result-landings strong {
     font-size: 42px;
+  }
+}
+
+@media (max-width: 720px), (pointer: coarse) {
+  html, body, button {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
 }

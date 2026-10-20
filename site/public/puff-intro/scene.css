@@ -1,6 +1,6 @@
-:root{--bg:#121311;--ink:#f0ebdf;--muted:#a9aa9e;--line:#353832;--paper:#1a1d19;--dark:#eee9dc;--coral:#df946f;--sage:#9eac8b}
+:root{--bg:var(--surface-space);--ink:#f0ebdf;--muted:#a9aa9e;--line:#353832;--paper:var(--surface-panel);--dark:#eee9dc;--coral:#df946f;--sage:#9eac8b}
 html{background:var(--bg)}body{background:var(--bg)}.skip-link{z-index:200}
-.entrance{background:#10120f;position:fixed;inset:0;height:100dvh;min-height:0;overflow:hidden;isolation:isolate;z-index:100}
+.entrance{background:var(--surface-space);position:fixed;inset:0;height:100dvh;min-height:0;overflow:hidden;isolation:isolate;z-index:100}
 #space{position:absolute;inset:0;width:100%;height:100%;z-index:-2;pointer-events:none}
 .scene-grain{position:absolute;inset:0;z-index:8;pointer-events:none;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.88' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' opacity='.6' d='M0 0h160v160H0z'/%3E%3C/svg%3E")}
 .entrance-top{top:28px;left:40px;right:40px;z-index:9;align-items:center}.scene-monogram{font:italic 35px/.8 var(--serif);letter-spacing:-.085em;display:flex;align-items:flex-start;gap:7px;color:var(--ink);padding:8px 0}.scene-monogram span{font:8px var(--sans);letter-spacing:0;margin-top:3px}.skip-entrance{font:11px var(--mono);gap:16px;color:#b2b5a7;min-height:44px}.skip-entrance:hover{color:var(--ink)}

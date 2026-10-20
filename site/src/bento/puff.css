@@ -1,20 +1,20 @@
 html.puff-theme,
 .puff-bento {
   color-scheme: dark;
-  --bg: #181917;
+  --bg: var(--surface-page);
   --ink: #eee7d7;
-  --muted: #a5a69b;
-  --rule: #3a3d35;
+  --muted: var(--surface-muted);
+  --rule: var(--surface-rule);
   --accent: #d99177;
-  --bg-rgb: 24 25 23;
+  --bg-rgb: var(--surface-page-rgb);
   --ink-rgb: 238 231 215;
-  --muted-rgb: 165 166 155;
-  --glass-rgb: 32 34 29;
-  --shelter-rgb: 155 172 143;
+  --muted-rgb: var(--surface-muted-rgb);
+  --glass-rgb: var(--surface-glass-rgb);
+  --shelter-rgb: 164 164 164;
   --shadow-rgb: 0 0 0;
   /* Data marks on /training: a dim neutral for context and a one-hue
      ramp (dark → light) for magnitude. Never used for text. */
-  --data-dim: #6b6d63;
+  --data-dim: #6b6b6b;
   --ramp-1: #42332c;
   --ramp-2: #6f4f42;
   --ramp-3: #9f6d5a;
@@ -377,6 +377,6 @@ html.puff-theme body {
   position: fixed;
   inset: 0;
   z-index: 999;
-  background: #181917;
+  background: var(--surface-page);
   pointer-events: auto;
 }

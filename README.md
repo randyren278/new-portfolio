@@ -134,10 +134,10 @@ The game loads on demand and preserves the page underneath.
 The site uses a small material vocabulary and repeats it everywhere.
 
 <table>
-  <tr><td><b>Page</b></td><td><code>#181917</code> — warm charcoal</td></tr>
+  <tr><td><b>Page</b></td><td><code>#181818</code> — charcoal gray</td></tr>
   <tr><td><b>Ink</b></td><td><code>#eee7d7</code> — cream</td></tr>
-  <tr><td><b>Muted</b></td><td><code>#a5a69b</code></td></tr>
-  <tr><td><b>Rule</b></td><td><code>#3a3d35</code></td></tr>
+  <tr><td><b>Muted</b></td><td><code>#a5a5a5</code></td></tr>
+  <tr><td><b>Rule</b></td><td><code>#3a3a3a</code></td></tr>
   <tr><td><b>Accent</b></td><td><code>#d99177</code> — terracotta</td></tr>
   <tr><td><b>Sans / utility</b></td><td>IBM Plex Mono</td></tr>
   <tr><td><b>Editorial serif</b></td><td>Instrument Serif / Newsreader</td></tr>

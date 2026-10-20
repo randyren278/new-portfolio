@@ -6,6 +6,7 @@
   class SpaceTransit {
     play({scene,entrance,portfolio,onfinish}) {
       this.cancel();this.active=true;this.animations=[];this.finished=false;this.mode=scene.mode;const mode=this.mode;const duration=mode==='kite'?1850:mode==='pool'?1750:1490;this.duration=duration*1.65;const w=innerWidth,h=innerHeight,cx=w*.5,cy=h*.46;
+      const surfaceRGB=getComputedStyle(document.documentElement).getPropertyValue('--surface-space-rgb').trim().replace(/\s+/g,',');
       const field=copy(scene.field.querySelector('canvas')),actor=copy(scene.layer.querySelector('canvas'));
       scene.dispose();if(field)scene.field.append(field);if(actor)scene.layer.append(actor);
       // Find the actual sprite pixels, including the kite/float, rather than a fixed box.
@@ -36,12 +37,12 @@
       animate(portfolio.querySelector('.blank-header'),[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:420,delay:970,easing:'ease-out'});
       animate(portfolio.querySelector('.blank-footer'),[{opacity:0},{opacity:1}],{duration:320,delay:1100,easing:'ease-out'});
       let rideFrame=-1;const rideSprite=mode==='ride'?document.createElement('canvas'):null;
-      const stars=Array.from({length:w<700?125:220},(_,i)=>({angle:hash(i*17+8)*Math.PI*2,z:hash(i*29+3),color:i%19===0?'#bc8e76':i%23===0?'#a6b6a0':'#ddd5bd',size:i%7===0?1.8:1.1}));
+      const stars=Array.from({length:w<700?125:220},(_,i)=>({angle:hash(i*17+8)*Math.PI*2,z:hash(i*29+3),color:i%19===0?'#bc8e76':i%23===0?'#aeaeae':'#ddd5bd',size:i%7===0?1.8:1.1}));
       const began=performance.now();this.onfinish=onfinish;this.scene=scene;
       const tick=now=>{
         if(!this.active)return;const elapsed=(now-began)/1.65,p=clamp(elapsed/duration),flight=clamp((elapsed-60)/650),speed=ease(clamp((elapsed-120)/850));ctx.clearRect(0,0,w,h);
         if(mode==='space'){
-        const veil=Math.sin(Math.PI*clamp((elapsed-40)/1250))*.28;ctx.fillStyle=`rgba(20,20,19,${veil})`;ctx.fillRect(0,0,w,h);
+        const veil=Math.sin(Math.PI*clamp((elapsed-40)/1250))*.28;ctx.fillStyle=`rgba(${surfaceRGB},${veil})`;ctx.fillRect(0,0,w,h);
         const intensity=clamp((elapsed-100)/170)*(1-ease(clamp((elapsed-850)/640)));
         for(const s of stars){const z=(s.z-speed*.85+1)%1,r=.11/(z+.035),tail=.018+speed*.075;const x=cx+Math.cos(s.angle)*r*w*.8,y=cy+Math.sin(s.angle)*r*h;const r0=.11/(z+tail+.035),tx=cx+Math.cos(s.angle)*r0*w*.8,ty=cy+Math.sin(s.angle)*r0*h;if(x< -80||x>w+80||y< -80||y>h+80)continue;const len=Math.hypot(x-tx,y-ty),count=Math.min(26,Math.max(1,Math.ceil(len/5)));ctx.fillStyle=s.color;for(let j=0;j<count;j++){const q=j/count;ctx.globalAlpha=intensity*(1-q)*(.35+(1-z)*.55);const size=s.size*(1-q*.4);ctx.fillRect(Math.round(x+(tx-x)*q),Math.round(y+(ty-y)*q),size,size)}}
         if(flight<1){const go=ease(flight),scale=1-go*.84;ctx.globalAlpha=1-clamp((flight-.65)/.35);ctx.imageSmoothingEnabled=false;const x=origin.x+(cx-origin.x)*go,y=origin.y+(cy-origin.y)*go;ctx.drawImage(sprite,x-origin.width*scale/2,y-origin.height*scale/2,origin.width*scale,origin.height*scale)}
@@ -81,15 +82,15 @@
           } else if(mode==='kite'){
             const edge=-h*.35+reveal*(w+h*.7);entrance.style.clipPath=`polygon(${edge-h*.35}px 0, ${w}px 0, ${w}px ${h}px, ${edge+h*.35}px ${h}px)`;
             // Curving wind ribbons follow the diagonal wipe, with a handful of kite-tail bows.
-            for(let ribbon=0;ribbon<9;ribbon++){const y0=h*(.08+ribbon*.105);ctx.fillStyle=ribbon%3===0?'#b8c5a6':'#c6b99d';for(let x=Math.max(0,edge-w*.3);x<Math.min(w,edge+w*.38);x+=7){const y=y0+Math.sin(x/w*5+elapsed*.004+ribbon)*11;ctx.globalAlpha=fade*.38*Math.sin(clamp((x-edge+w*.3)/(w*.68))*Math.PI);ctx.fillRect(Math.round(x),Math.round(y),1.6,1.6)}}
+            for(let ribbon=0;ribbon<9;ribbon++){const y0=h*(.08+ribbon*.105);ctx.fillStyle=ribbon%3===0?'#b8b8b8':'#c6b99d';for(let x=Math.max(0,edge-w*.3);x<Math.min(w,edge+w*.38);x+=7){const y=y0+Math.sin(x/w*5+elapsed*.004+ribbon)*11;ctx.globalAlpha=fade*.38*Math.sin(clamp((x-edge+w*.3)/(w*.68))*Math.PI);ctx.fillRect(Math.round(x),Math.round(y),1.6,1.6)}}
             const liftTime=clamp((elapsed-40)/1560),lift=smooth(liftTime);ctx.save();ctx.globalAlpha=1-smooth(clamp((liftTime-.75)/.25));ctx.translate(origin.x+lift*w*.34,origin.y-lift*(h+origin.height*.5));ctx.rotate(Math.sin(liftTime*Math.PI)*.08);ctx.drawImage(sprite,-origin.width/2,-origin.height/2,origin.width,origin.height);ctx.restore();
-            for(let i=0;i<12;i++){const a=clamp((elapsed-i*25)/1500),x=origin.x+a*w*.9+(hash(i+18)-.5)*80,y=origin.y-a*h*.8+(hash(i+9)-.5)*110;ctx.globalAlpha=Math.sin(a*Math.PI)*.6;ctx.fillStyle=i%3===0?'#d97757':i%3===1?'#b8c5a6':'#c9c5b9';ctx.fillRect(Math.round(x),Math.round(y),4,2);ctx.fillRect(Math.round(x+4),Math.round(y-2),2,5)}
+            for(let i=0;i<12;i++){const a=clamp((elapsed-i*25)/1500),x=origin.x+a*w*.9+(hash(i+18)-.5)*80,y=origin.y-a*h*.8+(hash(i+9)-.5)*110;ctx.globalAlpha=Math.sin(a*Math.PI)*.6;ctx.fillStyle=i%3===0?'#d97757':i%3===1?'#b8b8b8':'#c9c5b9';ctx.fillRect(Math.round(x),Math.round(y),4,2);ctx.fillRect(Math.round(x+4),Math.round(y-2),2,5)}
           } else {
             entrance.style.clipPath=`inset(0 0 0 ${reveal*100}%)`;
             const drive=clamp((elapsed-50)/820),accel=drive*drive,sheet=PuffPixels.sprites[scene.vehicle],step=Math.floor(elapsed/1000*sheet.fps);if(step!==rideFrame){PuffPixels.draw(rideSprite,scene.vehicle,12+step%(sheet.frames.length-12),1);rideFrame=step}const rw=sheet.w*1.75,rh=sheet.h*1.75,grid=h%9/2,groundY=Math.round(grid+Math.ceil((.7*h-grid)/9+1e-4)*9-.8*1.35-1);ctx.globalAlpha=1-clamp((drive-.92)/.08);ctx.drawImage(rideSprite,w*.38+accel*(w+rw)-rw/2,groundY-rh,rw,rh);
             // Road dashes follow the vehicle's ground plane, then coast to a stop.
             const ground=origin.y+origin.height/2+5,travel=ease(clamp(elapsed/1100))*w*1.7;
-            for(let row=0;row<4;row++){ctx.fillStyle=row===0?'#b8c5a6':'#87867f';ctx.globalAlpha=fade*(.36-row*.075);const y=ground+row*13;for(let x=-travel%67;x<w;x+=67)for(let k=0;k<5;k++)ctx.fillRect(Math.round(x+k*5),Math.round(y),2,1.5)}
+            for(let row=0;row<4;row++){ctx.fillStyle=row===0?'#b8b8b8':'#87867f';ctx.globalAlpha=fade*(.36-row*.075);const y=ground+row*13;for(let x=-travel%67;x<w;x+=67)for(let k=0;k<5;k++)ctx.fillRect(Math.round(x+k*5),Math.round(y),2,1.5)}
             for(let i=0;i<18;i++){const a=clamp((elapsed-i*10)/750);ctx.globalAlpha=Math.sin(a*Math.PI)*.36;ctx.fillStyle='#b9ab8b';ctx.fillRect(Math.round(origin.x-a*(60+hash(i+4)*120)),Math.round(ground-4-Math.sin(a*Math.PI)*(8+hash(i+12)*18)),1.5,1.5)}
           }
         }
