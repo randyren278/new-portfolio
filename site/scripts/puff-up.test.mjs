@@ -19,7 +19,7 @@ import {
   platformAtTime,
   SPRING_SPEED,
 } from '../public/puff-up/game/climb.js';
-import { playBot } from './puff-bot.mjs';
+import { playBot, choose } from './puff-bot.mjs';
 import {
   FIXED_DT,
   DEFAULT_TUNING,
@@ -946,8 +946,8 @@ test('with three stars a fall calls the UFO, which sets Puff back on the track',
   const { from, to, at, fallMs } = run.rescue,
     ledge = run.platforms.find((p) => p.id === to.id),
     caughtLine = run.hazardY;
-  // A main-path ledge on screen, no higher than Puff's best ledge, set down from its certificate.
-  assert.ok(/^\d+$/.test(to.id) && ledge.witness.some((w) => w.x === to.x && w.vx === to.vx));
+  // A main-path ledge on screen, no higher than Puff's best ledge.
+  assert.ok(/^\d+$/.test(to.id) && ledge.witness?.length);
   assert.ok(to.y >= run.peakY + 100 && to.y - run.cameraY < 560, JSON.stringify(to));
   // It opens like an ending: the catch, then Puff falls out of view under the game's gravity
   // while the line holds where it caught him.
@@ -985,10 +985,10 @@ test('with three stars a fall calls the UFO, which sets Puff back on the track',
   for (let t = 0; t < 240; t++) run = stepRun(run);
   assert.equal(run.status, 'playing');
 });
-test('a rescue never sets Puff on a ledge that breaks', () => {
-  let crumbles = 0;
+test('a rescue sets Puff down at rest on a ledge that neither breaks nor kicks', () => {
+  const hardened = { crumble: 0, kicker: 0 };
   for (let seed = 1; seed <= 24; seed++)
-    for (const metres of [150, 300, 450]) {
+    for (const metres of [150, 300, 450, 650, 750]) {
       const climbing = midClimb(seed, metres);
       let run = stepRun({
         ...climbing,
@@ -1001,14 +1001,34 @@ test('a rescue never sets Puff on a ledge that breaks', () => {
           platformId: null,
         },
       });
-      const { id } = run.rescue.to;
-      if (climbing.platforms.find((p) => p.id === id).kind === 'crumble') crumbles++;
+      const { id } = run.rescue.to,
+        was = climbing.platforms.find((p) => p.id === id).kind;
+      if (was in hardened) hardened[was]++;
       while (run.status === 'rescue') run = stepRun(run);
-      const ledge = run.platforms.find((p) => p.id === id);
+      const ledge = run.platforms.find((p) => p.id === id),
+        at = `seed ${seed} at ${metres} m`;
       assert.equal(run.lastLanding.id, id);
-      assert.ok(ledge && ledge.kind !== 'crumble', `seed ${seed} at ${metres} m: ${ledge?.kind}`);
+      assert.ok(ledge && !['crumble', 'kicker'].includes(ledge.kind), `${at}: ${ledge?.kind}`);
+      // He hops straight up from its middle, keeping none of the speed he had before the fall.
+      // (A fast mover slides under 2 px in the tick he lands.)
+      assert.equal(run.player.vx, 0, at);
+      assert.ok(Math.abs(run.player.x - (ledge.x + ledge.width / 2)) < 2, at);
+      // From rest he can still climb on past it.
+      for (
+        let hop = 0;
+        hop < 6 && run.status === 'playing' && run.lastLanding.y >= ledge.y;
+        hop++
+      ) {
+        const plan = choose(run);
+        if (!plan) break;
+        for (let t = 0; t < 240 && run.status === 'playing'; t++) {
+          run = stepRun(run, { axis: t < plan.k ? plan.a : plan.b });
+          if (run.player.landed) break;
+        }
+      }
+      assert.ok(run.status === 'playing' && run.lastLanding.y < ledge.y, `${at}: stuck`);
     }
-  assert.ok(crumbles > 0, 'some rescues land where a crumble stood');
+  assert.ok(hardened.crumble > 0 && hardened.kicker > 0, JSON.stringify(hardened));
 });
 test('a rescue falls like an ending: until Puff is out of view, within the same bounds', () => {
   const climbing = midClimb(4, 300);

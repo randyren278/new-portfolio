@@ -167,8 +167,8 @@ function rescueLedge(platforms, { cameraY, peakY }) {
   return onScreen.reduce((a, b) => (b.y > a.y ? b : a), onScreen[0]) ?? null;
 }
 // One step of a rescue: Puff first falls out of view as when a climb ends, then the UFO lifts
-// him from below to the ledge and sets him down as if he had just landed there, from one of its
-// certified takeoff states.
+// him from below to the ledge and sets him down as if he had just landed there, at rest: he keeps
+// none of the speed he had before the fall.
 function stepRescue(run, dt) {
   const delta = Number.isFinite(dt) ? clamp(dt, 0, 1 / 30) : 0,
     now = run.player.timeMs + delta * 1000,
@@ -234,7 +234,7 @@ function stepRescue(run, dt) {
         ...run.player,
         x: to.x,
         y: to.y,
-        vx: to.vx,
+        vx: 0,
         vy: -DEFAULT_TUNING.jumpSpeed,
         grounded: false,
         platformId: null,
@@ -762,24 +762,29 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
   const ledge = stars >= STARS_FOR_RESCUE && rescueLedge(next.platforms, next);
   if (!ledge) return { ...next, status: 'over' };
   const from = { x: player.x, y: player.y, vy: Math.max(0, player.vy) },
-    takeoff = ledge.witness[0];
+    // Where his sprite has just left the view, and how long his fall takes to get there.
+    outY = cameraY + fallLimit,
+    fallMs = fallDuration(from.y, from.vy, outY),
+    // He is set down at rest on the middle of the ledge, wherever a mover has carried it by then.
+    landing = platformAtTime(ledge, now + fallMs + RESCUE_MS);
   return {
     ...next,
     status: 'rescue',
     stars: 0,
-    // The UFO never sets him on a ledge that breaks: a crumble it picks turns to stone. Below
-    // his best ledge a third of rescues find only crumbles, and a stone ledge higher would gain
-    // him height. Crumbles and stone launch alike, so the course stays certified.
+    // The UFO never sets him on a ledge that breaks or kicks: a crumble or kicker it picks turns
+    // to stone. Below his best ledge many rescues find only those, and a stone ledge higher would
+    // gain him height.
     platforms: next.platforms.map((p) =>
-      p.id === ledge.id && p.kind === 'crumble' ? { ...p, kind: 'solid' } : p,
+      p.id === ledge.id && (p.kind === 'crumble' || p.kind === 'kicker')
+        ? { ...p, kind: 'solid' }
+        : p,
     ),
     rescue: {
       from,
-      to: { id: ledge.id, x: takeoff.x, vx: takeoff.vx, y: ledge.y },
+      to: { id: ledge.id, x: landing.x + ledge.width / 2, y: ledge.y },
       at: now,
-      // Where his sprite has just left the view, and how long his fall takes to get there.
-      outY: cameraY + fallLimit,
-      fallMs: fallDuration(from.y, from.vy, cameraY + fallLimit),
+      outY,
+      fallMs,
       // Where the line caught him, and where it drops to once the UFO comes.
       line: [hazardY, Math.max(hazardY, ledge.y + 300)],
     },
