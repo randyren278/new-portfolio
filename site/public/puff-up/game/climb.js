@@ -174,7 +174,7 @@ function stepRescue(run, dt) {
     now = run.player.timeMs + delta * 1000,
     { from, to, at, fallMs, outY, line } = run.rescue,
     progress = (now - at - fallMs) / RESCUE_MS;
-  let platforms = run.platforms.map((p) => platformAtTime(p, now));
+  const platforms = run.platforms.map((p) => platformAtTime(p, now));
   const effects = (run.effects ?? []).filter((e) => now - e.at < 650);
   if (progress < 0)
     return {
@@ -213,19 +213,12 @@ function stepRescue(run, dt) {
     };
   }
   const ledge = platforms.find((p) => p.id === to.id) ?? { id: to.id, kind: 'solid', pace: 1 };
-  const brokenPlatforms = [...(run.brokenPlatforms ?? [])];
-  if (ledge.kind === 'crumble') {
-    brokenPlatforms.push({ platform: { ...ledge }, readyAt: now + rebuildMs(ledge.y) });
-    effects.push({ type: 'break', x: ledge.x, y: ledge.y, width: ledge.width, at: now });
-    platforms = platforms.filter((p) => p.id !== ledge.id);
-  }
   return {
     ...run,
     status: 'playing',
     rescue: null,
     platforms,
     effects,
-    brokenPlatforms,
     calmUntil: now + CALM_MS,
     lastLanding: {
       id: ledge.id,
@@ -774,6 +767,12 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     ...next,
     status: 'rescue',
     stars: 0,
+    // The UFO never sets him on a ledge that breaks: a crumble it picks turns to stone. Below
+    // his best ledge a third of rescues find only crumbles, and a stone ledge higher would gain
+    // him height. Crumbles and stone launch alike, so the course stays certified.
+    platforms: next.platforms.map((p) =>
+      p.id === ledge.id && p.kind === 'crumble' ? { ...p, kind: 'solid' } : p,
+    ),
     rescue: {
       from,
       to: { id: ledge.id, x: takeoff.x, vx: takeoff.vx, y: ledge.y },

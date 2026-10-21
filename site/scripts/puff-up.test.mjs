@@ -985,6 +985,31 @@ test('with three stars a fall calls the UFO, which sets Puff back on the track',
   for (let t = 0; t < 240; t++) run = stepRun(run);
   assert.equal(run.status, 'playing');
 });
+test('a rescue never sets Puff on a ledge that breaks', () => {
+  let crumbles = 0;
+  for (let seed = 1; seed <= 24; seed++)
+    for (const metres of [150, 300, 450]) {
+      const climbing = midClimb(seed, metres);
+      let run = stepRun({
+        ...climbing,
+        stars: 3,
+        player: {
+          ...climbing.player,
+          y: climbing.cameraY + 900,
+          vy: 600,
+          grounded: false,
+          platformId: null,
+        },
+      });
+      const { id } = run.rescue.to;
+      if (climbing.platforms.find((p) => p.id === id).kind === 'crumble') crumbles++;
+      while (run.status === 'rescue') run = stepRun(run);
+      const ledge = run.platforms.find((p) => p.id === id);
+      assert.equal(run.lastLanding.id, id);
+      assert.ok(ledge && ledge.kind !== 'crumble', `seed ${seed} at ${metres} m: ${ledge?.kind}`);
+    }
+  assert.ok(crumbles > 0, 'some rescues land where a crumble stood');
+});
 test('a rescue falls like an ending: until Puff is out of view, within the same bounds', () => {
   const climbing = midClimb(4, 300);
   for (const depth of [100, 300, 400, 650, 900]) {
