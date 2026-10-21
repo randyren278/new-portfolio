@@ -1,5 +1,5 @@
 import { WORLD } from './physics.js';
-import { RESCUE_MS, ZONES, ZONE_METRES } from './climb.js';
+import { MODIFIERS, RESCUE_MS, ZONES, ZONE_METRES } from './climb.js';
 
 // Feedback drawn in world coordinates from run state and the frame's blended time `t` and
 // camera, so it moves as smoothly as the scene and pauses with the game.
@@ -57,12 +57,13 @@ export function drawRebuild(ctx, repair, t, totalMs, cameraY) {
   ctx.fillRect(Math.round(p.x), y, Math.round(p.width * filled), 4);
 }
 
-/** The first gate ledge of a zone names it underneath, like the launch pad. */
+/** The first gate ledge of a zone names it underneath, like the launch pad: past the table, by
+ * its modifier. */
 export function drawGateLabel(ctx, p, y) {
   ctx.fillStyle = '#a5a69b';
   ctx.textAlign = 'center';
   ctx.fillText(
-    `${p.gate * ZONE_METRES}M · ${zoneName(p.gate).toUpperCase()}`,
+    `${p.gate * ZONE_METRES}M · ${(MODIFIERS[p.modifier]?.name ?? zoneName(p.gate)).toUpperCase()}`,
     p.x + p.width / 2,
     y + 27,
   );
@@ -92,15 +93,21 @@ export function drawCallout(ctx, kicker, title, age, durationMs = 2400, y = CALL
   ctx.fillText(kicker, WORLD.width / 2, y - 6);
   ctx.restore();
 }
+/** Where a second card sits while a zone card shows. */
+export const CALLOUT_LOW_Y = CALLOUT_Y + 80;
 
-/** Zone title card after landing on a gate. */
+const BANNER_MS = 2400;
+/** Whether the zone card is up at time `t`. */
+export const bannerShows = (banner, t) => !!banner && t >= banner.at && t <= banner.at + BANNER_MS;
+/** Zone title card after landing on a gate; past the table it names the zone's modifier. */
 export function drawBanner(ctx, banner, t) {
   if (banner)
     drawCallout(
       ctx,
       `ZONE ${banner.zone} · ${banner.zone * ZONE_METRES} M`,
-      zoneName(banner.zone),
+      MODIFIERS[banner.modifier]?.name ?? zoneName(banner.zone),
       t - banner.at,
+      BANNER_MS,
     );
 }
 
@@ -129,11 +136,16 @@ export function danger(hazardY, playerY) {
   return Math.max(0, Math.min(1, 1 - (hazardY - playerY) / 220));
 }
 
-/** While the line is below the view, a gauge above the bottom controls says how far below. */
-export function drawGauge(ctx, metres, y) {
+/** While the line is below the view, a gauge above the bottom controls says how far below, and
+ * in a surge whether it is rushing or holding. */
+export function drawGauge(ctx, metres, y, surge = null) {
   ctx.fillStyle = '#d99177';
   ctx.textAlign = 'center';
-  ctx.fillText(`▼ LINE ${metres} M BELOW`, WORLD.width / 2, y);
+  ctx.fillText(
+    `▼ LINE ${metres} M BELOW${surge ? ` · ${surge.toUpperCase()}` : ''}`,
+    WORLD.width / 2,
+    y,
+  );
   ctx.textAlign = 'left';
 }
 

@@ -167,7 +167,8 @@ export function mountGame(
       frame = document.createElement('iframe');
       frame.id = 'game';
       frame.title = 'Puff climbing game';
-      frame.src = '/puff-up/game/index.html';
+      // On localhost the page's test switches (?stars=3, ?from=1180) reach the game.
+      frame.src = `/puff-up/game/index.html${location.hostname === 'localhost' ? location.search : ''}`;
       gameLoadTimer = setTimeout(() => reject(Error('The game took too long to load')), 12000);
       cancelGameLoad = () => {
         clearTimeout(gameLoadTimer);

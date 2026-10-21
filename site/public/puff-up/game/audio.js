@@ -25,6 +25,7 @@ export function cuesFor(previous, run) {
   if (fresh('spring')) cues.push('boing');
   if (fresh('kick')) cues.push('kick');
   if (fresh('spark')) cues.push('spark');
+  if (fresh('streak')) cues.push('streak');
   if (run.banner && run.banner !== previous.banner) cues.push('chime');
   return cues;
 }
@@ -119,6 +120,12 @@ export function createSound() {
       tone(1319, { gain: 0.08, decay: 0.18 });
       tone(1760, { gain: 0.07, decay: 0.24, delay: 0.06 });
     },
+    // A streak's star: the hop's notes run up the chord at once.
+    streak: () =>
+      music
+        .chordTones()
+        .slice(0, 3)
+        .forEach((note, i) => tone(hz(note + 24), { gain: 0.05, decay: 0.3, delay: i * 0.06 })),
     chime: () => {
       tone(659, { gain: 0.1, decay: 0.5 });
       tone(988, { gain: 0.08, decay: 0.7, delay: 0.12 });

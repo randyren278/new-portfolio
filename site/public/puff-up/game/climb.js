@@ -7,7 +7,8 @@ export function scoreForPeak(y) {
   return Number.isFinite(y) ? Math.max(0, Math.floor((START_Y - y) / 10)) : 0;
 }
 export const ZONE_METRES = 200;
-// Each zone is a step up; past the table the last zone repeats. scroll is the rising line in
+// Each zone is a step up; past the table the last zone repeats under a modifier (see MODIFIERS),
+// climbing in a wave. scroll is the rising line in
 // metres per second, mix weighs solid/crumble/moving/spring/kicker, and movers swing
 // ±amplitude px once per periodMs. A zone teaches its signature run of ledges, tests it, then
 // twists it near the top (see SEGMENTS).
@@ -109,6 +110,7 @@ export const ZONES = Object.freeze(
 // keep forbids one, and pace scales the rising line while Puff stands on them.
 export const SEGMENTS = Object.freeze({
   gate: { kind: 'solid', length: [2, 2], pace: 0.4 },
+  rest: { kind: 'solid', length: [2, 3], pace: 0.5 },
   mixed: { length: [3, 6], pace: 1 },
   crumbles: { kind: 'crumble', keep: true, length: [3, 5], pace: 1.05 },
   movers: { kind: 'moving', length: [2, 4], pace: 1.05 },
@@ -121,9 +123,81 @@ export const SEGMENTS = Object.freeze({
 });
 const SIGNATURES = ['crumbles', 'movers', 'kickers', 'switchbacks'],
   TWISTS = ['crumble-movers', 'mover-switchbacks', 'kicker-movers', 'crumble-switchbacks'];
-export function zoneForScore(score) {
-  const index = Math.max(0, Math.floor((Number.isFinite(score) ? score : 0) / ZONE_METRES));
-  return { index, ...ZONES[Math.min(index, ZONES.length - 1)] };
+// The hardest pace a run of ledges sets; the fairness test holds a clean climb above it.
+const PRESS = Math.max(...Object.values(SEGMENTS).map((s) => s.pace));
+// Past the table each zone draws a modifier, a rule named on its card, over the last zone's
+// ledges. A modifier only reweighs ledges the certificate already handles, or times the line.
+export const MODIFIERS = Object.freeze(
+  Object.fromEntries(
+    Object.entries({
+      'crumble-storm': {
+        name: 'Crumble storm',
+        signature: 'crumbles',
+        twist: 'crumble-switchbacks',
+        mix: [6, 70, 14, 0, 10],
+      },
+      'kicker-gauntlet': {
+        name: 'Kicker gauntlet',
+        signature: 'kickers',
+        twist: 'kicker-movers',
+        mix: [10, 14, 16, 0, 60],
+      },
+      // Springs a ledge closer than anywhere else: a spring, the ledge it skips, the stone it
+      // lands on, then the next spring.
+      'spring-garden': {
+        name: 'Spring garden',
+        signature: null,
+        twist: null,
+        mix: [15, 10, 15, 60, 0],
+        springEvery: 3,
+      },
+      // Side lanes twice as often: stars, and the calm each one brings.
+      'star-field': {
+        name: 'Star field',
+        signature: null,
+        twist: null,
+        forkEvery: 2,
+      },
+      // The line ignores the ledges' pace: it rushes at the hardest one, then holds still.
+      surge: { name: 'Surge', surge: true },
+    }).map(([id, m]) => [id, Object.freeze(m)]),
+  ),
+);
+const MODIFIER_IDS = Object.keys(MODIFIERS);
+// Modifiers come in seeded rounds of all five, so each comes round before any repeats, and a
+// round never opens with the one the last round ended on.
+function modifierRound(seed, round) {
+  let rng = random((seed ^ Math.imul(round + 1, 0x9e3779b1)) >>> 0);
+  const ids = [...MODIFIER_IDS];
+  for (let i = ids.length - 1; i > 0; i--) {
+    rng = random(rng);
+    const j = (rng >>> 16) % (i + 1);
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+  }
+  return ids;
+}
+export function modifierFor(seed, index) {
+  if (index < ZONES.length) return null;
+  const n = MODIFIER_IDS.length,
+    round = Math.floor((index - ZONES.length) / n),
+    ids = modifierRound(seed, round);
+  if (round > 0 && ids[0] === modifierRound(seed, round - 1)[n - 1])
+    [ids[0], ids[1]] = [ids[1], ids[0]];
+  return ids[(index - ZONES.length) % n];
+}
+/** The zone at `score`. Given the run's seed, a zone past the table carries its modifier. */
+export function zoneForScore(score, seed) {
+  const index = Math.max(0, Math.floor((Number.isFinite(score) ? score : 0) / ZONE_METRES)),
+    zone = { index, ...ZONES[Math.min(index, ZONES.length - 1)] },
+    modifier = seed === undefined ? null : modifierFor(seed, index);
+  return modifier ? { ...zone, ...MODIFIERS[modifier], modifier } : zone;
+}
+/** The rising line's speed in px per second, in `zone`, after a landing on a ledge of `pace`. */
+export const SURGE_MS = Object.freeze([6000, 4000]);
+export function lineSpeed(zone, pace, timeMs) {
+  if (zone.surge)
+    return timeMs % (SURGE_MS[0] + SURGE_MS[1]) < SURGE_MS[0] ? zone.scroll * PRESS * 10 : 0;
+  return zone.scroll * pace * 10;
 }
 /** A crumbled ledge returns after 3 s in the first zone and 1 s longer per zone. */
 export function rebuildMs(y) {
@@ -139,6 +213,8 @@ export function launch(player, ledge) {
 export const CALM_MS = 2500;
 /** Sparks are the stars; three charge one rescue from a fall. */
 export const STARS_FOR_RESCUE = 3;
+/** A streak counts landings in a row each higher than the last; its tenth earns a star. */
+export const STREAK_FOR_STAR = 10;
 /** How long the UFO takes to beam Puff back onto the track. */
 export const RESCUE_MS = 1700;
 /** When the line catches Puff he drops under the game's gravity until he is out of view, at most
@@ -219,6 +295,7 @@ function stepRescue(run, dt) {
     rescue: null,
     platforms,
     effects,
+    streak: 0,
     calmUntil: now + CALM_MS,
     lastLanding: {
       id: ledge.id,
@@ -345,7 +422,10 @@ function certify(sources, rise, gap, low, high) {
 }
 const KINDS = ['solid', 'crumble', 'moving', 'spring', 'kicker'];
 // The next run of ledges: a gate on entering a zone, its signature taught gently, then mixed
-// stretches alternating with the signature, and one twist in the zone's last quarter.
+// stretches alternating with the signature, and one twist in the zone's last quarter. Past the
+// table a zone climbs in a wave instead: every run at the hardest pace (see extend), the twist
+// earlier, then a breather of wide stone from REST_AT until the next gate.
+const REST_AT = 165;
 function nextSegment(plan, zone, into, rng) {
   if (zone.index > plan.zone)
     return {
@@ -363,7 +443,8 @@ function nextSegment(plan, zone, into, rng) {
     teach = false,
     twisted = plan.twisted;
   if (plan.name === 'gate' && signature) [name, teach] = [signature, true];
-  else if (into >= 150 && !twisted && zone.twist)
+  else if (zone.modifier && into >= REST_AT) name = 'rest';
+  else if (into >= (zone.modifier ? 110 : 150) && !twisted && zone.twist)
     [name, twisted] = [zone.twist === 'remix' ? pick(TWISTS) : zone.twist, true];
   else if (plan.name === 'mixed' && signature) name = signature;
   const [shortest, longest] = SEGMENTS[name].length;
@@ -386,14 +467,17 @@ const OPENING = Object.freeze({
   twisted: false,
   forkAt: 0,
 });
-function extend(platforms, cameraY, rng, nextId, plan) {
+function extend(platforms, cameraY, rng, nextId, plan, seed) {
   let top = platforms.filter((p) => !p.lane).reduce((a, b) => (a.y < b.y ? a : b));
   while (top.y > cameraY - 180) {
-    const zone = zoneForScore(scoreForPeak(top.y));
-    const skipSource = platforms.find((p) => p.kind === 'spring' && Number(p.id) === nextId - 2);
-    if (plan.left <= 0 || zone.index > plan.zone) {
+    const zone = zoneForScore(scoreForPeak(top.y), seed);
+    const skipSource = platforms.find((p) => p.kind === 'spring' && Number(p.id) === nextId - 2),
+      into = scoreForPeak(top.y) - zone.index * ZONE_METRES;
+    // A wave's breather cuts in on time, whatever run it interrupts.
+    const rest = zone.modifier && into >= REST_AT && plan.name !== 'rest' && plan.name !== 'gate';
+    if (plan.left <= 0 || zone.index > plan.zone || rest) {
       rng = random(rng);
-      plan = nextSegment(plan, zone, scoreForPeak(top.y) - zone.index * ZONE_METRES, rng);
+      plan = nextSegment(plan, zone, into, rng);
     }
     plan = { ...plan, left: plan.left - 1, step: plan.step + 1 };
     const segment = SEGMENTS[plan.name];
@@ -414,7 +498,10 @@ function extend(platforms, cameraY, rng, nextId, plan) {
     // Springs stay apart, and their skip stays inside the run they start in.
     if (
       kind === 'spring' &&
-      (plan.left < 2 || platforms.some((p) => p.kind === 'spring' && nextId - Number(p.id) < 4))
+      (plan.left < 2 ||
+        platforms.some(
+          (p) => p.kind === 'spring' && nextId - Number(p.id) < (zone.springEvery ?? 4),
+        ))
     )
       kind = 'solid';
     rng = random(rng);
@@ -453,7 +540,7 @@ function extend(platforms, cameraY, rng, nextId, plan) {
       gap = 118;
       offset = Math.min(offset, 124 + (rng % 9));
     }
-    if (plan.name === 'gate') {
+    if (plan.name === 'gate' || plan.name === 'rest') {
       width = Math.max(width, 100);
       offset = Math.min(offset, 112);
     }
@@ -535,13 +622,16 @@ function extend(platforms, cameraY, rng, nextId, plan) {
       width,
       kind,
       travelDir: direction,
-      pace: plan.teach ? 0.8 : segment.pace,
+      pace: plan.teach ? 0.8 : zone.modifier && segment.pace >= 1 ? PRESS : segment.pace,
       witness,
     };
     if (kind === 'kicker') top.push = center < WORLD.width / 2 ? 1 : -1;
     if (fromLane.length) top.fromLane = fromLane;
-    // The first gate ledge names the zone it opens.
-    if (plan.name === 'gate' && plan.step === 1) top.gate = plan.zone;
+    // The first gate ledge names the zone it opens, and the zone's modifier.
+    if (plan.name === 'gate' && plan.step === 1) {
+      top.gate = plan.zone;
+      if (zone.modifier) top.modifier = zone.modifier;
+    }
     if (kind === 'moving') {
       rng = random(rng);
       const [shortest, longest] = zone.periodMs;
@@ -565,7 +655,7 @@ function extend(platforms, cameraY, rng, nextId, plan) {
       !lane &&
       source.kind !== 'spring' &&
       kind !== 'spring' &&
-      nextId - plan.forkAt >= 4
+      nextId - plan.forkAt >= (zone.forkEvery ?? 4)
     ) {
       const laneWidth = zone.minWidth,
         laneHalf = landingHalf(laneWidth, 0),
@@ -640,6 +730,7 @@ export function createRun(seed = 0x50554646) {
     rng,
     2,
     OPENING,
+    normalized,
   );
   return {
     status: 'playing',
@@ -656,9 +747,29 @@ export function createRun(seed = 0x50554646) {
     banner: null,
     calmUntil: 0,
     stars: 0,
+    streak: 0,
     rescue: null,
     effects: [],
     brokenPlatforms: [],
+  };
+}
+/** For testing: run `seed` lifted to about `metres`, with Puff at rest on a ledge of the main
+ * path, turned to stone as a rescue would, and the line its usual lag below him. */
+export function climbFrom(seed, metres) {
+  let run = createRun(seed);
+  while (run.score < metres)
+    run = stepRun({ ...run, player: { ...run.player, y: run.player.y - 100 } }, {}, 0);
+  const ledge = run.platforms
+    .filter((p) => /^\d+$/.test(p.id) && p.kind !== 'spring' && p.y > run.cameraY + 300)
+    .reduce((a, b) => (b.y < a.y ? b : a));
+  return {
+    ...run,
+    platforms: run.platforms.map((p) => (p === ledge ? { ...p, kind: 'solid' } : p)),
+    player: { ...createState(), x: ledge.x + ledge.width / 2, y: ledge.y, platformId: ledge.id },
+    cameraY: ledge.y - 300,
+    peakY: ledge.y,
+    hazardY: ledge.y + HAZARD_LAG,
+    score: scoreForPeak(ledge.y),
   };
 }
 export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height + 80) {
@@ -680,7 +791,8 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     landings = run.landings,
     banner = run.banner,
     calmUntil = run.calmUntil ?? 0,
-    stars = run.stars ?? 0;
+    stars = run.stars ?? 0,
+    streak = run.streak ?? 0;
   const addEffect = (type, p) =>
     effects.push({ type, x: p.x, y: p.y, width: p.width, at: player.timeMs });
   if (run.player.grounded && run.player.platformId === 'floor' && player.events.includes('jump')) {
@@ -689,6 +801,11 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     platforms = platforms.filter((p) => p.id !== 'floor');
   }
   if (player.landed) {
+    streak = player.y < (run.lastLanding?.y ?? START_Y) - 1 ? streak + 1 : 0;
+    if (streak === STREAK_FOR_STAR) {
+      stars = Math.min(STARS_FOR_RESCUE, stars + 1);
+      addEffect('streak', { x: player.x, y: player.y, width: 0 });
+    }
     // Two ledges can share a row at a fork, so match the landing by position as well.
     const contact = platforms.find(
       (p) =>
@@ -716,7 +833,7 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     }
     // A gate names its zone once, not on every bounce.
     if (contact?.gate !== undefined && banner?.zone !== contact.gate)
-      banner = { zone: contact.gate, at: player.timeMs };
+      banner = { zone: contact.gate, modifier: contact.modifier ?? null, at: player.timeMs };
     if (contact) player = launch(player, contact);
     if (contact?.spark) {
       calmUntil = player.timeMs + CALM_MS;
@@ -731,14 +848,12 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     hazardY = Math.min(
       run.hazardY -
         (now < (run.calmUntil ?? 0) ? 0 : 1) *
-          zoneForScore(run.score).scroll *
-          (run.lastLanding?.pace ?? 1) *
-          10 *
+          lineSpeed(zoneForScore(run.score, run.seed), run.lastLanding?.pace ?? 1, now) *
           delta,
       peakY + HAZARD_LAG,
     );
   platforms = platforms.filter((p) => p.y <= cameraY + WORLD.height);
-  const generated = extend(platforms, cameraY, run.rng, run.nextId, run.plan);
+  const generated = extend(platforms, cameraY, run.rng, run.nextId, run.plan, run.seed);
   const next = {
     ...run,
     player,
@@ -753,6 +868,7 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     banner,
     calmUntil,
     stars,
+    streak,
     effects: effects.slice(-8),
     brokenPlatforms: brokenPlatforms.filter((repair) => repair.platform.y >= cameraY),
     status: 'playing',

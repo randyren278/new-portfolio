@@ -18,6 +18,12 @@ import {
   HAZARD_LAG,
   platformAtTime,
   SPRING_SPEED,
+  MODIFIERS,
+  modifierFor,
+  lineSpeed,
+  SURGE_MS,
+  STREAK_FOR_STAR,
+  climbFrom,
 } from '../public/puff-up/game/climb.js';
 import { playBot, choose } from './puff-bot.mjs';
 import {
@@ -1083,4 +1089,234 @@ test('without three stars a fall still ends the climb', () => {
   });
   assert.equal(run.status, 'over');
   assert.equal(run.stars, 2);
+});
+
+// Past the zone table: modifiers, the wave each zone climbs in, and climbing streaks.
+const mainPath = (seed, metres) =>
+  [...course(seed, metres).values()].filter((p) => /^\d+$/.test(p.id)).sort((a, b) => b.y - a.y);
+const zoneAt = (seed, p) => zoneForScore(scoreForPeak(p.y), seed);
+test('past the table each zone draws a modifier, in seeded rounds of all five, never twice in a row', () => {
+  const ids = Object.keys(MODIFIERS);
+  assert.equal(ids.length, 5);
+  for (let seed = 0; seed < 300; seed++) {
+    for (let z = 0; z < ZONES.length; z++) assert.equal(modifierFor(seed, z), null);
+    const order = Array.from({ length: 30 }, (_, i) => modifierFor(seed, ZONES.length + i));
+    for (let round = 0; round < 6; round++)
+      assert.deepEqual(new Set(order.slice(round * 5, round * 5 + 5)), new Set(ids));
+    order.forEach((m, i) => i && assert.notEqual(m, order[i - 1], `seed ${seed} zone ${i}`));
+    assert.equal(zoneForScore(ZONES.length * 200, seed).modifier, order[0]);
+    assert.equal(zoneForScore(ZONES.length * 200 - 1, seed).modifier, undefined);
+  }
+  assert.equal(new Set(Array.from({ length: 50 }, (_, s) => modifierFor(s, ZONES.length))).size, 5);
+});
+test('past the table a zone climbs in a wave: a gate, runs at the hardest pace, then wide stone', () => {
+  const press = Math.max(...Object.values(SEGMENTS).map((s) => s.pace));
+  for (const seed of [1, 2, 3, 4, 5, 0x50554646]) {
+    const ledges = mainPath(seed, 2650);
+    for (let z = ZONES.length; z <= 12; z++) {
+      const inZone = ledges.filter((p) => zoneAt(seed, p).index === z),
+        gate = inZone.findIndex((p) => p.pace === 0.4);
+      assert.ok(gate === 0 || gate === 1, `seed ${seed} zone ${z} gate at ${gate}`);
+      assert.equal(inZone[gate].modifier, modifierFor(seed, z));
+      assert.ok(inZone.filter((p) => p.pace === 0.5).length >= 2, `seed ${seed} zone ${z} rests`);
+      for (const p of inZone)
+        assert.ok([0.4, 0.5, 0.8, press].includes(p.pace), `seed ${seed} ${p.id} pace ${p.pace}`);
+    }
+    // Every ledge planned from 165 m into a zone is a breather: wide stone, the line at half pace.
+    for (let i = 1; i < ledges.length; i++) {
+      const [from, ledge] = [ledges[i - 1], ledges[i]],
+        zone = zoneAt(seed, from);
+      if (!zone.modifier || zoneAt(seed, ledge).index !== zone.index) continue;
+      if (scoreForPeak(from.y) - zone.index * 200 < 165) continue;
+      assert.deepEqual(
+        [ledge.kind, ledge.pace, ledge.width >= 100],
+        ['solid', 0.5, true],
+        `seed ${seed} ${ledge.id}`,
+      );
+    }
+  }
+});
+test('each modifier reshapes the ledges of its zone', () => {
+  const tally = {};
+  for (let seed = 0; seed < 16; seed++)
+    for (const p of [...course(seed, 2650).values()]) {
+      if (p.id === 'floor') continue;
+      const zone = zoneAt(seed, p);
+      if (zone.index < 4 || zone.index > 12) continue;
+      const t = (tally[zone.modifier ?? 'table'] ??= { ledges: 0, lanes: 0 });
+      if (p.lane) t.lanes++;
+      else {
+        t.ledges++;
+        t[p.kind] = (t[p.kind] ?? 0) + 1;
+      }
+    }
+  const share = (m, kind) => (tally[m][kind] ?? 0) / tally[m].ledges;
+  assert.ok(share('crumble-storm', 'crumble') > 1.5 * share('table', 'crumble'));
+  assert.ok(share('kicker-gauntlet', 'kicker') > 3 * share('table', 'kicker'));
+  assert.ok(share('spring-garden', 'spring') > 5 * share('table', 'spring'));
+  assert.ok(share('star-field', 'lanes') > 2.5 * share('table', 'lanes'));
+  assert.ok(share('spring-garden', 'spring') > 0.12, JSON.stringify(tally['spring-garden']));
+});
+test('every spring in a spring garden still offers its certified skip', () => {
+  let springs = 0;
+  for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+    const ledges = mainPath(seed, 2650);
+    for (let i = 0; i < ledges.length - 2; i++) {
+      const [spring, middle, to] = ledges.slice(i, i + 3);
+      if (spring.kind !== 'spring' || zoneAt(seed, spring).modifier !== 'spring-garden') continue;
+      springs++;
+      assert.equal(to.kind, 'solid', `seed ${seed}: ${spring.id} skips to stone`);
+      assert.ok(spring.y - to.y <= 216, `seed ${seed}: ${spring.id} skip has apex margin`);
+      // The skip is certified from the spring itself, and replays with real physics.
+      for (const w of to.witness) {
+        let p = {
+          ...createState(),
+          x: spring.witness[w.parent].x,
+          vx: spring.witness[w.parent].vx,
+          y: spring.y,
+          vy: -SPRING_SPEED,
+          grounded: false,
+          platformId: null,
+          coyoteMsLeft: 0,
+        };
+        for (let t = 0; t < 240 && !p.landed; t++)
+          p = step(p, { axis: t < w.k ? w.a : w.b, autoHop: true }, FIXED_DT, DEFAULT_TUNING, [to]);
+        assert.deepEqual([p.landed, p.x, p.vx], [true, w.x, w.vx], `seed ${seed}: ${spring.id}`);
+      }
+    }
+  }
+  assert.ok(springs > 20, `${springs} springs`);
+});
+test('a surge rushes at the hardest pace on any ledge, then holds still, never past a clean climb', () => {
+  const fastest =
+    Math.max(...ZONES.map((z) => z.scroll)) *
+    Math.max(...Object.values(SEGMENTS).map((s) => s.pace)) *
+    10;
+  const seed = [...Array(50).keys()].find((s) => modifierFor(s, ZONES.length) === 'surge'),
+    surge = zoneForScore(ZONES.length * 200, seed),
+    cycle = SURGE_MS[0] + SURGE_MS[1];
+  for (const pace of [0.4, 0.5, 1]) {
+    assert.equal(lineSpeed(surge, pace, 0), fastest);
+    assert.equal(lineSpeed(surge, pace, SURGE_MS[0] - 1), fastest);
+    assert.equal(lineSpeed(surge, pace, SURGE_MS[0]), 0);
+    assert.equal(lineSpeed(surge, pace, cycle - 1), 0);
+    assert.equal(lineSpeed(surge, pace, cycle), fastest);
+  }
+  const plain = zoneForScore(500);
+  assert.equal(lineSpeed(plain, 0.4, 0), plain.scroll * 0.4 * 10);
+  // The fairness bound holds in every zone and modifier, at every pace and moment.
+  for (let s = 0; s < 10; s++)
+    for (let m = 0; m <= 3000; m += 200)
+      for (const pace of [0.4, 0.5, 0.8, ...Object.values(SEGMENTS).map((g) => g.pace)])
+        for (let t = 0; t < cycle * 2; t += 500)
+          assert.ok(lineSpeed(zoneForScore(m, s), pace, t) <= fastest);
+  // stepRun moves the line by it; here it starts closer than its lag, so the lag never binds.
+  const start = climbFrom(seed, ZONES.length * 200 + 20),
+    lifted = { ...start, calmUntil: 0, hazardY: start.peakY + 200 };
+  assert.equal(zoneForScore(lifted.score, seed).modifier, 'surge');
+  const rush = stepRun(lifted, {}, 1 / 30),
+    hold = stepRun(
+      { ...lifted, player: { ...lifted.player, timeMs: SURGE_MS[0] + 100 } },
+      {},
+      1 / 30,
+    );
+  assert.ok(Math.abs(lifted.hazardY - rush.hazardY - fastest / 30) < 1e-6);
+  assert.equal(hold.hazardY, lifted.hazardY);
+});
+test('a gate past the table names its modifier on the banner', () => {
+  const seed = 7,
+    gate = mainPath(seed, 1300).find((p) => p.gate === ZONES.length);
+  assert.equal(gate.modifier, modifierFor(seed, ZONES.length));
+  let run = {
+    ...createRun(seed),
+    platforms: [
+      { ...gate, x: 80, y: 465 },
+      { id: 'ahead', x: 400, y: 0, width: 100, kind: 'solid' },
+    ],
+    player: {
+      ...createState(),
+      x: 80 + gate.width / 2,
+      y: 460,
+      vy: 200,
+      grounded: false,
+      platformId: null,
+      coyoteMsLeft: 0,
+    },
+  };
+  while (!run.player.landed) run = stepRun(run);
+  assert.deepEqual([run.banner.zone, run.banner.modifier], [ZONES.length, gate.modifier]);
+});
+// Lands Puff from just above on a stone ledge at `y`.
+function landAt(run, y) {
+  let next = {
+    ...run,
+    platforms: [
+      { id: `l${y}`, x: 80, y, width: 100, kind: 'solid', pace: 1 },
+      { id: 'ahead', x: 400, y: y - 2000, width: 100, kind: 'solid' },
+    ],
+    player: {
+      ...createState(),
+      x: 130,
+      y: y - 5,
+      vy: 200,
+      grounded: false,
+      platformId: null,
+      coyoteMsLeft: 0,
+      timeMs: run.player.timeMs,
+    },
+  };
+  let previous = next;
+  while (!next.player.landed) [previous, next] = [next, stepRun(next)];
+  return [previous, next];
+}
+test('a streak counts landings each higher than the last, and its tenth earns one star', () => {
+  let run = createRun(1),
+    previous;
+  assert.equal(run.streak, 0);
+  for (let i = 1; i <= 25; i++) {
+    [previous, run] = landAt(run, 465 - i * 120);
+    assert.equal(run.streak, i);
+    const earned = i === STREAK_FOR_STAR;
+    assert.equal(run.stars, i >= STREAK_FOR_STAR ? 1 : 0, `landing ${i}`);
+    assert.equal(cuesFor(previous, run).includes('streak'), earned, `landing ${i}`);
+  }
+  // A landing no higher than the last breaks it.
+  [, run] = landAt(run, 465 - 25 * 120);
+  assert.equal(run.streak, 0);
+  // The star is capped with the others.
+  run = { ...run, stars: 3, streak: STREAK_FOR_STAR - 1 };
+  [, run] = landAt(run, 465 - 30 * 120);
+  assert.deepEqual([run.streak, run.stars], [STREAK_FOR_STAR, 3]);
+});
+test('a rescue breaks the streak', () => {
+  const climbing = midClimb(4, 300);
+  let run = stepRun({
+    ...climbing,
+    stars: 3,
+    streak: 7,
+    player: {
+      ...climbing.player,
+      y: climbing.cameraY + 900,
+      vy: 600,
+      grounded: false,
+      platformId: null,
+    },
+  });
+  assert.equal(run.status, 'rescue');
+  while (run.status === 'rescue') run = stepRun(run);
+  assert.equal(run.streak, 0);
+});
+test('climbFrom starts Puff at rest on main-path stone at about that height, the line its lag below', () => {
+  for (const seed of [1, 2, 3]) {
+    const run = climbFrom(seed, 1150),
+      ledge = run.platforms.find((p) => p.id === run.player.platformId);
+    assert.ok(run.score >= 1100 && run.score <= 1160, String(run.score));
+    assert.deepEqual(
+      [ledge.kind, run.player.x, run.player.vx],
+      ['solid', ledge.x + ledge.width / 2, 0],
+    );
+    assert.equal(run.hazardY, ledge.y + HAZARD_LAG);
+    assert.ok(/^\d+$/.test(ledge.id));
+  }
+  assert.ok(playBot(3, 1450, 1150).cleared);
 });

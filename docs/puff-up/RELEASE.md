@@ -55,7 +55,7 @@ OS preference emulation and long endurance were not exercised for this release.
 ## Zones
 
 Every 200 m is a step up, driven by the `ZONES` and `SEGMENTS` tables in
-`game/climb.js`; past the table the last zone remixes every signature. The game
+`game/climb.js`; past the table (from 1200 m) the last zone repeats under a modifier. The game
 speed never changes. Per zone: the rising line's speed (2.5 → 12 m/s), the
 solid/crumble/moving/spring/kicker mix, ledge widths, and mover swing and period.
 
@@ -66,6 +66,17 @@ Signatures: crumble runs, mover chains, kickers (fling Puff sideways at full spe
 switchbacks. From zone 1 a fork can open: a narrow crumble lane beside the path
 with a spark that pauses the line for 2.5 s, merging on wide stone. Springs keep
 their skip inside the run they start in, and gaps vary from 112 to 134 px.
+
+Past the table each zone draws a modifier from `MODIFIERS`, in seeded rounds of all
+five, so each comes round before any repeats and none comes twice in a row: Crumble
+storm, Kicker gauntlet, Spring garden (springs three ledges apart), Star field (a fork
+every other ledge) and Surge (the line runs at the hardest pace on any ledge for 6 s,
+then holds for 4 s). The zone card and gate label name it. These zones climb in a
+wave: every run at the hardest pace (×1.1), the twist from 110 m, then wide stone with
+the line at half pace from 165 m until the next gate. The cloud sea (1200 m) and the
+jet stream (1400 m) drift behind the ledges; above them is open space. A climbing
+streak (landings each higher than the last) shows beside the stars from ×3, and its
+tenth landing earns one star.
 
 Every generated ledge carries a certificate (`witness`): takeoff states Puff really
 reaches on it, each replayable from a state on its source ledge with one steering
@@ -97,6 +108,10 @@ Validation:
   mapping, rebuild times, and the bot clearing the default course.
 - `node scripts/puff-bot.mjs 100 1250`: 100/100 seeds cleared 1250 m (zones 0–6)
   through `stepRun`. `pnpm test:puff:bot` runs the same sweep on 40 seeds.
+- Late zones: `pnpm test:puff` 49 tests, including modifier rounds, the wave, each
+  modifier's ledge mix, spring-garden skips, the surge staying under the fairness
+  bound, and streak stars. `node scripts/puff-bot.mjs 40 2650 0 1150` cleared 40/40
+  seeds from 1150 to 2650 m, and 10 seeds cleared 0 → 2650 m.
 - Frame pacing (WebKit, virtual 60/120/144 Hz, paced, two seeds to 1000 m): 0
   frames off smooth after warm-up in every zone; 0 canvases created after warm-up.
   Per-frame JS p99 0.3–0.6 ms below 600 m and 1.0–2.2 ms above. Occasional 5–20 ms

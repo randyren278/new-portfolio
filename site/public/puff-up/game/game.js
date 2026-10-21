@@ -1,13 +1,18 @@
 import { WORLD, DEFAULT_TUNING, FIXED_DT } from './physics.js';
 import {
   createRun,
+  climbFrom,
   stepRun,
   platformAtTime,
   rebuildMs,
   fallenY,
+  lineSpeed,
+  zoneForScore,
   FALL_MIN_MS,
   FALL_CAP_MS,
+  STREAK_FOR_STAR,
 } from './climb.js';
+import { drawPlaces } from './places.js';
 import { ANIMATIONS, renderPuff, samplePose } from './puff-motion.js';
 import { sampleFlightMotion } from './flight-pose.js';
 import { sampleGameVisual } from './game-visual.js';
@@ -18,6 +23,8 @@ import {
   drawBanner,
   drawBeam,
   drawBest,
+  bannerShows,
+  CALLOUT_LOW_Y,
   CALLOUT_Y,
   drawCallout,
   drawDust,
@@ -41,26 +48,34 @@ function nextSeed(previous) {
   const value = crypto.getRandomValues(new Uint32Array(1))[0];
   return value === previous ? (value + 1) >>> 0 : value;
 }
+// Local testing only: ?stars=3 on localhost starts each climb with a charged rescue, and
+// ?from=1180 starts it that many metres up.
+const testStars =
+    location.hostname === 'localhost'
+      ? Math.min(3, Number(new URLSearchParams(location.search).get('stars')) || 0)
+      : 0,
+  testFrom =
+    location.hostname === 'localhost'
+      ? Math.max(0, Number(new URLSearchParams(location.search).get('from')) || 0)
+      : 0;
+const freshRun = (seed) => (testFrom ? climbFrom(seed, testFrom) : createRun(seed));
 // draw() blends `previous` (the state before the latest fixed step) into `run`.
-let run = createRun(nextSeed()),
+let run = freshRun(nextSeed()),
   previous = run,
   running = false,
   started = false,
   best = 0;
-// bestAtStart is the record this climb chases; streak counts consecutive climbing landings.
+// bestAtStart is the record this climb chases. Moments for the low card: a new best, a charged
+// rescue, a streak milestone; the latest shows.
 let bestAtStart = 0,
-  streak = 0,
-  lastLandY = 575,
   newBestAt = null,
   readyAt = null,
+  streakCard = null,
   endedAt = null,
   // Where Puff was and how fast he was falling when the climb ended.
   fallFrom = null;
-// Local testing only: ?stars=3 on localhost starts each climb with a charged rescue.
-const testStars =
-  location.hostname === 'localhost'
-    ? Math.min(3, Number(new URLSearchParams(location.search).get('stars')) || 0)
-    : 0;
+// What a streak milestone says. The first earns a star.
+const STREAK_WORDS = { 25: 'On a roll', 50: 'Unstoppable', 100: 'Puff Up!' };
 const sound = createSound();
 let raf = null,
   lastTime = null,
@@ -142,6 +157,7 @@ let cssWidth = 640,
   dpr = 1,
   shownScore = null,
   shownStars = null,
+  shownStreak = null,
   // CSS px from the canvas top to the bottom controls; the line gauge sits just above them.
   gaugeTop = 620;
 function viewTransform() {
@@ -178,6 +194,7 @@ function draw() {
     shakeY + Math.cos(caughtAge * 0.11) * caught,
   );
   ctx.imageSmoothingEnabled = false;
+  drawPlaces(ctx, cameraY, t, reduced);
   ctx.font = '9px Plex,monospace';
   const first = Math.max(0, Math.ceil((575 - (cameraY + 620)) / 100)),
     last = Math.floor((575 - cameraY) / 100);
@@ -292,13 +309,15 @@ function draw() {
   }
   drawBest(ctx, run.score <= bestAtStart ? bestAtStart : 0, cameraY);
   // The rising line: touch it and the climb ends. It glows as it closes in, and cools to blue
-  // while a spark holds it.
+  // while a spark holds it. In a surge it pulses while it rushes and dims while it holds.
   const hazardY = mix(previous.hazardY, run.hazardY, a),
     hazard = Math.round(hazardY - cameraY),
     bottom = (cssHeight - top) / scale,
-    close = danger(hazardY, puffY),
     calm = t < run.calmUntil,
-    rgb = calm ? '130,181,203' : '217,145,119',
+    zone = zoneForScore(run.score, run.seed),
+    surge = zone.surge && !calm ? (lineSpeed(zone, 1, t) > 0 ? 'rushing' : 'holding') : null,
+    close = surge === 'rushing' ? Math.max(0.6, danger(hazardY, puffY)) : danger(hazardY, puffY),
+    rgb = calm ? '130,181,203' : surge === 'holding' ? '118,120,110' : '217,145,119',
     pulse = reduced || calm ? 0 : close * (0.5 + 0.5 * Math.sin(t / 90));
   if (hazard < bottom) {
     const haze = ctx.createLinearGradient(0, hazard, 0, hazard + 160);
@@ -308,8 +327,13 @@ function draw() {
     ctx.fillRect(0, hazard, WORLD.width, bottom - hazard);
     ctx.fillStyle = `rgba(${rgb},${0.85 + pulse * 0.15})`;
     ctx.fillRect(0, hazard - Math.round(close * 2), WORLD.width, 2 + Math.round(close * 2));
+    if (surge) {
+      ctx.textAlign = 'right';
+      ctx.fillText(`SURGE · ${surge.toUpperCase()}`, WORLD.width - 10, hazard - 8);
+      ctx.textAlign = 'left';
+    }
   } else if (run.status === 'playing')
-    drawGauge(ctx, Math.round((hazardY - puffY) / 10), (gaugeTop - top) / scale - 14);
+    drawGauge(ctx, Math.round((hazardY - puffY) / 10), (gaugeTop - top) / scale - 14, surge);
   let support = null;
   for (const ledge of run.platforms) {
     const p = platformAtTime(ledge, t);
@@ -364,15 +388,39 @@ function draw() {
   ctx.restore();
   drawUfo(ctx, ufo, cameraY, t);
   drawBanner(ctx, run.banner, t);
-  // Below the zone card, so a best just past a gate never overlaps it.
-  if (newBestAt !== null)
-    drawCallout(ctx, 'PAST YOUR BEST', 'New best', t - newBestAt, 1800, CALLOUT_Y + 80);
-  else if (readyAt !== null)
-    drawCallout(ctx, 'THREE STARS', 'Rescue ready', t - readyAt, 1800, CALLOUT_Y + 80);
+  // In the zone card's place, or below it if it was up when the moment came. A rescue made ready
+  // by a streak's star says so, not the streak.
+  const low = [
+    streakCard,
+    readyAt !== null && { kicker: 'THREE STARS', title: 'Rescue ready', at: readyAt },
+    newBestAt !== null && { kicker: 'PAST YOUR BEST', title: 'New best', at: newBestAt },
+  ]
+    .filter(Boolean)
+    .reduce((a, b) => (b.at >= a.at ? b : a), { at: Number.NEGATIVE_INFINITY });
+  if (low.title)
+    drawCallout(
+      ctx,
+      low.kicker,
+      low.title,
+      t - low.at,
+      1800,
+      bannerShows(run.banner, low.at) ? CALLOUT_LOW_Y : CALLOUT_Y,
+    );
   // Writing the HUD invalidates its layout and paint even when the text is unchanged.
   if (run.score !== shownScore) {
     shownScore = run.score;
     $('height-score').textContent = shownScore;
+  }
+  // The streak shows from three landings; gold as it nears the star.
+  if (run.streak !== shownStreak) {
+    const meter = $('streak-meter'),
+      grew = run.streak > (shownStreak ?? 0);
+    shownStreak = run.streak;
+    meter.hidden = shownStreak < 3;
+    meter.textContent = `×${shownStreak}`;
+    meter.classList.toggle('hot', shownStreak >= STREAK_FOR_STAR - 3);
+    if (grew && !meter.hidden && !reduced)
+      meter.animate([{ transform: 'scale(1.3)' }, { transform: 'scale(1)' }], 180);
   }
   if (run.stars !== shownStars) {
     shownStars = run.stars;
@@ -481,7 +529,7 @@ function pause() {
 function reset() {
   stopFrames();
   saveBest();
-  run = previous = createRun(nextSeed(run.seed));
+  run = previous = freshRun(nextSeed(run.seed));
   running = false;
   started = false;
   endedAt = null;
@@ -491,10 +539,9 @@ function start() {
   if (run.status === 'over') reset();
   if (!started) {
     bestAtStart = best;
-    streak = 0;
-    lastLandY = 575;
     newBestAt = null;
     readyAt = null;
+    streakCard = null;
     if (testStars) run = previous = { ...run, stars: testStars };
   }
   sound.start();
@@ -536,11 +583,17 @@ function tick(now) {
     best = Math.max(best, run.score);
     accumulator -= FIXED_DT;
     steps++;
-    if (run.player.landed) {
-      streak = run.player.y < lastLandY - 1 ? streak + 1 : 0;
-      lastLandY = run.player.y;
-    }
-    for (const cue of cuesFor(previous, run)) sound.cue(cue, streak);
+    for (const cue of cuesFor(previous, run)) sound.cue(cue, run.streak);
+    if (
+      run.streak > previous.streak &&
+      (run.streak === STREAK_FOR_STAR || STREAK_WORDS[run.streak])
+    )
+      streakCard = {
+        kicker: `STREAK ×${run.streak}`,
+        title:
+          STREAK_WORDS[run.streak] ?? (run.stars > previous.stars ? 'Star earned' : 'Stars full'),
+        at: run.player.timeMs,
+      };
     if (run.stars === 3 && previous.stars < 3) {
       readyAt = run.player.timeMs;
       sound.cue('ready');

@@ -121,6 +121,16 @@ canvas {
   color: #f3e3a6;
   text-shadow: 0 0 8px #e9be7699;
 }
+.height-hud > .streak-meter {
+  margin-left: 6px;
+  padding-left: 9px;
+  border-left: 1px solid #aaaaaa25;
+  color: var(--muted);
+  font-size: 12px;
+}
+.height-hud > .streak-meter.hot {
+  color: #e9be76;
+}
 .pause-label {
   position: absolute;
   left: 50%;

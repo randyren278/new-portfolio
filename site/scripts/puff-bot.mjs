@@ -1,13 +1,15 @@
 // Search bot for Puff Up. It plans each hop with the physics alone, which is fast, then plays
 // it through the real stepRun, so a clear means the real game was beaten: rising line,
 // crumbles, springs and movers included.
-// CLI: node scripts/puff-bot.mjs [seeds=20] [metres=1200] [firstSeed=0]
+// CLI: node scripts/puff-bot.mjs [seeds=20] [metres=1200] [firstSeed=0] [fromMetres=0]
 import { pathToFileURL } from 'node:url';
 import {
   createRun,
+  climbFrom,
   stepRun,
   platformAtTime,
   zoneForScore,
+  lineSpeed,
   HAZARD_LAG,
   launch,
 } from '../public/puff-up/game/climb.js';
@@ -32,7 +34,7 @@ const planned = (run) => ({
   ledges: run.platforms.filter((p) => p.id !== 'floor'),
   hazardY: run.hazardY,
   peakY: run.peakY,
-  scroll: zoneForScore(run.score).scroll,
+  zone: zoneForScore(run.score, run.seed),
   pace: run.lastLanding?.pace ?? 1,
 });
 // One predicted flight to a landing no lower than takeoff, or null if it falls or is caught.
@@ -51,7 +53,10 @@ function flight(state, plan) {
       [...(t === 0 ? (state.launch ?? []) : []), ...near].map((l) => platformAtTime(l, now)),
     );
     peakY = Math.min(peakY, p.y);
-    hazardY = Math.min(hazardY - state.scroll * state.pace * 10 * FIXED_DT, peakY + HAZARD_LAG);
+    hazardY = Math.min(
+      hazardY - lineSpeed(state.zone, state.pace, p.timeMs) * FIXED_DT,
+      peakY + HAZARD_LAG,
+    );
     if (p.y > hazardY || (p.vy > 0 && p.y > from + 1)) return null;
     if (p.landed) {
       const ledge = near.find((l) => {
@@ -66,7 +71,7 @@ function flight(state, plan) {
         ledges: ledge.kind === 'crumble' ? state.ledges.filter((l) => l !== ledge) : state.ledges,
         hazardY,
         peakY,
-        scroll: state.scroll,
+        zone: state.zone,
         pace: ledge.pace ?? 1,
       };
     }
@@ -125,8 +130,8 @@ export function choose(run) {
   }
   return options[0]?.plan ?? null;
 }
-export function playBot(seed, metres = 1200) {
-  let run = createRun(seed),
+export function playBot(seed, metres = 1200, from = 0) {
+  let run = from ? climbFrom(seed, from) : createRun(seed),
     hops = 0;
   while (run.status === 'playing' && run.score < metres) {
     const plan = choose(run);
@@ -140,11 +145,11 @@ export function playBot(seed, metres = 1200) {
   return { seed, metres: run.score, cleared: run.score >= metres, hops };
 }
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const [seeds = 20, metres = 1200, first = 0] = process.argv.slice(2).map(Number);
+  const [seeds = 20, metres = 1200, first = 0, from = 0] = process.argv.slice(2).map(Number);
   let failed = 0;
   for (let seed = first; seed < first + seeds; seed++) {
     const started = performance.now(),
-      result = playBot(seed, metres);
+      result = playBot(seed, metres, from);
     if (!result.cleared) failed++;
     console.log(JSON.stringify({ ...result, ms: Math.round(performance.now() - started) }));
   }
