@@ -286,9 +286,11 @@ const NAMED: [number, string][] = [
   [0.4, '400 m'],
   [0.5, '500 m'],
   [0.6, '600 m'],
+  [0.7, '700 m'],
   [0.8, '800 m'],
   [1, '1 km'],
   [1.2, '1.2 km'],
+  [1.3, '1.3 km'],
   [1.5, '1.5 km'],
   [1.609344, '1 mi'],
   [2, '2 km'],
@@ -312,15 +314,37 @@ function repLabel(km: number, sec: number): string {
 
 /** "2 × 1 mi, 2 mi, 3 × 1 mi" — consecutive equal reps collapse. */
 export function describeReps(reps: { km: number; sec: number }[]): string {
+  const stride = (r: { km: number; sec: number }) => r.km < 0.2 && r.sec <= 45;
+  const work = reps.filter((r) => !stride(r));
+  const sameDistance = NAMED.some(([d]) => work.every((r) => Math.abs(r.km - d) / d <= 0.04));
+  // A set's timing is stronger evidence than independently rounding each GPS distance.
+  const timed =
+    !sameDistance &&
+    work.every((r) => {
+      const round = Math.round(r.sec / 60) * 60;
+      return round >= 60 && Math.abs(r.sec - round) <= Math.max(4, round * 0.02);
+    });
   const groups: { label: string; n: number }[] = [];
   for (const r of reps) {
-    const label = repLabel(r.km, r.sec);
+    const label = stride(r)
+      ? 'stride'
+      : timed
+        ? clock(Math.round(r.sec / 60) * 60)
+        : repLabel(r.km, r.sec);
     const last = groups[groups.length - 1];
     if (last?.label === label) last.n++;
     else groups.push({ label, n: 1 });
   }
-  if (groups.length > 4) return `${reps.length} reps`;
-  return groups.map((g) => (g.n > 1 ? `${g.n} × ${g.label}` : g.label)).join(', ');
+  if (groups.length > 8) return `${reps.length} reps`;
+  return groups
+    .map((g) =>
+      g.label === 'stride'
+        ? `${g.n} ${g.n === 1 ? 'stride' : 'strides'}`
+        : g.n > 1
+          ? `${g.n} × ${g.label}`
+          : g.label,
+    )
+    .join(', ');
 }
 
 /**
@@ -332,7 +356,6 @@ export function classifyLaps(laps: CorosLap[]): LapPart[] | null {
   const moving = laps
     .map((l, i) => ({ i, pace: l.km >= 0.2 && l.sec > 0 ? l.sec / l.km : Number.NaN }))
     .filter((l) => Number.isFinite(l.pace));
-  if (moving.length < 3) return null;
   const sorted = [...moving].sort((a, b) => a.pace - b.pace);
   let cut = -1;
   let widest = 1;
@@ -343,9 +366,39 @@ export function classifyLaps(laps: CorosLap[]): LapPart[] | null {
       cut = k;
     }
   }
-  if (widest < 1.12 || cut < 0) return null;
-  const limit = sorted[cut].pace;
+  const limit = cut >= 0 && widest >= 1.12 ? sorted[cut].pace : 0;
   const isRep = new Set(moving.filter((l) => l.pace <= limit).map((l) => l.i));
+  const separated = (indices: number[]) =>
+    indices.some((right, n) => {
+      if (!n) return false;
+      const left = indices[n - 1];
+      return laps
+        .slice(left + 1, right)
+        .some(
+          (l) =>
+            l.sec >= 5 &&
+            (l.km < Math.min(laps[left].km, laps[right].km) * 0.6 ||
+              l.sec < Math.min(laps[left].sec, laps[right].sec) * 0.8),
+        );
+    });
+  // Uneven kilometre splits and a fast finish alone are not intervals.
+  if (isRep.size < 2 || !separated([...isRep])) isRep.clear();
+
+  const reference = limit || sorted[0]?.pace;
+  const strides = laps.flatMap((l, i) =>
+    reference &&
+    l.km >= 0.05 &&
+    l.km < 0.2 &&
+    l.sec >= 10 &&
+    l.sec <= 45 &&
+    l.sec / l.km <= reference * 1.3
+      ? [i]
+      : [],
+  );
+  if (strides.length >= 2 && separated(strides)) {
+    for (const i of strides) isRep.add(i);
+  }
+  if (isRep.size < 2) return null;
   const repIdx = [...isRep].sort((a, b) => a - b);
   const first = repIdx[0];
   const last = repIdx[repIdx.length - 1];

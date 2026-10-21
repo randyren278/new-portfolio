@@ -152,6 +152,55 @@ test('reps are found at the widest pace gap and named', () => {
   );
 });
 
+test('last month of real laps preserves work, strides and continuous runs', () => {
+  const month = JSON.parse(fx('laps-2026-09-21-to-10-20.json'));
+  for (const run of month) {
+    const parts = D.classifyLaps(run.laps);
+    const indices = run.laps.flatMap((_, i) => (parts?.[i] === 'rep' ? [i] : []));
+    assert.deepEqual(indices, run.expectedReps, `${run.date} ${run.labelId}: work laps`);
+    if (run.expectedTitle) {
+      assert.equal(
+        D.describeReps(run.laps.filter((_, i) => indices.includes(i))),
+        run.expectedTitle,
+        `${run.date}: session title`,
+      );
+    }
+  }
+});
+
+test('unseen interval distances with jogging recoveries retain their work laps', () => {
+  const lap = (km, sec) => ({ km, sec, watts: null });
+  const laps = [
+    lap(3, 900),
+    lap(1, 190),
+    lap(0.4, 150),
+    lap(1, 193),
+    lap(0.4, 148),
+    lap(1, 188),
+    lap(2, 640),
+  ];
+  assert.deepEqual(D.classifyLaps(laps), [
+    'warmup',
+    'rep',
+    'rest',
+    'rep',
+    'rest',
+    'rep',
+    'cooldown',
+  ]);
+});
+
+test('consistent distance evidence wins when mile reps also land near whole minutes', () => {
+  assert.equal(
+    D.describeReps([
+      { km: 1.61, sec: 300 },
+      { km: 1.6, sec: 302 },
+      { km: 1.62, sec: 298 },
+    ]),
+    '3 × 1 mi',
+  );
+});
+
 test('deriveView builds the full page from Coros', () => {
   const v = D.deriveView(sources());
   assert.equal(v.source, 'coros');

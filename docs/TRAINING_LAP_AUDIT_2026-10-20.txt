@@ -1,0 +1,68 @@
+TRAINING LAP AUDIT — SEPTEMBER 21 TO OCTOBER 20, 2026
+
+Source: live COROS querySportRecords, getActivityDetail and queryActivityLapData, read October 20 PT.
+34 running activities; 390.44 km. Every run in the returned month was inspected.
+Descriptions summarize recorded lap patterns, not a recovered coaching prescription. Distances and titles are rounded; short separated efforts are described as strides. Whole-run COROS focus remains separate.
+
+2026-09-21 | 11.66 km | COROS Base | No separate interval structure visible.
+2026-09-22 | 17.22 km | COROS Base | 10:00, 8:00, 6:00, 4:00, 2:00 — main work 3:32/km
+2026-09-23 | 10.33 km | COROS Recovery | No separate interval structure visible.
+2026-09-24 | 10.27 km | COROS Base | No separate interval structure visible.
+2026-09-25 | 11.03 km | COROS Base | No separate interval structure visible.
+2026-09-26 | 5.77 km | COROS Base | 4 strides
+2026-09-27 | 3.50 km | COROS Recovery | No separate interval structure visible.
+2026-09-27 | 8.26 km | COROS Anaerobic | Continuous hard run: 8.26 km at 3:19/km (27:27), no recoveries recorded.
+2026-09-27 | 3.00 km | COROS Recovery | No separate interval structure visible.
+2026-09-28 | 10.45 km | COROS Base | No separate interval structure visible.
+2026-09-29 | 13.18 km | COROS Base | 4 × 6:00, 3:00, 2 strides — main work 3:36/km
+2026-09-30 | 11.03 km | COROS Base | No separate interval structure visible.
+2026-10-01 | 10.02 km | COROS Base | No separate interval structure visible.
+2026-10-02 | 12.28 km | COROS Base | No separate interval structure visible.
+2026-10-03 | 18.72 km | COROS Base | 8 × 1.3 km, 4 strides — main work 3:16/km
+2026-10-04 | 10.18 km | COROS Base | No separate interval structure visible.
+2026-10-05 | 13.01 km | COROS Base | No separate interval structure visible.
+2026-10-06 | 19.32 km | COROS Base | 2 × 1 mi, 2 mi, 3 × 1 mi — main work 3:26/km
+2026-10-07 | 10.03 km | COROS Base | No separate interval structure visible.
+2026-10-08 | 11.11 km | COROS Base | No separate interval structure visible.
+2026-10-09 | 13.16 km | COROS Base | No separate interval structure visible.
+2026-10-10 | 15.41 km | COROS VO2 Max | 8 × 1 km — main work 3:05/km
+2026-10-11 | 22.51 km | COROS Tempo | No separate interval structure visible.
+2026-10-12 | 11.13 km | COROS Base | No separate interval structure visible.
+2026-10-13 | 16.66 km | COROS Base | 2 mi, 2 × 1 mi, 4 × 700 m — main work 3:13/km
+2026-10-14 | 11.35 km | COROS Base | No separate interval structure visible.
+2026-10-15 | 10.02 km | COROS Tempo | No separate interval structure visible.
+2026-10-16 | 6.38 km | COROS Base | Fast finish: three adjacent short laps; separate efforts are not established.
+2026-10-17 | 2.90 km | COROS Recovery | No separate interval structure visible.
+2026-10-17 | 9.91 km | COROS Threshold | Continuous threshold-labelled run: 9.91 km at 3:20/km (32:59), no recoveries recorded.
+2026-10-17 | 2.31 km | COROS unclassified | No separate interval structure visible.
+2026-10-18 | 18.02 km | COROS Base | No separate interval structure visible.
+2026-10-19 | 11.28 km | COROS Base | No separate interval structure visible.
+2026-10-20 | 19.03 km | COROS Base | 4 × 8:00 — main work 3:28/km
+
+OCTOBER 20 DETAIL
+4 work laps: 8:01 / 8:04 / 8:08 / 8:01.
+Distances: 2.314 / 2.319 / 2.278 / 2.385 km.
+Paces: 3:28 / 3:29 / 3:34 / 3:22 per km.
+Between-work recoveries: 2:01 / 2:02 / 2:01.
+Whole-run focus: Base; anaerobic TE 1.5. The old eligibility gate excluded this activity before reading its laps.
+
+IMPLEMENTATION AND EVIDENCE
+- Inspect recent run laps regardless of whole-run focus/anaerobic TE. Do not infer intervals from auto split group alone.
+- Require separated efforts; recognize short repeated efforts and use consistent time/distance descriptions.
+- Refresh the visible page every 30 seconds and on return/focus, preserving scroll. Source cache TTL remains 15 minutes; this does not force a COROS request every 30 seconds.
+- The sync footer now shows the actual fetch date.
+- Month labels were authored from the same captured laps used to improve the parser. This is an in-sample regression check, not a held-out accuracy estimate. October 16 was corrected during review because no recovery laps separate its short finish splits.
+- Original loader fails the latest-session regression, selecting October 13 instead of October 20. Candidate passes.
+- 24 training/cache/loader checks passed, including two synthetic neighboring cases; lint and production build passed.
+- Browser verification uses local fixtures in Umbra. No live deployment is claimed.
+- This audit accompanies the implementation; no deployment is claimed.
+
+CONTEXT SOURCES
+The original training-page design uses deterministic templates and rule-based rep detection, with COROS as body-data source and Strava as route source. (Source: [[Building the randyren.org Training Status Page]])
+The separate Google Sheets sync workflow was inspected for context; no sheet writes were made. (Source: [[Training Log Sync Workflow]])
+
+EXPERIMENT TRAJECTORY
+Original parser on the reviewed 34-run corpus: correct work-lap indices on 29/34, correct interval descriptions/abstentions on 26/34.
+First candidate failed the month check. Review found October 16 lacked recovery evidence and a September 29 separation was 9.7 seconds. The October 16 expectation was corrected rather than forcing a rep label; the recovery threshold was generalized to five seconds.
+Final parser matches all 34 reviewed cases. These are development cases; accuracy beyond them is not established. Existing captured fixtures and two synthetic neighboring cases also pass.
+A production browser check caught server/WebKit date punctuation causing hydration error 418. The sync label now assembles stable date/time parts; final verification uses a fresh Umbra profile.

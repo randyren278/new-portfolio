@@ -30,7 +30,6 @@ import {
   type TrainingView,
   classifyLaps,
   deriveView,
-  isQuality,
   mondayOf,
   shift,
 } from './derive';
@@ -172,19 +171,14 @@ async function corosPerActivity(
     if (text) details[r.labelId] = P.parseActivityDetail(text);
   });
 
-  // Latest session: the newest hard run in two weeks whose laps show reps.
+  // Whole-run focus often says Base even for intervals. Let the laps decide.
   const candidates = recentRuns
     .filter((r) => r.date >= shift(today, -13))
-    .filter(
-      (r) =>
-        isQuality(details[r.labelId]?.focus ?? null) || (details[r.labelId]?.anaerobicTE ?? 0) >= 2,
-    )
-    .sort((a, b) => b.start - a.start)
-    .slice(0, 3);
+    .sort((a, b) => b.start - a.start);
   for (const r of candidates) {
     const text = await settle('laps', once('queryActivityLapData', r));
     const laps = text ? P.parseLaps(text) : null;
-    if (laps && classifyLaps(laps.laps))
+    if (laps?.source === 'manual' && classifyLaps(laps.laps))
       return { details, session: { labelId: r.labelId, laps: laps.laps } };
   }
   return { details, session: null };
@@ -195,11 +189,11 @@ async function fetchCoros(today: string): Promise<CorosBundle> {
   return { ...core, ...(await corosPerActivity(core, today)) };
 }
 
-// Bump the version whenever the bundle's shape changes (v4: restingHr is back).
+// v5 reselects sessions from laps regardless of the whole-run focus.
 // No date in the key: a new day serves the last bundle instantly and refreshes
 // behind it. With the date in the key, the first visitor each morning waited
 // on a full cold Coros fetch.
-const corosCached = () => cached('coros-v4', 900, () => fetchCoros(todayLocal()));
+const corosCached = () => cached('coros-v5', 900, () => fetchCoros(todayLocal()));
 
 // -------------------------------------------------------------- Strava
 

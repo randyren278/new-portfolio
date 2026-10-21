@@ -25,6 +25,7 @@ import {
 } from './charts';
 import { useLiftCurtain } from './curtain';
 import { TipLayer } from './tip';
+import { useTrainingRefresh } from './useTrainingRefresh';
 
 const markReturn = markReturnToHome;
 
@@ -45,17 +46,23 @@ const focusName = (label: string) =>
 const signed = (v: number, digits = 1) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(digits)}`;
 
 function syncedLabel(view: TrainingView) {
-  const t = new Intl.DateTimeFormat('en-CA', {
+  const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Vancouver',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-  }).format(new Date(view.asOf));
-  return `Synced from ${view.source === 'coros' ? 'Coros' : 'Strava'} · ${fmtDow(view.today)} · ${t} PT`;
+  }).formatToParts(new Date(view.asOf));
+  const part = (type: string) => parts.find((p) => p.type === type)?.value;
+  const date = `${part('year')}-${part('month')}-${part('day')}`;
+  return `Synced from ${view.source === 'coros' ? 'Coros' : 'Strava'} · ${fmtDow(date)} · ${part('hour')}:${part('minute')} PT`;
 }
 
 export function TrainingPage({ view }: { view: TrainingView | null }) {
   useLiftCurtain();
+  useTrainingRefresh();
   return (
     <TipLayer>
       <div className="bento-page training-page">
@@ -206,7 +213,9 @@ function Cells({ view }: { view: TrainingView }) {
           <div className="tr-session-meta">
             {km1(view.session.km)} km · {clock(view.session.sec)} · {km1(view.session.repKm)} km of
             reps at {pace(view.session.repPace)} /km
-            {view.session.focus ? ` · ${focusName(view.session.focus).toLowerCase()}` : ''}
+            {view.session.focus
+              ? ` · Coros focus: ${focusName(view.session.focus).toLowerCase()}`
+              : ''}
             {view.session.trainingLoad ? ` · load ${view.session.trainingLoad}` : ''}
           </div>
           <div className="tr-session-cols">
@@ -378,8 +387,9 @@ function Cells({ view }: { view: TrainingView }) {
           § HOW THIS WORKS
         </h2>
         <p className="tr-essay tr-about">
-          Coros supplies the body; Strava supplies the map. The server asks both every fifteen
-          minutes and this page redraws itself. Nothing here is typed by hand.
+          Coros supplies the body; Strava supplies the map. While you’re here, the page checks for
+          updates every thirty seconds. Source data is cached for up to fifteen minutes; expired
+          data stays visible while the next sync finishes. Nothing here is typed by hand.
         </p>
         <div className="tr-src">
           <span className="tr-lab">Coros</span>

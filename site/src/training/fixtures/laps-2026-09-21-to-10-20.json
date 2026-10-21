@@ -1,0 +1,2347 @@
+[
+  {
+    "date": "2026-10-20",
+    "labelId": "481182449053761736",
+    "km": 19.03,
+    "focus": "Base",
+    "anaerobicTE": 1.5,
+    "laps": [
+      {
+        "km": 4.98069,
+        "sec": 1382.34,
+        "watts": 229
+      },
+      {
+        "km": 0.00485,
+        "sec": 41.84,
+        "watts": 12
+      },
+      {
+        "km": 2.31438,
+        "sec": 480.73,
+        "watts": 329
+      },
+      {
+        "km": 0.14674,
+        "sec": 120.53,
+        "watts": 112
+      },
+      {
+        "km": 2.31929,
+        "sec": 483.65,
+        "watts": 329
+      },
+      {
+        "km": 0.03521,
+        "sec": 122.17,
+        "watts": 38
+      },
+      {
+        "km": 2.2777,
+        "sec": 488.22,
+        "watts": 320
+      },
+      {
+        "km": 0.10129,
+        "sec": 120.67,
+        "watts": 96
+      },
+      {
+        "km": 2.3849,
+        "sec": 481.38,
+        "watts": 338
+      },
+      {
+        "km": 0.01526,
+        "sec": 10.25,
+        "watts": 210
+      },
+      {
+        "km": 4.44986,
+        "sec": 1326.05,
+        "watts": 252
+      }
+    ],
+    "expectedReps": [2, 4, 6, 8],
+    "expectedTitle": "4 × 8:00"
+  },
+  {
+    "date": "2026-10-19",
+    "labelId": "481153337759138094",
+    "km": 11.28,
+    "focus": "Base",
+    "anaerobicTE": 0.1,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 269.04,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 265.39,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 262.57,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 263.54,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 265.89,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 265.43,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.14,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.79,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.52,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 265.5,
+        "watts": null
+      },
+      {
+        "km": 0.28263,
+        "sec": 76.5,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-18",
+    "labelId": "481132414295375874",
+    "km": 18.02,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 273.3,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.46,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.29,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.42,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264.58,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.28,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264.97,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.5,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264.82,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.18,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.75,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.35,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270.85,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.43,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 265.61,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.25,
+        "watts": null
+      },
+      {
+        "km": 0.01863,
+        "sec": 5.37,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-17",
+    "labelId": "481110594513043458",
+    "km": 2.31,
+    "focus": null,
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 348.11,
+        "watts": 193
+      },
+      {
+        "km": 1,
+        "sec": 329.7,
+        "watts": 216
+      },
+      {
+        "km": 0.30739,
+        "sec": 94.37,
+        "watts": 214
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-17",
+    "labelId": "481110594513043457",
+    "km": 9.91,
+    "focus": "Threshold",
+    "anaerobicTE": 3.3,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 199.96,
+        "watts": 362
+      },
+      {
+        "km": 1,
+        "sec": 208.8,
+        "watts": 341
+      },
+      {
+        "km": 1,
+        "sec": 201.6,
+        "watts": 331
+      },
+      {
+        "km": 1,
+        "sec": 199.7,
+        "watts": 341
+      },
+      {
+        "km": 1,
+        "sec": 201.76,
+        "watts": 341
+      },
+      {
+        "km": 1,
+        "sec": 200.97,
+        "watts": 338
+      },
+      {
+        "km": 1,
+        "sec": 199.46,
+        "watts": 350
+      },
+      {
+        "km": 1,
+        "sec": 200.18,
+        "watts": 337
+      },
+      {
+        "km": 1,
+        "sec": 198.93,
+        "watts": 352
+      },
+      {
+        "km": 0.91232,
+        "sec": 167.42,
+        "watts": 360
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-17",
+    "labelId": "481108161151926376",
+    "km": 2.9,
+    "focus": "Recovery",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 297.33,
+        "watts": 233
+      },
+      {
+        "km": 1,
+        "sec": 386.4,
+        "watts": 184
+      },
+      {
+        "km": 0.90136,
+        "sec": 302.05,
+        "watts": 203
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-16",
+    "labelId": "481086975154094482",
+    "km": 6.38,
+    "focus": "Base",
+    "anaerobicTE": 0.8,
+    "laps": [
+      {
+        "km": 6.02928,
+        "sec": 1681.96,
+        "watts": 246
+      },
+      {
+        "km": 0.10215,
+        "sec": 42.92,
+        "watts": 190
+      },
+      {
+        "km": 0.08021,
+        "sec": 19.65,
+        "watts": 199
+      },
+      {
+        "km": 0.08095,
+        "sec": 16.75,
+        "watts": 311
+      },
+      {
+        "km": 0.08958,
+        "sec": 17.68,
+        "watts": 325
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null,
+    "note": "Three adjacent short laps without recoveries: a fast finish is visible, separate strides are not established."
+  },
+  {
+    "date": "2026-10-15",
+    "labelId": "481057869500809417",
+    "km": 10.02,
+    "focus": "Tempo",
+    "anaerobicTE": 0.5,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 276.11,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.21,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.79,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.92,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270.08,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.25,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.5,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.75,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.25,
+        "watts": null
+      },
+      {
+        "km": 0.01766,
+        "sec": 4.91,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-14",
+    "labelId": "481034453070676568",
+    "km": 11.35,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 281.35,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 262.5,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.25,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 265.89,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270.28,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 269.43,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.4,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.75,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.5,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264.5,
+        "watts": null
+      },
+      {
+        "km": 0.3456,
+        "sec": 92.32,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-13",
+    "labelId": "481020190828560389",
+    "km": 16.66,
+    "focus": "Base",
+    "anaerobicTE": 3.7,
+    "laps": [
+      {
+        "km": 3.84445,
+        "sec": 1156.17,
+        "watts": 216
+      },
+      {
+        "km": 3.22518,
+        "sec": 677.15,
+        "watts": 325
+      },
+      {
+        "km": 0.04211,
+        "sec": 193.89,
+        "watts": 26
+      },
+      {
+        "km": 1.61853,
+        "sec": 315.2,
+        "watts": 366
+      },
+      {
+        "km": 0.01745,
+        "sec": 90.68,
+        "watts": 45
+      },
+      {
+        "km": 1.62828,
+        "sec": 297.7,
+        "watts": 345
+      },
+      {
+        "km": 0.05699,
+        "sec": 181.57,
+        "watts": 33
+      },
+      {
+        "km": 0.69099,
+        "sec": 125.95,
+        "watts": 380
+      },
+      {
+        "km": 0.09987,
+        "sec": 121.8,
+        "watts": 60
+      },
+      {
+        "km": 0.7138,
+        "sec": 132.45,
+        "watts": 359
+      },
+      {
+        "km": 0.03468,
+        "sec": 120.35,
+        "watts": 40
+      },
+      {
+        "km": 0.70761,
+        "sec": 128.63,
+        "watts": 367
+      },
+      {
+        "km": 0.08737,
+        "sec": 124.77,
+        "watts": 59
+      },
+      {
+        "km": 0.72069,
+        "sec": 116.54,
+        "watts": 412
+      },
+      {
+        "km": 0.01436,
+        "sec": 24.2,
+        "watts": 112
+      },
+      {
+        "km": 3.16001,
+        "sec": 982.83,
+        "watts": 234
+      }
+    ],
+    "expectedReps": [1, 3, 5, 7, 9, 11, 13],
+    "expectedTitle": "2 mi, 2 × 1 mi, 4 × 700 m"
+  },
+  {
+    "date": "2026-10-12",
+    "labelId": "480989364506099812",
+    "km": 11.13,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 271.02,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.5,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.21,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.04,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.25,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 269,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270.14,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.86,
+        "watts": null
+      },
+      {
+        "km": 0.13037,
+        "sec": 35.61,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-11",
+    "labelId": "480966593117979023",
+    "km": 22.51,
+    "focus": "Tempo",
+    "anaerobicTE": 1,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 279.42,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270.75,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 263.35,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264.29,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 262.61,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264.82,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 265.71,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 263.72,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 262.25,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 263.25,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 265.92,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.43,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.86,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.27,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 269.93,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.25,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264.53,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.57,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.15,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.14,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 265.86,
+        "watts": null
+      },
+      {
+        "km": 0.51418,
+        "sec": 136.13,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-10",
+    "labelId": "480944039976271974",
+    "km": 15.41,
+    "focus": "VO2 Max",
+    "anaerobicTE": 3.3,
+    "laps": [
+      {
+        "km": 4.00671,
+        "sec": 1191.87,
+        "watts": 231
+      },
+      {
+        "km": 0.03965,
+        "sec": 29.56,
+        "watts": 81
+      },
+      {
+        "km": 1.00845,
+        "sec": 186.43,
+        "watts": 361
+      },
+      {
+        "km": 0.10831,
+        "sec": 90.21,
+        "watts": 126
+      },
+      {
+        "km": 1.00026,
+        "sec": 191.26,
+        "watts": 352
+      },
+      {
+        "km": 0.07511,
+        "sec": 90.77,
+        "watts": 94
+      },
+      {
+        "km": 1.00045,
+        "sec": 187.78,
+        "watts": 357
+      },
+      {
+        "km": 0.10086,
+        "sec": 90.1,
+        "watts": 114
+      },
+      {
+        "km": 1.01275,
+        "sec": 189.56,
+        "watts": 354
+      },
+      {
+        "km": 0.05481,
+        "sec": 91.15,
+        "watts": 75
+      },
+      {
+        "km": 1.01809,
+        "sec": 188.81,
+        "watts": 367
+      },
+      {
+        "km": 0.11787,
+        "sec": 91.84,
+        "watts": 125
+      },
+      {
+        "km": 1.02,
+        "sec": 188.76,
+        "watts": 369
+      },
+      {
+        "km": 0.08152,
+        "sec": 90.6,
+        "watts": 69
+      },
+      {
+        "km": 0.98769,
+        "sec": 181.21,
+        "watts": 366
+      },
+      {
+        "km": 0.03598,
+        "sec": 90.65,
+        "watts": 77
+      },
+      {
+        "km": 1.00214,
+        "sec": 178.51,
+        "watts": 372
+      },
+      {
+        "km": 0.01596,
+        "sec": 11.87,
+        "watts": 268
+      },
+      {
+        "km": 2.72736,
+        "sec": 795.45,
+        "watts": 234
+      }
+    ],
+    "expectedReps": [2, 4, 6, 8, 10, 12, 14, 16],
+    "expectedTitle": "8 × 1 km"
+  },
+  {
+    "date": "2026-10-09",
+    "labelId": "480922904716935369",
+    "km": 13.16,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 299.05,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.86,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.42,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.08,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 269.92,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.58,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 272.5,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 274.21,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 272.86,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 272.85,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 275.08,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 273.78,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 274.86,
+        "watts": null
+      },
+      {
+        "km": 0.15707,
+        "sec": 43.92,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-08",
+    "labelId": "480897067535860113",
+    "km": 11.11,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 280.87,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270.29,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.14,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.15,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.14,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 272.61,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.5,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.32,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.28,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.29,
+        "watts": null
+      },
+      {
+        "km": 0.10777,
+        "sec": 29.3,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-07",
+    "labelId": "480875386266222793",
+    "km": 10.03,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 277.78,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.75,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 273.14,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 278.57,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 277.54,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.75,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.25,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 269.6,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.72,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 273.18,
+        "watts": null
+      },
+      {
+        "km": 0.03337,
+        "sec": 10.03,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-06",
+    "labelId": "480857205141176320",
+    "km": 19.32,
+    "focus": "Base",
+    "anaerobicTE": 2.8,
+    "laps": [
+      {
+        "km": 4.057,
+        "sec": 1235.36,
+        "watts": 217
+      },
+      {
+        "km": 0.00567,
+        "sec": 31.94,
+        "watts": 67
+      },
+      {
+        "km": 1.6014,
+        "sec": 354.22,
+        "watts": 324
+      },
+      {
+        "km": 0.0193,
+        "sec": 60.55,
+        "watts": 95
+      },
+      {
+        "km": 1.61611,
+        "sec": 330.99,
+        "watts": 311
+      },
+      {
+        "km": 0.04248,
+        "sec": 59.46,
+        "watts": 105
+      },
+      {
+        "km": 3.2284,
+        "sec": 672.43,
+        "watts": 331
+      },
+      {
+        "km": 0.05126,
+        "sec": 119.74,
+        "watts": 50
+      },
+      {
+        "km": 1.60707,
+        "sec": 333.49,
+        "watts": 350
+      },
+      {
+        "km": 0.01418,
+        "sec": 61.33,
+        "watts": 101
+      },
+      {
+        "km": 1.61868,
+        "sec": 325,
+        "watts": 319
+      },
+      {
+        "km": 0.02089,
+        "sec": 60.48,
+        "watts": 51
+      },
+      {
+        "km": 1.58767,
+        "sec": 308.38,
+        "watts": 350
+      },
+      {
+        "km": 0.03228,
+        "sec": 16.75,
+        "watts": 312
+      },
+      {
+        "km": 3.81594,
+        "sec": 1200.07,
+        "watts": 231
+      }
+    ],
+    "expectedReps": [2, 4, 6, 8, 10, 12],
+    "expectedTitle": "2 × 1 mi, 2 mi, 3 × 1 mi"
+  },
+  {
+    "date": "2026-10-05",
+    "labelId": "480830460908306635",
+    "km": 13.01,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 10.57748,
+        "sec": 3108.17,
+        "watts": 231
+      },
+      {
+        "km": 2.42912,
+        "sec": 693.92,
+        "watts": 247
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-04",
+    "labelId": "480804269667156371",
+    "km": 10.18,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 306.98,
+        "watts": 222
+      },
+      {
+        "km": 1,
+        "sec": 300.32,
+        "watts": 217
+      },
+      {
+        "km": 1,
+        "sec": 300.66,
+        "watts": 203
+      },
+      {
+        "km": 1,
+        "sec": 306.05,
+        "watts": 233
+      },
+      {
+        "km": 1,
+        "sec": 292.57,
+        "watts": 221
+      },
+      {
+        "km": 1,
+        "sec": 278.59,
+        "watts": 216
+      },
+      {
+        "km": 1,
+        "sec": 299.09,
+        "watts": 231
+      },
+      {
+        "km": 1,
+        "sec": 298.07,
+        "watts": 219
+      },
+      {
+        "km": 1,
+        "sec": 326.41,
+        "watts": 217
+      },
+      {
+        "km": 1,
+        "sec": 286.41,
+        "watts": 255
+      },
+      {
+        "km": 0.17896,
+        "sec": 57.25,
+        "watts": 268
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-03",
+    "labelId": "480783905348157846",
+    "km": 18.72,
+    "focus": "Base",
+    "anaerobicTE": 3.9,
+    "laps": [
+      {
+        "km": 4.37225,
+        "sec": 1236.77,
+        "watts": 243
+      },
+      {
+        "km": 0.00785,
+        "sec": 32.25,
+        "watts": 23
+      },
+      {
+        "km": 1.2878,
+        "sec": 260.53,
+        "watts": 335
+      },
+      {
+        "km": 0.05808,
+        "sec": 110.01,
+        "watts": 62
+      },
+      {
+        "km": 1.29425,
+        "sec": 256.18,
+        "watts": 349
+      },
+      {
+        "km": 0.04372,
+        "sec": 110.25,
+        "watts": 45
+      },
+      {
+        "km": 1.30106,
+        "sec": 256.63,
+        "watts": 346
+      },
+      {
+        "km": 0.03511,
+        "sec": 108.7,
+        "watts": 51
+      },
+      {
+        "km": 1.29339,
+        "sec": 253.51,
+        "watts": 349
+      },
+      {
+        "km": 0.03131,
+        "sec": 108.02,
+        "watts": 37
+      },
+      {
+        "km": 1.28975,
+        "sec": 252.24,
+        "watts": 359
+      },
+      {
+        "km": 0.02145,
+        "sec": 111.59,
+        "watts": 31
+      },
+      {
+        "km": 1.29192,
+        "sec": 253.07,
+        "watts": 357
+      },
+      {
+        "km": 0.03403,
+        "sec": 109.58,
+        "watts": 31
+      },
+      {
+        "km": 1.29757,
+        "sec": 252.64,
+        "watts": 360
+      },
+      {
+        "km": 0.02075,
+        "sec": 111.48,
+        "watts": 34
+      },
+      {
+        "km": 1.29071,
+        "sec": 238.83,
+        "watts": 382
+      },
+      {
+        "km": 0.02286,
+        "sec": 16.15,
+        "watts": 180
+      },
+      {
+        "km": 0.11527,
+        "sec": 19.38,
+        "watts": 371
+      },
+      {
+        "km": 0.02316,
+        "sec": 106.39,
+        "watts": 71
+      },
+      {
+        "km": 0.10705,
+        "sec": 16.42,
+        "watts": 346
+      },
+      {
+        "km": 0.02398,
+        "sec": 89.28,
+        "watts": 75
+      },
+      {
+        "km": 0.10784,
+        "sec": 16.57,
+        "watts": 387
+      },
+      {
+        "km": 0.03314,
+        "sec": 90.3,
+        "watts": 89
+      },
+      {
+        "km": 0.10336,
+        "sec": 15.27,
+        "watts": 336
+      },
+      {
+        "km": 0.06179,
+        "sec": 200.49,
+        "watts": 43
+      },
+      {
+        "km": 3.14696,
+        "sec": 893.48,
+        "watts": 245
+      }
+    ],
+    "expectedReps": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24],
+    "expectedTitle": "8 × 1.3 km, 4 strides"
+  },
+  {
+    "date": "2026-10-02",
+    "labelId": "480764063935136050",
+    "km": 12.28,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 250.49,
+        "watts": 264
+      },
+      {
+        "km": 1,
+        "sec": 301.02,
+        "watts": 225
+      },
+      {
+        "km": 1,
+        "sec": 290.72,
+        "watts": 230
+      },
+      {
+        "km": 1,
+        "sec": 300.55,
+        "watts": 211
+      },
+      {
+        "km": 1,
+        "sec": 294.45,
+        "watts": 236
+      },
+      {
+        "km": 1,
+        "sec": 291.63,
+        "watts": 222
+      },
+      {
+        "km": 1,
+        "sec": 285.72,
+        "watts": 244
+      },
+      {
+        "km": 1,
+        "sec": 295.71,
+        "watts": 247
+      },
+      {
+        "km": 1,
+        "sec": 276.86,
+        "watts": 242
+      },
+      {
+        "km": 1,
+        "sec": 298,
+        "watts": 259
+      },
+      {
+        "km": 1,
+        "sec": 293.36,
+        "watts": 254
+      },
+      {
+        "km": 1,
+        "sec": 275.98,
+        "watts": 230
+      },
+      {
+        "km": 0.27963,
+        "sec": 76.13,
+        "watts": 280
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-10-01",
+    "labelId": "480734759650099603",
+    "km": 10.02,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 292.29,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270.86,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270.5,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 266.64,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.11,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 274.75,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 272.42,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.58,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 267.5,
+        "watts": null
+      },
+      {
+        "km": 0.02127,
+        "sec": 7.69,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-09-30",
+    "labelId": "480713135286681902",
+    "km": 11.03,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 271.76,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.43,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 276.84,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 272,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.71,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 273.43,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 274.57,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.79,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 268.25,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270.53,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.14,
+        "watts": null
+      },
+      {
+        "km": 0.02817,
+        "sec": 8.1,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-09-29",
+    "labelId": "480694737802658093",
+    "km": 13.18,
+    "focus": "Base",
+    "anaerobicTE": 2.1,
+    "laps": [
+      {
+        "km": 4.04237,
+        "sec": 1154.86,
+        "watts": 236
+      },
+      {
+        "km": 0,
+        "sec": 31.16,
+        "watts": 9
+      },
+      {
+        "km": 1.69127,
+        "sec": 362.53,
+        "watts": 313
+      },
+      {
+        "km": 0.1001,
+        "sec": 60.69,
+        "watts": 165
+      },
+      {
+        "km": 1.6716,
+        "sec": 360.11,
+        "watts": 317
+      },
+      {
+        "km": 0.0838,
+        "sec": 61.7,
+        "watts": 143
+      },
+      {
+        "km": 1.64158,
+        "sec": 361.69,
+        "watts": 317
+      },
+      {
+        "km": 0.08115,
+        "sec": 61.88,
+        "watts": 145
+      },
+      {
+        "km": 1.66429,
+        "sec": 361.45,
+        "watts": 313
+      },
+      {
+        "km": 0.06455,
+        "sec": 56.35,
+        "watts": 97
+      },
+      {
+        "km": 0.87635,
+        "sec": 180.99,
+        "watts": 356
+      },
+      {
+        "km": 0.01715,
+        "sec": 37.73,
+        "watts": 80
+      },
+      {
+        "km": 0.10832,
+        "sec": 25.57,
+        "watts": 264
+      },
+      {
+        "km": 0,
+        "sec": 9.66,
+        "watts": 24
+      },
+      {
+        "km": 0.08729,
+        "sec": 17.05,
+        "watts": 282
+      },
+      {
+        "km": 0.07643,
+        "sec": 41.81,
+        "watts": 201
+      },
+      {
+        "km": 0.97056,
+        "sec": 286.67,
+        "watts": 255
+      }
+    ],
+    "expectedReps": [2, 4, 6, 8, 10, 12, 14],
+    "expectedTitle": "4 × 6:00, 3:00, 2 strides"
+  },
+  {
+    "date": "2026-09-28",
+    "labelId": "480670342117883911",
+    "km": 10.45,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 276.06,
+        "watts": 216
+      },
+      {
+        "km": 1,
+        "sec": 293.87,
+        "watts": 226
+      },
+      {
+        "km": 1,
+        "sec": 306.24,
+        "watts": 220
+      },
+      {
+        "km": 1,
+        "sec": 311.64,
+        "watts": 219
+      },
+      {
+        "km": 1,
+        "sec": 295.71,
+        "watts": 239
+      },
+      {
+        "km": 1,
+        "sec": 277.32,
+        "watts": 248
+      },
+      {
+        "km": 1,
+        "sec": 282.41,
+        "watts": 248
+      },
+      {
+        "km": 1,
+        "sec": 304.37,
+        "watts": 217
+      },
+      {
+        "km": 1,
+        "sec": 290.48,
+        "watts": 251
+      },
+      {
+        "km": 1,
+        "sec": 293.24,
+        "watts": 228
+      },
+      {
+        "km": 0.45339,
+        "sec": 123.19,
+        "watts": 263
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-09-27",
+    "labelId": "480645037774897354",
+    "km": 3,
+    "focus": "Recovery",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 288.75,
+        "watts": 240
+      },
+      {
+        "km": 1,
+        "sec": 295.95,
+        "watts": 240
+      },
+      {
+        "km": 1,
+        "sec": 285.15,
+        "watts": 246
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-09-27",
+    "labelId": "480644550302400914",
+    "km": 8.26,
+    "focus": "Anaerobic",
+    "anaerobicTE": 3.1,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 200.39,
+        "watts": 358
+      },
+      {
+        "km": 1,
+        "sec": 206.53,
+        "watts": 322
+      },
+      {
+        "km": 1,
+        "sec": 204.38,
+        "watts": 338
+      },
+      {
+        "km": 1,
+        "sec": 203.27,
+        "watts": 334
+      },
+      {
+        "km": 1,
+        "sec": 199.64,
+        "watts": 353
+      },
+      {
+        "km": 1,
+        "sec": 199.63,
+        "watts": 345
+      },
+      {
+        "km": 1,
+        "sec": 197.08,
+        "watts": 354
+      },
+      {
+        "km": 1,
+        "sec": 194.81,
+        "watts": 350
+      },
+      {
+        "km": 0.26244,
+        "sec": 41.74,
+        "watts": 413
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-09-27",
+    "labelId": "480643483808334028",
+    "km": 3.5,
+    "focus": "Recovery",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 314.49,
+        "watts": 224
+      },
+      {
+        "km": 1,
+        "sec": 284,
+        "watts": 240
+      },
+      {
+        "km": 1,
+        "sec": 310.75,
+        "watts": 233
+      },
+      {
+        "km": 0.49688,
+        "sec": 132.6,
+        "watts": 246
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-09-26",
+    "labelId": "480619853972013357",
+    "km": 5.77,
+    "focus": "Base",
+    "anaerobicTE": 1.5,
+    "laps": [
+      {
+        "km": 5.21465,
+        "sec": 1534.02,
+        "watts": 226
+      },
+      {
+        "km": 0.10794,
+        "sec": 16.28,
+        "watts": 238
+      },
+      {
+        "km": 0.02738,
+        "sec": 50.83,
+        "watts": 161
+      },
+      {
+        "km": 0.10546,
+        "sec": 15.85,
+        "watts": 375
+      },
+      {
+        "km": 0.03614,
+        "sec": 62.69,
+        "watts": 119
+      },
+      {
+        "km": 0.09746,
+        "sec": 13.93,
+        "watts": 358
+      },
+      {
+        "km": 0.04482,
+        "sec": 55.5,
+        "watts": 139
+      },
+      {
+        "km": 0.13873,
+        "sec": 24.06,
+        "watts": 399
+      }
+    ],
+    "expectedReps": [1, 3, 5, 7],
+    "expectedTitle": "4 strides"
+  },
+  {
+    "date": "2026-09-25",
+    "labelId": "480597136010936320",
+    "km": 11.03,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 296.32,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 269.87,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 264.68,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 274.01,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 272.9,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 274.45,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 275.01,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 269.14,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 269.73,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 271.15,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 270.87,
+        "watts": null
+      },
+      {
+        "km": 0.03,
+        "sec": 8.14,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-09-24",
+    "labelId": "480578003005374574",
+    "km": 10.27,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 284.54,
+        "watts": 224
+      },
+      {
+        "km": 1,
+        "sec": 279.86,
+        "watts": 246
+      },
+      {
+        "km": 1,
+        "sec": 282.77,
+        "watts": 240
+      },
+      {
+        "km": 1,
+        "sec": 288.11,
+        "watts": 252
+      },
+      {
+        "km": 1,
+        "sec": 294.63,
+        "watts": 216
+      },
+      {
+        "km": 1,
+        "sec": 308.57,
+        "watts": 218
+      },
+      {
+        "km": 1,
+        "sec": 313.9,
+        "watts": 222
+      },
+      {
+        "km": 1,
+        "sec": 288.89,
+        "watts": 233
+      },
+      {
+        "km": 1,
+        "sec": 284.48,
+        "watts": 267
+      },
+      {
+        "km": 1,
+        "sec": 255.87,
+        "watts": 261
+      },
+      {
+        "km": 0.26737,
+        "sec": 63.87,
+        "watts": 309
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-09-23",
+    "labelId": "480550978267939216",
+    "km": 10.33,
+    "focus": "Recovery",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 309.76,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 295.17,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 289.16,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 289.78,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 289.77,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 291.77,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 296.58,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 293.47,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 293.15,
+        "watts": null
+      },
+      {
+        "km": 1,
+        "sec": 293.5,
+        "watts": null
+      },
+      {
+        "km": 0.33,
+        "sec": 96.45,
+        "watts": null
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  },
+  {
+    "date": "2026-09-22",
+    "labelId": "480532765725458532",
+    "km": 17.22,
+    "focus": "Base",
+    "anaerobicTE": 2.1,
+    "laps": [
+      {
+        "km": 4.32207,
+        "sec": 1229.07,
+        "watts": 222
+      },
+      {
+        "km": 0,
+        "sec": 59.34,
+        "watts": 7
+      },
+      {
+        "km": 2.75037,
+        "sec": 603.49,
+        "watts": 310
+      },
+      {
+        "km": 0.07017,
+        "sec": 117.5,
+        "watts": 69
+      },
+      {
+        "km": 2.213,
+        "sec": 480.95,
+        "watts": 321
+      },
+      {
+        "km": 0.04747,
+        "sec": 119.95,
+        "watts": 56
+      },
+      {
+        "km": 1.72291,
+        "sec": 360.79,
+        "watts": 335
+      },
+      {
+        "km": 0.0253,
+        "sec": 89.64,
+        "watts": 54
+      },
+      {
+        "km": 1.17767,
+        "sec": 240.98,
+        "watts": 339
+      },
+      {
+        "km": 0.06911,
+        "sec": 60.17,
+        "watts": 113
+      },
+      {
+        "km": 0.64384,
+        "sec": 119.91,
+        "watts": 369
+      },
+      {
+        "km": 4.18259,
+        "sec": 1345.59,
+        "watts": 235
+      }
+    ],
+    "expectedReps": [2, 4, 6, 8, 10],
+    "expectedTitle": "10:00, 8:00, 6:00, 4:00, 2:00"
+  },
+  {
+    "date": "2026-09-21",
+    "labelId": "480508005775868010",
+    "km": 11.66,
+    "focus": "Base",
+    "anaerobicTE": 0,
+    "laps": [
+      {
+        "km": 1,
+        "sec": 293.91,
+        "watts": 226
+      },
+      {
+        "km": 1,
+        "sec": 273.61,
+        "watts": 243
+      },
+      {
+        "km": 1,
+        "sec": 295.45,
+        "watts": 233
+      },
+      {
+        "km": 1,
+        "sec": 301.88,
+        "watts": 240
+      },
+      {
+        "km": 1,
+        "sec": 298.2,
+        "watts": 224
+      },
+      {
+        "km": 1,
+        "sec": 299.19,
+        "watts": 241
+      },
+      {
+        "km": 1,
+        "sec": 293.3,
+        "watts": 217
+      },
+      {
+        "km": 1,
+        "sec": 288.86,
+        "watts": 236
+      },
+      {
+        "km": 1,
+        "sec": 290.36,
+        "watts": 253
+      },
+      {
+        "km": 1,
+        "sec": 291.6,
+        "watts": 247
+      },
+      {
+        "km": 1,
+        "sec": 305.18,
+        "watts": 225
+      },
+      {
+        "km": 0.66036,
+        "sec": 195.83,
+        "watts": 243
+      }
+    ],
+    "expectedReps": [],
+    "expectedTitle": null
+  }
+]
