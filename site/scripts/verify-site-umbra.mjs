@@ -109,7 +109,7 @@ try {
     await consoleCheck(`${device}-home`);
     await call('open', `${base}/training`);
     await wait('!!document.querySelector(".training-page main svg")');
-    check(`${device}: direct training entry`, await evaluate('return document.title==="Training Log"'));
+    check(`${device}: direct training entry`, await evaluate('return document.title==="Randy Ren"'));
   }
   await call('open', `${base}/preview`);
   await wait('!!document.querySelector("iframe.is-ready")');

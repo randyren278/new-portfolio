@@ -254,7 +254,7 @@ const contrastFailures = (page) =>
   await page.waitForTimeout(800);
   assert(new URL(page.url()).pathname === '/training', 'View training status lands on /training');
   assert(
-    (await page.title()) === 'Training Log',
+    (await page.title()) === 'Randy Ren',
     `training page title (got "${await page.title()}")`,
   );
   assert(

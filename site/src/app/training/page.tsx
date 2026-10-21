@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 // (see src/training/load.ts), so Coros and Strava see a few calls an hour.
 export const dynamic = 'force-dynamic';
 
-const title = 'Training Log';
+const title = 'Randy Ren';
 const description =
   'How Randy’s running is going: load, recovery, the latest session, live from Coros and Strava.';
 

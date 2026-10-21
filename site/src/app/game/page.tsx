@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
-  title: 'Puff Up · Randy Ren',
+  title: 'Randy Ren',
   description: 'An endless climb with Puff.',
   alternates: { canonical: '/game' },
 };

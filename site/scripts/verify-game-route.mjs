@@ -68,7 +68,7 @@ try {
     game();
     check(
       name + ': approved entry changes address to /game',
-      read('return document.title==="Puff Up · Randy Ren"&&window.puffUp.hero.finished'),
+      read('return document.title==="Randy Ren"&&window.puffUp.hero.finished'),
       read('return window.puffUp'),
     );
     historyMove('back', () => home('/'));
@@ -139,7 +139,7 @@ try {
   const response = await fetch(base + '/game');
   check(
     'direct route has HTTP200 and game metadata',
-    response.status === 200 && (await response.text()).includes('Puff Up · Randy Ren'),
+    response.status === 200 && (await response.text()).includes('Randy Ren'),
   );
 } catch (error) {
   try {

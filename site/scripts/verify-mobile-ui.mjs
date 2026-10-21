@@ -134,8 +134,10 @@ try {
         call('click', 'text=Return to intro');
         wait('!!document.querySelector("iframe.is-ready")');
       }
-      read(`document.querySelector('iframe').src='/puff-intro/index.html?scene=${scene}';return true`);
-      wait(`document.querySelector('iframe')?.contentWindow?.spaceScene?.mode==='${scene}'`);
+      const sceneSearch = `?scene=${scene}&audit=${label}-${scene}`;
+      read(`document.querySelector('iframe').src='/puff-intro/index.html${sceneSearch}';return true`);
+      wait(`document.querySelector('iframe')?.contentWindow?.location.search===${JSON.stringify(sceneSearch)}&&document.querySelector('iframe')?.contentDocument?.readyState==='complete'&&document.querySelector('iframe')?.contentWindow?.spaceScene?.mode==='${scene}'`);
+      read(`const d=document.querySelector('iframe').contentDocument;await d.fonts.ready;await new Promise(r=>d.defaultView.requestAnimationFrame(()=>d.defaultView.requestAnimationFrame(r)));return true`);
       const intro = read(`const d=document.querySelector('iframe').contentDocument;return [...d.querySelectorAll('#light-button','.explore-button','#scene-effect')].map(e=>({id:e.id||e.className,...e.getBoundingClientRect().toJSON()}))`);
       check(`${label}/${scene}: intro controls fit and meet 44px`, intro.every(r => r.left >= 0 && r.right <= w && r.top >= 0 && r.bottom <= h && r.width >= 44 && r.height >= 44), intro);
       call('click', '.explore-button');

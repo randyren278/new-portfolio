@@ -35,7 +35,7 @@ export default function PuffGame({
         history.pushState({ puffGame: true, puffReturnUrl: returnUrl }, '', '/game');
     };
     const entered = () => {
-      document.title = 'Puff Up · Randy Ren';
+      document.title = 'Randy Ren';
       onEntered();
     };
     const returned = () => {
