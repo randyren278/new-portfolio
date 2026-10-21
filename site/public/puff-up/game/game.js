@@ -466,6 +466,10 @@ function saveBest() {
     localStorage.setItem(bestKey, String(best));
   } catch {}
 }
+const touchLayout = matchMedia(
+  '(max-width: 720px), (pointer: coarse), (max-width: 1000px) and (max-height: 500px)',
+);
+touchLayout.addEventListener('change', syncUI);
 function syncUI() {
   const over = run.status === 'over';
   $('play-toggle').innerHTML = running
@@ -497,7 +501,13 @@ function syncUI() {
   $('overlay-copy').hidden = over;
   document.querySelector('.height-hud').hidden = over;
   $('overlay-title').textContent = started ? 'Paused.' : 'Puff Up.';
-  $('overlay-copy').textContent = started ? 'Space to resume.' : '← → to steer. Puff hops.';
+  $('overlay-copy').textContent = touchLayout.matches
+    ? started
+      ? 'Tap Resume to keep climbing.'
+      : 'Hold either side to steer. Puff hops.'
+    : started
+      ? 'Space to resume.'
+      : '← → to steer. Puff hops.';
   $('run-announcement').textContent = over
     ? `Climb ended at ${run.score} metres.${beaten ? ' New best.' : ''} Try again to retry.`
     : running

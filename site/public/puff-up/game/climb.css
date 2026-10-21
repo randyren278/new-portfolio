@@ -91,8 +91,8 @@ canvas {
 }
 .sound-toggle {
   position: absolute;
-  top: max(24px, env(safe-area-inset-top));
-  right: max(20px, env(safe-area-inset-right));
+  top: var(--game-header-top, max(20px, env(safe-area-inset-top)));
+  right: max(var(--game-header-inset, 20px), env(safe-area-inset-right));
   min-width: 44px;
   padding: 8px 12px;
   background: rgb(var(--surface-space-rgb) / 0.85);
@@ -109,7 +109,7 @@ canvas {
   font-size: 10px;
   color: var(--muted);
 }
-.star-meter {
+.height-hud > .star-meter {
   margin-left: 6px;
   padding-left: 9px;
   border-left: 1px solid #aaaaaa25;
@@ -274,7 +274,7 @@ kbd {
   white-space: nowrap;
   border: 0;
 }
-@media (max-width: 720px), (pointer: coarse) {
+@media (max-width: 720px), (pointer: coarse), (max-width: 1000px) and (max-height: 500px) {
   .steering,
   .keyboard-hint {
     display: none;
@@ -287,7 +287,9 @@ kbd {
     width: calc(100% - 32px);
   }
   .height-hud {
-    top: max(20px, env(safe-area-inset-top));
+    top: calc(var(--game-header-bottom, max(58px, calc(env(safe-area-inset-top) + 44px))) + 10px);
+    max-width: calc(100% - 32px);
+    white-space: nowrap;
   }
   .height-hud > span {
     font-size: 21px;
@@ -306,6 +308,68 @@ kbd {
   }
   .run-results strong {
     font-size: 82px;
+  }
+}
+
+/* Leave both control rails clear when the phone rotates. The card can scroll
+   on an unusually short viewport or with enlarged text. */
+@media (max-height: 500px) {
+  .arena:has(.pause-label:not([hidden])) .height-hud {
+    visibility: hidden;
+  }
+  .pause-label,
+  .pause-label.over {
+    top: calc((100% + var(--game-header-bottom, 68px) - 80px) / 2);
+    max-height: calc(100% - var(--game-header-bottom, 68px) - 100px);
+    overflow: auto;
+    padding: 16px 20px;
+  }
+  .pause-label p {
+    font-size: 30px;
+    margin: 6px 0;
+  }
+  .pause-label small {
+    margin-bottom: 12px;
+  }
+  .pause-label > .primary {
+    margin-top: 12px;
+  }
+  .run-results {
+    margin: 10px 0 16px;
+  }
+  .run-results strong {
+    font-size: 58px;
+  }
+}
+
+@media (max-height: 360px) {
+  .pause-label,
+  .pause-label.over {
+    padding: 12px 16px;
+  }
+  .pause-label p {
+    font-size: 26px;
+    margin: 4px 0;
+  }
+  .pause-label small {
+    margin-bottom: 0;
+  }
+  .pause-label > .primary {
+    min-height: 44px;
+    margin-top: 8px;
+  }
+  .pause-label.over > .primary {
+    margin-top: 0;
+  }
+  .run-results {
+    margin: 8px 0 12px;
+  }
+  .run-results > div {
+    flex-direction: row;
+    align-items: baseline;
+  }
+  .run-results strong {
+    font-size: 42px;
   }
 }
 

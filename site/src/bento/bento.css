@@ -1077,6 +1077,40 @@ body {
   margin-top: 4px;
 }
 
+@media (max-width: 1100px), (pointer: coarse) {
+  /* Keep phone and tablet contact rows compact, with separate targets and the same
+     minimum height for linked values and the plain-text location. Rows
+     touch with no gap, so the targets set the spacing: 46px, not 44, since
+     at fractional offsets hit-testing can sit nearly a pixel off the drawn
+     box and an exact 44px link loses part of its target. */
+  .contact-rows {
+    row-gap: 0;
+  }
+  .contact-val {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+  }
+  .contact-val a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 46px;
+    padding-block: 4px;
+    border-bottom: 0;
+    text-decoration: underline;
+    text-decoration-color: var(--muted);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    /* The base rule transitions border-color; this rule swaps the ruled
+       edge for a text-decoration, so that property no longer exists and
+       the eased property has to move with it. */
+    transition: text-decoration-color 120ms ease;
+  }
+  .contact-val a:hover {
+    text-decoration-color: var(--ink);
+  }
+}
+
 /* ----- Mobile: single-column stack ----- */
 
 @media (max-width: 720px) {
@@ -1166,37 +1200,6 @@ body {
      three projects sat below its internal fold with no affordance saying
      so — a third of the catalogue, invisible. The cell grows to its
      content instead and the page does the scrolling. */
-  /* Keep mobile contact rows compact, with separate targets and the same
-     minimum height for linked values and the plain-text location. Rows
-     touch with no gap, so the targets set the spacing: 46px, not 44, since
-     at fractional offsets hit-testing can sit nearly a pixel off the drawn
-     box and an exact 44px link loses part of its target. */
-  .contact-rows {
-    row-gap: 0;
-  }
-  .contact-val {
-    display: flex;
-    align-items: center;
-    min-height: 46px;
-  }
-  .contact-val a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 46px;
-    padding-block: 4px;
-    border-bottom: 0;
-    text-decoration: underline;
-    text-decoration-color: var(--muted);
-    text-decoration-thickness: 1px;
-    text-underline-offset: 4px;
-    /* The base rule transitions border-color; this rule swaps the ruled
-       edge for a text-decoration, so that property no longer exists and
-       the eased property has to move with it. */
-    transition: text-decoration-color 120ms ease;
-  }
-  .contact-val a:hover {
-    text-decoration-color: var(--ink);
-  }
   .cell-projects .projects-list {
     overflow-y: visible;
   }
@@ -1471,6 +1474,7 @@ body {
 }
 .projects-plate-nav button {
   min-height: 44px;
+  min-width: 44px;
 }
 
 @media (min-width: 1101px) and (max-height: 940px) {

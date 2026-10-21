@@ -159,7 +159,7 @@
 .puff-game .puff-game-error h2 {
   font-size: 32px;
 }
-@media (max-width: 720px) {
+@media (max-width: 720px), (pointer: coarse), (max-width: 1000px) and (max-height: 500px) {
   .puff-game #back {
     left: max(16px, env(safe-area-inset-left));
     top: max(14px, env(safe-area-inset-top));

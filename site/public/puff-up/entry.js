@@ -162,6 +162,20 @@ export function mountGame(
     skyTime = 0;
     sky?.stop();
   }
+  // The Back button belongs to the host page. Share its actual bounds so the
+  // iframe's toolbar also clears a notch, even when its own safe-area is zero.
+  function syncGameHeader() {
+    if (!frame?.contentDocument || $('back').hidden) return;
+    const back = $('back').getBoundingClientRect(),
+      viewport = root.getBoundingClientRect(),
+      style = frame.contentDocument.documentElement.style;
+    style.setProperty('--game-header-top', `${back.top - viewport.top}px`);
+    style.setProperty('--game-header-bottom', `${back.bottom - viewport.top}px`);
+    style.setProperty('--game-header-inset', `${back.left - viewport.left}px`);
+  }
+  const headerObserver = new ResizeObserver(syncGameHeader);
+  headerObserver.observe(root);
+  headerObserver.observe($('back'));
   function loadGame(token) {
     return new Promise((resolve, reject) => {
       frame = document.createElement('iframe');
@@ -183,6 +197,7 @@ export function mountGame(
         if (!api) return reject(Error('The game did not open'));
         frame.contentDocument.documentElement.dataset.modality = root.dataset.modality;
         frame.contentDocument.body.dataset.handoff = 'true';
+        syncGameHeader();
         const sheet = frame.contentDocument.createElement('style');
         sheet.textContent = 'body[data-handoff] .pause-label{visibility:hidden}';
         frame.contentDocument.head.append(sheet);
@@ -498,6 +513,7 @@ export function mountGame(
   $('back').addEventListener('click', returnToPortfolio, { signal });
   let resizeTimer;
   const resize = () => {
+    syncGameHeader();
     if (state === 'entering') returnToPortfolio();
     else if (state === 'game') {
       clearTimeout(resizeTimer);
@@ -566,6 +582,7 @@ export function mountGame(
     disposed = true;
     root.hidden = true;
     events.abort();
+    headerObserver.disconnect();
     cancelGameLoad?.();
     clearTimeout(gameLoadTimer);
     clearTimeout(releaseTimer);
