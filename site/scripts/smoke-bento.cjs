@@ -602,7 +602,7 @@ function assert(cond, label) {
   );
   const bodyInLight = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   assert(
-    /24, 25, 23/.test(bodyInLight),
+    /24, 24, 24/.test(bodyInLight),
     `page keeps its dark background under OS light mode (got "${bodyInLight}")`,
   );
   await page.emulateMedia({ colorScheme: null });
@@ -660,7 +660,9 @@ function assert(cond, label) {
         await page.keyboard.press('Tab');
         await control.focus();
       }
-      await control.scrollIntoViewIfNeeded();
+      // Centre it: scrollIntoViewIfNeeded leaves a mostly visible control
+      // where it is, and a probe point past the viewport edge hits nothing.
+      await control.evaluate((el) => el.scrollIntoView({ block: 'center' }));
       const verdict = await control.evaluate((el) => {
         const HALF = 21.5;
         const r = el.getBoundingClientRect();

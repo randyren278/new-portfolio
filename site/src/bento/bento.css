@@ -1167,19 +1167,22 @@ body {
      so — a third of the catalogue, invisible. The cell grows to its
      content instead and the page does the scrolling. */
   /* Keep mobile contact rows compact, with separate targets and the same
-     minimum height for linked values and the plain-text location. */
+     minimum height for linked values and the plain-text location. Rows
+     touch with no gap, so the targets set the spacing: 46px, not 44, since
+     at fractional offsets hit-testing can sit nearly a pixel off the drawn
+     box and an exact 44px link loses part of its target. */
   .contact-rows {
-    row-gap: 6px;
+    row-gap: 0;
   }
   .contact-val {
     display: flex;
     align-items: center;
-    min-height: 32px;
+    min-height: 46px;
   }
   .contact-val a {
     display: inline-flex;
     align-items: center;
-    min-height: 32px;
+    min-height: 46px;
     padding-block: 4px;
     border-bottom: 0;
     text-decoration: underline;
