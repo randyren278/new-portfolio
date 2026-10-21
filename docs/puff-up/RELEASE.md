@@ -73,8 +73,7 @@ storm, Kicker gauntlet, Spring garden (springs three ledges apart), Star field (
 every other ledge) and Surge (the line runs at the hardest pace on any ledge for 6 s,
 then holds for 4 s). The zone card and gate label name it. These zones climb in a
 wave: every run at the hardest pace (×1.1), the twist from 110 m, then wide stone with
-the line at half pace from 165 m until the next gate. The cloud sea (1200 m) and the
-jet stream (1400 m) drift behind the ledges; above them is open space. A climbing
+the line at half pace from 165 m until the next gate. A climbing
 streak (landings each higher than the last) shows beside the stars from ×3, and its
 tenth landing earns one star.
 

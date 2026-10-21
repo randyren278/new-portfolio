@@ -12,7 +12,6 @@ import {
   FALL_CAP_MS,
   STREAK_FOR_STAR,
 } from './climb.js';
-import { drawPlaces } from './places.js';
 import { ANIMATIONS, renderPuff, samplePose } from './puff-motion.js';
 import { sampleFlightMotion } from './flight-pose.js';
 import { sampleGameVisual } from './game-visual.js';
@@ -194,7 +193,6 @@ function draw() {
     shakeY + Math.cos(caughtAge * 0.11) * caught,
   );
   ctx.imageSmoothingEnabled = false;
-  drawPlaces(ctx, cameraY, t, reduced);
   ctx.font = '9px Plex,monospace';
   const first = Math.max(0, Math.ceil((575 - (cameraY + 620)) / 100)),
     last = Math.floor((575 - cameraY) / 100);
