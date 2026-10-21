@@ -13,8 +13,9 @@ replaying the portfolio intro. Normal entry keeps the portfolio mounted undernea
 Browser Back/Forward, including reversing an in-progress return, follows the latest
 navigation. The history entry is pushed in the trusted Play click for WebKit.
 
-Red crumble platforms return in their original position after 3 seconds in the first
-zone and 1 second longer per zone above, while still visible. The game never runs
+Red crumble platforms return in their original position after 3 seconds at any
+height, while still visible. (They used to take 1 second longer per zone, and from
+800 m the line always reached a Puff waiting below one.) The game never runs
 faster than real time, so these are real seconds of play; pause freezes the countdown,
 restart clears pending repairs, and the initial launch pad never regenerates.
 

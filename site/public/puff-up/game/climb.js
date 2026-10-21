@@ -199,10 +199,9 @@ export function lineSpeed(zone, pace, timeMs) {
     return timeMs % (SURGE_MS[0] + SURGE_MS[1]) < SURGE_MS[0] ? zone.scroll * PRESS * 10 : 0;
   return zone.scroll * pace * 10;
 }
-/** A crumbled ledge returns after 3 s in the first zone and 1 s longer per zone. */
-export function rebuildMs(y) {
-  return (3 + zoneForScore(scoreForPeak(y)).index) * 1000;
-}
+/** A crumbled ledge returns after 3 s at any height: higher up, the line would reach a Puff
+ * waiting below it any later. */
+export const REBUILD_MS = 3000;
 /** What a ledge does to Puff as he leaves it: springs boost him, kickers throw him sideways. */
 export function launch(player, ledge) {
   if (ledge.kind === 'spring') return { ...player, vy: -SPRING_SPEED };
@@ -826,7 +825,7 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     if (contact?.kind === 'crumble') {
       brokenPlatforms.push({
         platform: contact.spark ? { ...contact, spark: false } : { ...contact },
-        readyAt: player.timeMs + rebuildMs(contact.y),
+        readyAt: player.timeMs + REBUILD_MS,
       });
       addEffect('break', contact);
       platforms = platforms.filter((p) => p.id !== contact.id);

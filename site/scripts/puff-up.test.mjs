@@ -7,7 +7,6 @@ import {
   zoneForScore,
   ZONES,
   SEGMENTS,
-  rebuildMs,
   launch,
   CALM_MS,
   STARS_FOR_RESCUE,
@@ -650,12 +649,52 @@ test('scrolled-off red platforms and the initial launch pad never regenerate', (
   assert.equal(stepRun(createRun(17)).brokenPlatforms.length, 0);
 });
 
-test('crumbled ledges take one second longer to return in each higher zone', () => {
-  const at = (metres) => 575 - metres * 10;
-  assert.deepEqual(
-    [50, 250, 450, 650, 850, 1050, 1300].map((m) => rebuildMs(at(m))),
-    [3000, 4000, 5000, 6000, 7000, 8000, 9000],
-  );
+test('high up, Puff can wait on the stone below a crumble he broke until it returns', () => {
+  // Find a gate stone with a crumble next above it, past 3000 m.
+  let run, stone, red;
+  for (let seed = 0; !red; seed++) {
+    run = createRun(seed);
+    while (run.score < 3000)
+      run = stepRun({ ...run, player: { ...run.player, y: run.player.y - 100 } }, {}, 0);
+    const path = run.platforms
+      .filter((p) => /^\d+$/.test(p.id))
+      .sort((a, b) => Number(a.id) - Number(b.id));
+    const i = path.findIndex(
+      (p, i) =>
+        p.kind === 'solid' &&
+        p.pace === 0.4 &&
+        scoreForPeak(p.y) >= 3000 &&
+        path[i + 1]?.kind === 'crumble' &&
+        Number(path[i + 1].id) === Number(p.id) + 1,
+    );
+    if (i >= 0) [stone, red] = [path[i], path[i + 1]];
+  }
+  // Puff stands on the stone with the line its full lag below, hops onto the crumble, misses
+  // the next ledge and falls back, then bounces on the stone until the crumble returns.
+  run = {
+    ...run,
+    platforms: run.platforms.filter((p) => !p.lane),
+    stars: 0,
+    calmUntil: 0,
+    lastLanding: null,
+    player: { ...createState(), x: center(stone), y: stone.y, platformId: stone.id, timeMs: 0 },
+    cameraY: stone.y - 300,
+    peakY: stone.y,
+    hazardY: stone.y + HAZARD_LAG,
+    score: scoreForPeak(stone.y),
+  };
+  const landings = [];
+  let target = red;
+  while (run.status === 'playing' && run.player.timeMs < 15000 && landings.length < 12) {
+    run = stepRun(run, { axis: steer(run.player, center(target)) });
+    if (!run.player.events.includes('land')) continue;
+    landings.push(run.lastLanding.id);
+    const back = run.platforms.some((p) => p.id === red.id);
+    target = landings.length === 1 || (run.lastLanding.id === stone.id && !back) ? stone : red;
+    if (landings.length > 2 && run.lastLanding.id === red.id) break;
+  }
+  assert.equal(run.status, 'playing', `caught after ${landings.join(' → ')}`);
+  assert.deepEqual([landings[0], landings[1], landings.at(-1)], [red.id, stone.id, red.id]);
 });
 test('the rising line catches a Puff who stops climbing, at the first zone speed', () => {
   let run = createRun();

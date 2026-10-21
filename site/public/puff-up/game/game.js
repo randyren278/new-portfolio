@@ -4,7 +4,7 @@ import {
   climbFrom,
   stepRun,
   platformAtTime,
-  rebuildMs,
+  REBUILD_MS,
   fallenY,
   lineSpeed,
   zoneForScore,
@@ -204,7 +204,7 @@ function draw() {
   }
   for (const repair of run.brokenPlatforms)
     if (repair.platform.id !== 'floor')
-      drawRebuild(ctx, repair, t, rebuildMs(repair.platform.y), cameraY);
+      drawRebuild(ctx, repair, t, REBUILD_MS, cameraY);
   for (const ledge of run.platforms) {
     const p = platformAtTime(ledge, t),
       y = Math.round(p.y - cameraY);
