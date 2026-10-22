@@ -109,9 +109,16 @@ canvas {
   font-size: 10px;
   color: var(--muted);
 }
+/* The unit sits on the height's baseline; the stars and streak centre in the pill. */
+.height-hud > .star-meter,
+.height-hud > .streak-meter {
+  align-self: center;
+}
 .height-hud > .star-meter {
   margin-left: 6px;
   padding-left: 9px;
+  /* The star glyphs sit low in their em box; this lifts their ink onto the pill's centre. */
+  padding-bottom: 2px;
   border-left: 1px solid #aaaaaa25;
   color: #e9be7690;
   font-size: 12px;
