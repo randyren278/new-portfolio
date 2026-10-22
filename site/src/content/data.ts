@@ -109,7 +109,7 @@ github    randyren278
 linkedin  /in/randyren278
 location  VANCOUVER, BC, PT/GMT-8`;
 
-const RESUME_VERSION = '389a5fff0693';
+const RESUME_VERSION = 'cb845b3c1ef3';
 
 export const RESUME = {
   name: 'Randy Ren',
