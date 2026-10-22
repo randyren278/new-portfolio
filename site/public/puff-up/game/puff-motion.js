@@ -144,6 +144,15 @@ export const ANIMATIONS = Object.freeze([
     false,
     'Anticipation, an upward burst and a small warm rocket trail.',
   ),
+  define(
+    'rocket',
+    'Rocket',
+    'Reward',
+    3900,
+    60,
+    false,
+    'A rattling crouch held down as the engine lights, lift-off with both arms up, the climb, then the engine cuts out, Puff coasts up and drops feet first. The game draws the flame.',
+  ),
 ]);
 const byId = new Map(ANIMATIONS.map((a) => [a.id, a]));
 const TAU = Math.PI * 2;
@@ -551,6 +560,60 @@ export function samplePose(id = 'idle', timeMs = 0, { direction = 'right' } = {}
         [1, 0.55],
       ]);
       break;
+    case 'rocket': {
+      // The beats of climb.js's rocket: held down and lit to 0.19, let go, the engine cuts out
+      // at 0.70, the top of the coast at 0.92, then the drop onto the ledge.
+      const rattle = u < 0.19 ? Math.sin(u * 140) * ease(u / 0.19) * 0.6 : 0;
+      p.offsetX = rattle * 0.7;
+      p.offsetY = T([
+        [0, 0],
+        [0.19, -1],
+        [0.4, -6],
+        [0.7, -18],
+        [0.92, -20],
+        [1, -14],
+      ]);
+      p.bodyScaleY = T([
+        [0, 1],
+        [0.15, 0.88],
+        [0.19, 0.88],
+        [0.24, 1.1],
+        [0.36, 1.04],
+        [0.7, 1.03],
+        [0.76, 0.98],
+        [0.92, 1],
+        [1, 1],
+      ]);
+      p.bodyScaleX = 1 + (1 - p.bodyScaleY) * 0.5;
+      p.rotation = rattle * 2;
+      p.leftArm = p.rightArm = T([
+        [0, 0],
+        [0.15, 0.15],
+        [0.22, 1],
+        [0.7, 0.9],
+        [0.8, 0.45],
+        [1, 0.25],
+      ]);
+      p.leftFootRotation = T([
+        [0, 0],
+        [0.17, -8],
+        [0.22, 6],
+        [0.7, 6],
+        [0.92, 0],
+      ]);
+      p.rightFootRotation = -p.leftFootRotation;
+      // Up into the climb, then down at the ledge it drops onto.
+      p.lookY = T([
+        [0, 0],
+        [0.15, -1],
+        [0.85, -1.5],
+        [0.92, 0.5],
+        [1, 0.5],
+      ]);
+      p.eyeHeight = u > 0.06 && u < 0.21 ? 1 : 2;
+      p.starAmount = pulse(u, 0.19, 0.45);
+      break;
+    }
   }
   return p;
 }

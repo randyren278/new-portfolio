@@ -12,6 +12,7 @@ import {
   lineSpeed,
   HAZARD_LAG,
   launch,
+  ROCKET_STREAK,
 } from '../public/puff-up/game/climb.js';
 import { FIXED_DT, DEFAULT_TUNING, step } from '../public/puff-up/game/physics.js';
 
@@ -136,6 +137,9 @@ export function playBot(seed, metres = 1200, from = 0) {
   while (run.status === 'playing' && run.score < metres) {
     const plan = choose(run);
     if (!plan) break;
+    // The bot climbs every metre itself, so a clear covers every zone: each streak lapses one
+    // landing short of a rocket.
+    if (run.streak === ROCKET_STREAK - 1) run = { ...run, streak: 0 };
     for (let t = 0; t < 240 && run.status === 'playing'; t++) {
       run = stepRun(run, { axis: t < plan.k ? plan.a : plan.b });
       if (run.player.landed) break;

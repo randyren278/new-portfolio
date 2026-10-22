@@ -230,6 +230,42 @@ function fallDuration(y, vy, outY) {
   return clamp(ms, FALL_MIN_MS, FALL_CAP_MS);
 }
 const smooth = (u) => u * u * (3 - 2 * u);
+// The UFO and the rocket never set Puff on a ledge that breaks or kicks: a crumble or kicker one
+// chooses turns to stone, and stays stone.
+const harden = (platforms, id) =>
+  platforms.map((p) =>
+    p.id === id && (p.kind === 'crumble' || p.kind === 'kicker') ? { ...p, kind: 'solid' } : p,
+  );
+// Both then set him down at rest in the middle of the ledge, as if he had just landed there.
+function setDown(player, ledge, to, now, speed = 0) {
+  return {
+    lastLanding: {
+      id: ledge.id,
+      kind: ledge.kind,
+      x: to.x,
+      y: to.y,
+      speed,
+      at: now,
+      pace: ledge.pace ?? 1,
+    },
+    player: launch(
+      {
+        ...player,
+        x: to.x,
+        y: to.y,
+        vx: 0,
+        vy: -DEFAULT_TUNING.jumpSpeed,
+        grounded: false,
+        platformId: null,
+        coyoteMsLeft: 0,
+        landed: true,
+        events: ['land', 'jump'],
+        timeMs: now,
+      },
+      ledge,
+    ),
+  };
+}
 // Where a rescued Puff is set down: a main-path ledge on screen, the highest no higher than his
 // best ledge (the rescue then drops the line below it), so a rescue never gains him height.
 // Only if none is on screen does he go to the lowest ledge above.
@@ -290,37 +326,142 @@ function stepRescue(run, dt) {
   const ledge = platforms.find((p) => p.id === to.id) ?? { id: to.id, kind: 'solid', pace: 1 };
   return {
     ...run,
+    ...setDown(run.player, ledge, to, now),
     status: 'playing',
     rescue: null,
     platforms,
     effects,
     streak: 0,
     calmUntil: now + CALM_MS,
-    lastLanding: {
-      id: ledge.id,
-      kind: ledge.kind,
-      x: to.x,
-      y: to.y,
-      speed: 0,
-      at: now,
-      pace: ledge.pace ?? 1,
-    },
-    player: launch(
-      {
-        ...run.player,
-        x: to.x,
-        y: to.y,
-        vx: 0,
-        vy: -DEFAULT_TUNING.jumpSpeed,
-        grounded: false,
-        platformId: null,
-        coyoteMsLeft: 0,
-        landed: true,
-        events: ['land', 'jump'],
-        timeMs: now,
-      },
-      ledge,
+  };
+}
+/** Each ROCKET_STREAK landings of a streak light Puff's rocket, and each carries him
+ * ROCKET_METRES further than the last: about 200 m at ×50, 400 m at ×100. It sets him down
+ * there as the UFO would. */
+export const ROCKET_STREAK = 50,
+  ROCKET_METRES = 200;
+/** The rocket's beats follow a real launch: it lights on the ledge and builds thrust held down,
+ * is let go, lifts off slowly and gathers pace while the engine burns for ROCKET_CUTOFF of the
+ * climb, coasts up to ROCKET_DROP px over the ledge it chose, and Puff falls onto it. The climb
+ * takes ROCKET_CLIMB_MS at ×50; a higher one takes longer by the square root of its height, as
+ * it would under the same thrust. */
+export const ROCKET_IGNITE_MS = 750,
+  ROCKET_CLIMB_MS = 2800,
+  ROCKET_CUTOFF = 0.7,
+  ROCKET_DROP = 90;
+const DROP_MS = Math.sqrt((2 * ROCKET_DROP) / DEFAULT_TUNING.gravity) * 1000;
+/** How long `rocket` flies, from lighting to touchdown. */
+export const rocketMs = (rocket) => ROCKET_IGNITE_MS + rocket.climb + DROP_MS;
+// Puff strains a little off the ledge against the hold-down.
+const HOVER = 4;
+// The share of the climb done `u` through it. He is let go at KICK of the top speed, gathers
+// pace evenly to it while the engine burns, then slows evenly to nothing at the top. PEAK scales
+// the speed so the whole climb comes to 1.
+const KICK = 0.3,
+  PEAK = 2 / (1 + ROCKET_CUTOFF * KICK);
+export function rocketClimb(u) {
+  const c = ROCKET_CUTOFF;
+  if (u < c) return PEAK * (KICK * u + ((1 - KICK) * u * u) / (2 * c));
+  const coast = u - c;
+  return PEAK * ((c * (1 + KICK)) / 2 + coast - (coast * coast) / (2 * (1 - c)));
+}
+/** Where the rocket has Puff's feet `age` ms after it lit. */
+export function rocketAt({ from, to, climb }, age) {
+  const lift = from.y - HOVER,
+    apex = to.y - ROCKET_DROP;
+  if (age < ROCKET_IGNITE_MS)
+    return { x: from.x, y: from.y - HOVER * smooth(age / ROCKET_IGNITE_MS) };
+  const u = (age - ROCKET_IGNITE_MS) / climb;
+  if (u >= 1) return { x: to.x, y: Math.min(to.y, fallenY(apex, 0, (u - 1) * climb)) };
+  // He drifts across only as he climbs, never sideways off the ledge.
+  const climbed = rocketClimb(u);
+  return { x: from.x + (to.x - from.x) * smooth(climbed), y: lift + (apex - lift) * climbed };
+}
+// The rocket lights on the landing that fills the streak. It lays the course out to past its
+// goal at once and chooses the main-path ledge nearest it, turned to stone if it would break or
+// kick. The line holds until a while after touchdown.
+function ignite(run) {
+  const { player } = run,
+    stages = run.streak / ROCKET_STREAK,
+    goal = player.y - ROCKET_METRES * 10 * stages,
+    ahead = extend([...run.platforms], goal - 300, run.rng, run.nextId, run.plan, run.seed),
+    ledge = ahead.platforms
+      .filter((p) => /^\d+$/.test(p.id) && p.witness?.length)
+      .reduce((a, b) => (Math.abs(b.y - goal) < Math.abs(a.y - goal) ? b : a)),
+    at = player.timeMs,
+    climb = ROCKET_CLIMB_MS * Math.sqrt(stages),
+    landing = platformAtTime(ledge, at + rocketMs({ climb }));
+  return {
+    ...run,
+    ...ahead,
+    platforms: harden(
+      ahead.platforms.map((p) => platformAtTime(p, at)),
+      ledge.id,
     ),
+    status: 'rocket',
+    calmUntil: at + rocketMs({ climb }) + CALM_MS,
+    rocket: {
+      at,
+      climb,
+      from: { x: player.x, y: player.y },
+      to: { id: ledge.id, x: landing.x + ledge.width / 2, y: ledge.y },
+    },
+    player: { ...player, vx: 0, vy: 0, grounded: false, platformId: null, events: ['land'] },
+  };
+}
+function stepRocket(run, dt) {
+  const delta = Number.isFinite(dt) ? clamp(dt, 0, 1 / 30) : 0,
+    now = run.player.timeMs + delta * 1000,
+    { at, to } = run.rocket,
+    effects = (run.effects ?? []).filter((e) => now - e.at < 650);
+  let platforms = run.platforms.map((p) => platformAtTime(p, now));
+  if (now - at >= rocketMs(run.rocket)) {
+    // Touchdown: a landing higher than the last, so the streak runs on. Past a zone's gate, the
+    // zone of the ledge it lands on is named as the gate would have. (The flight topped out above
+    // the ledge, perhaps over the next zone's line, so the score can't tell.)
+    const ledge = platforms.find((p) => p.id === to.id) ?? { id: to.id, kind: 'solid', pace: 1 },
+      zone = zoneForScore(scoreForPeak(to.y), run.seed),
+      speed = Math.sqrt(2 * DEFAULT_TUNING.gravity * ROCKET_DROP);
+    return {
+      ...run,
+      ...setDown(run.player, ledge, to, now, speed),
+      status: 'playing',
+      rocket: null,
+      platforms,
+      effects: [...effects, { type: 'touchdown', x: to.x, y: to.y, width: ledge.width, at: now }],
+      landings: run.landings + 1,
+      streak: run.streak + 1,
+      banner:
+        zone.index > (run.banner?.zone ?? 0)
+          ? { zone: zone.index, modifier: zone.modifier ?? null, at: now }
+          : run.banner,
+    };
+  }
+  const { x, y } = rocketAt(run.rocket, now - at),
+    peakY = Math.min(run.peakY, y),
+    cameraY = Math.min(run.cameraY, y - 300);
+  platforms = platforms.filter((p) => p.y <= cameraY + WORLD.height);
+  const generated = extend(platforms, cameraY, run.rng, run.nextId, run.plan, run.seed);
+  return {
+    ...run,
+    ...generated,
+    platforms: generated.platforms.map((p) => platformAtTime(p, now)),
+    effects,
+    cameraY,
+    peakY,
+    score: scoreForPeak(peakY),
+    hazardY: Math.min(run.hazardY, peakY + HAZARD_LAG),
+    player: {
+      ...run.player,
+      x,
+      y,
+      vx: 0,
+      vy: delta ? (y - run.player.y) / delta : run.player.vy,
+      grounded: false,
+      landed: false,
+      events: [],
+      timeMs: now,
+    },
   };
 }
 /** While Puff outclimbs the rising line it trails this far below the peak. */
@@ -774,6 +915,7 @@ export function climbFrom(seed, metres) {
 export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height + 80) {
   if (run.status === 'over') return run;
   if (run.status === 'rescue') return stepRescue(run, dt);
+  if (run.status === 'rocket') return stepRocket(run, dt);
   const delta = Number.isFinite(dt) ? clamp(dt, 0, 1 / 30) : 0;
   const now = run.player.timeMs + delta * 1000;
   let platforms = run.platforms.map((p) => platformAtTime(p, now));
@@ -872,7 +1014,10 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     brokenPlatforms: brokenPlatforms.filter((repair) => repair.platform.y >= cameraY),
     status: 'playing',
   };
-  if (!(player.y > hazardY || player.y - cameraY > fallLimit)) return next;
+  if (!(player.y > hazardY || player.y - cameraY > fallLimit))
+    return player.landed && streak > run.streak && streak % ROCKET_STREAK === 0
+      ? ignite(next)
+      : next;
   // A fall with three stars calls the UFO instead of ending the climb.
   const ledge = stars >= STARS_FOR_RESCUE && rescueLedge(next.platforms, next);
   if (!ledge) return { ...next, status: 'over' };
@@ -889,11 +1034,7 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     // The UFO never sets him on a ledge that breaks or kicks: a crumble or kicker it picks turns
     // to stone. Below his best ledge many rescues find only those, and a stone ledge higher would
     // gain him height.
-    platforms: next.platforms.map((p) =>
-      p.id === ledge.id && (p.kind === 'crumble' || p.kind === 'kicker')
-        ? { ...p, kind: 'solid' }
-        : p,
-    ),
+    platforms: harden(next.platforms, ledge.id),
     rescue: {
       from,
       to: { id: ledge.id, x: landing.x + ledge.width / 2, y: ledge.y },

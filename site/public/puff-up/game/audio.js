@@ -3,6 +3,7 @@
 // can still hold it suspended when the portfolio starts the game for the player, so any later
 // tap or key resumes it. The mute choice persists like the best height and silences everything.
 import { createMusic } from './music.js';
+import { ROCKET_IGNITE_MS, ROCKET_CLIMB_MS, ROCKET_CUTOFF, ROCKET_STREAK } from './climb.js';
 const MUTE_KEY = 'puff-up:muted:v1';
 const LEVEL = 0.42;
 // The music sits just under the effects.
@@ -19,6 +20,11 @@ export function cuesFor(previous, run) {
     const arrives = run.rescue.at + run.rescue.fallMs;
     return previous.player.timeMs < arrives && run.player.timeMs >= arrives ? ['ufo'] : [];
   }
+  // The rocket lights on a landing (below), blasts off once, and lands with a touchdown.
+  if (run.status === 'rocket' && previous.status === 'rocket') {
+    const blast = run.rocket.at + ROCKET_IGNITE_MS;
+    return previous.player.timeMs < blast && run.player.timeMs >= blast ? ['blast'] : [];
+  }
   const fresh = (type) => run.effects.some((e) => e.at === run.player.timeMs && e.type === type);
   if (run.player.landed) cues.push('hop');
   if (fresh('break')) cues.push('crack');
@@ -27,6 +33,8 @@ export function cuesFor(previous, run) {
   if (fresh('spark')) cues.push('spark');
   if (fresh('streak')) cues.push('streak');
   if (run.banner && run.banner !== previous.banner) cues.push('chime');
+  if (run.status === 'rocket') cues.push('ignite');
+  if (fresh('touchdown')) cues.push('touchdown');
   return cues;
 }
 
@@ -100,6 +108,28 @@ export function createSound() {
     src.start(t);
     src.stop(t + decay + 0.02);
   }
+  // Looped noise that swells over `attack`, holds, and dies over `decay` while its filter sweeps
+  // from `from` to `to` Hz: the rocket's rumble and roar.
+  function roar({ from, to, gain, attack = 0.02, hold = 0, decay, q = 0.9, type = 'bandpass' }) {
+    const t = ctx.currentTime,
+      end = t + attack + hold + decay,
+      src = ctx.createBufferSource(),
+      filter = ctx.createBiquadFilter(),
+      env = ctx.createGain();
+    src.buffer = noiseBuffer;
+    src.loop = true;
+    filter.type = type;
+    filter.Q.value = q;
+    filter.frequency.setValueAtTime(from, t);
+    filter.frequency.exponentialRampToValueAtTime(to, end);
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.exponentialRampToValueAtTime(gain, t + attack);
+    env.gain.setValueAtTime(gain, t + attack + hold);
+    env.gain.exponentialRampToValueAtTime(0.0001, end);
+    src.connect(filter).connect(env).connect(master);
+    src.start(t);
+    src.stop(end + 0.02);
+  }
   const play = {
     // A faint soft note from the chord the music is on, climbing it with the streak.
     hop: (streak) => {
@@ -157,6 +187,29 @@ export function createSound() {
           node.stop(t + 1.45);
         }
       }
+    },
+    // The rocket: a low rumble building while it is held down, a thump as it is let go and a roar
+    // that climbs with him until the engine cuts out, a whistle rising over it, then a thud on
+    // touchdown and the chord's notes run up high.
+    ignite: () =>
+      roar({ from: 90, to: 360, gain: 0.16, attack: 0.7, decay: 0.12, q: 0.7, type: 'lowpass' }),
+    blast: (streak) => {
+      // As long as the engine burns: longer for a higher rocket (see climb.js).
+      const burn =
+        (ROCKET_CUTOFF * ROCKET_CLIMB_MS * Math.sqrt(Math.max(1, streak / ROCKET_STREAK))) / 1000;
+      tone(70, { gain: 0.22, decay: 0.8, slide: 0.5 });
+      roar({ from: 300, to: 2400, gain: 0.18, attack: 0.2, hold: burn - 0.5, decay: 0.3 });
+      tone(330, { type: 'triangle', gain: 0.03, decay: burn, slide: 4 });
+    },
+    touchdown: () => {
+      tone(98, { gain: 0.22, decay: 0.4, slide: 0.5 });
+      burst({ frequency: 380, type: 'lowpass', gain: 0.18, decay: 0.3 });
+      music
+        .chordTones()
+        .slice(0, 3)
+        .forEach((note, i) =>
+          tone(hz(note + 24), { gain: 0.05, decay: 0.35, delay: 0.08 + i * 0.07 }),
+        );
     },
     ready: () =>
       [784, 988, 1175].forEach((f, i) => tone(f, { gain: 0.07, decay: 0.5, delay: i * 0.07 })),

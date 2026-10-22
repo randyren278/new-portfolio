@@ -1,5 +1,14 @@
 import { WORLD } from './physics.js';
-import { MODIFIERS, RESCUE_MS, ZONES, ZONE_METRES } from './climb.js';
+import {
+  MODIFIERS,
+  RESCUE_MS,
+  ZONES,
+  ZONE_METRES,
+  ROCKET_IGNITE_MS,
+  ROCKET_CUTOFF,
+  ROCKET_METRES,
+  rocketClimb,
+} from './climb.js';
 
 // Feedback drawn in world coordinates from run state and the frame's blended time `t` and
 // camera, so it moves as smoothly as the scene and pauses with the game.
@@ -95,6 +104,9 @@ export function drawCallout(ctx, kicker, title, age, durationMs = 2400, y = CALL
 }
 /** Where a second card sits while a zone card shows. */
 export const CALLOUT_LOW_Y = CALLOUT_Y + 80;
+/** The rocket's card sits above Puff instead: he lights it where the card would sit, and the
+ * plume fills everything below him. */
+export const CALLOUT_HIGH_Y = 150;
 
 const BANNER_MS = 2400;
 /** Whether the zone card is up at time `t`. */
@@ -149,12 +161,24 @@ export function drawGauge(ctx, metres, y, surge = null) {
   ctx.textAlign = 'left';
 }
 
-/** Short decaying camera shake from big moments only; none with reduced motion. */
-const JOLTS = { spring: 3, kick: 2, break: 1.2 };
-export function shake(effects, t, reduced) {
+/** Short decaying camera shake from big moments only; none with reduced motion. The rocket
+ * sways the view gently instead: building as it ignites, most as it is let go, a little while it
+ * burns. */
+const JOLTS = { spring: 3, kick: 2, break: 1.2, touchdown: 5 };
+export function shake(effects, t, reduced, rocket = null) {
   if (reduced) return [0, 0];
   let x = 0,
     y = 0;
+  if (rocket) {
+    const age = t - rocket.at,
+      release = age - ROCKET_IGNITE_MS,
+      strength =
+        release < 0
+          ? 1.5 * ease(age / ROCKET_IGNITE_MS)
+          : 1.5 * Math.max(0, 1 - release / 700) ** 2 + 0.5 * rocketThrust(rocket, age);
+    x += Math.sin(age / 45) * strength;
+    y += Math.cos(age / 37) * strength;
+  }
   for (const e of effects) {
     const age = t - e.at,
       strength = JOLTS[e.type];
@@ -328,4 +352,289 @@ export function drawUfo(ctx, ufo, cameraY, t) {
       ctx.fillRect(x - 5 + c * 2, y - 40 + r * 2, 2, 2);
     }),
   );
+}
+
+// The rocket. Everything is drawn on Puff's 2 px grid from the rocket's timeline, so it pauses
+// and blends with the rest of the scene.
+const grid = (n) => Math.round(n / 2) * 2;
+// A fixed scatter in [0, 1) for the `i`th spark, cloud or line.
+const scatter = (i) => {
+  const s = Math.sin(i * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
+};
+/** How hard the engine burns `age` ms after it lit: easing up to full while held down, then
+ * easing out quickly at ROCKET_CUTOFF of the climb while Puff coasts on. */
+export function rocketThrust(rocket, age) {
+  if (age < ROCKET_IGNITE_MS) return 0.3 + 0.7 * ease(age / ROCKET_IGNITE_MS);
+  const u = (age - ROCKET_IGNITE_MS) / rocket.climb;
+  return ease(Math.max(0, Math.min(1, (ROCKET_CUTOFF + 0.06 - u) / 0.06)));
+}
+// The rocket's flame is painted at Puff's pixel size on its own canvas, a row at a time, then
+// drawn at 2× without smoothing like his sprite: whole pixels, and no seams between rows.
+const FLAME = { width: 48, height: 260 };
+let flameCanvas = null;
+// Colours down the flame, root to tip; each row blends the two stops either side of it.
+const OUTER = [
+    [0, [247, 239, 217]],
+    [0.2, [233, 190, 118]],
+    [0.5, [217, 151, 89]],
+    [0.8, [217, 145, 119]],
+    [1, [217, 145, 119]],
+  ],
+  INNER = [
+    [0, [247, 239, 217]],
+    [0.25, [247, 239, 217]],
+    [1, [233, 190, 118]],
+  ],
+  // The igniter's green, which the flame fades from as the engine lights.
+  LIGHTING = [
+    [0, [238, 229, 210]],
+    [1, [184, 197, 166]],
+  ];
+// The colour `s` of the way down `stops`, tinted `green` of the way to the igniter's.
+function blend(stops, s, green = 0) {
+  const at = (list) => {
+      const i = Math.max(
+          1,
+          list.findIndex(([p]) => p >= s),
+        ),
+        [a, from] = list[i - 1],
+        [b, to] = list[i],
+        u = b > a ? Math.max(0, Math.min(1, (s - a) / (b - a))) : 1;
+      return from.map((c, k) => c + (to[k] - c) * u);
+    },
+    tint = at(LIGHTING);
+  return at(stops)
+    .map((c, k) => Math.round(c + (tint[k] - c) * green))
+    .join(',');
+}
+/** One flame `length` world px long hanging from (x, top), no lower than `end`: a teardrop as
+ * wide as Puff's body where it leaves his helmet, swelling, then tapering to a tip that fades
+ * into the smoke, with a hotter core inside it, its edges rippling slowly, and licks of flame
+ * breaking off below. */
+function drawFlame(ctx, x, top, end, length, t, green) {
+  if (!flameCanvas) {
+    flameCanvas = document.createElement('canvas');
+    flameCanvas.width = FLAME.width;
+    flameCanvas.height = FLAME.height;
+  }
+  const g = flameCanvas.getContext('2d'),
+    count = Math.min(FLAME.height, Math.round(length / 2)),
+    shown = Math.max(0, Math.min(FLAME.height, Math.floor((end - top) / 2))),
+    mid = FLAME.width / 2;
+  if (!shown) return;
+  g.clearRect(0, 0, FLAME.width, FLAME.height);
+  for (let r = 0; r < Math.min(count, shown); r++) {
+    const s = r / count,
+      ripple = 1 + 0.06 * Math.sin(s * 9 - t / 90) + 0.03 * Math.sin(s * 21 + t / 70),
+      half = Math.round((12 + 6 * Math.min(1, s / 0.22)) * (1 - s) ** 0.9 * ripple),
+      fade = s > 0.7 ? (1 - s) / 0.3 : 1;
+    if (half < 1) continue;
+    g.fillStyle = `rgba(${blend(OUTER, s, green)},${fade})`;
+    g.fillRect(mid - half, r, half * 2, 1);
+    const inner = Math.round(half * 0.55 * Math.sqrt(Math.max(0, 1 - s / 0.45)));
+    if (inner >= 1) {
+      g.fillStyle = `rgb(${blend(INNER, s / 0.45, green)})`;
+      g.fillRect(mid - inner, r, inner * 2, 1);
+    }
+  }
+  for (let i = 0; i < 6; i++) {
+    const a = ((t + scatter(i + 60) * 700) % 700) / 700,
+      r = Math.round(count * (0.75 + 0.2 * scatter(i + 61)) + a * 30);
+    if (r >= shown) continue;
+    g.fillStyle = `rgba(217,145,119,${(1 - a) * 0.8})`;
+    g.fillRect(Math.round(mid + (scatter(i + 62) - 0.5) * 14), r, a < 0.5 ? 2 : 1, a < 0.5 ? 2 : 1);
+  }
+  ctx.drawImage(
+    flameCanvas,
+    0,
+    0,
+    FLAME.width,
+    shown,
+    x - FLAME.width,
+    top,
+    FLAME.width * 2,
+    shown * 2,
+  );
+}
+// A round puff of smoke in 2 px rows.
+function cloud(ctx, x, y, r) {
+  const cx = grid(x),
+    cy = grid(y),
+    shape = new Path2D();
+  for (let dy = -grid(r); dy < r; dy += 2) {
+    const half = grid(Math.sqrt(Math.max(0, r * r - (dy + 1) ** 2)));
+    if (half) shape.rect(cx - half, cy + dy, half * 2, 2);
+  }
+  ctx.fill(shape);
+}
+// 2 px checkerboards of a colour, one each way round; swapping them makes the flame shimmer.
+const dithers = new Map();
+function dither(ctx, color, flip) {
+  const key = color + flip;
+  if (!dithers.has(key)) {
+    const tile = document.createElement('canvas');
+    tile.width = tile.height = 4;
+    const g = tile.getContext('2d');
+    g.fillStyle = color;
+    g.fillRect(flip * 2, 0, 2, 2);
+    g.fillRect(2 - flip * 2, 2, 2, 2);
+    dithers.set(key, ctx.createPattern(tile, 'repeat'));
+  }
+  return dithers.get(key);
+}
+/** Speed lines while the rocket climbs fast, streaming down past the ledges. */
+export function drawStreaks(ctx, rocket, vy, cameraY, view, reduced) {
+  if (!rocket || reduced) return;
+  const k = Math.max(0, Math.min(1, (-vy - 300) / 1000));
+  if (!k) return;
+  const span = view.bottom - view.top + 240;
+  for (let i = 0; i < 18; i++) {
+    const length = grid((50 + scatter(i + 20) * 110) * k),
+      drift = scatter(i + 40) * span - cameraY * (1.3 + scatter(i + 60)),
+      y = view.top - 120 + (((drift % span) + span) % span);
+    ctx.fillStyle =
+      i % 4 ? `rgba(238,231,215,${0.06 + 0.12 * k})` : `rgba(233,190,118,${0.1 + 0.18 * k})`;
+    ctx.fillRect(grid(12 + scatter(i) * (WORLD.width - 24)), grid(y), 2, length);
+  }
+}
+// How green the engine's light still is `age` ms after it lit, fading out as it comes up.
+const greenAt = (age) => Math.max(0, 1 - age / 300);
+/** The launch around Puff, after a Falcon 9's: the engine's light, green at first as its
+ * igniter burns; the exhaust splashing along the ledge and rolling out as a bank of smoke as he
+ * lifts off; the smoke trail it leaves and gold motes falling from it. Drawn behind Puff; his
+ * flame is drawn over him (see drawRocketFlame). */
+export function drawRocket(ctx, rocket, t, puffX, puffY, cameraY, view) {
+  const age = t - rocket.at,
+    thrust = rocketThrust(rocket, age),
+    { from, to } = rocket,
+    pad = from.y - cameraY,
+    feet = puffY - cameraY,
+    height = from.y - puffY,
+    flip = Math.floor(t / 70) % 2;
+  ctx.save();
+  if (thrust > 0) {
+    const glow = ctx.createRadialGradient(puffX, feet + 50, 0, puffX, feet + 50, 230),
+      green = greenAt(age),
+      light = [233, 190, 118].map((c, k) => Math.round(c + ([184, 197, 166][k] - c) * green));
+    glow.addColorStop(0, `rgba(${light.join(',')},${0.2 * thrust + 0.2 * green})`);
+    glow.addColorStop(1, 'rgba(233,190,118,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(puffX - 230, feet - 180, 460, 460);
+  }
+  // Smoke rolling out across the ledge from the moment it lights.
+  const bank = age / 2800;
+  if (bank < 1) {
+    ctx.fillStyle = '#d3c8b3';
+    for (let i = 0; i < 16; i++) {
+      const reach = (20 + scatter(i + 11) * 180) * (1 - (1 - bank) ** 2.5),
+        r = 5 + 20 * Math.sqrt(bank) * (0.5 + scatter(i + 31) * 0.7);
+      ctx.globalAlpha = 0.55 * Math.min(1, age / 300) * (1 - bank);
+      cloud(
+        ctx,
+        from.x + (i % 2 ? 1 : -1) * reach,
+        pad - 4 - r * 0.5 - scatter(i + 23) * 30 * bank,
+        r,
+      );
+    }
+  }
+  // While the plume still reaches the ledge it splashes along it, throwing sparks.
+  const splash = thrust * Math.max(0, 1 - height / 320);
+  if (splash > 0) {
+    const reach = 24 + 90 * splash * Math.min(1, age / 500);
+    ctx.globalAlpha = splash;
+    ['#f7efd9', '#e9be76', '#d99759'].forEach((color, row) => {
+      const half = grid(reach * (1 - row * 0.25));
+      ctx.fillStyle = dither(ctx, color, (flip + row) % 2);
+      ctx.fillRect(grid(from.x) - half, grid(pad - 2 - row * 2), half * 2, 2);
+    });
+    for (let i = 0; i < 16; i++) {
+      const a = ((age + scatter(i) * 300) % 300) / 300;
+      ctx.globalAlpha = splash * (1 - a);
+      ctx.fillStyle = i % 3 ? '#e9be76' : '#f7efd9';
+      ctx.fillRect(
+        grid(from.x + (i % 2 ? 1 : -1) * (8 + a * (50 + scatter(i + 7) * 120))),
+        grid(pad - 4 - a * (12 + scatter(i + 3) * 22) + a * a * 26),
+        2,
+        2,
+      );
+    }
+  }
+  // The smoke trail, where Puff passed while the engine burned: widening and thinning far below.
+  const burned = rocketClimb(ROCKET_CUTOFF);
+  ctx.fillStyle = '#d3c8b3';
+  for (let k = 1, y = from.y - 18; y > puffY + 40; k++, y -= 18) {
+    const below = y - puffY,
+      screenY = y - cameraY,
+      f = (from.y - y) / (from.y - to.y);
+    if (f > burned || screenY < view.top - 40 || screenY > view.bottom + 40) continue;
+    ctx.globalAlpha = 0.3 * Math.min(1, (burned - f) * 20) * Math.max(0, 1 - below / 900);
+    cloud(
+      ctx,
+      from.x + (to.x - from.x) * f * f * (3 - 2 * f) + (scatter(k) - 0.5) * 16,
+      screenY,
+      8 + Math.min(20, below * 0.03) * (0.6 + scatter(k + 90) * 0.8),
+    );
+  }
+  // Gold motes falling from the flame; the ledge stops them.
+  const end = Math.min(view.bottom, pad - 2);
+  if (thrust > 0.05) {
+    for (let i = 0; i < 10; i++) {
+      const a = ((t + scatter(i) * 600) % 600) / 600,
+        y = grid(feet + 70 + a * 260);
+      if (y >= end) continue;
+      ctx.globalAlpha = thrust * (1 - a);
+      ctx.fillStyle = i % 3 ? '#e9be76' : '#f7efd9';
+      ctx.fillRect(grid(puffX + (scatter(i + 50) - 0.5) * (60 + a * 60)), y, 2, 2);
+    }
+  }
+  ctx.restore();
+}
+/** The rocket's flame, drawn over Puff from the foot of his helmet down, so his feet are hidden
+ * and he rides it like a capsule while the engine burns; they show again as it cuts out. A
+ * higher rocket's runs longer. The ledge he lit it on stops it. */
+export function drawRocketFlame(ctx, rocket, t, puffX, puffY, cameraY, view) {
+  const age = t - rocket.at,
+    thrust = rocketThrust(rocket, age);
+  if (thrust <= 0.01) return;
+  const { from, to } = rocket,
+    power = Math.min(1.5, 0.75 + (0.25 * (from.y - to.y)) / (ROCKET_METRES * 10)),
+    length = (140 + 130 * Math.min(1, (from.y - puffY) / 1200)) * thrust * power;
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, age / 150, thrust / 0.3);
+  // On Puff's own pixel grid, from the row under his helmet's rim, 4 of his pixels above his soles.
+  drawFlame(
+    ctx,
+    Math.round(puffX),
+    Math.round(puffY - cameraY) - 8,
+    Math.min(view.bottom, from.y - cameraY - 2),
+    length,
+    t,
+    greenAt(age),
+  );
+  ctx.restore();
+}
+/** The rocket's touchdown: a gold shockwave along the ledge and a fountain of little stars. */
+export function drawTouchdown(ctx, effect, t, cameraY) {
+  const age = t - effect.at,
+    y = effect.y - cameraY,
+    s = age / 1000;
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#e9be76';
+  for (const [delay, grow] of [
+    [0, 0.3],
+    [90, 0.2],
+  ]) {
+    const rx = 18 + Math.max(0, age - delay) * grow;
+    ctx.beginPath();
+    ctx.ellipse(effect.x, y + 2, rx, 3 + rx * 0.1, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#f3e3a6';
+  for (let i = 0; i < 8; i++) {
+    const x = grid(effect.x + (i % 2 ? 1 : -1) * (20 + scatter(i + 70) * 110) * s * 1.6),
+      top = grid(y - (180 + scatter(i + 80) * 160) * s + 900 * s * s);
+    ctx.fillRect(x - 2, top, 6, 2);
+    ctx.fillRect(x, top - 2, 2, 6);
+  }
 }

@@ -138,6 +138,19 @@ canvas {
 .height-hud > .streak-meter.hot {
   color: #e9be76;
 }
+/* Gold while the rocket flies, the height spinning up inside. */
+.height-hud {
+  transition:
+    border-color 0.4s,
+    box-shadow 0.4s;
+}
+.height-hud.rocket {
+  border-color: #e9be7680;
+  box-shadow: 0 0 22px #e9be7640;
+}
+.height-hud.rocket > #height-score {
+  color: #f3e3a6;
+}
 .pause-label {
   position: absolute;
   left: 50%;

@@ -1359,3 +1359,154 @@ test('climbFrom starts Puff at rest on main-path stone at about that height, the
   }
   assert.ok(playBot(3, 1450, 1150).cleared);
 });
+
+// The rocket: each 50 landings of a streak.
+import {
+  ROCKET_STREAK,
+  ROCKET_METRES,
+  rocketMs,
+  ROCKET_IGNITE_MS,
+  ROCKET_CLIMB_MS,
+  ROCKET_CUTOFF,
+  ROCKET_DROP,
+  rocketAt,
+} from '../public/puff-up/game/climb.js';
+// A climb at about `metres`, one landing short of `streak`. climbFrom leaves no landing behind,
+// so Puff's first bounce counts as a climb.
+const nearStreak = (seed, metres, streak) => ({ ...climbFrom(seed, metres), streak: streak - 1 });
+function untilLanded(run) {
+  let previous = run;
+  for (let i = 0; i < 400 && !run.player.landed; i++) [previous, run] = [run, stepRun(run)];
+  return [previous, run];
+}
+// The kind a ledge was laid as, before anything turned it to stone.
+function laidAs(seed, id) {
+  let run = createRun(seed);
+  while (!run.platforms.some((p) => p.id === id))
+    run = stepRun({ ...run, player: { ...run.player, y: run.player.y - 100 } }, {}, 0);
+  return run.platforms.find((p) => p.id === id).kind;
+}
+test('a streak of 50 lights the rocket: about 200 m up, set down as a rescue would', () => {
+  const hardened = { crumble: 0, kicker: 0 };
+  for (let seed = 1; seed <= 16; seed++)
+    for (const metres of [300, 650, 1150, 1550, 2350]) {
+      const at = `seed ${seed} at ${metres} m`;
+      let [previous, run] = untilLanded(nearStreak(seed, metres, ROCKET_STREAK));
+      assert.deepEqual([run.status, run.streak], ['rocket', ROCKET_STREAK], at);
+      const { from, to } = run.rocket,
+        was = laidAs(seed, to.id);
+      if (was in hardened) hardened[was]++;
+      assert.ok(/^\d+$/.test(to.id), at);
+      assert.ok(
+        Math.abs((from.y - to.y) / 10 - ROCKET_METRES) <= 10,
+        `${at}: ${(from.y - to.y) / 10} m`,
+      );
+      // The camera and height only rise on the way, and the line never catches him.
+      while (run.status === 'rocket') {
+        [previous, run] = [run, stepRun(run)];
+        assert.ok(run.cameraY <= previous.cameraY && run.score >= previous.score, at);
+        assert.ok(run.player.y <= run.hazardY, at);
+      }
+      const ledge = run.platforms.find((p) => p.id === to.id);
+      assert.equal(run.lastLanding.id, to.id, at);
+      assert.ok(ledge && !['crumble', 'kicker'].includes(ledge.kind), `${at}: ${ledge?.kind}`);
+      assert.equal(run.player.vx, 0, at);
+      assert.ok(Math.abs(run.player.x - (ledge.x + ledge.width / 2)) < 2, at);
+      // The touchdown is a landing higher than the last; the line holds a while; the card names
+      // the zone it lands in.
+      assert.equal(run.streak, ROCKET_STREAK + 1, at);
+      assert.ok(run.calmUntil > run.player.timeMs, at);
+      assert.equal(run.banner?.zone, zoneForScore(scoreForPeak(ledge.y), seed).index, at);
+      // From rest he climbs on past it.
+      for (
+        let hop = 0;
+        hop < 6 && run.status === 'playing' && run.lastLanding.y >= ledge.y;
+        hop++
+      ) {
+        const plan = choose(run);
+        if (!plan) break;
+        for (let t = 0; t < 240 && run.status === 'playing'; t++) {
+          run = stepRun(run, { axis: t < plan.k ? plan.a : plan.b });
+          if (run.player.landed) break;
+        }
+      }
+      assert.ok(run.status === 'playing' && run.lastLanding.y < ledge.y, `${at}: stuck`);
+    }
+  assert.ok(hardened.crumble > 0 && hardened.kicker > 0, JSON.stringify(hardened));
+});
+test('the rocket lifts off in place, climbs to just over its ledge, then drops onto it', () => {
+  const rocket = { from: { x: 200, y: 0 }, to: { x: 400, y: -2000 }, climb: ROCKET_CLIMB_MS },
+    top = ROCKET_IGNITE_MS + ROCKET_CLIMB_MS;
+  let last = rocketAt(rocket, 0);
+  assert.deepEqual(last, rocket.from);
+  for (let age = 5; age <= rocketMs(rocket); age += 5) {
+    const p = rocketAt(rocket, age);
+    if (age <= ROCKET_IGNITE_MS) assert.equal(p.x, 200);
+    assert.ok(age <= top ? p.y <= last.y : p.y >= last.y, `${age} ms`);
+    last = p;
+  }
+  assert.deepEqual(rocketAt(rocket, top), { x: 400, y: -2000 - ROCKET_DROP });
+  assert.deepEqual(rocketAt(rocket, rocketMs(rocket)), rocket.to);
+  // Let go, it leaves the ledge at once, is fastest as the engine cuts out, then coasts.
+  const speed = (age) => rocketAt(rocket, age).y - rocketAt(rocket, age + 5).y,
+    cutoff = ROCKET_IGNITE_MS + ROCKET_CLIMB_MS * ROCKET_CUTOFF;
+  assert.ok(speed(ROCKET_IGNITE_MS + 5) > speed(cutoff - 5) / 4);
+  for (const age of [ROCKET_IGNITE_MS + 200, cutoff - 400, cutoff + 400])
+    assert.ok(speed(age) < speed(cutoff - 5), `${age} ms`);
+});
+test('each 50 more of a streak carries the rocket 200 m higher, on a longer flight', () => {
+  const flights = [];
+  for (const stages of [1, 2, 3]) {
+    let [, run] = untilLanded(nearStreak(7, 1000, ROCKET_STREAK * stages));
+    const { from, to } = run.rocket,
+      at = `×${run.streak}`;
+    assert.ok(
+      Math.abs((from.y - to.y) / 10 - ROCKET_METRES * stages) <= 10,
+      `${at}: ${(from.y - to.y) / 10} m`,
+    );
+    flights.push(rocketMs(run.rocket));
+    while (run.status === 'rocket') run = stepRun(run);
+    assert.deepEqual([run.status, run.lastLanding.id], ['playing', to.id], at);
+  }
+  assert.ok(flights[0] < flights[1] && flights[1] < flights[2], JSON.stringify(flights));
+});
+test('the zone card at touchdown names the ledge it lands on, not the top of its flight', () => {
+  // The flight tops out 9 m over its ledge, so a ledge just under a zone line is still below it.
+  let straddled = 0;
+  for (let seed = 1; seed <= 60; seed++) {
+    let [, run] = untilLanded(nearStreak(seed, 900 + (seed % 10) * 20, ROCKET_STREAK));
+    const { to } = run.rocket;
+    while (run.status === 'rocket') run = stepRun(run);
+    const landed = zoneForScore(scoreForPeak(to.y), seed).index;
+    if (zoneForScore(run.score, seed).index !== landed) straddled++;
+    assert.equal(run.banner?.zone, landed, `seed ${seed}`);
+  }
+  assert.ok(straddled > 0, 'no touchdown landed just under a zone line');
+});
+test('the rocket lights at each 50 of a streak, not between', () => {
+  for (const [streak, lit] of [
+    [ROCKET_STREAK - 1, false],
+    [ROCKET_STREAK * 2, true],
+    [ROCKET_STREAK * 2 + 1, false],
+  ]) {
+    const [, run] = untilLanded(nearStreak(5, 900, streak));
+    assert.deepEqual(
+      [run.streak, run.status],
+      [streak, lit ? 'rocket' : 'playing'],
+      String(streak),
+    );
+  }
+});
+test('the rocket sounds as it lights, once as it blasts off, and on touchdown', () => {
+  let [previous, run] = untilLanded(nearStreak(2, 700, ROCKET_STREAK));
+  const heard = [cuesFor(previous, run)];
+  while (run.status === 'rocket') {
+    [previous, run] = [run, stepRun(run)];
+    heard.push(cuesFor(previous, run));
+  }
+  const all = heard.flat(),
+    count = (cue) => all.filter((c) => c === cue).length;
+  assert.ok(heard[0].includes('hop') && heard[0].includes('ignite'), JSON.stringify(heard[0]));
+  assert.deepEqual([count('ignite'), count('blast'), count('touchdown')], [1, 1, 1]);
+  assert.ok(heard.at(-1).includes('touchdown') && heard.at(-1).includes('hop'));
+});

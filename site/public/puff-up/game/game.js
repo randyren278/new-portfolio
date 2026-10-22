@@ -11,6 +11,8 @@ import {
   FALL_MIN_MS,
   FALL_CAP_MS,
   STREAK_FOR_STAR,
+  ROCKET_METRES,
+  ROCKET_STREAK,
 } from './climb.js';
 import { ANIMATIONS, renderPuff, samplePose } from './puff-motion.js';
 import { sampleFlightMotion } from './flight-pose.js';
@@ -23,6 +25,7 @@ import {
   drawBeam,
   drawBest,
   bannerShows,
+  CALLOUT_HIGH_Y,
   CALLOUT_LOW_Y,
   CALLOUT_Y,
   drawCallout,
@@ -31,7 +34,11 @@ import {
   drawGauge,
   drawKicker,
   drawRebuild,
+  drawRocket,
+  drawRocketFlame,
   drawSpark,
+  drawStreaks,
+  drawTouchdown,
   drawUfo,
   shake,
   squash,
@@ -47,8 +54,8 @@ function nextSeed(previous) {
   const value = crypto.getRandomValues(new Uint32Array(1))[0];
   return value === previous ? (value + 1) >>> 0 : value;
 }
-// Local testing only: ?stars=3 on localhost starts each climb with a charged rescue, and
-// ?from=1180 starts it that many metres up.
+// Local testing only: ?stars=3 on localhost starts each climb with a charged rescue,
+// ?from=1180 starts it that many metres up, and ?streak=49 starts it that far into a streak.
 const testStars =
     location.hostname === 'localhost'
       ? Math.min(3, Number(new URLSearchParams(location.search).get('stars')) || 0)
@@ -56,6 +63,10 @@ const testStars =
   testFrom =
     location.hostname === 'localhost'
       ? Math.max(0, Number(new URLSearchParams(location.search).get('from')) || 0)
+      : 0,
+  testStreak =
+    location.hostname === 'localhost'
+      ? Math.max(0, Number(new URLSearchParams(location.search).get('streak')) || 0)
       : 0;
 const freshRun = (seed) => (testFrom ? climbFrom(seed, testFrom) : createRun(seed));
 // draw() blends `previous` (the state before the latest fixed step) into `run`.
@@ -137,7 +148,7 @@ function sprite(animation, timeMs, direction, flight = null) {
   );
   const time = (frame * 1000) / clip.fps,
     pose = samplePose(animation, time, { direction }),
-    airborne = ['jump', 'fall', 'boost'].includes(animation);
+    airborne = ['jump', 'fall', 'boost', 'rocket'].includes(animation);
   puffCtx.clearRect(0, 0, 104, 112);
   renderPuff(puffCtx, {
     animation,
@@ -157,6 +168,7 @@ let cssWidth = 640,
   shownScore = null,
   shownStars = null,
   shownStreak = null,
+  shownRocket = false,
   // CSS px from the canvas top to the bottom controls; the line gauge sits just above them.
   gaugeTop = 620;
 function viewTransform() {
@@ -186,7 +198,7 @@ function draw() {
   ctx.clearRect(0, 0, cssWidth, cssHeight);
   ctx.translate(left, top);
   ctx.scale(scale, scale);
-  const [shakeX, shakeY] = shake(run.effects, t, reduced),
+  const [shakeX, shakeY] = shake(run.effects, t, reduced, run.rocket),
     caught = reduced || caughtAge === null || caughtAge > 300 ? 0 : 6 * (1 - caughtAge / 300) ** 2;
   ctx.translate(
     shakeX + Math.sin(caughtAge * 0.09) * caught,
@@ -194,6 +206,14 @@ function draw() {
   );
   ctx.imageSmoothingEnabled = false;
   ctx.font = '9px Plex,monospace';
+  // The whole canvas in world units, wider and taller than the world on most screens.
+  const view = {
+    left: -left / scale,
+    top: -top / scale,
+    right: (cssWidth - left) / scale,
+    bottom: (cssHeight - top) / scale,
+  };
+  drawStreaks(ctx, run.rocket, run.player.vy, cameraY, view, reduced);
   const first = Math.max(0, Math.ceil((575 - (cameraY + 620)) / 100)),
     last = Math.floor((575 - cameraY) / 100);
   for (let n = first; n <= last; n++) {
@@ -302,7 +322,7 @@ function draw() {
         Math.PI * 2,
       );
       ctx.stroke();
-    }
+    } else if (effect.type === 'touchdown') drawTouchdown(ctx, effect, t, cameraY);
     ctx.restore();
   }
   drawBest(ctx, run.score <= bestAtStart ? bestAtStart : 0, cameraY);
@@ -365,6 +385,7 @@ function draw() {
     }
   }
   drawDust(ctx, run.lastLanding, t, cameraY);
+  if (run.rocket) drawRocket(ctx, run.rocket, t, puffX, puffY, cameraY, view);
   const ufo = ufoAt(run.rescue, t, puffX, puffY, cameraY, (gaugeTop - top) / scale);
   drawBeam(ctx, ufo, puffX, puffY, cameraY, t);
   const falling = endedAt !== null,
@@ -384,6 +405,7 @@ function draw() {
   ctx.scale(sx, sy);
   ctx.drawImage(image, -104, -144, 208, 224);
   ctx.restore();
+  if (run.rocket) drawRocketFlame(ctx, run.rocket, t, puffX, puffY, cameraY, view);
   drawUfo(ctx, ufo, cameraY, t);
   drawBanner(ctx, run.banner, t);
   // In the zone card's place, or below it if it was up when the moment came. A rescue made ready
@@ -402,7 +424,7 @@ function draw() {
       low.title,
       t - low.at,
       1800,
-      bannerShows(run.banner, low.at) ? CALLOUT_LOW_Y : CALLOUT_Y,
+      low.high ? CALLOUT_HIGH_Y : bannerShows(run.banner, low.at) ? CALLOUT_LOW_Y : CALLOUT_Y,
     );
   // Writing the HUD invalidates its layout and paint even when the text is unchanged.
   if (run.score !== shownScore) {
@@ -419,6 +441,11 @@ function draw() {
     meter.classList.toggle('hot', shownStreak >= STREAK_FOR_STAR - 3);
     if (grew && !meter.hidden && !reduced)
       meter.animate([{ transform: 'scale(1.3)' }, { transform: 'scale(1)' }], 180);
+  }
+  // The pill glows gold while the rocket flies.
+  if ((run.status === 'rocket') !== shownRocket) {
+    shownRocket = run.status === 'rocket';
+    document.querySelector('.height-hud').classList.toggle('rocket', shownRocket);
   }
   if (run.stars !== shownStars) {
     shownStars = run.stars;
@@ -551,6 +578,7 @@ function start() {
     readyAt = null;
     streakCard = null;
     if (testStars) run = previous = { ...run, stars: testStars };
+    if (testStreak) run = previous = { ...run, streak: testStreak };
   }
   sound.start();
   running = true;
@@ -592,15 +620,18 @@ function tick(now) {
     accumulator -= FIXED_DT;
     steps++;
     for (const cue of cuesFor(previous, run)) sound.cue(cue, run.streak);
+    const rocket = run.status === 'rocket' && previous.status !== 'rocket';
     if (
       run.streak > previous.streak &&
-      (run.streak === STREAK_FOR_STAR || STREAK_WORDS[run.streak])
+      (run.streak === STREAK_FOR_STAR || STREAK_WORDS[run.streak] || rocket)
     )
       streakCard = {
-        kicker: `STREAK ×${run.streak}`,
+        kicker: `STREAK ×${run.streak}${rocket ? ` · ROCKET +${(ROCKET_METRES * run.streak) / ROCKET_STREAK} M` : ''}`,
         title:
-          STREAK_WORDS[run.streak] ?? (run.stars > previous.stars ? 'Star earned' : 'Stars full'),
+          STREAK_WORDS[run.streak] ??
+          (rocket ? 'Lift-off' : run.stars > previous.stars ? 'Star earned' : 'Stars full'),
         at: run.player.timeMs,
+        high: rocket,
       };
     if (run.stars === 3 && previous.stars < 3) {
       readyAt = run.player.timeMs;
@@ -621,9 +652,11 @@ function tick(now) {
       break;
     }
   }
-  // Quiet while Puff falls away and the UFO works, as after an ending.
+  // Quiet while Puff falls away and the UFO works, as after an ending, and while the rocket flies.
   if (endedAt === null)
-    sound.danger(run.status === 'rescue' ? 0 : danger(run.hazardY, run.player.y));
+    sound.danger(
+      run.status === 'rescue' || run.status === 'rocket' ? 0 : danger(run.hazardY, run.player.y),
+    );
   draw();
   if (running) raf = requestAnimationFrame(tick);
 }
