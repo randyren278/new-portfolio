@@ -185,41 +185,42 @@
   margin: 18px 0 22px;
   max-width: 56ch;
 }
-/* The last outdoor run's route on the left, the four numbers in a 2×2 on
-   the right. Without a route the numbers take the cell. */
-.tr-status-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  column-gap: 32px;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-.tr-status-body.no-map {
-  grid-template-columns: minmax(0, 1fr);
-}
-.tr-route {
+/* ----- run: the latest outdoor run's route, its distance over its pace ----- */
+.tr-run-body {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0;
-  min-width: 0;
-  min-height: 0;
+  gap: 20px;
+  flex: 1 1 auto;
+  min-height: 150px;
 }
-.tr-route svg {
-  display: block;
+.tr-run-map {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.tr-run-map svg {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: 180px;
+  height: 100%;
   overflow: visible;
 }
+
+/* ----- status: the four numbers in a 2×2 ----- */
 .tr-metrics {
+  --row-pad: 10px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-content: center;
+  flex: 1 1 auto;
 }
 .tr-metrics > div {
-  padding: 10px 0 10px 20px;
+  padding: var(--row-pad) 0 var(--row-pad) 20px;
   border-left: 1px solid var(--rule);
   min-width: 0;
+}
+.tr-metrics > div:nth-child(odd) {
+  padding-left: 0;
+  border-left: 0;
 }
 .tr-metrics > div:nth-child(-n + 2) {
   padding-top: 0;
@@ -227,6 +228,16 @@
 .tr-metrics > div:nth-child(n + 3) {
   border-top: 1px solid var(--rule);
   padding-bottom: 0;
+}
+/* The run's distance over its pace: one column of the same rows. */
+.tr-metrics.tr-run-stats {
+  grid-template-columns: max-content;
+  flex: 0 0 auto;
+}
+.tr-run-stats > div:nth-child(2) {
+  padding: var(--row-pad) 0 0;
+  border-left: 0;
+  border-top: 1px solid var(--rule);
 }
 .tr-metrics .tr-serif {
   font-size: clamp(28px, 2.6vw, 36px);
@@ -238,16 +249,6 @@
   line-height: 1.4;
   color: var(--muted);
   margin-top: 4px;
-}
-@media (max-width: 720px) {
-  .tr-status-body {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: 22px;
-  }
-  .tr-metrics > div:nth-child(odd) {
-    padding-left: 0;
-    border-left: 0;
-  }
 }
 
 /* ----- loading ----- */
@@ -419,10 +420,12 @@
   .tr-grid .kicker {
     margin-bottom: 12px;
   }
-  .tr-grid .chart,
-  .tr-route svg {
+  .tr-grid .chart {
     flex: 1 1 0;
     height: auto;
+    min-height: 0;
+  }
+  .tr-run-body {
     min-height: 0;
   }
   .tr-metrics .tr-serif {
@@ -447,8 +450,8 @@
   .tr-grid .kicker {
     margin-bottom: 10px;
   }
-  .tr-metrics > div {
-    padding-block: 7px;
+  .tr-metrics {
+    --row-pad: 7px;
   }
 }
 

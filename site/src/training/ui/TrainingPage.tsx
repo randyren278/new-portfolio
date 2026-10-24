@@ -13,7 +13,17 @@ import '@/bento/puff.css';
 import '../training.css';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
-import { type TrainingView, fmtDay, fmtDow, hm, km1, pace } from '../derive';
+import {
+  type Activity,
+  type TrainingView,
+  clock,
+  fmtDay,
+  fmtDow,
+  hm,
+  km1,
+  pace,
+  runTitle,
+} from '../derive';
 import { markReturnToHome } from '../returnFlag';
 import { LoadChart, RecoveryChart, Ring, Sparkline, VolumeChart, WeekBars } from './charts';
 import { useLiftCurtain } from './curtain';
@@ -98,6 +108,7 @@ function Cells({ view }: { view: TrainingView }) {
   const r = view.readiness;
   return (
     <main className="tr-grid">
+      {view.outdoor?.route && <RunCell run={view.outdoor} route={view.outdoor.route} />}
       <StatusCell view={view} />
 
       {r && (
@@ -218,73 +229,85 @@ function Cells({ view }: { view: TrainingView }) {
   );
 }
 
+/** The latest outdoor run over 6 km with a public route: the map, its distance and pace. */
+function RunCell({ run, route }: { run: Activity; route: string }) {
+  return (
+    <section className="cell tr-run" aria-labelledby="k-run">
+      <h2 className="kicker" id="k-run">
+        § RUN · {fmtDow(run.date)}
+      </h2>
+      <div className="tr-run-body">
+        <div className="tr-run-map">
+          <svg
+            viewBox="0 0 160 110"
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label={`Route of the ${km1(run.km)} km run`}
+          >
+            <path
+              d={route}
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth={1.5}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        </div>
+        {/* Same parts as the 2×2 beside it, so its rows line up with these. */}
+        <div className="tr-metrics tr-run-stats">
+          <Metric label="Distance" value={km1(run.km)} unit="km" sub={clock(run.sec)} />
+          <Metric label="Pace" value={pace(run.sec / run.km)} unit="/km" sub={runTitle(run)} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function StatusCell({ view }: { view: TrainingView }) {
   const m = view.metrics;
-  const run = view.outdoor;
   return (
-    <section className="cell span-2 tr-status" aria-labelledby="k-status">
+    <section
+      className={`cell tr-status${view.outdoor?.route ? '' : ' span-2'}`}
+      aria-labelledby="k-status"
+    >
       <h2 className="kicker" id="k-status">
         § STATUS · {fmtDow(view.today)}
       </h2>
-      <div className={`tr-status-body${run?.route ? '' : ' no-map'}`}>
-        {run?.route && (
-          <figure className="tr-route">
-            <svg
-              viewBox="0 0 160 110"
-              preserveAspectRatio="xMinYMid meet"
-              role="img"
-              aria-label={`Route of the ${km1(run.km)} km run on ${fmtDow(run.date)}`}
-            >
-              <path
-                d={run.route}
-                fill="none"
-                stroke="var(--accent)"
-                strokeWidth={1.5}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
-            <figcaption className="tr-lab">
-              Last outdoor run · {fmtDow(run.date)} · {km1(run.km)} km · {pace(run.sec / run.km)}{' '}
-              /km
-            </figcaption>
-          </figure>
+      <div className="tr-metrics">
+        <Metric
+          label="Last 7 days"
+          value={km1(m.km7)}
+          unit="km"
+          sub={`${signed(m.km7 - m.km7prev)} vs prior 7`}
+        />
+        <Metric
+          label="Last 28 days"
+          value={String(Math.round(m.km28))}
+          unit="km"
+          sub={`${Math.round(m.km28 / 4)} km / wk avg`}
+        />
+        <Metric
+          label="Run streak"
+          value={String(m.streak)}
+          unit={m.streak === 1 ? 'day' : 'days'}
+          sub={m.streak >= m.longest ? 'longest in six months' : `longest ${m.longest}`}
+        />
+        {view.predictor?.vo2max ? (
+          <Metric
+            label="VO2max"
+            value={String(view.predictor.vo2max)}
+            unit=""
+            sub={
+              view.predictor.thresholdPace
+                ? `threshold ${pace(view.predictor.thresholdPace)} /km`
+                : ''
+            }
+          />
+        ) : (
+          <Metric label="This week" value={km1(view.week.km)} unit="km" sub="so far" />
         )}
-        <div className="tr-metrics">
-          <Metric
-            label="Last 7 days"
-            value={km1(m.km7)}
-            unit="km"
-            sub={`${signed(m.km7 - m.km7prev)} vs prior 7`}
-          />
-          <Metric
-            label="Last 28 days"
-            value={String(Math.round(m.km28))}
-            unit="km"
-            sub={`${Math.round(m.km28 / 4)} km / wk avg`}
-          />
-          <Metric
-            label="Run streak"
-            value={String(m.streak)}
-            unit={m.streak === 1 ? 'day' : 'days'}
-            sub={m.streak >= m.longest ? 'longest in six months' : `longest ${m.longest}`}
-          />
-          {view.predictor?.vo2max ? (
-            <Metric
-              label="VO2max"
-              value={String(view.predictor.vo2max)}
-              unit=""
-              sub={
-                view.predictor.thresholdPace
-                  ? `threshold ${pace(view.predictor.thresholdPace)} /km`
-                  : ''
-              }
-            />
-          ) : (
-            <Metric label="This week" value={km1(view.week.km)} unit="km" sub="so far" />
-          )}
-        </div>
       </div>
     </section>
   );

@@ -294,15 +294,32 @@ const contrastFailures = (page) =>
     '§ HOW THIS WORKS',
   ])
     assert(!has(k), `cell removed: ${k}`);
-  // The status cell maps the last outdoor run over 6 km that has a public route.
-  const runCap = (await page.textContent('.tr-status .tr-route figcaption'))?.replace(/\s+/g, ' ');
-  const runKm = Number(runCap?.match(/([\d.]+) km/)?.[1]);
-  assert(
-    (await page.locator('.tr-status .tr-route svg path').getAttribute('d'))?.length > 0 &&
-      /^Last outdoor run/.test(runCap ?? '') &&
-      runKm > 6,
-    `status maps the last outdoor run over 6 km (${runCap})`,
+  // The run cell maps the last outdoor run over 6 km that has a public route.
+  const [runKmText, runPace] = await page.$$eval('.tr-run .tr-metrics .tr-serif', (els) =>
+    els.map((e) => e.textContent ?? ''),
   );
+  const runKm = Number.parseFloat(runKmText ?? '');
+  assert(
+    has('§ RUN') &&
+      (await page.locator('.tr-run .tr-run-map path').getAttribute('d'))?.length > 0 &&
+      runKm > 6 &&
+      /^\d+:\d\d/.test(runPace ?? ''),
+    `run cell maps an outdoor run over 6 km with its pace (${runKm} km)`,
+  );
+  if (!IS_MOBILE) {
+    // Its distance and pace sit on the same rows as the numbers beside it.
+    const rows = await page.evaluate(() =>
+      ['.tr-run', '.tr-status'].map((c) =>
+        [...document.querySelectorAll(`${c} .tr-metrics .tr-serif`)].map((e) =>
+          Math.round(e.getBoundingClientRect().top),
+        ),
+      ),
+    );
+    assert(
+      rows[0][0] === rows[1][0] && rows[0][1] === rows[1][2],
+      `run rows line up with the status rows (${rows[0]} vs ${rows[1]})`,
+    );
+  }
 
   const charts = await page.$$eval('.chart svg', (els) =>
     els.map((e) => e.getBoundingClientRect().width),
@@ -435,7 +452,7 @@ const contrastFailures = (page) =>
     `summary API answers (${summary.status()})`,
   );
   const pageKm7 = Number.parseFloat(
-    (await page.textContent('.tr-metrics > div:first-child .tr-serif')) ?? '',
+    (await page.textContent('.tr-status .tr-metrics > div:first-child .tr-serif')) ?? '',
   );
   assert(
     Math.abs(pageKm7 - body.km7) < 0.05,
