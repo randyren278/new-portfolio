@@ -301,6 +301,13 @@ const contrastFailures = (page) =>
   );
   if (EXPECT_COROS)
     assert(word !== 'Logging.', 'status comes from Coros, not the Strava-only fallback');
+  if (EXPECT_COROS) {
+    const scale = await page.getAttribute('.tr-status .tr-scale svg', 'aria-label');
+    assert(
+      /^Load ratio \d\.\d\d: [A-Z]/.test(scale ?? ''),
+      `status sits on Coros's load ratio scale (${scale})`,
+    );
+  }
 
   const charts = await page.$$eval('.chart svg', (els) =>
     els.map((e) => e.getBoundingClientRect().width),

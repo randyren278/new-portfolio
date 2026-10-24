@@ -15,7 +15,15 @@ import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { type TrainingView, fmtDay, fmtDow, hm, km1, pace } from '../derive';
 import { markReturnToHome } from '../returnFlag';
-import { LoadChart, RecoveryChart, Ring, Sparkline, VolumeChart, WeekBars } from './charts';
+import {
+  LoadChart,
+  RatioScale,
+  RecoveryChart,
+  Ring,
+  Sparkline,
+  VolumeChart,
+  WeekBars,
+} from './charts';
 import { useLiftCurtain } from './curtain';
 import { TipLayer } from './tip';
 import { useTrainingRefresh } from './useTrainingRefresh';
@@ -226,43 +234,53 @@ function StatusCell({ view }: { view: TrainingView }) {
       <h2 className="kicker" id="k-status">
         § STATUS · {fmtDow(view.today)}
       </h2>
-      <p className="tr-status-word">
-        {s ? s.word : 'Logging'}
-        <span className="dot">.</span>
-      </p>
-      <div className="tr-metrics">
-        <Metric
-          label="Last 7 days"
-          value={km1(m.km7)}
-          unit="km"
-          sub={`${signed(m.km7 - m.km7prev)} vs prior 7`}
-        />
-        <Metric
-          label="Last 28 days"
-          value={String(Math.round(m.km28))}
-          unit="km"
-          sub={`${Math.round(m.km28 / 4)} km / wk avg`}
-        />
-        <Metric
-          label="Run streak"
-          value={String(m.streak)}
-          unit={m.streak === 1 ? 'day' : 'days'}
-          sub={m.streak >= m.longest ? 'longest in six months' : `longest ${m.longest}`}
-        />
-        {view.predictor?.vo2max ? (
+      <div className="tr-status-body">
+        <div className="tr-status-state">
+          <p className="tr-status-word">
+            {s ? s.word : 'Logging'}
+            <span className="dot">.</span>
+          </p>
+          {s && (
+            <div>
+              <div className="tr-lab">Load ratio</div>
+              <RatioScale ratio={s.ratio} word={s.word} />
+            </div>
+          )}
+        </div>
+        <div className="tr-metrics">
           <Metric
-            label="VO2max"
-            value={String(view.predictor.vo2max)}
-            unit=""
-            sub={
-              view.predictor.thresholdPace
-                ? `threshold ${pace(view.predictor.thresholdPace)} /km`
-                : ''
-            }
+            label="Last 7 days"
+            value={km1(m.km7)}
+            unit="km"
+            sub={`${signed(m.km7 - m.km7prev)} vs prior 7`}
           />
-        ) : (
-          <Metric label="This week" value={km1(view.week.km)} unit="km" sub="so far" />
-        )}
+          <Metric
+            label="Last 28 days"
+            value={String(Math.round(m.km28))}
+            unit="km"
+            sub={`${Math.round(m.km28 / 4)} km / wk avg`}
+          />
+          <Metric
+            label="Run streak"
+            value={String(m.streak)}
+            unit={m.streak === 1 ? 'day' : 'days'}
+            sub={m.streak >= m.longest ? 'longest in six months' : `longest ${m.longest}`}
+          />
+          {view.predictor?.vo2max ? (
+            <Metric
+              label="VO2max"
+              value={String(view.predictor.vo2max)}
+              unit=""
+              sub={
+                view.predictor.thresholdPace
+                  ? `threshold ${pace(view.predictor.thresholdPace)} /km`
+                  : ''
+              }
+            />
+          ) : (
+            <Metric label="This week" value={km1(view.week.km)} unit="km" sub="so far" />
+          )}
+        </div>
       </div>
     </section>
   );

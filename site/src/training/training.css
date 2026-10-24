@@ -172,10 +172,9 @@
   font-family: "Instrument Serif", "IBM Plex Serif", Georgia, serif;
   font-style: italic;
   font-weight: 400;
-  font-size: clamp(60px, 7.4vw, 108px);
-  line-height: 0.9;
-  margin: 0 0 18px;
-  letter-spacing: -0.01em;
+  font-size: clamp(38px, 3.4vw, 50px);
+  line-height: 1;
+  margin: 0;
 }
 .tr-status-word .dot {
   color: var(--accent);
@@ -186,25 +185,53 @@
   margin: 18px 0 22px;
   max-width: 56ch;
 }
+/* State on the left (the word over Coros's ratio scale), the four numbers
+   in a 2×2 on the right. */
+.tr-status-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  column-gap: 32px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.tr-status-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 22px;
+  min-width: 0;
+}
+.tr-scale {
+  width: 100%;
+}
+.tr-scale svg {
+  display: block;
+  overflow: visible;
+}
+.tr-scale text {
+  font-family: "IBM Plex Mono", monospace;
+}
 .tr-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid var(--rule);
-  margin-top: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: center;
 }
 .tr-metrics > div {
-  padding: 14px 0 0 16px;
+  padding: 10px 0 10px 20px;
   border-left: 1px solid var(--rule);
   min-width: 0;
 }
-.tr-metrics > div:first-child {
-  padding-left: 0;
-  border-left: 0;
+.tr-metrics > div:nth-child(-n + 2) {
+  padding-top: 0;
+}
+.tr-metrics > div:nth-child(n + 3) {
+  border-top: 1px solid var(--rule);
+  padding-bottom: 0;
 }
 .tr-metrics .tr-serif {
-  font-size: clamp(30px, 3vw, 40px);
+  font-size: clamp(28px, 2.6vw, 36px);
   display: block;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 .tr-sub {
   font-size: 10px;
@@ -213,16 +240,13 @@
   margin-top: 4px;
 }
 @media (max-width: 720px) {
-  .tr-metrics {
-    grid-template-columns: 1fr 1fr;
+  .tr-status-body {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 22px;
   }
-  .tr-metrics > div:nth-child(3) {
+  .tr-metrics > div:nth-child(odd) {
     padding-left: 0;
     border-left: 0;
-  }
-  .tr-metrics > div:nth-child(n + 3) {
-    border-top: 1px solid var(--rule);
-    margin-top: 14px;
   }
 }
 
@@ -400,19 +424,8 @@
     height: auto;
     min-height: 0;
   }
-  /* The word takes whatever height the metrics leave in its cell. */
-  .tr-status {
-    container-type: size;
-  }
-  .tr-status-word {
-    font-size: clamp(48px, calc((100cqh - 116px) * 1.05), 104px);
-    margin-bottom: 10px;
-  }
-  .tr-metrics > div {
-    padding-top: 10px;
-  }
   .tr-metrics .tr-serif {
-    font-size: clamp(28px, 4vh, 40px);
+    font-size: clamp(26px, 3.6vh, 38px);
   }
   .tr-vital {
     padding-block: 6px;
@@ -432,6 +445,12 @@
   }
   .tr-grid .kicker {
     margin-bottom: 10px;
+  }
+  .tr-status-state {
+    gap: 14px;
+  }
+  .tr-metrics > div {
+    padding-block: 7px;
   }
 }
 
