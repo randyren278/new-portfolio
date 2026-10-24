@@ -339,6 +339,9 @@ export function mountGame(
     gameWrap.style.pointerEvents = '';
     update('game');
     phase = 'playing';
+    // The portfolio is fully covered now. At opacity 0 Safari still keeps its painted layers, about
+    // 40 MB of GPU memory on a phone; skipping its contents lets the browser release them.
+    page.style.contentVisibility = 'hidden';
     scheduleMeteor();
     scheduleTwinkle();
     onEntered();
@@ -462,6 +465,8 @@ export function mountGame(
     gameWrap.style.opacity = '0';
     gameWrap.style.transform = '';
     space.style.opacity = '0';
+    // Back in layout before the scroll is restored; skipped, the page has no height to scroll.
+    page.style.contentVisibility = '';
     page.style.opacity = '1';
     window.scrollTo(returnScroll.x, returnScroll.y);
     const duration = reducedQuery.matches ? 100 : 500;
@@ -570,6 +575,7 @@ export function mountGame(
       transform: page.style.transform,
       transformOrigin: page.style.transformOrigin,
       pointerEvents: page.style.pointerEvents,
+      contentVisibility: page.style.contentVisibility,
     },
     oldInert = page.inert;
   document.body.style.overflow = 'hidden';

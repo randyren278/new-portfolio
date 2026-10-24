@@ -1,7 +1,8 @@
 // Synthesized sound: no files to load. The AudioContext is made on the first Start and
 // suspended while paused; after a climb the music fades out before it is suspended. A browser
 // can still hold it suspended when the portfolio starts the game for the player, so any later
-// tap or key resumes it. The mute choice persists like the best height and silences everything.
+// tap or key resumes it. The mute choice persists like the best height. Muted, there is no
+// AudioContext at all: the music's reverb alone holds ~37 MB, too much to keep running silent.
 import { createMusic } from './music.js';
 import { ROCKET_IGNITE_MS, ROCKET_CLIMB_MS, ROCKET_CUTOFF, ROCKET_STREAK } from './climb.js';
 const MUTE_KEY = 'puff-up:muted:v1';
@@ -46,7 +47,7 @@ export function createSound() {
     droneGain = null,
     noiseBuffer = null,
     droneLevel = 0,
-    paused = false,
+    paused = true,
     muted = false;
   try {
     muted = localStorage.getItem(MUTE_KEY) === '1';
@@ -55,9 +56,11 @@ export function createSound() {
     if (ctx) return true;
     const Context = window.AudioContext || window.webkitAudioContext;
     if (!Context) return false;
-    ctx = new Context();
+    // Nearly all of it sits under 5 kHz; at 24 kHz only the noise clicks lose their top octave,
+    // and the reverb's memory and every node's work halve.
+    ctx = new Context({ sampleRate: 24000 });
     master = ctx.createGain();
-    master.gain.value = muted ? 0 : LEVEL;
+    master.gain.value = LEVEL;
     master.connect(ctx.destination);
     music = createMusic(ctx, master);
     noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate);
@@ -75,6 +78,23 @@ export function createSound() {
     drone.connect(low).connect(droneGain).connect(master);
     drone.start();
     return true;
+  }
+  // Muting fades out over a few ms, then closes the context, which frees the whole graph.
+  function release() {
+    if (!ctx) return;
+    const closing = ctx;
+    music.stop(0.05);
+    master.gain.setTargetAtTime(0, closing.currentTime, 0.02);
+    setTimeout(() => closing.close().catch(() => {}), 400);
+    ctx = master = music = droneGain = noiseBuffer = null;
+    droneLevel = 0;
+  }
+  function start() {
+    paused = false;
+    clearTimeout(resting);
+    if (muted || !ready()) return;
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
+    music.start(MUSIC_LEVEL);
   }
   function tone(
     frequency,
@@ -223,13 +243,7 @@ export function createSound() {
       return muted;
     },
     /** Call from a user gesture; resumes a paused context. */
-    start() {
-      paused = false;
-      clearTimeout(resting);
-      if (!ready()) return;
-      if (ctx.state !== 'running') ctx.resume().catch(() => {});
-      music.start(MUSIC_LEVEL);
-    },
+    start,
     /** After a climb: let the music fade, then suspend. */
     rest() {
       paused = true;
@@ -263,7 +277,9 @@ export function createSound() {
       try {
         localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
       } catch {}
-      if (master) master.gain.setTargetAtTime(muted ? 0 : LEVEL, ctx.currentTime, 0.02);
+      // Unmuting is a tap or key press, so a mid-climb context may be made here.
+      if (muted) release();
+      else if (!paused) start();
       return muted;
     },
   };
