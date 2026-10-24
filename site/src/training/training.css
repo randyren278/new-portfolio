@@ -185,8 +185,8 @@
   margin: 18px 0 22px;
   max-width: 56ch;
 }
-/* State on the left (the word over Coros's ratio scale), the four numbers
-   in a 2×2 on the right. */
+/* The last outdoor run's route on the left, the four numbers in a 2×2 on
+   the right. Without a route the numbers take the cell. */
 .tr-status-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
@@ -194,22 +194,22 @@
   flex: 1 1 auto;
   min-height: 0;
 }
-.tr-status-state {
+.tr-status-body.no-map {
+  grid-template-columns: minmax(0, 1fr);
+}
+.tr-route {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 22px;
+  gap: 10px;
+  margin: 0;
   min-width: 0;
+  min-height: 0;
 }
-.tr-scale {
-  width: 100%;
-}
-.tr-scale svg {
+.tr-route svg {
   display: block;
+  width: 100%;
+  height: 180px;
   overflow: visible;
-}
-.tr-scale text {
-  font-family: "IBM Plex Mono", monospace;
 }
 .tr-metrics {
   display: grid;
@@ -419,7 +419,8 @@
   .tr-grid .kicker {
     margin-bottom: 12px;
   }
-  .tr-grid .chart {
+  .tr-grid .chart,
+  .tr-route svg {
     flex: 1 1 0;
     height: auto;
     min-height: 0;
@@ -445,9 +446,6 @@
   }
   .tr-grid .kicker {
     margin-bottom: 10px;
-  }
-  .tr-status-state {
-    gap: 14px;
   }
   .tr-metrics > div {
     padding-block: 7px;

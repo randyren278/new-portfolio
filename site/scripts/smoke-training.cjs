@@ -294,20 +294,15 @@ const contrastFailures = (page) =>
     '§ HOW THIS WORKS',
   ])
     assert(!has(k), `cell removed: ${k}`);
-  const word = (await page.textContent('.tr-status-word'))?.trim();
+  // The status cell maps the last outdoor run over 6 km that has a public route.
+  const runCap = (await page.textContent('.tr-status .tr-route figcaption'))?.replace(/\s+/g, ' ');
+  const runKm = Number(runCap?.match(/([\d.]+) km/)?.[1]);
   assert(
-    /^[A-Z][a-z]+\.$/.test(word ?? ''),
-    `status word reads as one word and a full stop (got "${word}")`,
+    (await page.locator('.tr-status .tr-route svg path').getAttribute('d'))?.length > 0 &&
+      /^Last outdoor run/.test(runCap ?? '') &&
+      runKm > 6,
+    `status maps the last outdoor run over 6 km (${runCap})`,
   );
-  if (EXPECT_COROS)
-    assert(word !== 'Logging.', 'status comes from Coros, not the Strava-only fallback');
-  if (EXPECT_COROS) {
-    const scale = await page.getAttribute('.tr-status .tr-scale svg', 'aria-label');
-    assert(
-      /^Load ratio \d\.\d\d: [A-Z]/.test(scale ?? ''),
-      `status sits on Coros's load ratio scale (${scale})`,
-    );
-  }
 
   const charts = await page.$$eval('.chart svg', (els) =>
     els.map((e) => e.getBoundingClientRect().width),
@@ -439,8 +434,13 @@ const contrastFailures = (page) =>
     summary.ok() && 'km7' in body && 'status' in body,
     `summary API answers (${summary.status()})`,
   );
-  if (EXPECT_COROS)
-    assert(`${body.status}.` === word, `summary status matches the page (${body.status})`);
+  const pageKm7 = Number.parseFloat(
+    (await page.textContent('.tr-metrics > div:first-child .tr-serif')) ?? '',
+  );
+  assert(
+    Math.abs(pageKm7 - body.km7) < 0.05,
+    `summary's last 7 days matches the page (${body.km7} vs ${pageKm7})`,
+  );
   const connect = await page.request.get(url('/api/coros/connect'), { maxRedirects: 0 });
   assert(
     [403, 500].includes(connect.status()),

@@ -312,3 +312,42 @@ test('Coros activities pick up the matching Strava route', () => {
   });
   assert.equal(v.lines[0].route, 'M1,1');
 });
+
+test('the status map is the latest outdoor run over 6 km with a public route', () => {
+  const run = (id, date, extra) => ({
+    id,
+    start: Date.parse(`${date}T15:00:00Z`) / 1000,
+    date,
+    sport: 'run',
+    indoor: false,
+    km: 10,
+    sec: 2700,
+    route: `M${id},${id}`,
+    ...extra,
+  });
+  const view = (strava) =>
+    D.deriveView({
+      ...sources(),
+      records: null,
+      strava,
+      load: null,
+      fitness: null,
+      recovery: null,
+      restingHr: null,
+      hrv: null,
+      sleep: null,
+      details: {},
+      session: null,
+    });
+  const v = view([
+    run(1, '2026-10-02'),
+    run(2, '2026-10-04', { km: 8.2 }),
+    run(3, '2026-10-05', { sport: 'ride', km: 30 }),
+    run(4, '2026-10-06', { km: 5.9 }),
+    run(5, '2026-10-07', { km: 12, route: null }),
+    run(6, '2026-10-08', { indoor: true, km: 13, route: null }),
+  ]);
+  assert.equal(v.outdoor.id, '2', 'skips the indoor run, the private route, the short run and the ride');
+  assert.equal(v.outdoor.route, 'M2,2');
+  assert.equal(view([run(1, '2026-10-08', { km: 4 })]).outdoor, null);
+});

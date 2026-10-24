@@ -15,15 +15,7 @@ import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { type TrainingView, fmtDay, fmtDow, hm, km1, pace } from '../derive';
 import { markReturnToHome } from '../returnFlag';
-import {
-  LoadChart,
-  RatioScale,
-  RecoveryChart,
-  Ring,
-  Sparkline,
-  VolumeChart,
-  WeekBars,
-} from './charts';
+import { LoadChart, RecoveryChart, Ring, Sparkline, VolumeChart, WeekBars } from './charts';
 import { useLiftCurtain } from './curtain';
 import { TipLayer } from './tip';
 import { useTrainingRefresh } from './useTrainingRefresh';
@@ -227,26 +219,38 @@ function Cells({ view }: { view: TrainingView }) {
 }
 
 function StatusCell({ view }: { view: TrainingView }) {
-  const s = view.status;
   const m = view.metrics;
+  const run = view.outdoor;
   return (
     <section className="cell span-2 tr-status" aria-labelledby="k-status">
       <h2 className="kicker" id="k-status">
         § STATUS · {fmtDow(view.today)}
       </h2>
-      <div className="tr-status-body">
-        <div className="tr-status-state">
-          <p className="tr-status-word">
-            {s ? s.word : 'Logging'}
-            <span className="dot">.</span>
-          </p>
-          {s && (
-            <div>
-              <div className="tr-lab">Load ratio</div>
-              <RatioScale ratio={s.ratio} word={s.word} />
-            </div>
-          )}
-        </div>
+      <div className={`tr-status-body${run?.route ? '' : ' no-map'}`}>
+        {run?.route && (
+          <figure className="tr-route">
+            <svg
+              viewBox="0 0 160 110"
+              preserveAspectRatio="xMinYMid meet"
+              role="img"
+              aria-label={`Route of the ${km1(run.km)} km run on ${fmtDow(run.date)}`}
+            >
+              <path
+                d={run.route}
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+            <figcaption className="tr-lab">
+              Last outdoor run · {fmtDow(run.date)} · {km1(run.km)} km · {pace(run.sec / run.km)}{' '}
+              /km
+            </figcaption>
+          </figure>
+        )}
         <div className="tr-metrics">
           <Metric
             label="Last 7 days"

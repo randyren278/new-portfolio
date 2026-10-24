@@ -145,6 +145,8 @@ export type TrainingView = {
   focus: { label: string; sec: number; rank: number }[] | null;
   heat: { start: string; days: { date: string; km: number; tip: string }[] };
   predictor: CorosFitness | null;
+  /** The status cell's map: the latest outdoor run over 6 km with a public route. */
+  outdoor: Activity | null;
   lines: Activity[];
   odometer: {
     since: string;
@@ -607,6 +609,8 @@ export function deriveView(src: Sources): TrainingView {
     focus,
     heat: { start: heatStart, days: heatDays },
     predictor: src.fitness?.predictions.length ? src.fitness : null,
+    outdoor:
+      windowActs.findLast((a) => a.sport === 'run' && !a.indoor && a.km > 6 && a.route) ?? null,
     lines: windowActs
       .filter((a) => a.sport === 'run' || a.sport === 'ride')
       .slice(-8)
