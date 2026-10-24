@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * SVG charts for the training page. Each one measures its container and
- * draws at that exact width, so axis text stays crisp at every size.
+ * SVG charts for the training page. CSS sizes each container; the chart
+ * measures it and draws at that exact width and height, so axis text stays
+ * crisp at every size and a chart fills its cell instead of setting it.
  * Marks follow the site's palette: --accent for the thing the chart is
  * about, a dim neutral for context, text always in text colours.
  */
@@ -11,10 +12,8 @@ import { type PointerEvent, useEffect, useRef, useState } from 'react';
 import type { CorosLoadDay } from '../coros/parse';
 import {
   type Night,
-  type Session,
   type Week,
   type WeekDay,
-  clock,
   fmtDay,
   fmtDow,
   hm,
@@ -25,19 +24,20 @@ import {
 } from '../derive';
 import { useTip } from './tip';
 
-export function useWidth<T extends HTMLElement>() {
+export function useSize<T extends HTMLElement>() {
   const ref = useRef<T>(null);
-  const [width, setWidth] = useState(0);
+  const [size, setSize] = useState({ w: 0, h: 0 });
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const measure = () => setWidth(Math.round(el.clientWidth));
+    const measure = () =>
+      setSize({ w: Math.round(el.clientWidth), h: Math.round(el.clientHeight) });
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  return [ref, width] as const;
+  return [ref, size.w, size.h] as const;
 }
 
 const AX = { fill: 'var(--muted)', fontSize: 10 } as const;
@@ -82,16 +82,16 @@ export function LoadChart({
   days,
   dayTips,
 }: { days: CorosLoadDay[]; dayTips: Map<string, string> }) {
-  const [ref, W] = useWidth<HTMLDivElement>();
+  const [ref, W, H] = useSize<HTMLDivElement>();
   const n = days.length;
   const ml = 30;
   const mr = 92;
   const mt = 8;
-  const H1 = 170;
-  const gap = 30;
-  const H2 = 64;
+  const gap = 26;
   const mb = 22;
-  const H = mt + H1 + gap + H2 + mb;
+  // Load gets about two thirds of the height, the ratio the rest.
+  const H2 = Math.round((H - mt - gap - mb) * 0.32);
+  const H1 = H - mt - gap - mb - H2;
   const iw = Math.max(1, W - ml - mr);
   const x = (i: number) => ml + (n > 1 ? (i * iw) / (n - 1) : iw / 2);
   const cross = useCrosshair(n, x, (i) => {
@@ -103,7 +103,7 @@ export function LoadChart({
       dayTips.get(d.date) ?? 'Rest',
     ];
   });
-  if (W < 160 || !n) return <div ref={ref} className="chart" style={{ height: H }} />;
+  if (W < 160 || H1 < 30 || !n) return <div ref={ref} className="chart" />;
 
   const ymax = Math.ceil(Math.max(...days.map((d) => Math.max(d.shortTerm, d.longTerm))) / 40) * 40;
   const y = (v: number) => mt + H1 - (v / ymax) * H1;
@@ -192,7 +192,7 @@ export function LoadChart({
         <text x={ml} y={r0 - H2 - 10} {...AX} letterSpacing={1}>
           LOAD RATIO
         </text>
-        {[1, 1.5].map((v) => (
+        {(H2 < 44 ? [1] : [1, 1.5]).map((v) => (
           <g key={v}>
             <line x1={ml} x2={ml + iw} y1={ry(v)} y2={ry(v)} {...GRID} />
             <text x={ml - 8} y={ry(v) + 3} textAnchor="end" {...AX}>
@@ -243,18 +243,18 @@ export function LoadChart({
 // -------------------------------------------------------- this week
 
 export function WeekBars({ days, today }: { days: WeekDay[]; today: string }) {
-  const [ref, W] = useWidth<HTMLDivElement>();
-  const H = 96;
+  const [ref, W, box] = useSize<HTMLDivElement>();
+  const H = box - 2; // the today mark sits on the bottom edge
   const mt = 16;
   const mb = 18;
   const ih = H - mt - mb;
-  if (W < 160) return <div ref={ref} className="chart" style={{ height: H + 2 }} />;
+  if (W < 160 || ih < 20) return <div ref={ref} className="chart" />;
   const step = W / 7;
   const bw = Math.min(24, step * 0.5);
   const vmax = Math.max(20, ...days.map((d) => d.km));
   return (
     <div ref={ref} className="chart">
-      <svg width={W} height={H + 2} aria-hidden="true">
+      <svg width={W} height={box} aria-hidden="true">
         {days.map((d, i) => {
           const cx = step * i + step / 2;
           const h = (d.km / vmax) * ih;
@@ -316,140 +316,16 @@ export function WeekBars({ days, today }: { days: WeekDay[]; today: string }) {
   );
 }
 
-// ---------------------------------------------------------- session
-
-export function SessionChart({
-  session,
-  threshold,
-}: { session: Session; threshold: number | null }) {
-  const [ref, W] = useWidth<HTMLDivElement>();
-  const ml = 34;
-  const mr = 8;
-  const mt = 18;
-  const H1 = 230;
-  const mb = 20;
-  const H = mt + H1 + mb;
-  if (W < 160) return <div ref={ref} className="chart" style={{ height: H }} />;
-  const iw = W - ml - mr;
-  const total = session.laps.reduce((s, l) => s + l.sec, 0);
-  const tx = (t: number) => ml + (t / total) * iw;
-
-  // Pace as a dash per lap on a fixed fast→slow scale, never bars from
-  // zero: from zero a 3:41 rep and a 3:14 rep look identical.
-  const paces = session.laps.filter((l) => l.part !== 'rest' && l.km > 0).map((l) => l.sec / l.km);
-  const pFast = Math.floor((Math.min(...paces) - 10) / 30) * 30;
-  const pSlow = Math.ceil((Math.max(...paces) + 10) / 30) * 30;
-  const y = (p: number) =>
-    mt + ((Math.min(Math.max(p, pFast), pSlow) - pFast) / (pSlow - pFast)) * H1;
-  const ticks: number[] = [];
-  for (let p = pFast; p <= pSlow; p += 30) ticks.push(p);
-
-  let t = 0;
-  let repN = 0;
-  const marks = session.laps.map((l, i) => {
-    const x0 = tx(t);
-    const x1 = tx(t + l.sec);
-    t += l.sec;
-    const p = l.km > 0 ? l.sec / l.km : 0;
-    let tip: string;
-    let label: string | null = null;
-    if (l.part === 'rep') {
-      repN++;
-      const rep = session.reps[repN - 1];
-      tip = `Rep ${repN}|${l.km.toFixed(2)} km · ${clock(l.sec)} · ${pace(p)} /km${l.watts ? `|${l.watts} W` : ''}`;
-      if (repN === 1 || rep === session.reps[session.fastest]) label = pace(p);
-    } else if (l.part === 'rest') tip = `Recovery|${clock(l.sec)}`;
-    else
-      tip = `${l.part === 'warmup' ? 'Warm-up' : 'Cool-down'}|${l.km.toFixed(2)} km · ${pace(p)} /km`;
-    return { i, l, x0, x1, p, tip, label };
-  });
-  return (
-    <div ref={ref} className="chart">
-      <svg width={W} height={H} aria-hidden="true">
-        <text x={ml} y={mt - 6} {...AX}>
-          PACE /KM
-        </text>
-        {ticks.map((p) => (
-          <g key={p}>
-            <line x1={ml} x2={ml + iw} y1={y(p)} y2={y(p)} {...GRID} />
-            <text x={ml - 6} y={y(p) + 3} textAnchor="end" {...AX}>
-              {pace(p)}
-            </text>
-          </g>
-        ))}
-        {threshold && threshold > pFast && threshold < pSlow && (
-          <g>
-            <line
-              x1={ml}
-              x2={ml + iw}
-              y1={y(threshold)}
-              y2={y(threshold)}
-              stroke="rgba(var(--ink-rgb) / 0.3)"
-            />
-            <text x={ml + iw} y={y(threshold) + 13} textAnchor="end" {...AX}>
-              threshold {pace(threshold)}
-            </text>
-          </g>
-        )}
-        {marks.map((m) =>
-          m.l.part === 'rest' || !m.l.km ? null : (
-            <rect
-              key={m.i}
-              x={m.x0 + 1}
-              y={y(m.p) - 4}
-              width={Math.max(2, m.x1 - m.x0 - 2)}
-              height={8}
-              rx={4}
-              fill={m.l.part === 'rep' ? 'var(--accent)' : DIM}
-            />
-          ),
-        )}
-        {marks.map((m) =>
-          m.label ? (
-            <text
-              key={`l${m.i}`}
-              x={(m.x0 + m.x1) / 2}
-              y={y(m.p) - 9}
-              textAnchor="middle"
-              fontSize={10}
-              fill="var(--ink)"
-            >
-              {m.label}
-            </text>
-          ) : null,
-        )}
-        {Array.from({ length: Math.floor(total / 60 / 20) + 1 }, (_, k) => k * 20).map((m) => (
-          <text key={m} x={tx(m * 60)} y={H - 4} textAnchor={m ? 'middle' : 'start'} {...AX}>
-            {m}′
-          </text>
-        ))}
-        {marks.map((m) => (
-          <rect
-            key={`h${m.i}`}
-            x={m.x0}
-            y={mt}
-            width={Math.max(4, m.x1 - m.x0)}
-            height={H1}
-            fill="transparent"
-            data-tip={m.tip}
-          />
-        ))}
-      </svg>
-    </div>
-  );
-}
-
 // ----------------------------------------------------------- volume
 
 export function VolumeChart({ weeks }: { weeks: Week[] }) {
-  const [ref, W] = useWidth<HTMLDivElement>();
+  const [ref, W, H] = useSize<HTMLDivElement>();
   const ml = 28;
   const mr = 4;
   const mt = 20;
-  const H1 = 150;
   const mb = 24;
-  const H = mt + H1 + mb;
-  if (W < 160 || !weeks.length) return <div ref={ref} className="chart" style={{ height: H }} />;
+  const H1 = H - mt - mb;
+  if (W < 160 || H1 < 30 || !weeks.length) return <div ref={ref} className="chart" />;
   const iw = W - ml - mr;
   const vmax = Math.max(20, Math.ceil(Math.max(...weeks.map((w) => w.runKm)) / 20) * 20);
   const y = (v: number) => mt + H1 - (v / vmax) * H1;
@@ -535,15 +411,14 @@ export function RecoveryChart({
   sleepBase: number | null;
   dayTips: Map<string, string>;
 }) {
-  const [ref, W] = useWidth<HTMLDivElement>();
+  const [ref, W, H] = useSize<HTMLDivElement>();
   const n = nights.length;
   const ml = 4;
   const mr = 46;
-  const rowH = 52;
   const gap = 28;
   const top = 16;
   const mb = 20;
-  const H = top + 2 * rowH + gap + mb;
+  const rowH = (H - top - gap - mb) / 2;
   const iw = Math.max(1, W - ml - mr);
   const x = (i: number) => ml + (n > 1 ? (i * iw) / (n - 1) : 0);
   const cross = useCrosshair(n, x, (i) => {
@@ -555,7 +430,7 @@ export function RecoveryChart({
       `Day before: ${dayTips.get(shift(d.date, -1)) ?? 'rest'}`,
     ];
   });
-  if (W < 160 || !n) return <div ref={ref} className="chart" style={{ height: H }} />;
+  if (W < 160 || rowH < 20 || !n) return <div ref={ref} className="chart" />;
 
   const panels: Panel[] = [
     {
@@ -723,8 +598,8 @@ export function RecoveryChart({
 // ------------------------------------------------------------ small
 
 export function Sparkline({ values, base }: { values: number[]; base: number | null }) {
-  const w = 96;
-  const h = 26;
+  const w = 72;
+  const h = 24;
   if (values.length < 2) return <svg width={w} height={h} aria-hidden="true" />;
   const lo = Math.min(...values, base ?? Number.POSITIVE_INFINITY);
   const hi = Math.max(...values, base ?? Number.NEGATIVE_INFINITY);
@@ -761,8 +636,7 @@ export function Ring({ pct }: { pct: number }) {
   const c = 2 * Math.PI * r;
   return (
     <svg
-      width={136}
-      height={136}
+      className="tr-ring"
       viewBox="0 0 136 136"
       role="img"
       aria-label={`Recovery ${pct} percent`}

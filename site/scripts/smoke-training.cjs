@@ -276,28 +276,24 @@ const contrastFailures = (page) =>
     els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
   );
   const has = (prefix) => kickers.some((k) => k.startsWith(prefix));
-  for (const k of [
-    '§ STATUS',
-    '§ THIS WEEK',
-    '§ WEEKLY VOLUME',
-    '§ LINE STUDIES',
-    '§ ODOMETER',
-    '§ HOW THIS WORKS',
-  ]) {
+  for (const k of ['§ STATUS', '§ THIS WEEK', '§ WEEKLY VOLUME']) {
     assert(has(k), `cell rendered: ${k}`);
   }
   if (EXPECT_COROS) {
-    for (const k of [
-      '§ READINESS',
-      '§ TRAINING LOAD',
-      '§ RECOVERY',
-      '§ TRAINING FOCUS',
-      '§ NOTES FROM THE LOG',
-    ]) {
+    for (const k of ['§ READINESS', '§ TRAINING LOAD', '§ RECOVERY', '§ TRAINING FOCUS']) {
       assert(has(k), `Coros cell rendered: ${k}`);
     }
   }
-  for (const k of ['§ CONSISTENCY', '§ RACE PREDICTOR']) assert(!has(k), `cell removed: ${k}`);
+  for (const k of [
+    '§ CONSISTENCY',
+    '§ RACE PREDICTOR',
+    '§ LATEST SESSION',
+    '§ NOTES FROM THE LOG',
+    '§ LINE STUDIES',
+    '§ ODOMETER',
+    '§ HOW THIS WORKS',
+  ])
+    assert(!has(k), `cell removed: ${k}`);
   const word = (await page.textContent('.tr-status-word'))?.trim();
   assert(
     /^[A-Z][a-z]+\.$/.test(word ?? ''),
@@ -310,15 +306,27 @@ const contrastFailures = (page) =>
     els.map((e) => e.getBoundingClientRect().width),
   );
   assert(
-    charts.length >= (EXPECT_COROS ? 5 : 2) && charts.every((w) => w > 100),
+    charts.length >= (EXPECT_COROS ? 4 : 2) && charts.every((w) => w > 100),
     `charts drew at their real width (${charts.map(Math.round).join(', ')})`,
   );
-  const lines = await page.locator('.tr-study').count();
-  assert(lines >= 1 && lines <= 8, `line studies show the latest activities (${lines})`);
-  if (await page.locator('.tr-reps').count()) {
-    const reps = await page.locator('.tr-reps tbody tr').count();
-    const best = await page.locator('.tr-reps tr.best').count();
-    assert(reps >= 2 && best === 1, `session table lists reps with one fastest (${reps} reps)`);
+  if (!IS_MOBILE) {
+    // Desktop fits on one screen like the home page: no page scroll, and
+    // nothing in a cell runs past its bottom edge.
+    const fit = await page.evaluate(() => ({
+      scroll: document.scrollingElement.scrollHeight - innerHeight,
+      over: [...document.querySelectorAll('.tr-grid > .cell')]
+        .filter((c) => {
+          const floor = c.getBoundingClientRect().bottom - parseFloat(getComputedStyle(c).paddingBottom);
+          return [...c.querySelectorAll('*')].some(
+            (el) => !el.closest('svg') && el.getBoundingClientRect().bottom > floor + 1,
+          );
+        })
+        .map((c) => c.querySelector('.kicker')?.textContent),
+    }));
+    assert(
+      fit.scroll <= 0 && fit.over.length === 0,
+      `the page fits one screen (${fit.scroll}px scroll, overflowing: ${fit.over.join(', ') || 'none'})`,
+    );
   }
 
   // Randy shows resting HR in the readiness cell and nowhere else: no other
