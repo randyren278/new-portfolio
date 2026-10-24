@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 const title = 'Randy Ren';
 const description =
-  'How Randy’s running is going: load, recovery, the latest session, live from Coros and Strava.';
+  'How Randy’s running is going: load, recovery and the latest run, live from Coros and Strava.';
 
 // Open Graph and Twitter replace the layout's objects wholesale, so the
 // shared image and site name are restated here.
