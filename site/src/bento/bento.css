@@ -1609,7 +1609,7 @@ body {
   top: 50%;
   margin: 0;
   max-width: none;
-  width: min(540px, calc(100vw - 32px));
+  width: min(440px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   overflow: auto;
   overscroll-behavior: contain;
@@ -1672,18 +1672,10 @@ body {
   font-family: "Instrument Serif", "IBM Plex Serif", ui-serif, Georgia, serif;
   font-style: italic;
   font-weight: 400;
-  font-size: clamp(30px, 5vw, 38px);
+  font-size: clamp(26px, 4.4vw, 30px);
   line-height: 1.05;
-  margin: 0 0 12px;
-  padding-right: 24px;
-}
-.training-ask-copy {
-  font-family: "Newsreader", "IBM Plex Serif", ui-serif, Georgia, serif;
-  font-style: italic;
-  font-size: 16px;
-  line-height: 1.45;
   margin: 0 0 18px;
-  text-wrap: pretty;
+  padding-right: 24px;
 }
 /* Status gets the widest column ("Overreaching" is the longest Coros word);
    on a phone the type steps down so no value breaks mid-word, and values

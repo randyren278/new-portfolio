@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * "Do you want to view Randy's training status?" — the plate that opens
- * from the Latest Activity cell. Same glass plate as a project, Puff asks.
- * Fetches three headline numbers while it's open; leaving fades the page
- * out with the same curtain the intro replay uses, then routes.
+ * "Want to see Randy's training log?" — the plate that opens from the
+ * Latest Activity cell. Same glass plate as a project, Puff asks. Shows
+ * three headline numbers; leaving fades the page out with the same curtain
+ * the intro replay uses, then routes.
  */
 
 import { markReturnToHome } from '@/training/returnFlag';
@@ -14,6 +14,27 @@ import { createPortal } from 'react-dom';
 import { PuffArt } from './PuffEntrance';
 
 type Summary = { status: string | null; recoveryPct: number | null; km7: number };
+
+// The numbers are requested when the home page mounts, not when the plate
+// opens: a cold summary costs a function start and a Postgres read, and
+// fetched on click that wait showed as "…" in the plate every time.
+// Reused for five minutes, the CDN's own freshness for the route.
+let summary: { at: number; request: Promise<Summary> } | null = null;
+
+export function prefetchTrainingSummary(): Promise<Summary> {
+  if (summary && Date.now() - summary.at < 300_000) return summary.request;
+  const entry: NonNullable<typeof summary> = {
+    at: Date.now(),
+    request: fetch('/api/training/summary')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .catch((err) => {
+        if (summary === entry) summary = null;
+        throw err;
+      }),
+  };
+  summary = entry;
+  return entry.request;
+}
 
 export function TrainingAsk({
   open,
@@ -26,17 +47,16 @@ export function TrainingAsk({
 }) {
   const router = useRouter();
   const [shown, setShown] = useState(false);
-  const [summary, setSummary] = useState<Summary | null | 'error'>(null);
+  const [numbers, setNumbers] = useState<Summary | null | 'error'>(null);
   const plate = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     if (!open) return;
     router.prefetch('/training');
     let live = true;
-    fetch('/api/training/summary')
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((s: Summary) => live && setSummary(s))
-      .catch(() => live && setSummary('error'));
+    prefetchTrainingSummary()
+      .then((s) => live && setNumbers(s))
+      .catch(() => live && setNumbers('error'));
     return () => {
       live = false;
     };
@@ -52,7 +72,7 @@ export function TrainingAsk({
     document.body.style.overflow = 'hidden';
     // Focus the plate itself, not its primary button: Safari treats a
     // scripted focus on a button as keyboard focus and draws the ring, so the
-    // plate opened with "View training status" already highlighted.
+    // plate opened with "View training log" already highlighted.
     plate.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -100,7 +120,7 @@ export function TrainingAsk({
     router.push('/training');
   }
 
-  const s = summary && summary !== 'error' ? summary : null;
+  const s = numbers && numbers !== 'error' ? numbers : null;
   return createPortal(
     <div className={`training-ask${shown ? ' open' : ''}`}>
       <div
@@ -127,14 +147,9 @@ export function TrainingAsk({
           <div className="kicker">§ TRAINING STATUS</div>
         </div>
         <h2 className="training-ask-title" id="training-ask-title">
-          Do you want to view Randy’s training status?
+          Want to see Randy’s training log?
         </h2>
-        <p className="training-ask-copy">
-          How ready the body is today, what the last month of load has built, the latest session rep
-          by rep, and how the weeks are stacking up. Live from Coros and Strava, not typed in by
-          hand.
-        </p>
-        {summary !== 'error' && (
+        {numbers !== 'error' && (
           <dl className="training-ask-preview" aria-busy={!s}>
             <div>
               <dt>Status</dt>
@@ -152,7 +167,7 @@ export function TrainingAsk({
         )}
         <div className="training-ask-actions">
           <button className="glass-pill training-ask-go" type="button" onClick={view}>
-            View training status <span aria-hidden="true">→</span>
+            View training log <span aria-hidden="true">→</span>
           </button>
           <button className="glass-pill" type="button" onClick={onClose}>
             Not now

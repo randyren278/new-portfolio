@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { TrainingAsk } from '../TrainingAsk';
+import { TrainingAsk, prefetchTrainingSummary } from '../TrainingAsk';
 
 export type StravaData = {
   id: number;
@@ -80,6 +80,8 @@ export function StravaCell({
   const [loading, setLoading] = useState(live);
   useEffect(() => {
     if (!live) return;
+    // The training plate's numbers, ready before anyone opens it.
+    prefetchTrainingSummary().catch(() => {});
     let active = true;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);

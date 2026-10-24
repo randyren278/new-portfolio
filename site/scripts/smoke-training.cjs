@@ -104,6 +104,10 @@ const contrastFailures = (page) =>
       errors.push(`CONSOLE: ${m.text()}`);
     }
   });
+  const summaryRequests = [];
+  page.on('request', (r) => {
+    if (new URL(r.url()).pathname === '/api/training/summary') summaryRequests.push(r.url());
+  });
 
   console.log(
     `\n== smoke-training (${IS_MOBILE ? 'mobile / iPhone 13' : 'desktop'}) → ${BASE_URL} ==`,
@@ -186,12 +190,17 @@ const contrastFailures = (page) =>
   assert(ring === 'solid 2px', `opener has a visible keyboard focus ring (${ring})`);
 
   // ---- 2. the plate, by keyboard -------------------------------------------
+  // Fetched on open, a cold summary left the plate showing "…" for seconds.
+  assert(
+    summaryRequests.length > 0,
+    'the plate numbers are requested before the plate opens',
+  );
   await page.keyboard.press('Enter');
   const plate = page.locator('.training-ask-plate');
   await plate.waitFor({ state: 'visible' });
   const title = (await page.textContent('#training-ask-title'))?.trim();
   assert(
-    title === 'Do you want to view Randy’s training status?',
+    title === 'Want to see Randy’s training log?',
     `plate asks the question (got "${title}")`,
   );
   assert(
@@ -252,7 +261,7 @@ const contrastFailures = (page) =>
   await page.waitForURL('**/training', { timeout: 20000 });
   await page.waitForSelector('.tr-grid');
   await page.waitForTimeout(800);
-  assert(new URL(page.url()).pathname === '/training', 'View training status lands on /training');
+  assert(new URL(page.url()).pathname === '/training', 'View training log lands on /training');
   assert(
     (await page.title()) === 'Randy Ren',
     `training page title (got "${await page.title()}")`,
