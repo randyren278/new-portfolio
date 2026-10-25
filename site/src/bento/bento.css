@@ -306,6 +306,13 @@ body {
   font-size: 13px;
   align-content: start;
 }
+/* Bottom-right, like every other action on the page. */
+.contact-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 12px;
+}
 .contact-lab {
   font-size: 10px;
   letter-spacing: 0.08em;

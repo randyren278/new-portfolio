@@ -66,6 +66,20 @@ export function ContactCell({
           </div>
         ))}
       </div>
+      {/* The plain way in; tapping Puff twice still works. Opens the same
+          "Want to play?" invitation, which hands focus back here on close. */}
+      {onPuffPlay && (
+        <div className="contact-actions">
+          <button
+            className="glass-pill contact-play"
+            type="button"
+            aria-haspopup="dialog"
+            onClick={(event) => onPuffPlay(event.currentTarget)}
+          >
+            Play a game <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+      )}
     </section>
   );
 }

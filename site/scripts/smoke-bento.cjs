@@ -154,6 +154,7 @@ function assert(cond, label) {
     '.strava-open',
     '.resume-view',
     '.resume-download',
+    '.contact-play',
   ]) {
     await page.hover(trigger);
     await page.waitForTimeout(250);
@@ -529,6 +530,35 @@ function assert(cond, label) {
   assert(
     !!stravaPathD && stravaPathD.length > 20,
     `strava SVG path rendered (${stravaPathD?.slice(0, 32)}...)`,
+  );
+
+  // ---- 7c. Correspondence has a plain way into the game --------------
+  // The only way in used to be tapping Puff twice within 5 s, behind a
+  // first tap that just says "Hello!". The pill opens the same invitation.
+
+  const play = page.locator('.cell-contact .contact-play');
+  const playLabel = (await play.textContent())?.replace(/\s+/g, ' ').trim();
+  assert(playLabel === 'Play a game ↗', `Correspondence shows the game pill (got "${playLabel}")`);
+  await play.click();
+  const invited = await page
+    .waitForFunction(
+      () => window.puffUp?.state === 'invite' && document.getElementById('invite')?.open,
+      null,
+      { timeout: 15000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  assert(invited, 'one tap on the pill opens the "Want to play?" invitation');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !window.puffUp, null, { timeout: 15000 }).catch(() => {});
+  assert(
+    await page.evaluate(
+      () =>
+        !document.querySelector('.puff-game') &&
+        document.activeElement?.classList.contains('contact-play') &&
+        document.body.style.overflow !== 'hidden',
+    ),
+    'declining closes the invitation and hands focus back to the pill',
   );
 
   // ---- 8. mobile-specific checks -------------------------------------
@@ -1094,6 +1124,7 @@ function assert(cond, label) {
           '.cell-photo-b .glass-pill',
           '.strava-pill',
           '.resume-download',
+          '.contact-play',
         ]) {
           const a = at(sel);
           if (a && !(near(a.bottom, py) && near(a.right, px)))
