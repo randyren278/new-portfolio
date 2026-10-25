@@ -4,53 +4,24 @@
  * Strava cell — middle-right of the bento.
  *
  * Optional live data loads independently of the entrance and portfolio.
- * The API projects the activity; null means no tokens / fetch error. When strava
- * is null we render a hand-drawn fallback polyline in the same visual
- * language as the mockup, plus a muted "not connected" caption.
- *
- * The real path is already projected to a 360×200 SVG viewBox by the
- * route handler; this cell just drops it into <path d={...}>.
+ * The run is /training's run cell (the latest outdoor run over 6 km with a
+ * public route), read through /api/training/summary from the same view the
+ * training page renders. Until it loads, or if it can't, we render a
+ * hand-drawn fallback polyline in the same visual language as the mockup,
+ * plus a muted caption.
  */
 
+import { clock, km1, pace } from '@/training/derive';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { TrainingAsk, prefetchTrainingSummary } from '../TrainingAsk';
+import { TrainingAsk } from '../TrainingAsk';
 
-export type StravaData = {
-  id: number;
-  name: string;
-  distanceM: number;
-  movingTimeS: number;
-  activityType: string;
-  polylinePath: string;
+export type TrainingSummary = {
+  status: string | null;
+  recoveryPct: number | null;
+  km7: number;
+  // route: SVG path in a 160×110 box, as /training draws it
+  run: { km: number; sec: number; route: string; stravaId: number | null } | null;
 };
-
-function formatDistance(meters: number): string {
-  const km = meters / 1000;
-  return `${km.toFixed(1)} KM`;
-}
-
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
-
-// Run-family activities (Run, TrailRun, VirtualRun) are reported as pace
-// (min/km) — the convention runners actually read. Everything else
-// (Ride, Hike, Swim, EBikeRide, etc.) gets speed in km/h.
-function formatSpeed(meters: number, seconds: number, activityType: string): string {
-  if (meters <= 0 || seconds <= 0) return '';
-  if (/run/i.test(activityType)) {
-    const secPerKm = seconds / (meters / 1000);
-    const m = Math.floor(secPerKm / 60);
-    const s = Math.round(secPerKm % 60);
-    return `${m}:${s.toString().padStart(2, '0')} /KM`;
-  }
-  const kmh = meters / 1000 / (seconds / 3600);
-  return `${kmh.toFixed(1)} KM/H`;
-}
 
 // Hand-authored fallback polyline. Same one used in the mockup — starts
 // upper-left, meanders down, loops, returns. Not random — needs to look
@@ -72,36 +43,37 @@ const FALLBACK_PATH = `M 34 46
   C 62 112, 54 92, 44 74
   C 38 64, 34 54, 34 46 Z`;
 
-export function StravaCell({
-  strava: initial,
-  live = false,
-}: { strava: StravaData | null; live?: boolean }) {
-  const [strava, setStrava] = useState(initial);
-  const [loading, setLoading] = useState(live);
-  useEffect(() => {
-    if (!live) return;
-    // The training plate's numbers, ready before anyone opens it.
-    prefetchTrainingSummary().catch(() => {});
-    let active = true;
+export function StravaCell() {
+  // One request feeds the card and the plate; null while it loads.
+  const [summary, setSummary] = useState<TrainingSummary | null | 'error'>(null);
+  const request = useRef<AbortController | null>(null);
+  const load = useCallback(() => {
     const controller = new AbortController();
+    request.current = controller;
     const timer = setTimeout(() => controller.abort(), 8000);
-    fetch('/api/strava/latest', { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((activity: StravaData | null) => {
-        if (!controller.signal.aborted) setStrava(activity);
+    fetch('/api/training/summary', { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((s: TrainingSummary) => {
+        if (request.current === controller) setSummary(s);
       })
-      .catch(() => {})
+      .catch(() => {
+        // A failed re-read keeps what the card already shows.
+        if (request.current === controller) setSummary((s) => s ?? 'error');
+      })
       .finally(() => {
         clearTimeout(timer);
-        if (active) setLoading(false);
+        if (request.current === controller) request.current = null;
       });
+  }, []);
+  useEffect(() => {
+    load();
     return () => {
-      active = false;
-      clearTimeout(timer);
-      controller.abort();
+      request.current?.abort();
+      request.current = null;
     };
-  }, [live]);
-  const usingFallback = strava === null;
+  }, [load]);
+  const run = summary && summary !== 'error' ? summary.run : null;
+  const loading = summary === null;
   // The whole cell is the doorway to /training: one real button laid over
   // it, asking first (TrainingAsk) rather than navigating on a stray tap.
   const [asking, setAsking] = useState(false);
@@ -116,42 +88,40 @@ export function StravaCell({
       <h2 className="kicker">§ LATEST ACTIVITY</h2>
       <div className="strava-body">
         <svg
-          viewBox="0 0 360 200"
+          viewBox={run ? '0 0 160 110' : '0 0 360 200'}
           preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-labelledby="strava-svg-title"
         >
           <title id="strava-svg-title">
-            {usingFallback ? 'Fallback activity trace' : 'Latest activity trace'}
+            {run ? 'Latest activity trace' : 'Fallback activity trace'}
           </title>
           <path
-            d={usingFallback ? FALLBACK_PATH : strava.polylinePath}
+            d={run ? run.route : FALLBACK_PATH}
             fill="none"
             stroke="var(--accent)"
             strokeWidth={1.5}
             strokeLinecap="round"
             strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
           />
         </svg>
       </div>
       <div className="strava-foot">
-        {usingFallback ? (
+        {run ? (
+          <div>
+            <div className="strava-cap">
+              {km1(run.km)} KM · {clock(run.sec)} · RUN
+            </div>
+            <div className="strava-sub">{pace(run.sec / run.km)} /KM</div>
+          </div>
+        ) : (
           <div>
             <div className="strava-cap">
               {loading ? '— LATEST ACTIVITY —' : '— NO RECENT ACTIVITY —'}
             </div>
             <div className="strava-sub">
               {loading ? 'loading activity' : 'strava not connected'}
-            </div>
-          </div>
-        ) : (
-          <div>
-            <div className="strava-cap">
-              {formatDistance(strava.distanceM)} · {formatDuration(strava.movingTimeS)} ·{' '}
-              {strava.activityType.toUpperCase()}
-            </div>
-            <div className="strava-sub">
-              {formatSpeed(strava.distanceM, strava.movingTimeS, strava.activityType)}
             </div>
           </div>
         )}
@@ -168,7 +138,13 @@ export function StravaCell({
         type="button"
         aria-haspopup="dialog"
         aria-label="Training status — see how Randy’s training is going"
-        onClick={() => setAsking(true)}
+        onClick={() => {
+          setAsking(true);
+          // Read again unless a read is under way: this visit may have set
+          // off the refresh that brings in a new run, and the plate leads
+          // straight to /training.
+          if (!request.current) load();
+        }}
       >
         <span className="glass-pill strava-pill" aria-hidden="true">
           Training status <span>→</span>
@@ -177,7 +153,8 @@ export function StravaCell({
       <TrainingAsk
         open={asking}
         onClose={close}
-        stravaUrl={strava ? `https://www.strava.com/activities/${strava.id}` : null}
+        numbers={summary}
+        stravaUrl={run?.stravaId ? `https://www.strava.com/activities/${run.stravaId}` : null}
       />
     </section>
   );

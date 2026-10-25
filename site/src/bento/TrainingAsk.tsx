@@ -12,54 +12,28 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PuffArt } from './PuffEntrance';
+import type { TrainingSummary } from './cells/StravaCell';
 
-type Summary = { status: string | null; recoveryPct: number | null; km7: number };
-
-// The numbers are requested when the home page mounts, not when the plate
-// opens: a cold summary costs a function start and a Postgres read, and
-// fetched on click that wait showed as "…" in the plate every time.
-// Reused for five minutes, the CDN's own freshness for the route.
-let summary: { at: number; request: Promise<Summary> } | null = null;
-
-export function prefetchTrainingSummary(): Promise<Summary> {
-  if (summary && Date.now() - summary.at < 300_000) return summary.request;
-  const entry: NonNullable<typeof summary> = {
-    at: Date.now(),
-    request: fetch('/api/training/summary')
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .catch((err) => {
-        if (summary === entry) summary = null;
-        throw err;
-      }),
-  };
-  summary = entry;
-  return entry.request;
-}
-
+// The numbers come from the cell's request, made when the home page mounts,
+// not when the plate opens: a cold summary costs a function start and a
+// Postgres read, and fetched on click that wait showed as "…" every time.
 export function TrainingAsk({
   open,
   onClose,
+  numbers,
   stravaUrl,
 }: {
   open: boolean;
   onClose: () => void;
+  numbers: TrainingSummary | null | 'error';
   stravaUrl: string | null;
 }) {
   const router = useRouter();
   const [shown, setShown] = useState(false);
-  const [numbers, setNumbers] = useState<Summary | null | 'error'>(null);
   const plate = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    if (!open) return;
-    router.prefetch('/training');
-    let live = true;
-    prefetchTrainingSummary()
-      .then((s) => live && setNumbers(s))
-      .catch(() => live && setNumbers('error'));
-    return () => {
-      live = false;
-    };
+    if (open) router.prefetch('/training');
   }, [open, router]);
 
   useEffect(() => {

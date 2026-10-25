@@ -311,6 +311,7 @@ test('Coros activities pick up the matching Strava route', () => {
     ],
   });
   assert.equal(v.lines[0].route, 'M1,1');
+  assert.equal(v.lines[0].stravaId, 9, 'and the upload it came from, for the plate’s Strava link');
 });
 
 test('the status map is the latest outdoor run over 6 km with a public route', () => {

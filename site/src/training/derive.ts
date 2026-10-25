@@ -63,6 +63,7 @@ export type Activity = {
   sec: number;
   focus: string | null;
   route: string | null;
+  stravaId: number | null; // the public Strava upload the route came from
 };
 
 export type Week = {
@@ -244,13 +245,14 @@ function activitiesOf(src: Sources): Activity[] {
   const strava = src.strava ?? [];
   // Coros records and Strava uploads of the same session start within a
   // few seconds of each other; five minutes absorbs any clock skew.
-  const routeFor = (start: number) =>
-    strava.find((s) => Math.abs(s.start - start) <= 300 && s.route)?.route ?? null;
+  const uploadOf = (start: number) =>
+    strava.find((s) => Math.abs(s.start - start) <= 300 && s.route);
 
   if (src.records) {
     return src.records
       .map((r) => {
         const { sport, indoor } = sportOfCoros(r.kind);
+        const upload = indoor ? undefined : uploadOf(r.start);
         return {
           id: r.labelId,
           date: r.date,
@@ -260,7 +262,8 @@ function activitiesOf(src: Sources): Activity[] {
           km: r.km ?? 0,
           sec: r.durationSec,
           focus: src.details[r.labelId]?.focus ?? null,
-          route: indoor ? null : routeFor(r.start),
+          route: upload?.route ?? null,
+          stravaId: upload?.id ?? null,
         };
       })
       .sort((a, b) => a.start - b.start);
@@ -276,6 +279,7 @@ function activitiesOf(src: Sources): Activity[] {
       sec: s.sec,
       focus: null,
       route: s.route,
+      stravaId: s.id,
     }))
     .sort((a, b) => a.start - b.start);
 }

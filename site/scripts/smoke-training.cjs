@@ -169,6 +169,17 @@ const contrastFailures = (page) =>
   if (process.env.SHARE_URL) await page.goto(process.env.SHARE_URL, { waitUntil: 'load' });
   await page.goto(BASE_URL, { waitUntil: 'networkidle' });
   await passIntro(page);
+  // Compared with /training's run cell in section 4: one source, one run.
+  await page
+    .waitForFunction(
+      () => document.querySelector('.strava-sub')?.textContent !== 'loading activity',
+      null,
+      { timeout: 20000 },
+    )
+    .catch(() => {});
+  const homeRun = await page.evaluate(() =>
+    ['.strava-cap', '.strava-sub'].map((s) => document.querySelector(s)?.textContent).join(' '),
+  );
   const opener = page.locator('.strava-open');
   assert(await opener.isVisible(), 'Latest Activity cell carries the training status opener');
   const pill = (await page.textContent('.strava-pill'))?.replace(/\s+/g, ' ').trim();
@@ -305,6 +316,25 @@ const contrastFailures = (page) =>
       runKm > 6 &&
       /^\d+:\d\d/.test(runPace ?? ''),
     `run cell maps an outdoor run over 6 km with its pace (${runKm} km)`,
+  );
+  const [[km, time], [runPaceValue]] = await page.$$eval('.tr-run .tr-metrics > div', (els) =>
+    els.map((e) => [
+      e.querySelector('.tr-serif')?.firstChild?.textContent,
+      e.querySelector('.tr-sub')?.textContent,
+    ]),
+  );
+  const trainingRun = `${km} KM · ${time} · RUN ${runPaceValue} /KM`;
+  assert(
+    homeRun === trainingRun,
+    `the home card shows the run cell's run (home "${homeRun}", training "${trainingRun}")`,
+  );
+  const trainingKm7 = await page.$eval(
+    '.tr-status .tr-metrics > div:first-child .tr-serif',
+    (e) => e.firstChild?.textContent,
+  );
+  assert(
+    preview[2] === `${trainingKm7} km`,
+    `the plate's last 7 days matches the page (plate "${preview[2]}", page "${trainingKm7} km")`,
   );
   if (!IS_MOBILE) {
     // Its distance and pace sit on the same rows as the numbers beside it.

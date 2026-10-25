@@ -146,8 +146,8 @@ WCAG AA on `--bg`; the smokes' contrast sweeps reject anything that doesn't.
 
 ## Strava integration
 
-The middle-right cell renders a projected SVG polyline from the most
-recent GPS activity.
+The middle-right cell shows `/training`'s run cell: the latest outdoor run
+over 6 km with a public route (`view.outdoor`).
 
 - OAuth: visit `/api/strava/connect?key=<CONNECT_KEY>` once → callback lands
   at `/api/strava/callback` → tokens persisted to the store. Both bootstraps
@@ -157,14 +157,20 @@ recent GPS activity.
   - `STRAVA_TOKEN_FILE` set → local JSON file (for `pnpm dev`, gitignored).
   - Otherwise → **Vercel Edge Config** (reads via SDK; writes via REST API
     using `VERCEL_TOKEN` + `EDGE_CONFIG_ID`).
-- The polyline is projected server-side to a 360×200 SVG viewBox path.
-  `StravaCell` drops the path string directly into `<path d={...}>`.
-- If the fetch fails (no tokens, offline, no GPS activity), `page.tsx`
-  passes `strava: null` and `StravaCell` renders a hand-drawn fallback
-  polyline with a "not connected" caption. **The cell is never broken.**
-- Data cache: 60 s (`unstable_cache` in `page.tsx`). The app gets 100 Strava
-  reads per 15 minutes in total; uncached, a burst of visitors would exhaust
-  it and blank this cell and `/training`'s routes.
+- **One source with `/training`.** `StravaCell` fetches `/api/training/summary`
+  on mount and again when its plate opens. That route builds the same
+  `loadTrainingView()` the training page renders and is `private, no-store`,
+  so the card, the plate's numbers and `/training` read the same Postgres
+  rows. Don't give the card its own Strava fetch or cache, or an edge cache
+  on the summary: with separate lifetimes (a 60 s Strava cache against the
+  15 min training cache), the card showed a run `/training` didn't have yet.
+  `smoke-training` asserts that the card and the run cell match.
+- The route is the 160×110 path `/training` draws, with the same formatters
+  (`km1`, `clock`, `pace` from `derive.ts`).
+- If the summary fails or there's no such run, `StravaCell` renders a
+  hand-drawn fallback polyline with a muted caption. **The cell is never broken.**
+- The app gets 100 Strava reads per 15 minutes in total. Strava is read only
+  by the 15-minute training cache refresh, never per visit.
 
 ## Training status (`/training`)
 

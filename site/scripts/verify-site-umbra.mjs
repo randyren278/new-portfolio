@@ -117,7 +117,7 @@ try {
   await call('click', '.explore-button');
   await wait('!document.querySelector("iframe")');
   check('preview enters portfolio', await evaluate('return !document.querySelector(".bento-page").inert'));
-  for (const route of ['/preview', '/training', '/api/training/summary', '/api/strava/latest', '/robots.txt', '/sitemap.xml', '/favicon.svg', '/resume/Randy_Ren_Resume.pdf', '/api/resume/download', '/resume/Randy_Ren_Resume-preview.webp']) {
+  for (const route of ['/preview', '/training', '/api/training/summary', '/robots.txt', '/sitemap.xml', '/favicon.svg', '/resume/Randy_Ren_Resume.pdf', '/api/resume/download', '/resume/Randy_Ren_Resume-preview.webp']) {
     const start = performance.now();
     const response = await fetch(new URL(route, base));
     const body = Buffer.from(await response.arrayBuffer());

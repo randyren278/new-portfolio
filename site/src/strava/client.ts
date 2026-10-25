@@ -129,29 +129,3 @@ export async function fetchActivitiesSince(after: number): Promise<StravaActivit
   }
   return out;
 }
-
-/**
- * Fetch the most recent PUBLIC activity with a GPS polyline. Indoor /
- * treadmill / manual entries return `map.summary_polyline: null` and are
- * skipped, as are activities set to Followers Only or Only Me on Strava.
- */
-export async function fetchLatestActivityWithGps(): Promise<StravaActivity | null> {
-  const token = await getAccessToken();
-  const res = await fetch(`${API_BASE}/athlete/activities?per_page=30`, {
-    headers: { Authorization: `Bearer ${token}` },
-    // Hit Strava fresh on every page load — the portfolio is low-traffic
-    // enough to stay well under Strava's 100-req/15min rate limit, and
-    // the caller (page.tsx) is a server component so this only fires
-    // once per SSR pass, not once per client.
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    throw new Error(`strava activities fetch failed: ${res.status} ${await res.text()}`);
-  }
-  const activities = (await res.json()) as StravaActivity[];
-  return (
-    activities.find(
-      (a) => !!a.map?.summary_polyline && (a.visibility ?? 'everyone') === 'everyone',
-    ) ?? null
-  );
-}

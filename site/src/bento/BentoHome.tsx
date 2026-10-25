@@ -316,7 +316,7 @@ export function BentoHome({
               case 'resume':
                 return <ResumeCell key={section} resume={content.RESUME} />;
               case 'activity':
-                return <StravaCell key={section} strava={null} live />;
+                return <StravaCell key={section} />;
             }
           })}
         </main>

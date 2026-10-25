@@ -12,7 +12,7 @@ const profile = `scratch-portfolio-perf-${process.pid}`;
 const hook = `<script>window.__portfolioPerf={};new MutationObserver(()=>{const f=document.querySelector('iframe.puff-entrance');if(f&&!window.__portfolioPerf.frameCreated)window.__portfolioPerf.frameCreated=performance.now();if(f?.classList.contains('is-ready')&&!window.__portfolioPerf.introReady){window.__portfolioPerf.introReady=performance.now();requestAnimationFrame(()=>window.__portfolioPerf.introPaintOpportunity=performance.now())}}).observe(document,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});</script>`;
 function proxy(target) {
 return http.createServer((req, res) => {
-  if (req.url === '/api/strava/latest' && process.env.PERF_ACTIVITY_FAULT) {
+  if (req.url === '/api/training/summary' && process.env.PERF_ACTIVITY_FAULT) {
     const fault = process.env.PERF_ACTIVITY_FAULT;
     const timer = setTimeout(() => {
       res.writeHead(fault === 'error' ? 503 : 200, { 'content-type': 'application/json' });
