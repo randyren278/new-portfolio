@@ -1510,3 +1510,17 @@ test('the rocket sounds as it lights, once as it blasts off, and on touchdown', 
   assert.deepEqual([count('ignite'), count('blast'), count('touchdown')], [1, 1, 1]);
   assert.ok(heard.at(-1).includes('touchdown') && heard.at(-1).includes('hop'));
 });
+
+// The ★: the bot steers a climb in the game, a decision per landing, as climb() plays it.
+import { climb } from '../public/puff-up/game/bot.js';
+test('the bot the ★ hands a climb to is never caught by the line, rockets and all', () => {
+  for (const seed of [7, 0x50554646]) {
+    // No stars to call a rescue: a catch ends the climb.
+    let reached = null;
+    for (const { run } of climb({ ...createRun(seed), stars: Number.NEGATIVE_INFINITY })) {
+      reached = run;
+      if (run.score >= 2600) break;
+    }
+    assert.ok(reached.score >= 2600, `seed ${seed}: caught at ${reached.score} m`);
+  }
+});

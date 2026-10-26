@@ -71,7 +71,7 @@ try {
     clearBoxes(`${label}/long-score`, gameGeometry());
     const hit = read(`
       const d=document.querySelector('#game').contentDocument;
-      return [document.querySelector('#back'),d.querySelector('#sound-toggle'),d.querySelector('#restart')].map(e=>{
+      return [document.querySelector('#back'),d.querySelector('#sound-toggle'),d.querySelector('#bot-toggle'),d.querySelector('#restart')].map(e=>{
         const r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
         return {id:e.id,w:r.width,h:r.height,hits:[[0,0],[-21.5,0],[21.5,0],[0,-21.5],[0,21.5]].every(([dx,dy])=>e.contains(e.ownerDocument.elementFromPoint(x+dx,y+dy)))};
       });

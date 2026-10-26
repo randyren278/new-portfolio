@@ -256,6 +256,41 @@ canvas {
   font-size: 10px;
   color: var(--muted);
 }
+/* The bot's star: round and the arrows' size, in the bottom-right corner across from the sound
+   toggle. Gold while the next climb is the bot's. */
+.bot-toggle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* The controls are centred; this reaches from their right edge to the screen's. */
+  right: calc(
+    (min(640px, 100vw - 40px) - 100vw) / 2 +
+      max(var(--game-header-inset, 20px), env(safe-area-inset-right))
+  );
+  width: calc(1.6em + 18px);
+  height: calc(1.6em + 18px);
+  margin: auto 0;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--muted);
+  transition:
+    border-color 0.4s,
+    box-shadow 0.4s;
+}
+.bot-toggle[aria-pressed="true"] {
+  border-color: #e9be7680;
+  box-shadow: 0 0 22px #e9be7640;
+  color: #f3e3a6;
+}
+/* Without room in the corner it sits beside Retry. */
+@media (max-width: 840px), (pointer: coarse), (max-width: 1000px) and (max-height: 500px) {
+  .bot-toggle {
+    position: static;
+    margin: 0 0 0 auto;
+  }
+}
 .keyboard-hint {
   position: absolute;
   bottom: 4px;

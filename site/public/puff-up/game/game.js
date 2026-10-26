@@ -18,6 +18,7 @@ import { ANIMATIONS, renderPuff, samplePose } from './puff-motion.js';
 import { sampleFlightMotion } from './flight-pose.js';
 import { sampleGameVisual } from './game-visual.js';
 import { bindTouchSteering } from './touch-steering.js';
+import { createAutopilot } from './autopilot.js';
 import { createSound, cuesFor } from './audio.js';
 import {
   danger,
@@ -74,7 +75,11 @@ let run = freshRun(nextSeed()),
   previous = run,
   running = false,
   started = false,
-  best = 0;
+  best = 0,
+  // The ★ hands the next climb to the bot; `pilot` steers this one if it was handed over. A bot's
+  // climb never counts toward the best.
+  botNext = false,
+  pilot = null;
 // bestAtStart is the record this climb chases. Moments for the low card: a new best, a charged
 // rescue, a streak milestone; the latest shows.
 let bestAtStart = 0,
@@ -105,6 +110,7 @@ Object.defineProperty(window, 'puffClimb', {
       running,
       started,
       best,
+      bot: pilot !== null,
       visual: Object.freeze(sampleGameVisual(run)),
       run: Object.freeze({
         ...run,
@@ -514,7 +520,7 @@ function syncUI() {
   );
   $('pause-label').hidden = running;
   $('pause-label').classList.toggle('over', over);
-  const beaten = over && bestAtStart > 0 && run.score > bestAtStart;
+  const beaten = over && !pilot && bestAtStart > 0 && run.score > bestAtStart;
   $('overlay-kicker').textContent = over
     ? beaten
       ? 'NEW BEST'
@@ -564,6 +570,8 @@ function pause() {
 function reset() {
   stopFrames();
   saveBest();
+  pilot?.stop();
+  pilot = null;
   run = previous = freshRun(nextSeed(run.seed));
   running = false;
   started = false;
@@ -579,6 +587,7 @@ function start() {
     streakCard = null;
     if (testStars) run = previous = { ...run, stars: testStars };
     if (testStreak) run = previous = { ...run, streak: testStreak };
+    if (botNext) pilot = createAutopilot(run, viewTransform().fallLimit);
   }
   sound.start();
   running = true;
@@ -614,9 +623,14 @@ function tick(now) {
     return;
   }
   while (accumulator >= FIXED_DT && steps < 12) {
+    if (pilot && !pilot.ready(run)) {
+      accumulator = Math.min(accumulator, FIXED_DT);
+      break;
+    }
     previous = run;
-    run = stepRun(run, { axis: axis() }, FIXED_DT, viewTransform().fallLimit);
-    best = Math.max(best, run.score);
+    run = stepRun(run, { axis: pilot ? pilot.axis : axis() }, FIXED_DT, viewTransform().fallLimit);
+    pilot?.stepped(run);
+    if (!pilot) best = Math.max(best, run.score);
     accumulator -= FIXED_DT;
     steps++;
     for (const cue of cuesFor(previous, run)) sound.cue(cue, run.streak);
@@ -637,7 +651,7 @@ function tick(now) {
       readyAt = run.player.timeMs;
       sound.cue('ready');
     }
-    if (newBestAt === null && bestAtStart > 0 && run.score > bestAtStart) {
+    if (!pilot && newBestAt === null && bestAtStart > 0 && run.score > bestAtStart) {
       newBestAt = run.player.timeMs;
       sound.cue('best');
     }
@@ -691,6 +705,11 @@ addEventListener('keydown', (e) => {
   syncSound();
 });
 syncSound();
+$('bot-toggle').addEventListener('click', (e) => {
+  botNext = !botNext;
+  e.currentTarget.setAttribute('aria-pressed', String(botNext));
+  canvas.focus({ preventScroll: true });
+});
 $('restart').addEventListener('click', () => {
   reset();
   start();
