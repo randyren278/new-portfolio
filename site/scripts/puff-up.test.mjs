@@ -1443,11 +1443,13 @@ test('the rocket sounds as it lights, once as it blasts off, and on touchdown', 
 
 // The ★: the bot steers a climb in the game, a decision per landing, as climb() plays it.
 import { climb, steer as botSteer } from '../public/puff-up/game/bot.js';
-test('the bot the ★ hands a climb to is never caught by the line, rockets and all', () => {
+test('the bot the ★ hands a climb to is never caught by the line nor breaks its streak, rockets and all', () => {
   for (const seed of [7, 0x50554646]) {
     // No stars to call a rescue: a catch ends the climb.
     let reached = null;
     for (const { run } of climb({ ...createRun(seed), stars: Number.NEGATIVE_INFINITY })) {
+      // A star whose setup hop lands no higher is not worth the streak (1879 m on 0x50554646).
+      assert.ok(!reached?.streak || run.streak, `seed ${seed}: streak broke at ${run.score} m`);
       reached = run;
       if (run.score >= 2600) break;
     }

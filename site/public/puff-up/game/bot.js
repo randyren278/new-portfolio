@@ -114,15 +114,16 @@ function viable(state, depth) {
 // A landing on a star's ledge that climbs and stays viable two hops on.
 const starred = (n) => n?.ledge.spark && n.climbs && viable(n, 2);
 // The hop onto a star, or else the one that sets it up: a star's lane sits off to the side, often
-// out of reach from where Puff lands. A setup is a landing still viable a hop on, from which a
-// quick probe toward the star lands on it. Setups a few pixels apart probe alike; one of each.
+// out of reach from where Puff lands. A setup is a landing that climbs, so the streak runs on,
+// still viable a hop on, from which a quick probe toward the star lands on it. Setups a few
+// pixels apart probe alike; one of each.
 function starward(options) {
   const onto = options.find(starred);
   if (onto) return onto.plan;
   const tried = new Set();
   for (const next of options) {
     const key = `${next.ledge.id}:${Math.round(next.player.x / 12)}:${Math.sign(Math.round(next.player.vx / 40))}`;
-    if (tried.has(key)) continue;
+    if (!next.climbs || tried.has(key)) continue;
     tried.add(key);
     const star = next.ledges.find((l) => l.spark && l.y < next.player.y - 1);
     if (!star) continue;
@@ -132,9 +133,9 @@ function starward(options) {
   }
   return null;
 }
-/** The next hop: a star within two hops if the climb stays viable, as a player would take it;
- * else the climb that stays viable longest, or a bounce that sets one up. With `wait`, only a hop
- * that goes straight up for its first `wait` ticks. */
+/** The next hop: a star within two hops if the climb stays viable and the streak runs on, as a
+ * player would take it; else the climb that stays viable longest, or a bounce that sets one up.
+ * With `wait`, only a hop that goes straight up for its first `wait` ticks. */
 export function choose(run, wait = 0) {
   // A plan switches steer once, so it is straight throughout if it is at both ends.
   const plans = wait ? PLANS.filter((p) => steer(p, 0) === 0 && steer(p, wait - 1) === 0) : PLANS,
