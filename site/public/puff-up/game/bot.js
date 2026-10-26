@@ -78,10 +78,10 @@ function behind(n) {
 }
 // Distinct landings, best first: highest, then most progress toward the ledge after it.
 const expansions = new WeakMap();
-function landings(state) {
+function landings(state, plans = PLANS) {
   if (!expansions.has(state)) {
     const seen = new Map();
-    for (const plan of PLANS) {
+    for (const plan of plans) {
       const next = flight(state, plan);
       if (!next) continue;
       const key = `${next.ledge.id}:${Math.round(next.player.x / 2)}:${Math.round(next.player.vx / 20)}`;
@@ -133,10 +133,13 @@ function starward(options) {
   return null;
 }
 /** The next hop: a star within two hops if the climb stays viable, as a player would take it;
- * else the climb that stays viable longest, or a bounce that sets one up. */
-export function choose(run) {
-  const state = planned(run),
-    options = landings(state),
+ * else the climb that stays viable longest, or a bounce that sets one up. With `wait`, only a hop
+ * that goes straight up for its first `wait` ticks. */
+export function choose(run, wait = 0) {
+  // A plan switches steer once, so it is straight throughout if it is at both ends.
+  const plans = wait ? PLANS.filter((p) => steer(p, 0) === 0 && steer(p, wait - 1) === 0) : PLANS,
+    state = planned(run),
+    options = landings(state, plans),
     { y } = state.player;
   if (state.ledges.some((l) => l.spark && l.y < y - 1 && l.y >= y - 260)) {
     const plan = starward(options);
@@ -155,10 +158,11 @@ export const decides = (run) => run.player.landed && run.status === 'playing';
 /** Names the exact moment of a climb, so the game can tell a decision was made where it is. */
 export const stateKey = ({ player: p }) => `${p.timeMs}:${p.x}:${p.y}:${p.vx}:${p.vy}`;
 /** The bot's climb from `run` as the game plays it: a decision at each point where it decides,
- * each played through the real stepRun to the next. Yields where each was made and its plan. */
-export function* climb(run, fallLimit) {
-  while (run.status !== 'over') {
-    const plan = choose(run);
+ * each played through the real stepRun to the next. Yields where each was made and its plan. The
+ * first hop goes straight up for `wait` ticks, which the game plays while it waits for it. */
+export function* climb(run, fallLimit, wait = 0) {
+  for (let first = true; run.status !== 'over'; first = false) {
+    const plan = choose(run, first ? wait : 0);
     yield { at: stateKey(run), plan, run };
     for (let tick = 0; ; tick++) {
       run = stepRun(run, { axis: steer(plan, tick) }, FIXED_DT, fallLimit);

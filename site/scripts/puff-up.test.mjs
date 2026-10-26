@@ -1442,7 +1442,7 @@ test('the rocket sounds as it lights, once as it blasts off, and on touchdown', 
 });
 
 // The ★: the bot steers a climb in the game, a decision per landing, as climb() plays it.
-import { climb } from '../public/puff-up/game/bot.js';
+import { climb, steer as botSteer } from '../public/puff-up/game/bot.js';
 test('the bot the ★ hands a climb to is never caught by the line, rockets and all', () => {
   for (const seed of [7, 0x50554646]) {
     // No stars to call a rescue: a catch ends the climb.
@@ -1463,5 +1463,22 @@ test('the bot the ★ hands a climb to takes the stars on its way', () => {
       if (run.score >= 600) break;
     }
     assert.ok(stars >= 3, `seed ${seed}: ${stars} stars by 600 m`);
+  }
+});
+test('the first hop of the bot’s climb goes straight up while the game waits for it', () => {
+  for (const seed of [7, 0x50554646]) {
+    let first = null,
+      reached = null;
+    for (const { run, plan } of climb(
+      { ...createRun(seed), stars: Number.NEGATIVE_INFINITY },
+      undefined,
+      24,
+    )) {
+      first ??= plan;
+      reached = run;
+      if (run.score >= 400) break;
+    }
+    for (let t = 0; t < 24; t++) assert.equal(botSteer(first, t), 0, `seed ${seed} tick ${t}`);
+    assert.ok(reached.score >= 400, `seed ${seed}: caught at ${reached.score} m`);
   }
 });

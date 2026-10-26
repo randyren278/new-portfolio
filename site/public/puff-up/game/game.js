@@ -18,7 +18,7 @@ import { ANIMATIONS, renderPuff, samplePose } from './puff-motion.js';
 import { sampleFlightMotion } from './flight-pose.js';
 import { sampleGameVisual } from './game-visual.js';
 import { bindTouchSteering } from './touch-steering.js';
-import { createAutopilot } from './autopilot.js';
+import { createAutopilot, warmBot } from './autopilot.js';
 import { decides } from './bot.js';
 import { createSound, cuesFor } from './audio.js';
 import {
@@ -593,9 +593,12 @@ function takeOver() {
 function setBot(on) {
   botOn = on;
   $('bot-toggle').setAttribute('aria-pressed', String(on));
-  if (on) return;
-  pilot?.stop();
-  pilot = null;
+  // Its worker starts now, in the half second before the landing it takes the climb at.
+  if (on) warmBot();
+  else {
+    pilot?.stop();
+    pilot = null;
+  }
 }
 function tick(now) {
   raf = null;
