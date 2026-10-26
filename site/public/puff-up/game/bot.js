@@ -111,9 +111,37 @@ function viable(state, depth) {
   }
   return landings(state).some((landing) => landing.climbs && viable(landing, depth - 1));
 }
-/** The next hop: the climb that stays viable longest, or a bounce that sets one up. */
+// A landing on a star's ledge that climbs and stays viable two hops on.
+const starred = (n) => n?.ledge.spark && n.climbs && viable(n, 2);
+// The hop onto a star, or else the one that sets it up: a star's lane sits off to the side, often
+// out of reach from where Puff lands. A setup is a landing still viable a hop on, from which a
+// quick probe toward the star lands on it. Setups a few pixels apart probe alike; one of each.
+function starward(options) {
+  const onto = options.find(starred);
+  if (onto) return onto.plan;
+  const tried = new Set();
+  for (const next of options) {
+    const key = `${next.ledge.id}:${Math.round(next.player.x / 12)}:${Math.sign(Math.round(next.player.vx / 40))}`;
+    if (tried.has(key)) continue;
+    tried.add(key);
+    const star = next.ledges.find((l) => l.spark && l.y < next.player.y - 1);
+    if (!star) continue;
+    const d = Math.sign(centre(star) - next.player.x) || 1;
+    if (PROBES.some((plan) => plan.a === d && starred(flight(next, plan))) && viable(next, 1))
+      return next.plan;
+  }
+  return null;
+}
+/** The next hop: a star within two hops if the climb stays viable, as a player would take it;
+ * else the climb that stays viable longest, or a bounce that sets one up. */
 export function choose(run) {
-  const options = landings(planned(run));
+  const state = planned(run),
+    options = landings(state),
+    { y } = state.player;
+  if (state.ledges.some((l) => l.spark && l.y < y - 1 && l.y >= y - 260)) {
+    const plan = starward(options);
+    if (plan) return plan;
+  }
   for (let d = 3; d >= 1; d--) {
     for (const next of options) if (next.climbs && viable(next, d - 1)) return next.plan;
     for (const next of options) if (!next.climbs && viable(next, d)) return next.plan;

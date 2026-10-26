@@ -1,9 +1,6 @@
 import { WORLD } from './physics.js';
 import {
-  MODIFIERS,
   RESCUE_MS,
-  ZONES,
-  ZONE_METRES,
   ROCKET_IGNITE_MS,
   ROCKET_CUTOFF,
   ROCKET_METRES,
@@ -12,7 +9,6 @@ import {
 
 // Feedback drawn in world coordinates from run state and the frame's blended time `t` and
 // camera, so it moves as smoothly as the scene and pauses with the game.
-const zoneName = (index) => ZONES[Math.min(index, ZONES.length - 1)].name;
 export const metresToY = (metres) => 575 - metres * 10;
 
 /** A kicker: lavender ledge whose chevrons point the way it throws Puff. */
@@ -66,19 +62,6 @@ export function drawRebuild(ctx, repair, t, totalMs, cameraY) {
   ctx.fillRect(Math.round(p.x), y, Math.round(p.width * filled), 4);
 }
 
-/** The first gate ledge of a zone names it underneath, like the launch pad: past the table, by
- * its modifier. */
-export function drawGateLabel(ctx, p, y) {
-  ctx.fillStyle = '#a5a69b';
-  ctx.textAlign = 'center';
-  ctx.fillText(
-    `${p.gate * ZONE_METRES}M · ${(MODIFIERS[p.modifier]?.name ?? zoneName(p.gate)).toUpperCase()}`,
-    p.x + p.width / 2,
-    y + 27,
-  );
-  ctx.textAlign = 'left';
-}
-
 /** A title card that fades in, holds and fades out. It sits below Puff, over ledges already
  * climbed, so it never hides what is coming. */
 export const CALLOUT_Y = 455;
@@ -102,26 +85,9 @@ export function drawCallout(ctx, kicker, title, age, durationMs = 2400, y = CALL
   ctx.fillText(kicker, WORLD.width / 2, y - 6);
   ctx.restore();
 }
-/** Where a second card sits while a zone card shows. */
-export const CALLOUT_LOW_Y = CALLOUT_Y + 80;
 /** The rocket's card sits above Puff instead: he lights it where the card would sit, and the
  * plume fills everything below him. */
 export const CALLOUT_HIGH_Y = 150;
-
-const BANNER_MS = 2400;
-/** Whether the zone card is up at time `t`. */
-export const bannerShows = (banner, t) => !!banner && t >= banner.at && t <= banner.at + BANNER_MS;
-/** Zone title card after landing on a gate; past the table it names the zone's modifier. */
-export function drawBanner(ctx, banner, t) {
-  if (banner)
-    drawCallout(
-      ctx,
-      `ZONE ${banner.zone} · ${banner.zone * ZONE_METRES} M`,
-      MODIFIERS[banner.modifier]?.name ?? zoneName(banner.zone),
-      t - banner.at,
-      BANNER_MS,
-    );
-}
 
 /** Where the last best climb ended: a dashed gold line to climb toward. */
 export function drawBest(ctx, best, cameraY) {

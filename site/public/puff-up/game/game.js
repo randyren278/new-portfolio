@@ -19,19 +19,16 @@ import { sampleFlightMotion } from './flight-pose.js';
 import { sampleGameVisual } from './game-visual.js';
 import { bindTouchSteering } from './touch-steering.js';
 import { createAutopilot } from './autopilot.js';
+import { decides } from './bot.js';
 import { createSound, cuesFor } from './audio.js';
 import {
   danger,
-  drawBanner,
   drawBeam,
   drawBest,
-  bannerShows,
   CALLOUT_HIGH_Y,
-  CALLOUT_LOW_Y,
   CALLOUT_Y,
   drawCallout,
   drawDust,
-  drawGateLabel,
   drawGauge,
   drawKicker,
   drawRebuild,
@@ -76,15 +73,16 @@ let run = freshRun(nextSeed()),
   running = false,
   started = false,
   best = 0,
-  // The ★ hands the next climb to the bot; `pilot` steers this one if it was handed over. A bot's
-  // climb never counts toward the best.
-  botNext = false,
-  pilot = null;
-// bestAtStart is the record this climb chases. Moments for the low card: a new best, a charged
-// rescue, a streak milestone; the latest shows.
+  // While the ★ is on, the bot has the climb from the next point it decides: the start or a
+  // landing. `pilot` steers while it does. Once it has steered (`assisted`), the climb adds
+  // nothing more to the best.
+  botOn = false,
+  pilot = null,
+  assisted = false;
+// bestAtStart is the record this climb chases; newBestAt is when it passed it. Only a streak's
+// milestones and its rocket get a card.
 let bestAtStart = 0,
   newBestAt = null,
-  readyAt = null,
   streakCard = null,
   endedAt = null,
   // Where Puff was and how fast he was falling when the climb ended.
@@ -235,7 +233,6 @@ function draw() {
     const p = platformAtTime(ledge, t),
       y = Math.round(p.y - cameraY);
     if (y < -20 || y > 620) continue;
-    if (p.gate !== undefined) drawGateLabel(ctx, p, y);
     if (p.spark) drawSpark(ctx, p, y, t, reduced);
     if (p.kind === 'kicker') {
       drawKicker(ctx, p, y);
@@ -413,24 +410,14 @@ function draw() {
   ctx.restore();
   if (run.rocket) drawRocketFlame(ctx, run.rocket, t, puffX, puffY, cameraY, view);
   drawUfo(ctx, ufo, cameraY, t);
-  drawBanner(ctx, run.banner, t);
-  // In the zone card's place, or below it if it was up when the moment came. A rescue made ready
-  // by a streak's star says so, not the streak.
-  const low = [
-    streakCard,
-    readyAt !== null && { kicker: 'THREE STARS', title: 'Rescue ready', at: readyAt },
-    newBestAt !== null && { kicker: 'PAST YOUR BEST', title: 'New best', at: newBestAt },
-  ]
-    .filter(Boolean)
-    .reduce((a, b) => (b.at >= a.at ? b : a), { at: Number.NEGATIVE_INFINITY });
-  if (low.title)
+  if (streakCard)
     drawCallout(
       ctx,
-      low.kicker,
-      low.title,
-      t - low.at,
+      streakCard.kicker,
+      streakCard.title,
+      t - streakCard.at,
       1800,
-      low.high ? CALLOUT_HIGH_Y : bannerShows(run.banner, low.at) ? CALLOUT_LOW_Y : CALLOUT_Y,
+      streakCard.high ? CALLOUT_HIGH_Y : CALLOUT_Y,
     );
   // Writing the HUD invalidates its layout and paint even when the text is unchanged.
   if (run.score !== shownScore) {
@@ -520,7 +507,7 @@ function syncUI() {
   );
   $('pause-label').hidden = running;
   $('pause-label').classList.toggle('over', over);
-  const beaten = over && !pilot && bestAtStart > 0 && run.score > bestAtStart;
+  const beaten = over && !assisted && bestAtStart > 0 && run.score > bestAtStart;
   $('overlay-kicker').textContent = over
     ? beaten
       ? 'NEW BEST'
@@ -572,6 +559,7 @@ function reset() {
   saveBest();
   pilot?.stop();
   pilot = null;
+  assisted = false;
   run = previous = freshRun(nextSeed(run.seed));
   running = false;
   started = false;
@@ -583,11 +571,10 @@ function start() {
   if (!started) {
     bestAtStart = best;
     newBestAt = null;
-    readyAt = null;
     streakCard = null;
     if (testStars) run = previous = { ...run, stars: testStars };
     if (testStreak) run = previous = { ...run, streak: testStreak };
-    if (botNext) pilot = createAutopilot(run, viewTransform().fallLimit);
+    if (botOn) takeOver();
   }
   sound.start();
   running = true;
@@ -597,6 +584,18 @@ function start() {
   syncUI();
   canvas.focus({ preventScroll: true });
   raf = requestAnimationFrame(tick);
+}
+function takeOver() {
+  pilot = createAutopilot(run, viewTransform().fallLimit);
+  assisted = true;
+}
+// The ★ on or off. Switched off, the player has the climb back at once.
+function setBot(on) {
+  botOn = on;
+  $('bot-toggle').setAttribute('aria-pressed', String(on));
+  if (on) return;
+  pilot?.stop();
+  pilot = null;
 }
 function tick(now) {
   raf = null;
@@ -623,6 +622,10 @@ function tick(now) {
     return;
   }
   while (accumulator >= FIXED_DT && steps < 12) {
+    // Steering takes the climb back from the bot. Switched on mid-climb, the bot takes it at the
+    // next landing.
+    if (pilot && axis()) setBot(false);
+    if (botOn && !pilot && decides(run)) takeOver();
     if (pilot && !pilot.ready(run)) {
       accumulator = Math.min(accumulator, FIXED_DT);
       break;
@@ -630,7 +633,7 @@ function tick(now) {
     previous = run;
     run = stepRun(run, { axis: pilot ? pilot.axis : axis() }, FIXED_DT, viewTransform().fallLimit);
     pilot?.stepped(run);
-    if (!pilot) best = Math.max(best, run.score);
+    if (!assisted) best = Math.max(best, run.score);
     accumulator -= FIXED_DT;
     steps++;
     for (const cue of cuesFor(previous, run)) sound.cue(cue, run.streak);
@@ -647,11 +650,8 @@ function tick(now) {
         at: run.player.timeMs,
         high: rocket,
       };
-    if (run.stars === 3 && previous.stars < 3) {
-      readyAt = run.player.timeMs;
-      sound.cue('ready');
-    }
-    if (!pilot && newBestAt === null && bestAtStart > 0 && run.score > bestAtStart) {
+    if (run.stars === 3 && previous.stars < 3) sound.cue('ready');
+    if (!assisted && newBestAt === null && bestAtStart > 0 && run.score > bestAtStart) {
       newBestAt = run.player.timeMs;
       sound.cue('best');
     }
@@ -705,9 +705,8 @@ addEventListener('keydown', (e) => {
   syncSound();
 });
 syncSound();
-$('bot-toggle').addEventListener('click', (e) => {
-  botNext = !botNext;
-  e.currentTarget.setAttribute('aria-pressed', String(botNext));
+$('bot-toggle').addEventListener('click', () => {
+  setBot(!botOn);
   canvas.focus({ preventScroll: true });
 });
 $('restart').addEventListener('click', () => {

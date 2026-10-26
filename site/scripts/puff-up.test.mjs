@@ -904,40 +904,9 @@ test('sound cues follow what happened in each step', () => {
   assert.deepEqual(landOn('spring'), ['hop', 'boing']);
   assert.deepEqual(landOn('kicker', { push: 1 }), ['hop', 'kick']);
   assert.deepEqual(landOn('crumble', { spark: true, lane: true }), ['hop', 'crack', 'spark']);
-  assert.deepEqual(landOn('solid', { gate: 2 }), ['hop', 'chime']);
   const over = { ...createRun(1), status: 'over' };
   assert.deepEqual(cuesFor(createRun(1), over), ['caught']);
 });
-test('a gate names its zone once, however often Puff bounces on it', () => {
-  let run = {
-      ...createRun(1),
-      platforms: [
-        { id: 'g', x: 80, y: 465, width: 160, kind: 'solid', gate: 2, pace: 0.4 },
-        { id: 'ahead', x: 400, y: 0, width: 100, kind: 'solid' },
-      ],
-      player: {
-        ...createState(),
-        x: 160,
-        y: 460,
-        vy: 200,
-        grounded: false,
-        platformId: null,
-        coyoteMsLeft: 0,
-      },
-    },
-    chimes = 0,
-    landings = 0;
-  for (let i = 0; i < 600 && landings < 5; i++) {
-    const previous = run;
-    run = stepRun(run);
-    if (run.player.landed) landings++;
-    chimes += cuesFor(previous, run).filter((c) => c === 'chime').length;
-  }
-  assert.equal(landings, 5);
-  assert.equal(chimes, 1);
-  assert.equal(run.banner.zone, 2);
-});
-
 // A run lifted past a few screens of course, so ledges exist above and below Puff.
 function midClimb(seed, metres) {
   let run = createRun(seed);
@@ -1156,7 +1125,6 @@ test('past the table a zone climbs in a wave: a gate, runs at the hardest pace, 
       const inZone = ledges.filter((p) => zoneAt(seed, p).index === z),
         gate = inZone.findIndex((p) => p.pace === 0.4);
       assert.ok(gate === 0 || gate === 1, `seed ${seed} zone ${z} gate at ${gate}`);
-      assert.equal(inZone[gate].modifier, modifierFor(seed, z));
       assert.ok(inZone.filter((p) => p.pace === 0.5).length >= 2, `seed ${seed} zone ${z} rests`);
       for (const p of inZone)
         assert.ok([0.4, 0.5, 0.8, press].includes(p.pace), `seed ${seed} ${p.id} pace ${p.pace}`);
@@ -1261,29 +1229,6 @@ test('a surge rushes at the hardest pace on any ledge, then holds still, never p
     );
   assert.ok(Math.abs(lifted.hazardY - rush.hazardY - fastest / 30) < 1e-6);
   assert.equal(hold.hazardY, lifted.hazardY);
-});
-test('a gate past the table names its modifier on the banner', () => {
-  const seed = 7,
-    gate = mainPath(seed, 1300).find((p) => p.gate === ZONES.length);
-  assert.equal(gate.modifier, modifierFor(seed, ZONES.length));
-  let run = {
-    ...createRun(seed),
-    platforms: [
-      { ...gate, x: 80, y: 465 },
-      { id: 'ahead', x: 400, y: 0, width: 100, kind: 'solid' },
-    ],
-    player: {
-      ...createState(),
-      x: 80 + gate.width / 2,
-      y: 460,
-      vy: 200,
-      grounded: false,
-      platformId: null,
-      coyoteMsLeft: 0,
-    },
-  };
-  while (!run.player.landed) run = stepRun(run);
-  assert.deepEqual([run.banner.zone, run.banner.modifier], [ZONES.length, gate.modifier]);
 });
 // Lands Puff from just above on a stone ledge at `y`.
 function landAt(run, y) {
@@ -1412,11 +1357,9 @@ test('a streak of 50 lights the rocket: about 200 m up, set down as a rescue wou
       assert.ok(ledge && !['crumble', 'kicker'].includes(ledge.kind), `${at}: ${ledge?.kind}`);
       assert.equal(run.player.vx, 0, at);
       assert.ok(Math.abs(run.player.x - (ledge.x + ledge.width / 2)) < 2, at);
-      // The touchdown is a landing higher than the last; the line holds a while; the card names
-      // the zone it lands in.
+      // The touchdown is a landing higher than the last; the line holds a while.
       assert.equal(run.streak, ROCKET_STREAK + 1, at);
       assert.ok(run.calmUntil > run.player.timeMs, at);
-      assert.equal(run.banner?.zone, zoneForScore(scoreForPeak(ledge.y), seed).index, at);
       // From rest he climbs on past it.
       for (
         let hop = 0;
@@ -1470,19 +1413,6 @@ test('each 50 more of a streak carries the rocket 200 m higher, on a longer flig
   }
   assert.ok(flights[0] < flights[1] && flights[1] < flights[2], JSON.stringify(flights));
 });
-test('the zone card at touchdown names the ledge it lands on, not the top of its flight', () => {
-  // The flight tops out 9 m over its ledge, so a ledge just under a zone line is still below it.
-  let straddled = 0;
-  for (let seed = 1; seed <= 60; seed++) {
-    let [, run] = untilLanded(nearStreak(seed, 900 + (seed % 10) * 20, ROCKET_STREAK));
-    const { to } = run.rocket;
-    while (run.status === 'rocket') run = stepRun(run);
-    const landed = zoneForScore(scoreForPeak(to.y), seed).index;
-    if (zoneForScore(run.score, seed).index !== landed) straddled++;
-    assert.equal(run.banner?.zone, landed, `seed ${seed}`);
-  }
-  assert.ok(straddled > 0, 'no touchdown landed just under a zone line');
-});
 test('the rocket lights at each 50 of a streak, not between', () => {
   for (const [streak, lit] of [
     [ROCKET_STREAK - 1, false],
@@ -1522,5 +1452,16 @@ test('the bot the ★ hands a climb to is never caught by the line, rockets and 
       if (run.score >= 2600) break;
     }
     assert.ok(reached.score >= 2600, `seed ${seed}: caught at ${reached.score} m`);
+  }
+});
+test('the bot the ★ hands a climb to takes the stars on its way', () => {
+  for (const seed of [7, 0x50554646]) {
+    let stars = 0;
+    for (const { run } of climb({ ...createRun(seed), stars: Number.NEGATIVE_INFINITY })) {
+      // Each decision follows a landing; landing on a star leaves its spark at that moment.
+      if (run.effects.some((e) => e.type === 'spark' && e.at === run.player.timeMs)) stars++;
+      if (run.score >= 600) break;
+    }
+    assert.ok(stars >= 3, `seed ${seed}: ${stars} stars by 600 m`);
   }
 });

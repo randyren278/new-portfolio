@@ -253,11 +253,13 @@ canvas {
   background: #eee7d706;
 }
 #restart {
+  /* As tall as the arrows and the star beside it, despite its smaller type. */
+  align-self: stretch;
   font-size: 10px;
   color: var(--muted);
 }
 /* The bot's star: round and the arrows' size, in the bottom-right corner across from the sound
-   toggle. Gold while the next climb is the bot's. */
+   toggle. Gold while the bot has the climb. */
 .bot-toggle {
   position: absolute;
   top: 0;

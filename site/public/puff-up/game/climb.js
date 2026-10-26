@@ -125,7 +125,7 @@ const SIGNATURES = ['crumbles', 'movers', 'kickers', 'switchbacks'],
   TWISTS = ['crumble-movers', 'mover-switchbacks', 'kicker-movers', 'crumble-switchbacks'];
 // The hardest pace a run of ledges sets; the fairness test holds a clean climb above it.
 const PRESS = Math.max(...Object.values(SEGMENTS).map((s) => s.pace));
-// Past the table each zone draws a modifier, a rule named on its card, over the last zone's
+// Past the table each zone draws a modifier, a rule laid over the last zone's
 // ledges. A modifier only reweighs ledges the certificate already handles, or times the line.
 export const MODIFIERS = Object.freeze(
   Object.fromEntries(
@@ -416,11 +416,8 @@ function stepRocket(run, dt) {
     effects = (run.effects ?? []).filter((e) => now - e.at < 650);
   let platforms = run.platforms.map((p) => platformAtTime(p, now));
   if (now - at >= rocketMs(run.rocket)) {
-    // Touchdown: a landing higher than the last, so the streak runs on. Past a zone's gate, the
-    // zone of the ledge it lands on is named as the gate would have. (The flight topped out above
-    // the ledge, perhaps over the next zone's line, so the score can't tell.)
+    // Touchdown: a landing higher than the last, so the streak runs on.
     const ledge = platforms.find((p) => p.id === to.id) ?? { id: to.id, kind: 'solid', pace: 1 },
-      zone = zoneForScore(scoreForPeak(to.y), run.seed),
       speed = Math.sqrt(2 * DEFAULT_TUNING.gravity * ROCKET_DROP);
     return {
       ...run,
@@ -431,10 +428,6 @@ function stepRocket(run, dt) {
       effects: [...effects, { type: 'touchdown', x: to.x, y: to.y, width: ledge.width, at: now }],
       landings: run.landings + 1,
       streak: run.streak + 1,
-      banner:
-        zone.index > (run.banner?.zone ?? 0)
-          ? { zone: zone.index, modifier: zone.modifier ?? null, at: now }
-          : run.banner,
     };
   }
   const { x, y } = rocketAt(run.rocket, now - at),
@@ -767,11 +760,6 @@ function extend(platforms, cameraY, rng, nextId, plan, seed) {
     };
     if (kind === 'kicker') top.push = center < WORLD.width / 2 ? 1 : -1;
     if (fromLane.length) top.fromLane = fromLane;
-    // The first gate ledge names the zone it opens, and the zone's modifier.
-    if (plan.name === 'gate' && plan.step === 1) {
-      top.gate = plan.zone;
-      if (zone.modifier) top.modifier = zone.modifier;
-    }
     if (kind === 'moving') {
       rng = random(rng);
       const [shortest, longest] = zone.periodMs;
@@ -884,7 +872,6 @@ export function createRun(seed = 0x50554646) {
     score: 0,
     landings: 0,
     lastLanding: null,
-    banner: null,
     calmUntil: 0,
     stars: 0,
     streak: 0,
@@ -930,7 +917,6 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
   const effects = (run.effects ?? []).filter((e) => now - e.at < 650);
   let lastLanding = run.lastLanding,
     landings = run.landings,
-    banner = run.banner,
     calmUntil = run.calmUntil ?? 0,
     stars = run.stars ?? 0,
     streak = run.streak ?? 0;
@@ -972,9 +958,6 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
       addEffect('break', contact);
       platforms = platforms.filter((p) => p.id !== contact.id);
     }
-    // A gate names its zone once, not on every bounce.
-    if (contact?.gate !== undefined && banner?.zone !== contact.gate)
-      banner = { zone: contact.gate, modifier: contact.modifier ?? null, at: player.timeMs };
     if (contact) player = launch(player, contact);
     if (contact?.spark) {
       calmUntil = player.timeMs + CALM_MS;
@@ -1006,7 +989,6 @@ export function stepRun(run, input = {}, dt = FIXED_DT, fallLimit = WORLD.height
     score: scoreForPeak(peakY),
     landings,
     lastLanding,
-    banner,
     calmUntil,
     stars,
     streak,

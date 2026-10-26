@@ -33,7 +33,6 @@ export function cuesFor(previous, run) {
   if (fresh('kick')) cues.push('kick');
   if (fresh('spark')) cues.push('spark');
   if (fresh('streak')) cues.push('streak');
-  if (run.banner && run.banner !== previous.banner) cues.push('chime');
   if (run.status === 'rocket') cues.push('ignite');
   if (fresh('touchdown')) cues.push('touchdown');
   return cues;
@@ -176,10 +175,6 @@ export function createSound() {
         .chordTones()
         .slice(0, 3)
         .forEach((note, i) => tone(hz(note + 24), { gain: 0.05, decay: 0.3, delay: i * 0.06 })),
-    chime: () => {
-      tone(659, { gain: 0.1, decay: 0.5 });
-      tone(988, { gain: 0.08, decay: 0.7, delay: 0.12 });
-    },
     best: () =>
       [1047, 1319, 1568].forEach((f, i) => tone(f, { gain: 0.08, decay: 0.4, delay: i * 0.08 })),
     // The UFO: a warbling rise, like an old sci-fi saucer arriving.
