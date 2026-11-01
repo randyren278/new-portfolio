@@ -41,13 +41,6 @@ function computeFinal(): Rect {
   return { top: (vh - height) / 2, left: (vw - width) / 2, width, height };
 }
 
-function yearSpan(order: string[], mediums: Record<string, MediumEntry>) {
-  const years = order.map((id) => mediums[id]?.year).filter((y): y is number => !!y);
-  const lo = Math.min(...years);
-  const hi = Math.max(...years);
-  return lo === hi ? String(lo) : `${lo} – ${hi}`;
-}
-
 export function ProjectsCell({ order, mediums, plates }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -197,9 +190,7 @@ export function ProjectsCell({ order, mediums, plates }: Props) {
         })}
       </div>
       <div className="projects-meta" ref={metaRef}>
-        <span>
-          {String(order.length).padStart(2, '0')} PROJECTS · {yearSpan(order, mediums)}
-        </span>
+        <span>{String(order.length).padStart(2, '0')} PROJECTS</span>
         <span>SELECT ONE TO OPEN</span>
       </div>
 

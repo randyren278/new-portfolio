@@ -7,8 +7,7 @@ import type { ReadyPhoto } from '../usePhotoShuffle';
 
 /**
  * Photo cell — a flip card. The front is the photograph; clicking it turns
- * the card over to the verso, which carries the two things the image alone
- * can't say: that Randy shot it, and that the frame beside it on the grid
+ * the card over to the verso, which shows how the frame beside it on the grid
  * was chosen to match its palette (see pickColorBand in ../photos.ts).
  *
  * The verso shows this frame's five dominant tones as a ribbon, then the
@@ -175,7 +174,6 @@ export function PhotoCell({ slot, areaClass, caption, incoming, onSettled, delay
               <span className="kicker">
                 § VERSO · {rank}/{POOL_SIZE} BY HUE
               </span>
-              <span className="photo-prov">PHOTOGRAPHED BY RANDY REN</span>
             </div>
 
             {caption ? <p className="photo-caption">{caption}</p> : null}

@@ -896,12 +896,6 @@ body {
 .photo-verso-top .kicker {
   margin-bottom: 0;
 }
-.photo-prov {
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
 .photo-caption {
   font-family: "Newsreader", "IBM Plex Serif", ui-serif, Georgia, serif;
   font-style: italic;
