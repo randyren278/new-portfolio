@@ -10,7 +10,7 @@ rmSync(output, { recursive: true, force: true });
 
 const files = [
   ...readdirSync(path.join(source, 'dive'))
-    .filter((name) => /\.(mjs|css|html)$/.test(name) || name === 'boat-grid.webp')
+    .filter((name) => /\.(mjs|css|html)$/.test(name) || ['boat-grid.webp', 'share-boat-v1.png'].includes(name))
     .map((name) => `dive/${name}`),
   'surfaces.css',
   'favicon.svg',
