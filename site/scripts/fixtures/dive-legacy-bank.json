@@ -1,0 +1,496 @@
+{
+  "count": 72,
+  "answers": 3929,
+  "digests": {
+    "nature-mammals": "017fc4dbc4abeff9a9df47194e005bc3dad02c1f45bc51a130f04aa0435b1f3f",
+    "nature-birds": "a3869250c800665c703559478afb12b81b014ff71e4ca300dc0ebdbf0463566f",
+    "nature-fish": "f234509e2509f6cc08ad421aa0b502e3b4140847c99ea6710f011b77929c0e27",
+    "nature-reptiles": "eeb04479a2d5e8c9296d2fbb9271bb3b27570911306f282b65dcdcd7c8ceb1a8",
+    "nature-insects": "9e2ccdd32af61531e6dafd0a252622c8bd701958263bc97b2145e4db6041f051",
+    "nature-flowers": "5a1a2a50d4e7daeb4897fb5797d639d15d708fc4f5bafa0748b3e36ed401a4fe",
+    "nature-trees": "b1f7744517f4813d4eb5895f11b66d19b4d710370d32afc8cdbefd7b73faba5c",
+    "nature-weather": "c5e25f0015ac0fb51d57ae1aaa432df996b7c3ae8a62c6210a77e5be91a9df28",
+    "nature-minerals": "99e4b98fbdf38ec2891bc29c3cf42516cc6d50531d097f4e15d11058aa434091",
+    "nature-elements": "f41819961521abed44126afa2ef1a2cfa328858ff0ff2ef0bc11543850c66f47",
+    "nature-planets": "5b9b84051044cb7a70f1689a875d1068eb30c80c5d2f7d8d6b4d2391a41f774e",
+    "nature-constellations": "3e9cd0b48193f41b5a4ceea77abccd0f1f9ca3c972ffc7a1dd43e9d0dae53969",
+    "nature-sea-creatures": "b2376ef3d82af25104a38ca2cef4955487264da6fba4891445bf3b3838796c51",
+    "nature-shells": "bc6a0f776337f0d2371bbcabc87395121b5aa125614017061498989e7ac4a72a",
+    "nature-fruits": "d9f181e8c1b9ecb9d077f27a59b662259741aeb520018621bbb2816bdbc44c12",
+    "nature-herbs": "e5015624255b80f9e6a28ef48a996f00eaab82104933729f317c4daab57c1082",
+    "nature-dog-breeds": "9e2b4a17838ef879a83ceb49a7ea81db1e69da66fba4e68665c8bd44c043aaf5",
+    "nature-cat-breeds": "ccf2a94cc6648e971aacae29a2adaa23c904079b4180b3bc3fc5076c84600520",
+    "culture-shakespeare-plays": "a138312b69cadc9c9c6fde19f5b8e2e555281bf0f3a334dcfbb86de9e2b9f8b9",
+    "culture-greek-gods": "8d8f42c9e19e5164e77fd5042caaae9e69d327a3765f20803b5aa63be2a8ee93",
+    "culture-instruments": "6bbba756ed623d103d1463b7f2537bd7292c8819055ca8464d8d2f17ac6c973a",
+    "culture-strings": "9738c5a3c4b2feeaa9bce59191f94003537f1811f2b18078b75b223d3cee0e47",
+    "culture-percussion": "a120bb27b36bd0df7ee758d7a75ddb33cbb25fff8488c9f80d22d07cfbef4c1f",
+    "culture-board-games": "e2e205a1cc6e5e6e76d52713dbfdc38194408ad3ffcf4648a975e882e5b2437e",
+    "culture-consoles": "fdb05bcde47ef4f7669627de0e2be46b6e2457c380f093c7756e8470eada6a86",
+    "culture-literary-genres": "8b4820294c61d5493581eaa63bcc7291e9bdc2e70fc86dc7a78492f2b7dc242f",
+    "culture-film-genres": "ff6e2811395d6cba8bcb536a73ea5ee96ed3497396e600198e223078f4d0ae70",
+    "culture-art-movements": "466d245c14b93f83ffe7719c77c7f4dfec112fa43d95dac8e6154ee0261be3f8",
+    "culture-dance": "85a2d19c1962f7d1176900752e8b458521b0aed9d66f2eef137641ad3e26ff9a",
+    "culture-shakespeare-characters": "509bf090b7d9346b61384d0c6f3179a53b55e78410cba4709a65376e2666d853",
+    "culture-greek-alphabet": "f0f441ec546ce3afbbdedfb1fa4f85f6f7cf928f67ec59526c926dd6fa9b0ec0",
+    "culture-fairy-tales": "a84db284691bbe34fb9b9f8fa0ab99b4fdf6bba84421edbcaabf33bfe6a53a99",
+    "culture-music-genres": "39e6bb8287405920863f483809c9f88107840e04860132a05a9c7c3dfc22195a",
+    "culture-writing-systems": "c843559e3d67b6f7d1c92aecfc6429a296d91a7b8601fc77abf222b01dde89fb",
+    "culture-pixar": "1652db6042d0d3a90418c9b1d313eca80672ecc787580131a603befd3f07f39e",
+    "culture-mario": "376b7a626f8753533ff2d7ddcb67f58593f602421c938cffa96bcd6cecc3c79a",
+    "world-europe": "d468d9aca6eea3240544383618430591bbd76a5fe904b0e3367aff8798178817",
+    "world-africa": "59c326944998e44190cb8921db61654048f524b912d4b6435948e1280f046a8d",
+    "world-asia": "a5bed05c5b31392522ea6d212062e19f9c340b39d1c1c8710d8aa9bb13493204",
+    "world-americas": "4a0ca8d2476bfd6671dc3618ab19f19fc9fa867d7296221b3253a205cb285c22",
+    "world-island-countries": "ab5e4cfaa97178dd6a11002bb47ce632801c310059e26689516dbbc9583cd13d",
+    "world-landlocked": "86568006c661ab89a38ab5f472450c9081b6091c398b881ba93a2816f137057d",
+    "world-capitals": "542f52f684d65112bd70a7e134381b2dbe2f72dc067704f2bf2219b16dc20fe4",
+    "world-us-states": "b042c4506496223e52bd7490f0c654e7ea4b3ed8933d3f8ee3d17792b88cdfe3",
+    "world-canada": "e125ef6d2a054282dcb3867fb7ef79ff29d730a88d3042c745e091ff1c58c0c9",
+    "world-australia": "69de0ab895467a05a997b322565df5ccabaaf691e04a6d7d5564b2c0d81231e1",
+    "world-abc-countries": "b1b0ef646aa5d97f91199005e2cbd274265d73b00a86cbe69edb34c66e62fe63",
+    "world-mnp-countries": "668de4ecc9e15251d20be6e07df0bf24cbd89b04bc2cd91fff9279461686db92",
+    "world-rivers": "0fdd73542d370a971f27a946a017296abeb3ab3f41ca5c756f8d6ff4b6a52d7b",
+    "world-mountain-ranges": "edc5890538529e1ebed4e387de89b0442aba7896f56229d920c071dd206acf16",
+    "world-seas": "96320bf8f8280a7511c4d78a56891996561036f9103a2bdf71e05c496496d11a",
+    "world-currencies": "0b453637c1e8255ed6b9dc0caf44d500e3881eccd0aa6aeb203f4a0a8be867f9",
+    "world-europe-capitals": "fa791c04bf3ff678138c13da55058a23f504555730fa32b5b34f0c749a6a3319",
+    "world-asia-capitals": "ec86ff13381e20adbfe3811f98110ca822a957d9babb17d987546086c3a1859f",
+    "everyday-kitchen": "ff61666406066ce2ffbc069f1a4b7cf4289207ef531646323e1a4fc86654ab6a",
+    "everyday-tools": "22938013c525bd80fc37dc88b8c359734527df9f5b568f9a8a953fa1976986d1",
+    "everyday-clothes": "3049cfdd75d772187d04473ff959df3647de74d270b4f0a5b6c138c09a4553c4",
+    "everyday-shoes": "5fca9793a97db85d8d1ae4e14c5eb73fb78df522309b101cd87a50dd31b15c5c",
+    "everyday-furniture": "e34dc934a5254d62ff9d2f3db2f0a7fdd810df749bb4a3e6681880f817d456fa",
+    "everyday-vehicles": "3a62118496380fdcb0f37e4c82a88d9d9e118f671e708cbbcbd05a22f1b1b9ff",
+    "everyday-ball-sports": "f4e7d236565b9f3e5ede365cce13b9f57a31e8a7a2ce10df27553bc89defcd5c",
+    "everyday-pasta": "c62dbf91493890ff8b6be0f7541f7d21b6dc585366b9150a7755f3103cf84fcc",
+    "everyday-cheese": "0c0c72e61614cd2d18b53463f58fa34edbded81755a12ded9b04fcd8cf0701c2",
+    "everyday-bread": "e160274349a98b2be10df373ce82cc158d07feee603be46d49b932e4d69f1aba",
+    "everyday-tea": "905b282f666c035090d893ae557beb07ad584d6b0989f740eb5e1dff54cd7452",
+    "everyday-coffee": "1c9ac6d942787c7b8eb2570a0458fe9d07ceb1e559755f1705ad2d1c2ece45d5",
+    "everyday-stationery": "d2d703ff7972ef4758552600734aad641c1a6abcaa6b80a528b3e904440fc3f9",
+    "everyday-fabrics": "0504c332f4274bf808276ae052071683b1c81f9c043fa8c080971263797c6554",
+    "everyday-shapes": "9d283a05457eded7275cc8be24c74e175c074b1426b6690e3602f89c6c11017b",
+    "everyday-lengths": "6764f126c832c659fafe0ff66ed0515df186ee2959537b46e91605854a11ac2e",
+    "everyday-breakfast": "861072609dd88113a028d1cfef6eb14eb02f49efbad0aef2943287bff1a41164",
+    "everyday-cooking": "7d2ea1ae483b4ffbf1e1225261f77e54fc2456a8daf3e22d3c3f85bae0665ab0"
+  },
+  "daily": [
+    {
+      "dateKey": "2026-10-06",
+      "id": "daily:2026-10-06",
+      "questions": [
+        "nature-weather",
+        "world-rivers",
+        "culture-mario",
+        "culture-shakespeare-characters",
+        "world-asia",
+        "everyday-stationery",
+        "world-us-states"
+      ]
+    },
+    {
+      "dateKey": "2026-10-07",
+      "id": "daily:2026-10-07",
+      "questions": [
+        "world-asia-capitals",
+        "everyday-coffee",
+        "culture-literary-genres",
+        "nature-fish",
+        "world-island-countries",
+        "everyday-tea",
+        "everyday-breakfast"
+      ]
+    },
+    {
+      "dateKey": "2026-10-08",
+      "id": "daily:2026-10-08",
+      "questions": [
+        "world-mountain-ranges",
+        "nature-shells",
+        "everyday-stationery",
+        "world-australia",
+        "culture-instruments",
+        "nature-flowers",
+        "everyday-vehicles"
+      ]
+    },
+    {
+      "dateKey": "2026-10-09",
+      "id": "daily:2026-10-09",
+      "questions": [
+        "culture-film-genres",
+        "nature-reptiles",
+        "culture-greek-gods",
+        "culture-art-movements",
+        "everyday-cheese",
+        "nature-cat-breeds",
+        "culture-greek-alphabet"
+      ]
+    },
+    {
+      "dateKey": "2026-10-10",
+      "id": "daily:2026-10-10",
+      "questions": [
+        "nature-birds",
+        "world-capitals",
+        "culture-music-genres",
+        "culture-shakespeare-characters",
+        "culture-consoles",
+        "culture-film-genres",
+        "everyday-tools"
+      ]
+    },
+    {
+      "dateKey": "2026-10-11",
+      "id": "daily:2026-10-11",
+      "questions": [
+        "nature-insects",
+        "nature-minerals",
+        "culture-instruments",
+        "everyday-stationery",
+        "culture-consoles",
+        "nature-constellations",
+        "nature-fish"
+      ]
+    },
+    {
+      "dateKey": "2026-10-12",
+      "id": "daily:2026-10-12",
+      "questions": [
+        "culture-consoles",
+        "nature-elements",
+        "culture-fairy-tales",
+        "culture-greek-gods",
+        "nature-insects",
+        "culture-dance",
+        "nature-weather"
+      ]
+    },
+    {
+      "dateKey": "2026-10-13",
+      "id": "daily:2026-10-13",
+      "questions": [
+        "culture-writing-systems",
+        "nature-trees",
+        "everyday-kitchen",
+        "everyday-furniture",
+        "world-mountain-ranges",
+        "culture-greek-gods",
+        "everyday-fabrics"
+      ]
+    },
+    {
+      "dateKey": "2026-10-14",
+      "id": "daily:2026-10-14",
+      "questions": [
+        "nature-dog-breeds",
+        "world-australia",
+        "world-island-countries",
+        "culture-literary-genres",
+        "culture-shakespeare-plays",
+        "culture-music-genres",
+        "everyday-tools"
+      ]
+    },
+    {
+      "dateKey": "2026-10-15",
+      "id": "daily:2026-10-15",
+      "questions": [
+        "culture-fairy-tales",
+        "nature-insects",
+        "nature-fish",
+        "world-europe",
+        "everyday-clothes",
+        "culture-art-movements",
+        "everyday-bread"
+      ]
+    },
+    {
+      "dateKey": "2026-10-16",
+      "id": "daily:2026-10-16",
+      "questions": [
+        "world-asia",
+        "world-rivers",
+        "everyday-shoes",
+        "world-europe",
+        "world-landlocked",
+        "world-abc-countries",
+        "culture-dance"
+      ]
+    },
+    {
+      "dateKey": "2026-10-17",
+      "id": "daily:2026-10-17",
+      "questions": [
+        "nature-dog-breeds",
+        "nature-mammals",
+        "everyday-coffee",
+        "culture-film-genres",
+        "everyday-shoes",
+        "culture-writing-systems",
+        "nature-minerals"
+      ]
+    },
+    {
+      "dateKey": "2026-10-18",
+      "id": "daily:2026-10-18",
+      "questions": [
+        "everyday-stationery",
+        "everyday-cheese",
+        "everyday-kitchen",
+        "nature-planets",
+        "culture-shakespeare-plays",
+        "world-asia-capitals",
+        "world-seas"
+      ]
+    },
+    {
+      "dateKey": "2026-10-19",
+      "id": "daily:2026-10-19",
+      "questions": [
+        "world-mnp-countries",
+        "nature-constellations",
+        "world-europe-capitals",
+        "culture-instruments",
+        "everyday-kitchen",
+        "nature-reptiles",
+        "world-us-states"
+      ]
+    },
+    {
+      "dateKey": "2026-10-20",
+      "id": "daily:2026-10-20",
+      "questions": [
+        "culture-music-genres",
+        "culture-pixar",
+        "everyday-fabrics",
+        "world-seas",
+        "nature-constellations",
+        "culture-mario",
+        "everyday-lengths"
+      ]
+    },
+    {
+      "dateKey": "2026-10-21",
+      "id": "daily:2026-10-21",
+      "questions": [
+        "nature-dog-breeds",
+        "world-australia",
+        "culture-shakespeare-plays",
+        "world-asia-capitals",
+        "world-europe",
+        "culture-pixar",
+        "world-africa"
+      ]
+    },
+    {
+      "dateKey": "2026-10-22",
+      "id": "daily:2026-10-22",
+      "questions": [
+        "culture-writing-systems",
+        "culture-film-genres",
+        "everyday-clothes",
+        "world-landlocked",
+        "everyday-cooking",
+        "culture-shakespeare-characters",
+        "culture-mario"
+      ]
+    },
+    {
+      "dateKey": "2026-10-23",
+      "id": "daily:2026-10-23",
+      "questions": [
+        "world-us-states",
+        "world-canada",
+        "world-mnp-countries",
+        "culture-mario",
+        "everyday-shapes",
+        "nature-sea-creatures",
+        "world-landlocked"
+      ]
+    },
+    {
+      "dateKey": "2026-10-24",
+      "id": "daily:2026-10-24",
+      "questions": [
+        "world-australia",
+        "culture-art-movements",
+        "everyday-furniture",
+        "nature-cat-breeds",
+        "world-rivers",
+        "world-capitals",
+        "everyday-vehicles"
+      ]
+    },
+    {
+      "dateKey": "2026-10-25",
+      "id": "daily:2026-10-25",
+      "questions": [
+        "world-asia-capitals",
+        "nature-dog-breeds",
+        "nature-minerals",
+        "nature-planets",
+        "everyday-stationery",
+        "everyday-coffee",
+        "culture-art-movements"
+      ]
+    },
+    {
+      "dateKey": "2026-10-26",
+      "id": "daily:2026-10-26",
+      "questions": [
+        "everyday-breakfast",
+        "nature-constellations",
+        "culture-pixar",
+        "world-seas",
+        "nature-trees",
+        "world-americas",
+        "everyday-tools"
+      ]
+    },
+    {
+      "dateKey": "2026-10-27",
+      "id": "daily:2026-10-27",
+      "questions": [
+        "culture-fairy-tales",
+        "culture-art-movements",
+        "culture-writing-systems",
+        "world-americas",
+        "everyday-fabrics",
+        "everyday-breakfast",
+        "nature-shells"
+      ]
+    },
+    {
+      "dateKey": "2026-10-28",
+      "id": "daily:2026-10-28",
+      "questions": [
+        "world-landlocked",
+        "world-rivers",
+        "everyday-lengths",
+        "world-island-countries",
+        "everyday-coffee",
+        "everyday-bread",
+        "world-seas"
+      ]
+    },
+    {
+      "dateKey": "2026-10-29",
+      "id": "daily:2026-10-29",
+      "questions": [
+        "nature-weather",
+        "world-europe",
+        "culture-film-genres",
+        "world-europe-capitals",
+        "culture-greek-gods",
+        "culture-pixar",
+        "culture-shakespeare-plays"
+      ]
+    },
+    {
+      "dateKey": "2026-10-30",
+      "id": "daily:2026-10-30",
+      "questions": [
+        "world-island-countries",
+        "nature-planets",
+        "world-seas",
+        "everyday-cooking",
+        "culture-pixar",
+        "culture-percussion",
+        "everyday-clothes"
+      ]
+    },
+    {
+      "dateKey": "2026-10-31",
+      "id": "daily:2026-10-31",
+      "questions": [
+        "nature-minerals",
+        "everyday-ball-sports",
+        "world-currencies",
+        "nature-mammals",
+        "nature-constellations",
+        "everyday-vehicles",
+        "world-abc-countries"
+      ]
+    },
+    {
+      "dateKey": "2026-11-01",
+      "id": "daily:2026-11-01",
+      "questions": [
+        "nature-trees",
+        "culture-dance",
+        "culture-literary-genres",
+        "nature-herbs",
+        "culture-mario",
+        "everyday-coffee",
+        "nature-flowers"
+      ]
+    },
+    {
+      "dateKey": "2026-11-02",
+      "id": "daily:2026-11-02",
+      "questions": [
+        "everyday-cheese",
+        "nature-insects",
+        "culture-percussion",
+        "nature-herbs",
+        "culture-strings",
+        "everyday-tea",
+        "culture-pixar"
+      ]
+    },
+    {
+      "dateKey": "2026-11-03",
+      "id": "daily:2026-11-03",
+      "questions": [
+        "nature-cat-breeds",
+        "culture-shakespeare-characters",
+        "culture-mario",
+        "nature-weather",
+        "world-abc-countries",
+        "culture-greek-alphabet",
+        "everyday-furniture"
+      ]
+    },
+    {
+      "dateKey": "2026-11-04",
+      "id": "daily:2026-11-04",
+      "questions": [
+        "nature-herbs",
+        "nature-fish",
+        "world-mnp-countries",
+        "culture-strings",
+        "culture-shakespeare-characters",
+        "culture-board-games",
+        "everyday-furniture"
+      ]
+    },
+    {
+      "dateKey": "2026-11-05",
+      "id": "daily:2026-11-05",
+      "questions": [
+        "nature-constellations",
+        "world-mountain-ranges",
+        "nature-minerals",
+        "world-island-countries",
+        "world-canada",
+        "nature-trees",
+        "culture-board-games"
+      ]
+    },
+    {
+      "dateKey": "2026-11-06",
+      "id": "daily:2026-11-06",
+      "questions": [
+        "nature-dog-breeds",
+        "culture-shakespeare-characters",
+        "culture-board-games",
+        "nature-mammals",
+        "world-australia",
+        "culture-fairy-tales",
+        "everyday-shoes"
+      ]
+    }
+  ]
+}

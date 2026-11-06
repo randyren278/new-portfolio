@@ -4,6 +4,12 @@ const nextConfig = {
   poweredByHeader: false,
   // Allow an isolated production preview alongside the running dev server.
   distDir: process.env.PORTFOLIO_BUILD_DIR || '.next',
+  async redirects() {
+    return [
+      { source: '/dive', destination: 'https://rillion.randyren.org/', permanent: true },
+      { source: '/dive/index.html', destination: 'https://rillion.randyren.org/', permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

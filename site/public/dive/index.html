@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#081a30">
+  <title>Randy Ren</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="canonical" href="https://rillion.randyren.org/">
+  <meta name="description" content="Seven prompts. One little explorer. A new word-game dive every day.">
+  <link rel="stylesheet" href="/surfaces.css">
+  <link rel="stylesheet" href="/dive/style.css">
+  <link rel="preload" as="image" href="/dive/boat-grid.webp">
+  <script type="module" src="/dive/app.mjs"></script>
+</head>
+<body>
+  <main class="page">
+    <div class="ocean-panel" aria-hidden="true">
+      <canvas id="ocean"></canvas>
+      <div class="scene-shade"></div>
+    </div>
+    <header class="topbar">
+      <a href="https://randyren.org/" target="_top" class="brand" aria-label="Back to Randy Ren">← <span>Randy Ren</span></a>
+      <span class="game-name">PUFF / DAILY DIVE</span>
+      <nav aria-label="Game tools">
+        <button type="button" id="sound" class="icon-button" aria-label="Turn sound off" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Zm4 3c3 2 3 6 0 8m3-11c5 4 5 10 0 14"/></svg></button>
+        <button type="button" data-dialog="stats" class="icon-button" aria-label="Open logbook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V12m7 7V5m7 14V9M3 21h18"/></svg></button>
+        <button type="button" data-dialog="help" class="icon-button help-button" aria-label="How to play">?</button>
+      </nav>
+    </header>
+    <h1 class="sr-only">Puff’s Daily Dive</h1>
+    <div class="panel-top"><span id="dive-label">DAILY DIVE</span><span id="daily-date"></span></div>
+    <section class="play-panel" aria-label="The dive">
+      <div id="screen" tabindex="-1"><p class="loading">Preparing the boat…</p></div>
+    </section>
+    <div class="depth-rail" aria-hidden="true"><span>0</span><div><i id="depth-marker"></i></div><span>7,000</span></div>
+    <div class="depth-readout"><span id="scene-depth">0</span><small>m</small><span id="zone" class="sr-only">Surface</span></div>
+    <div class="metrics" aria-label="Score"><div><span>SCORE</span><strong><b id="score">0</b></strong></div><div><span>BEST</span><strong><b id="best">0</b></strong></div></div>
+    <nav class="modes" aria-label="Choose a dive">
+      <button type="button" id="daily-mode" class="selected">Daily</button>
+      <button type="button" id="unlimited-mode">∞ Unlimited</button>
+      <button type="button" data-dialog="themes">Themes</button>
+      <button type="button" data-dialog="archive">Archive</button>
+    </nav>
+    <p id="storage-note" class="storage-note" role="status"></p>
+  </main>
+  <dialog id="help" aria-labelledby="help-title"><form method="dialog"><button class="close" aria-label="Close instructions">×</button></form><p class="eyebrow">A FIELD GUIDE</p><h2 id="help-title">Think beyond<br><em>the obvious.</em></h2><ol class="instructions"><li>Seven prompts. You have <strong>25 seconds</strong> to name one thing for each.</li><li>A valid answer earns up to <strong>100 points</strong>. Uncommon choices earn more. Each point takes Puff 10 metres deeper.</li><li>One shared daily puzzle resets at <strong>midnight UTC</strong>. After that, keep exploring in unlimited mode.</li></ol><p class="small">Rarity is hand-ranked for this game, rather than measured from players. Answers come from a curated bank; spelling variants and small typos are accepted. If an answer isn’t listed, try another before time runs out. Your daily attempt and personal best stay in this browser.</p><h3 class="rarity-guide-title">The rarity ladder</h3><div id="rarity-guide"></div><p class="small">Six bands on this game’s curated point scale. Exact points vary by answer; they are not live player percentages.</p><button class="primary wide" type="button" data-close>Let’s get our feet wet ↘</button></dialog>
+  <dialog id="stats" aria-labelledby="stats-title"><form method="dialog"><button class="close" aria-label="Close logbook">×</button></form><p class="eyebrow">YOUR EXPEDITIONS</p><h2 id="stats-title">The logbook.</h2><div id="stats-content"></div></dialog>
+  <dialog id="themes" aria-labelledby="themes-title"><form method="dialog"><button class="close" aria-label="Close themes">×</button></form><p class="eyebrow">FOLLOW YOUR CURIOSITY</p><h2 id="themes-title">Pick a current.</h2><p class="small">Seven prompts from one corner of the world. Unlimited attempts.</p><div id="theme-list" class="theme-list"></div></dialog>
+  <dialog id="archive" aria-labelledby="archive-title"><form method="dialog"><button class="close" aria-label="Close archive">×</button></form><p class="eyebrow">THE LAST THIRTY DAYS</p><h2 id="archive-title">Missed the boat?</h2><p class="small">A different shared puzzle for each date. Finished dives open your saved result.</p><div id="archive-list" class="archive-list"></div></dialog>
+  <noscript>This game needs JavaScript to run. Please enable JavaScript and reload.</noscript>
+</body>
+</html>
