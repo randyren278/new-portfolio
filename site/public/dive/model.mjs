@@ -1,6 +1,8 @@
 import {
   QUESTIONS,
   BASE_QUESTIONS,
+  AUDITED_QUESTIONS,
+  PLAYABLE_QUESTIONS,
   LEGACY_QUESTIONS,
   CATEGORIES,
   ANSWER_BANK_VERSION,
@@ -15,6 +17,7 @@ const DAY_MS = 86400000;
 const EPOCH = Date.UTC(2026, 0, 1);
 const questionById = new Map(QUESTIONS.map((question) => [question.id, question]));
 const baseQuestionById = new Map(BASE_QUESTIONS.map((question) => [question.id, question]));
+const auditedQuestionById = new Map(AUDITED_QUESTIONS.map((question) => [question.id, question]));
 const categoryIds = new Set(CATEGORIES.map((category) => category.id));
 const plain = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const integer = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
@@ -61,17 +64,22 @@ function freshSeed() {
   return `${Date.now().toString(36)}-${[...bytes].map((value) => value.toString(36)).join('-')}-${++freshCounter}`;
 }
 
-export function createRun({ mode = 'daily', dateKey = dayKey(), category = 'all', seed } = {}) {
+export function createRun({
+  mode = 'daily', dateKey = dayKey(), category = 'all', seed,
+  poolVersion = mode === 'daily' && dateKey < '2026-11-07' ? 1 : 2,
+} = {}) {
   if (!['daily', 'unlimited'].includes(mode)) throw new RangeError('Unknown dive mode');
   if (!validDay(dateKey)) throw new RangeError('Invalid puzzle date');
+  if (!integer(poolVersion, 1, 2)) throw new RangeError('Unknown question pool version');
   const selectedCategory = mode === 'daily' ? 'all' : category;
   if (selectedCategory !== 'all' && !categoryIds.has(selectedCategory))
     throw new RangeError('Unknown category');
-  // Expanding a dated puzzle's pool would invalidate its saved questions.
+  // Old saves keep their shuffle pool; new dives use reviewed accessible prompts.
   const bank =
+    poolVersion === 2 ? PLAYABLE_QUESTIONS :
     mode === 'daily' && dateKey < '2026-11-07'
       ? LEGACY_QUESTIONS.map((question) => questionById.get(question.id))
-      : QUESTIONS;
+      : AUDITED_QUESTIONS.map((question) => questionById.get(question.id));
   const pool = bank.filter(
     (question) => selectedCategory === 'all' || question.category === selectedCategory,
   );
@@ -89,6 +97,7 @@ export function createRun({ mode = 'daily', dateKey = dayKey(), category = 'all'
     mode,
     dateKey,
     category: selectedCategory,
+    ...(poolVersion === 2 ? { poolVersion } : {}),
     questions: shuffled.slice(0, ROUND_COUNT),
     round: 0,
     answers: [],
@@ -297,7 +306,8 @@ export function recordAnswer(
   if (!integer(bankVersion, 1, ANSWER_BANK_VERSION))
     throw new RangeError('Unknown answer bank version');
   const current = run.questions[run.round];
-  const question = bankVersion === 1 ? baseQuestionById.get(current?.id) : current;
+  const question = bankVersion === 1 ? baseQuestionById.get(current?.id)
+    : bankVersion === 2 ? auditedQuestionById.get(current?.id) : current;
   const entered = safeText(input).trim();
   if (!question) throw new RangeError('No current question');
   const result = timedOut
@@ -358,13 +368,15 @@ function validateRun(value, requireComplete = false) {
     return null;
   const category = value.mode === 'daily' ? 'all' : value.category;
   if (category !== 'all' && !categoryIds.has(category)) return null;
+  const poolVersion = value.poolVersion === undefined ? 1 : value.poolVersion;
+  if (!integer(poolVersion, 1, 2)) return null;
   const ids = value.questions.map((question) => (plain(question) ? question.id : null));
   if (new Set(ids).size !== ROUND_COUNT || ids.some((id) => !questionById.has(id))) return null;
   const questions = ids.map((id) => questionById.get(id));
   if (category !== 'all' && questions.some((question) => question.category !== category))
     return null;
   if (value.mode === 'daily') {
-    const expected = createRun({ dateKey: value.dateKey });
+    const expected = createRun({ dateKey: value.dateKey, poolVersion });
     if (value.id !== expected.id || ids.some((id, i) => id !== expected.questions[i].id))
       return null;
   } else if (!value.id.startsWith(`unlimited:${category}:`)) return null;
@@ -373,6 +385,7 @@ function validateRun(value, requireComplete = false) {
     mode: value.mode,
     dateKey: value.dateKey,
     category,
+    ...(poolVersion === 2 ? { poolVersion } : {}),
     questions,
     round: 0,
     answers: [],
@@ -388,8 +401,10 @@ function validateRun(value, requireComplete = false) {
       answer.input.length > 80
     )
       return null;
-    const bankVersion = answer.bankVersion ?? 1;
+    const bankVersion = answer.bankVersion === undefined ? 1 : answer.bankVersion;
     if (!integer(bankVersion, 1, ANSWER_BANK_VERSION)) return null;
+    if (bankVersion === 1 && !baseQuestionById.has(questions[i].id)) return null;
+    if (bankVersion === 2 && !auditedQuestionById.has(questions[i].id)) return null;
     run = recordAnswer(run, answer.input, {
       timedOut: answer.kind === 'timeout',
       bankVersion,

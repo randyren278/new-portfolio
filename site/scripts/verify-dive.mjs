@@ -3,7 +3,7 @@ import { execFile } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { QUESTIONS, LEGACY_QUESTIONS, CATEGORIES } from '../public/dive/questions.mjs';
+import { QUESTIONS, PLAYABLE_QUESTIONS, LEGACY_QUESTIONS, CATEGORIES } from '../public/dive/questions.mjs';
 
 const [base = 'http://127.0.0.1:4318', output = '/tmp/randy-dive-qa'] = process.argv.slice(2);
 const profile = `scratch-dive-check-${process.pid}`;
@@ -239,7 +239,7 @@ try {
     'return [...document.querySelectorAll("[data-theme]")].map(el=>({id:el.dataset.theme,text:el.textContent}))',
   );
   for (const category of CATEGORIES) {
-    const count = QUESTIONS.filter((question) => question.category === category.id).length;
+    const count = PLAYABLE_QUESTIONS.filter((question) => question.category === category.id).length;
     assert.ok(themeLabels.find((label) => label.id === category.id)?.text.includes(`${count} PROMPTS`));
   }
   const category = await evaluate('return document.querySelector("[data-theme]").dataset.theme');

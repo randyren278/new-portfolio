@@ -5,6 +5,9 @@ import { CULTURE_QUESTION_ROWS } from './questions-culture-extra.mjs';
 import { WORLD_QUESTION_ROWS } from './questions-world-extra.mjs';
 import { EVERYDAY_QUESTION_ROWS } from './questions-everyday-extra.mjs';
 import { ANSWER_AUDIT } from './answer-audit-v2.mjs';
+import { ANSWER_REVIEW } from './answer-review-v3.mjs';
+import { GENERAL_QUESTIONS } from './questions-general-extra.mjs';
+import { PLAYABLE_ANCHORS } from './playability.mjs';
 
 export const CATEGORIES = [
   { id: 'nature', label: 'Natural world' },
@@ -482,7 +485,7 @@ export const BASE_QUESTIONS = [
   ].map((row) => question(...row, true)),
 ];
 
-export const ANSWER_BANK_VERSION = 2;
+export const ANSWER_BANK_VERSION = 3;
 
 export function applyAnswerAudit(question, patch = {}) {
   const removed = new Set([...(patch.remove ?? []), ...Object.keys(patch.merge ?? {})]);
@@ -505,12 +508,22 @@ export function applyAnswerAudit(question, patch = {}) {
     ...question,
     prompt: patch.prompt ?? question.prompt,
     preciseMatching: true,
-    matchingVersion: ANSWER_BANK_VERSION,
-    rejectedInputs: patch.rejectedInputs ?? [],
+    matchingVersion: 2,
+    rejectedInputs: patch.rejectedInputs ?? question.rejectedInputs ?? [],
     answers,
   };
 }
 
-export const QUESTIONS = BASE_QUESTIONS.map((question) =>
+export const AUDITED_QUESTIONS = BASE_QUESTIONS.map((question) =>
   applyAnswerAudit(question, ANSWER_AUDIT[question.id]),
+);
+
+export const QUESTIONS = [
+  ...AUDITED_QUESTIONS.map((question) => applyAnswerAudit(question, ANSWER_REVIEW[question.id])),
+  ...GENERAL_QUESTIONS.map((question) => applyAnswerAudit(question)),
+];
+
+// New prompts enter the shuffle only after review supplies familiar answer anchors.
+export const PLAYABLE_QUESTIONS = QUESTIONS.filter((question) =>
+  Object.hasOwn(PLAYABLE_ANCHORS, question.id),
 );

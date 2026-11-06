@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { QUESTIONS, LEGACY_QUESTIONS, CATEGORIES } from '../public/dive/questions.mjs';
+import { QUESTIONS, PLAYABLE_QUESTIONS, LEGACY_QUESTIONS, CATEGORIES } from '../public/dive/questions.mjs';
 import { createRun, evaluateAnswer, loadProgress, saveProgress } from '../public/dive/model.mjs';
 import { rarityFor } from '../public/dive/rarity.mjs';
 
@@ -87,7 +87,7 @@ test('new daily schedule and all unlimited themes actually draw expanded content
     assert.equal(new Set(run.questions.map((q) => q.id)).size, 7);
     for (const q of run.questions) seen.add(q.id);
   }
-  assert.equal(seen.size, QUESTIONS.length);
+  assert.deepEqual([...seen].sort(), PLAYABLE_QUESTIONS.map(q => q.id).sort());
   for (const category of CATEGORIES) {
     const run = createRun({ mode: 'unlimited', category: category.id, seed: 'expanded-theme' });
     assert.ok(run.questions.every((q) => q.category === category.id));

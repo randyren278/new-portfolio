@@ -11,7 +11,7 @@ import {
   saveProgress,
   finishRun,
 } from './model.mjs';
-import { CATEGORIES, QUESTIONS } from './questions.mjs';
+import { CATEGORIES, PLAYABLE_QUESTIONS } from './questions.mjs';
 import { mountOcean } from './scene.mjs';
 import { RARITY_BANDS, rarityFor, diveRarityFor, rarityIcon, rarityLadder } from './rarity.mjs';
 
@@ -418,7 +418,7 @@ function fillDialog(id) {
   if (id === 'themes') {
     $('#theme-list').innerHTML = CATEGORIES.map(
       (category) =>
-        `<button type="button" data-theme="${escape(category.id)}"><strong>${escape(category.label)}</strong><small>${QUESTIONS.filter((question) => question.category === category.id).length} PROMPTS · 7 PER DIVE ↗</small></button>`,
+        `<button type="button" data-theme="${escape(category.id)}"><strong>${escape(category.label)}</strong><small>${PLAYABLE_QUESTIONS.filter((question) => question.category === category.id).length} PROMPTS · 7 PER DIVE ↗</small></button>`,
     ).join('');
     for (const button of $('#theme-list').querySelectorAll('button'))
       button.onclick = () => {

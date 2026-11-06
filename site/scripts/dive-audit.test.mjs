@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { BASE_QUESTIONS, QUESTIONS, applyAnswerAudit } from '../public/dive/questions.mjs';
+import { BASE_QUESTIONS, QUESTIONS, ANSWER_BANK_VERSION, applyAnswerAudit } from '../public/dive/questions.mjs';
 import {
   createRun,
   evaluateAnswer,
@@ -77,14 +77,14 @@ test('old scored answers survive corrections and mixed-version resume counts onc
     progress.activeDaily.run.questions[progress.activeDaily.run.round].answers[0].name,
   );
   assert.deepEqual(resumed.answers.slice(0, prefix.length), prefix);
-  assert.equal(resumed.answers.at(-1).bankVersion, 2);
+  assert.equal(resumed.answers.at(-1).bankVersion, ANSWER_BANK_VERSION);
   progress.activeDaily = { run: resumed, deadline: 0, feedback: true };
   progress.activeDailies[resumed.dateKey] = progress.activeDaily;
   assert.equal(saveProgress(storage, progress), true);
   progress = loadProgress(storage);
   resumed = progress.activeDaily.run;
   assert.deepEqual(resumed.answers.slice(0, prefix.length), prefix);
-  assert.equal(resumed.answers.at(-1).bankVersion, 2);
+  assert.equal(resumed.answers.at(-1).bankVersion, ANSWER_BANK_VERSION);
   while (!resumed.complete)
     resumed = recordAnswer(resumed, resumed.questions[resumed.round].answers[0].name);
   const finished = finishRun(progress, resumed);
@@ -122,7 +122,7 @@ test('versioned matching supports uppercase transliteration and rejects unknown 
   };
   assert.equal(evaluateAnswer(question, 'STRAẞE').canonical, 'Straße');
   const run = createRun();
-  for (const bankVersion of [0, 3, null, '1'])
+  for (const bankVersion of [0, ANSWER_BANK_VERSION + 1, null, '1'])
     assert.throws(() => recordAnswer(run, 'anything', { bankVersion }), RangeError);
 });
 

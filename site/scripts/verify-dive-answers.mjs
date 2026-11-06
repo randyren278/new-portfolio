@@ -3,7 +3,7 @@ import { execFile } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { createRun } from '../public/dive/model.mjs';
+import { createRun, loadProgress, STORAGE_KEY } from '../public/dive/model.mjs';
 
 const [base = 'http://127.0.0.1:4318', output = '/tmp/dive-answer-qa', mode = 'fixed'] =
   process.argv.slice(2);
@@ -32,9 +32,9 @@ const dates = new Map();
 const targetIds = new Set(cases.map((item) => item.id));
 for (let i = 0; i < 10000 && dates.size < targetIds.size; i++) {
   const date = new Date(Date.UTC(2026, 10, 7 + i)).toISOString().slice(0, 10);
-  const run = createRun({ dateKey: date });
+  const run = createRun({ dateKey: date, poolVersion: 1 });
   if (cases.some((item) => item.id === run.questions[0].id) && !dates.has(run.questions[0].id))
-    dates.set(run.questions[0].id, { date, prompt: run.questions[0].prompt });
+    dates.set(run.questions[0].id, { date, prompt: run.questions[0].prompt, run });
 }
 assert.equal(dates.size, targetIds.size, 'Find deterministic public daily fixtures for every case');
 mkdirSync(output, { recursive: true });
@@ -54,9 +54,18 @@ try {
     const fixture = dates.get(item.id);
     await call('open', `${base}/dive`, '--tab', tab);
     await call('wait', '--selector', '#begin', '--tab', tab);
+    // Specialist questions remain playable by resuming an existing old-pool save.
+    const progress = loadProgress();
+    progress.activeDaily = {
+      run: fixture.run,
+      deadline: Date.parse(`${fixture.date}T12:00:00Z`) + 25000,
+      feedback: false,
+    };
+    progress.activeDailies[fixture.date] = progress.activeDaily;
     await evaluate(`
       localStorage.clear();window.OriginalDate=Date;const stamp=Date.parse(${JSON.stringify(`${fixture.date}T12:00:00Z`)});
-      window.Date=class extends window.OriginalDate{constructor(...args){super(...(args.length?args:[stamp]))}static now(){return stamp}};return true;
+      window.Date=class extends window.OriginalDate{constructor(...args){super(...(args.length?args:[stamp]))}static now(){return stamp}};
+      localStorage.setItem(${JSON.stringify(STORAGE_KEY)},${JSON.stringify(JSON.stringify(progress))});return true;
     `);
     await call('click', '#daily-mode', '--tab', tab);
     await call('click', '#begin', '--tab', tab);
@@ -81,7 +90,7 @@ try {
     if (accepted)
       assert.equal(observed.canonical, mode === 'fixed' ? item.canonical : item.oldCanonical);
     else assert.match(observed.message, /Not listed/);
-    results.push({ ...item, ...fixture, observed });
+    results.push({ ...item, date: fixture.date, prompt: fixture.prompt, surface: 'resumed old-pool daily', observed });
     await call('screenshot', path.join(output, `${item.id}-${item.input.replace(/[^a-z0-9]+/gi, '-')}.png`), '--tab', tab);
     console.log(`PASS ${mode}: ${item.input} ${accepted ? 'accepted' : 'rejected'} on ${item.id}`);
   }
