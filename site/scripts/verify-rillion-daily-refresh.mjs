@@ -63,7 +63,7 @@ try {
         assert.equal(await evaluate('return document.querySelector("#screen").dataset.state'), 'feedback');
         if (date === '2026-11-06') {
           await call('open', base + '/', '--tab', 'other');
-          await call('wait', '--selector', '#sound', '--tab', 'other');
+          await call('wait', '--selector', '#begin', '--tab', 'other');
           await call('click', '#sound', '--tab', 'other');
           await call('wait', '--js', 'document.querySelector("#sound").getAttribute("aria-pressed")==="false"', '--tab', tab);
           assert.equal(await evaluate('return document.querySelector("#screen").dataset.state'), 'feedback');
