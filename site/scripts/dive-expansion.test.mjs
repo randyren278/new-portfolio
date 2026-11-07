@@ -45,7 +45,7 @@ test('all legacy question content and scores remain byte-for-byte equivalent', (
       legacy.digests[q.id],
     );
   for (const expected of legacy.daily) {
-    const actual = createRun({ dateKey: expected.dateKey });
+    const actual = createRun({ dateKey: expected.dateKey, poolVersion: 1 });
     assert.equal(actual.id, expected.id);
     assert.deepEqual(
       actual.questions.map((q) => q.id),

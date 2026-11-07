@@ -3,7 +3,8 @@ import { execFile } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { createRun, loadProgress, STORAGE_KEY } from '../public/dive/model.mjs';
+import { createRun, evaluateAnswer, loadProgress, STORAGE_KEY } from '../public/dive/model.mjs';
+import { QUESTIONS, PLAYABLE_QUESTIONS } from '../public/dive/questions.mjs';
 
 const [base = 'http://127.0.0.1:4318', output = '/tmp/dive-answer-qa', mode = 'fixed'] =
   process.argv.slice(2);
@@ -29,11 +30,13 @@ const cases = [
   { id: 'nature-sharks', input: 'Whale', valid: false, oldCanonical: 'whale shark' },
 ];
 const dates = new Map();
-const targetIds = new Set(cases.map((item) => item.id));
+const playable = new Set(PLAYABLE_QUESTIONS.map(q => q.id));
+const nativeCases = cases.filter(item => mode === 'baseline' || playable.has(item.id));
+const targetIds = new Set(nativeCases.map((item) => item.id));
 for (let i = 0; i < 10000 && dates.size < targetIds.size; i++) {
   const date = new Date(Date.UTC(2026, 10, 7 + i)).toISOString().slice(0, 10);
-  const run = createRun({ dateKey: date, poolVersion: 1 });
-  if (cases.some((item) => item.id === run.questions[0].id) && !dates.has(run.questions[0].id))
+  const run = createRun({ dateKey: date, poolVersion: mode === 'baseline' ? 1 : 2 });
+  if (targetIds.has(run.questions[0].id) && !dates.has(run.questions[0].id))
     dates.set(run.questions[0].id, { date, prompt: run.questions[0].prompt, run });
 }
 assert.equal(dates.size, targetIds.size, 'Find deterministic public daily fixtures for every case');
@@ -50,11 +53,18 @@ const call = async (...args) =>
 const evaluate = async (source) => (await call('eval', source, '--tab', tab)).value;
 const results = [];
 try {
-  for (const item of cases) {
+  for (const item of cases.filter(item => !nativeCases.includes(item))) {
+    const observed = evaluateAnswer(QUESTIONS.find(q => q.id === item.id), item.input);
+    assert.equal(observed.valid, item.valid);
+    if (item.valid) assert.equal(observed.canonical, item.canonical);
+    results.push({ ...item, surface: 'model; retired from new daily rotation', observed });
+    console.log(`PASS model: ${item.input} on retired prompt ${item.id}`);
+  }
+  for (const item of nativeCases) {
     const fixture = dates.get(item.id);
     await call('open', `${base}/dive`, '--tab', tab);
     await call('wait', '--selector', '#begin', '--tab', tab);
-    // Specialist questions remain playable by resuming an existing old-pool save.
+    // Current-pool saves exercise the public resume and native submission path.
     const progress = loadProgress();
     progress.activeDaily = {
       run: fixture.run,
@@ -90,7 +100,7 @@ try {
     if (accepted)
       assert.equal(observed.canonical, mode === 'fixed' ? item.canonical : item.oldCanonical);
     else assert.match(observed.message, /Not listed/);
-    results.push({ ...item, date: fixture.date, prompt: fixture.prompt, surface: 'resumed old-pool daily', observed });
+    results.push({ ...item, date: fixture.date, prompt: fixture.prompt, surface: 'native daily', observed });
     await call('screenshot', path.join(output, `${item.id}-${item.input.replace(/[^a-z0-9]+/gi, '-')}.png`), '--tab', tab);
     console.log(`PASS ${mode}: ${item.input} ${accepted ? 'accepted' : 'rejected'} on ${item.id}`);
   }

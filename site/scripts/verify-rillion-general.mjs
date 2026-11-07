@@ -109,13 +109,22 @@ try {
   assert.deepEqual(restored.activeDaily.run.answers, previous.activeDaily.run.answers);
   await setDate('2026-11-08');
   await click('#daily-mode');
+  assert.match(await evaluate('return document.querySelector("#begin").textContent'), /Dive in/);
+  await click('#begin');
+  assert.equal(await evaluate('return document.querySelector("#prompt").textContent'), createRun({ dateKey: '2026-11-08' }).questions[0].prompt);
+  const legacy = JSON.parse(readFileSync(new URL('./fixtures/dive-v5-audit-progress.json', import.meta.url), 'utf8'));
+  await evaluate(`localStorage.setItem(${JSON.stringify(STORAGE_KEY)},${JSON.stringify(JSON.stringify(legacy))});return true;`);
+  await call('reload', '--tab', tab);
+  await call('wait', '--selector', '#begin', '--tab', tab);
+  await setDate(legacy.activeDaily.run.dateKey);
+  await click('#daily-mode');
   assert.match(await evaluate('return document.querySelector("#begin").textContent'), /Resume/);
   await click('#begin');
   assert.equal(await evaluate('return document.querySelector("#screen").dataset.state'), 'feedback');
   await click('#next');
   const resumedPrompt = await evaluate('return document.querySelector("#prompt").textContent');
-  assert.equal(resumedPrompt, QUESTIONS.find(q => q.id === previous.activeDaily.run.questions[3].id).prompt);
-  console.log('PASS theme counts and previous-version browser save resume');
+  assert.equal(resumedPrompt, QUESTIONS.find(q => q.id === legacy.activeDaily.run.questions[legacy.activeDaily.run.round].id).prompt);
+  console.log('PASS theme counts, outdated daily refresh, and archived save resume');
   assert.equal((await call('console', '--level', 'error', '--tab', tab)).count, 0);
   writeFileSync(path.join(output, 'receipt.json'), JSON.stringify({ base, checks, contextChecks, completion: stored.daily[dateKey], savedVersionResume: true, themeCounts: themeText, testedAt: new Date().toISOString() }, null, 2) + '\n');
 } finally {

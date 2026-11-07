@@ -5,6 +5,7 @@ import {
   dayKey,
   dailyNumber,
   createRun,
+  sameDailyPuzzle,
   recordAnswer,
   evaluateAnswer,
   loadProgress,
@@ -155,6 +156,17 @@ function saveActive() {
   }
   persist();
 }
+function dailyProgress(key) {
+  const current = createRun({ dateKey: key });
+  const saved = sameDailyPuzzle(progress.daily[key], current) ? progress.daily[key] :
+    progress.history.find(value => sameDailyPuzzle(value, current));
+  const active = progress.activeDailies?.[key] ??
+    (progress.activeDaily?.run.dateKey === key ? progress.activeDaily : null);
+  return {
+    saved: sameDailyPuzzle(saved, current) ? saved : null,
+    active: sameDailyPuzzle(active?.run, current) ? active : null,
+  };
+}
 function showHome(options = selected) {
   stopClock();
   selected = options;
@@ -164,12 +176,8 @@ function showHome(options = selected) {
   setPlaying(false);
   scene.setMood('idle');
   updateMetrics();
-  const saved = progress.daily[selected.dateKey];
-  const active =
-    selected.mode === 'daily' &&
-    (progress.activeDailies?.[selected.dateKey] ||
-      progress.activeDaily?.run.dateKey === selected.dateKey);
   const daily = selected.mode === 'daily';
+  const { saved, active } = daily ? dailyProgress(selected.dateKey) : { saved: null, active: null };
   screen.dataset.state = 'home';
   screen.innerHTML = `<h2 class="home-title">${daily ? 'Daily dive.' : 'Open water.'}</h2>
     <p class="home-note">${saved && daily ? `${number(saved.score * 10)}m reached.${selected.dateKey === dayKey() ? ' Next daily in <span id="reset-time"></span>.' : ''}` : active ? 'Your boat is waiting.' : 'Seven prompts. Rarer answers go deeper.'}</p>
@@ -204,11 +212,8 @@ function begin() {
   if (followToday && selected.mode === 'daily') selected.dateKey = dayKey();
   // Read again so a completed daily dive in another tab stays completed.
   if (storage && persistent) progress = loadProgress(storage);
-  if (selected.mode === 'daily' && progress.daily[selected.dateKey])
-    return showResult(progress.daily[selected.dateKey]);
-  const savedActive =
-    progress.activeDailies?.[selected.dateKey] ??
-    (progress.activeDaily?.run.dateKey === selected.dateKey ? progress.activeDaily : null);
+  const { saved, active: savedActive } = dailyProgress(selected.dateKey);
+  if (selected.mode === 'daily' && saved) return showResult(saved);
   if (selected.mode === 'daily' && savedActive) {
     const active = savedActive;
     selected = { mode: 'daily', dateKey: active.run.dateKey, category: 'all' };
@@ -434,7 +439,8 @@ function fillDialog(id) {
   if (id === 'archive') {
     $('#archive-list').innerHTML = Array.from({ length: 30 }, (_, i) => {
       const key = dayKey(new Date(Date.parse(`${dayKey()}T00:00:00Z`) - (i + 1) * 86400000));
-      return `<button type="button" data-date="${key}"><span>${dateLabel(key)} · ${new Date(`${key}T12:00:00Z`).getUTCFullYear()}</span><span>${progress.daily[key] ? `${progress.daily[key].score} PTS · VIEW` : 'DIVE IN ↗'}</span></button>`;
+      const { saved } = dailyProgress(key);
+      return `<button type="button" data-date="${key}"><span>${dateLabel(key)} · ${new Date(`${key}T12:00:00Z`).getUTCFullYear()}</span><span>${saved ? `${saved.score} PTS · VIEW` : 'DIVE IN ↗'}</span></button>`;
     }).join('');
     for (const button of $('#archive-list').querySelectorAll('button'))
       button.onclick = () => {
@@ -493,10 +499,8 @@ addEventListener('storage', (event) => {
   progress = loadProgress(storage);
   updateSound();
   if (run?.mode === 'daily' && !run.complete) {
-    if (progress.daily[run.dateKey]) return showResult(progress.daily[run.dateKey]);
-    const active =
-      progress.activeDailies?.[run.dateKey] ??
-      (progress.activeDaily?.run.dateKey === run.dateKey ? progress.activeDaily : null);
+    const { saved, active } = dailyProgress(run.dateKey);
+    if (saved) return showResult(saved);
     if (
       active &&
       (active.run.round !== run.round ||

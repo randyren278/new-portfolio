@@ -7,10 +7,83 @@ import {
 } from '../public/dive/questions.mjs';
 import { GENERAL_QUESTIONS } from '../public/dive/questions-general-extra.mjs';
 import { PLAYABLE_ANCHORS } from '../public/dive/playability.mjs';
-import { createRun, evaluateAnswer, recordAnswer, loadProgress, saveProgress, finishRun } from '../public/dive/model.mjs';
+import { createRun, sameDailyPuzzle, evaluateAnswer, recordAnswer, loadProgress, saveProgress, finishRun } from '../public/dive/model.mjs';
 
 const fixture = name => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 const byId = new Map(QUESTIONS.map(q => [q.id, q]));
+
+test('the November 6 daily immediately uses the accessible pool with its own identity', () => {
+  const previous = createRun({ dateKey: '2026-11-06', poolVersion: 1 });
+  const current = createRun({ dateKey: '2026-11-06' });
+  assert.equal(current.poolVersion, 2);
+  assert.notEqual(current.id, previous.id);
+  assert.equal(sameDailyPuzzle(previous, current), false);
+  assert.ok(current.questions.every(q => PLAYABLE_ANCHORS[q.id]));
+  assert.notDeepEqual(current.questions.map(q => q.id), previous.questions.map(q => q.id));
+});
+
+test('a completed old daily keeps its score while the refreshed daily resumes and counts once', () => {
+  let raw = fixture('dive-v6-progress.json');
+  const storage = { getItem: () => raw, setItem: (_, value) => { raw = value; } };
+  let progress = loadProgress(storage);
+  const previous = progress.daily['2026-11-06'];
+  const oldPlayed = progress.played, oldTotal = progress.total;
+  let run = createRun({ dateKey: '2026-11-06' });
+  run = recordAnswer(run, PLAYABLE_ANCHORS[run.questions[0].id][0]);
+  progress.activeDaily = { run, deadline: 0, feedback: true };
+  progress.activeDailies[run.dateKey] = progress.activeDaily;
+  saveProgress(storage, progress);
+  progress = loadProgress(storage);
+  assert.equal(progress.activeDaily.run.id, run.id);
+  assert.deepEqual(progress.daily[run.dateKey], previous);
+  while (!run.complete) run = recordAnswer(run, PLAYABLE_ANCHORS[run.questions[run.round].id][0]);
+  progress = finishRun(progress, run);
+  assert.equal(progress.played, oldPlayed + 1);
+  assert.equal(progress.total, oldTotal + run.score);
+  assert.ok(progress.history.some(r => r.id === previous.id && r.score === previous.score));
+  assert.equal(progress.daily[run.dateKey].id, run.id);
+  assert.equal(finishRun(progress, run), progress);
+  saveProgress(storage, progress);
+  progress = loadProgress(storage);
+  assert.equal(progress.daily[run.dateKey].id, run.id);
+  assert.ok(progress.history.some(r => r.id === previous.id));
+});
+
+test('already-accessible saves keep their original identity and cannot count twice after refresh', () => {
+  let run = createRun({ dateKey: '2026-11-07' });
+  while (!run.complete) run = recordAnswer(run, PLAYABLE_ANCHORS[run.questions[run.round].id][0]);
+  const original = { ...run, id: `daily:${run.dateKey}` };
+  let progress = finishRun(loadProgress(), original);
+  assert.equal(progress.played, 1);
+  let raw;
+  saveProgress({ setItem: (_, value) => { raw = value; } }, progress);
+  progress = loadProgress({ getItem: () => raw });
+  assert.equal(progress.daily[run.dateKey].id, original.id);
+  assert.equal(sameDailyPuzzle(progress.daily[run.dateKey], run), true);
+  assert.equal(finishRun(progress, run), progress);
+  delete progress.daily[run.dateKey];
+  assert.equal(finishRun(progress, run), progress, 'history-only legacy identity cannot count twice');
+});
+
+test('finishing an older pool cannot clear a newer active daily or replace its completed result', () => {
+  const dateKey = '2026-11-06';
+  let old = createRun({ dateKey, poolVersion: 1 });
+  while (!old.complete) old = recordAnswer(old, old.questions[old.round].answers[0].name);
+  let current = createRun({ dateKey });
+  current = recordAnswer(current, PLAYABLE_ANCHORS[current.questions[0].id][0]);
+  let progress = loadProgress();
+  progress.activeDaily = { run: current, deadline: 0, feedback: true };
+  progress.activeDailies[dateKey] = progress.activeDaily;
+  const active = progress.activeDaily;
+  progress = finishRun(progress, old);
+  assert.equal(progress.activeDaily, active);
+  assert.equal(progress.activeDailies[dateKey], active);
+  while (!current.complete) current = recordAnswer(current, PLAYABLE_ANCHORS[current.questions[current.round].id][0]);
+  let reverse = finishRun(loadProgress(), current);
+  reverse = finishRun(reverse, old);
+  assert.equal(reverse.daily[dateKey].id, current.id);
+  assert.equal(reverse.played, 2);
+});
 
 test('ordinary dives exclude specialist recall and every selectable prompt has three low-score anchors', () => {
   const ids = new Set(PLAYABLE_QUESTIONS.map(q => q.id));

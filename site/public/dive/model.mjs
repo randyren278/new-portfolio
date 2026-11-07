@@ -66,7 +66,7 @@ function freshSeed() {
 
 export function createRun({
   mode = 'daily', dateKey = dayKey(), category = 'all', seed,
-  poolVersion = mode === 'daily' && dateKey < '2026-11-07' ? 1 : 2,
+  poolVersion = mode === 'daily' && dateKey < '2026-11-06' ? 1 : 2,
 } = {}) {
   if (!['daily', 'unlimited'].includes(mode)) throw new RangeError('Unknown dive mode');
   if (!validDay(dateKey)) throw new RangeError('Invalid puzzle date');
@@ -93,7 +93,9 @@ export function createRun({
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return {
-    id: mode === 'daily' ? runSeed : `unlimited:${selectedCategory}:${runSeed}`,
+    id: mode === 'daily'
+      ? `${runSeed}${poolVersion === 2 ? ':pool2' : ''}`
+      : `unlimited:${selectedCategory}:${runSeed}`,
     mode,
     dateKey,
     category: selectedCategory,
@@ -104,6 +106,11 @@ export function createRun({
     score: 0,
     complete: false,
   };
+}
+
+export function sameDailyPuzzle(left, right) {
+  return Boolean(left && right && left.mode === 'daily' && right.mode === 'daily' &&
+    left.dateKey === right.dateKey && (left.poolVersion ?? 1) === (right.poolVersion ?? 1));
 }
 
 export function normalizeAnswer(input) {
@@ -377,7 +384,8 @@ function validateRun(value, requireComplete = false) {
     return null;
   if (value.mode === 'daily') {
     const expected = createRun({ dateKey: value.dateKey, poolVersion });
-    if (value.id !== expected.id || ids.some((id, i) => id !== expected.questions[i].id))
+    const originalId = poolVersion === 2 && value.id === `daily:${value.dateKey}`;
+    if ((!originalId && value.id !== expected.id) || ids.some((id, i) => id !== expected.questions[i].id))
       return null;
   } else if (!value.id.startsWith(`unlimited:${category}:`)) return null;
   let run = {
@@ -478,7 +486,7 @@ function sanitizeProgress(value) {
     if (
       run?.mode !== 'daily' ||
       run.complete ||
-      clean.daily[run.dateKey] ||
+      sameDailyPuzzle(clean.daily[run.dateKey], run) ||
       (key && key !== run.dateKey)
     )
       return null;
@@ -542,18 +550,21 @@ export function finishRun(progress, run) {
   if (!valid) return progress;
   if (
     progress.completedIds?.includes(valid.id) ||
-    progress.history?.some((record) => record.id === valid.id) ||
-    (valid.mode === 'daily' && progress.daily?.[valid.dateKey])
+    progress.history?.some((record) => record.id === valid.id || sameDailyPuzzle(record, valid)) ||
+    sameDailyPuzzle(progress.daily?.[valid.dateKey], valid)
   )
     return progress;
   const result = { ...valid, completedAt: Date.now() };
   const activeDailies = { ...(progress.activeDailies ?? {}) };
-  if (valid.mode === 'daily') delete activeDailies[valid.dateKey];
+  if (sameDailyPuzzle(activeDailies[valid.dateKey]?.run, valid)) delete activeDailies[valid.dateKey];
   const legacyActive = progress.activeDaily;
   const activeDaily =
-    valid.mode === 'daily' && legacyActive?.run.dateKey === valid.dateKey
+    sameDailyPuzzle(legacyActive?.run, valid)
       ? (Object.values(activeDailies).at(-1) ?? null)
       : (legacyActive ?? null);
+  const previousDaily = progress.daily?.[valid.dateKey];
+  const dailyResult = previousDaily && (previousDaily.poolVersion ?? 1) > (valid.poolVersion ?? 1)
+    ? previousDaily : result;
   return {
     ...progress,
     version: 1,
@@ -563,7 +574,7 @@ export function finishRun(progress, run) {
     history: [result, ...(progress.history ?? [])].slice(0, 30),
     daily:
       valid.mode === 'daily'
-        ? { ...(progress.daily ?? {}), [valid.dateKey]: result }
+        ? { ...(progress.daily ?? {}), [valid.dateKey]: dailyResult }
         : { ...(progress.daily ?? {}) },
     activeDaily,
     activeDailies,
