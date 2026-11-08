@@ -108,7 +108,7 @@ than leaving a broken state.
 
 The Strava cell is also a doorway. Tapping it asks whether you'd like to see
 how the training is going, and `/training` answers from the watch itself:
-Coros' load and recovery verdicts, HRV and sleep, the latest session lap by
+Coros' load and recovery verdicts, HRV, the latest session lap by
 lap, and the weeks behind it. Coros is read through its hosted MCP server;
 Strava contributes the route shapes. Every number is fetched, never typed.
 

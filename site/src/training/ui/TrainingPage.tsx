@@ -60,7 +60,7 @@ function syncedLabel(view: TrainingView) {
   }).formatToParts(new Date(view.asOf));
   const part = (type: string) => parts.find((p) => p.type === type)?.value;
   const date = `${part('year')}-${part('month')}-${part('day')}`;
-  return `Synced from ${view.source === 'coros' ? 'Coros' : 'Strava'} · ${fmtDow(date)} · ${part('hour')}:${part('minute')} PT`;
+  return `Updated · ${fmtDow(date)} · ${part('hour')}:${part('minute')} PT`;
 }
 
 export function TrainingPage({ view }: { view: TrainingView | null }) {
@@ -156,16 +156,6 @@ function Cells({ view }: { view: TrainingView }) {
                   base={r.rhr.baseline}
                 />
               )}
-              {r.sleep && (
-                <Vital
-                  label="Sleep"
-                  value={r.sleep.value}
-                  unit="/100"
-                  note={r.sleep.baseline != null ? `typical ${Math.round(r.sleep.baseline)}` : ''}
-                  series={r.sleep.series}
-                  base={r.sleep.baseline}
-                />
-              )}
             </div>
           </div>
         </section>
@@ -216,11 +206,7 @@ function Cells({ view }: { view: TrainingView }) {
           <h2 className="kicker" id="k-recovery">
             § RECOVERY · 3 WK
           </h2>
-          <RecoveryChart
-            nights={view.nights}
-            sleepBase={view.readiness?.sleep?.baseline ?? null}
-            dayTips={dayTips}
-          />
+          <RecoveryChart nights={view.nights} dayTips={dayTips} />
         </section>
       )}
 

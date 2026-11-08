@@ -38,7 +38,6 @@ function sources(overrides = {}) {
     recovery: P.parseRecovery(fx('recovery.txt')),
     restingHr: P.parseRestingHr(fx('resting-hr.txt')),
     hrv: P.parseSleepHrv(fx('sleep-hrv.txt')),
-    sleep: P.parseSleepOverview(fx('sleep-overview.txt')),
     details,
     session: {
       labelId: '480944039976271974',
@@ -225,6 +224,7 @@ test('deriveView builds the full page from Coros', () => {
   assert.equal(v.nights.length, 21);
   assert.ok(v.focus.some((f) => f.label === 'Base'));
   assert.equal(v.predictor.vo2max, 64);
+  assert.doesNotMatch(JSON.stringify(v), /sleep/i, 'sleep data never reaches the page');
   assert.equal(v.lines.length, 8);
   assert.equal(v.lines[0].date, '2026-10-10', 'line studies run newest first');
   const hrvNote = v.notes.find((n) => n.text.startsWith('HRV dropped to 39'));
@@ -233,6 +233,18 @@ test('deriveView builds the full page from Coros', () => {
     `a note calls out the Sep 28 HRV dip (${v.notes.map((n) => n.text).join(' / ')})`,
   );
   assert.ok(v.status.essay.length > 40);
+});
+
+test('old HRV and resting HR are not presented as current after overnight wear stops', () => {
+  const v = D.deriveView(
+    sources({
+      hrv: [{ date: '2026-09-20', hrv: 72, baseline: 78 }],
+      restingHr: [{ date: '2026-09-20', bpm: 52 }],
+    }),
+  );
+  assert.equal(v.readiness.hrv, null);
+  assert.equal(v.readiness.rhr, null);
+  assert.equal(v.readiness.pct, 79);
 });
 
 test('resting HR reaches the page only in readiness', () => {
@@ -280,7 +292,6 @@ test('without Coros, Strava carries the activity panels alone', () => {
     recovery: null,
     restingHr: null,
     hrv: null,
-    sleep: null,
     details: {},
     session: null,
   });
@@ -336,7 +347,6 @@ test('the status map is the latest outdoor run over 6 km with a public route', (
       recovery: null,
       restingHr: null,
       hrv: null,
-      sleep: null,
       details: {},
       session: null,
     });

@@ -79,6 +79,7 @@ test('latest Base-labelled workout reaches the view through the real loader', as
   assert.equal(view.session?.date, '2026-10-20');
   assert.equal(view.session?.title, '4 × 8:00');
   assert.equal(view.session?.focus, 'Base', 'preserve COROS focus separately from lap structure');
+  assert.ok(!calls.some((c) => c.tool === 'querySleepOverview'), 'sleep data is no longer requested');
   assert.equal(
     calls.filter((c) => c.tool === 'queryActivityLapData').length,
     1,

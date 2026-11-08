@@ -393,32 +393,20 @@ export function VolumeChart({ weeks }: { weeks: Week[] }) {
 
 // --------------------------------------------------------- recovery
 
-type Panel = {
-  key: 'hrv' | 'sleep';
-  label: string;
-  value: (n: Night) => number | null;
-  base: (n: Night) => number | null;
-  flag: (n: Night) => boolean;
-  bars?: boolean;
-};
-
 export function RecoveryChart({
   nights,
-  sleepBase,
   dayTips,
 }: {
   nights: Night[];
-  sleepBase: number | null;
   dayTips: Map<string, string>;
 }) {
   const [ref, W, H] = useSize<HTMLDivElement>();
   const n = nights.length;
   const ml = 4;
   const mr = 46;
-  const gap = 28;
   const top = 16;
   const mb = 20;
-  const rowH = (H - top - gap - mb) / 2;
+  const rowH = H - top - mb;
   const iw = Math.max(1, W - ml - mr);
   const x = (i: number) => ml + (n > 1 ? (i * iw) / (n - 1) : 0);
   const cross = useCrosshair(n, x, (i) => {
@@ -426,139 +414,77 @@ export function RecoveryChart({
     return [
       fmtDow(d.date),
       `HRV ${d.hrv ?? '—'} ms${d.baseline ? ` (base ${d.baseline})` : ''}${d.hrvStatus ? ` · ${d.hrvStatus}` : ''}`,
-      `Sleep score ${d.sleep ?? '—'}`,
       `Day before: ${dayTips.get(shift(d.date, -1)) ?? 'rest'}`,
     ];
   });
   if (W < 160 || rowH < 20 || !n) return <div ref={ref} className="chart" />;
-
-  const panels: Panel[] = [
-    {
-      key: 'hrv',
-      label: 'HRV · MS',
-      value: (d) => d.hrv,
-      base: (d) => d.baseline,
-      flag: (d) => /low/i.test(d.hrvStatus ?? ''),
-    },
-    {
-      key: 'sleep',
-      label: 'SLEEP SCORE',
-      value: (d) => d.sleep,
-      base: () => sleepBase,
-      flag: (d) => (d.sleep ?? 100) < 65,
-      bars: true,
-    },
-  ];
+  const vals = nights.map((d) => d.hrv).filter((v): v is number => v != null);
+  if (!vals.length) return <div ref={ref} className="chart" />;
+  const bases = nights.map((d) => d.baseline).filter((v): v is number => v != null);
+  const lo = Math.min(...vals, ...bases) - 4;
+  const hi = Math.max(...vals, ...bases) + 4;
+  const y = (v: number) => top + rowH - ((v - lo) / (hi - lo)) * rowH;
+  const points = (value: (d: Night) => number | null) =>
+    nights.flatMap((d, i) => {
+      const v = value(d);
+      return v == null ? [] : [[x(i), y(v)] as [number, number]];
+    });
+  const basePts = points((d) => d.baseline);
+  const valPts = points((d) => d.hrv);
+  const lastBase = basePts.at(-1);
+  const current = nights.findLast((d) => d.hrv != null)?.hrv ?? null;
   const ticks = [0, 7, 14, n - 1].filter((i, k, a) => i < n && a.indexOf(i) === k);
-
   return (
     <div ref={ref} className="chart">
       <svg width={W} height={H} data-crosshair="" aria-hidden="true">
-        {panels.map((p, k) => {
-          const y0 = top + k * (rowH + gap);
-          const vals = nights.map(p.value).filter((v): v is number => v != null);
-          const bases = nights.map(p.base).filter((v): v is number => v != null);
-          if (!vals.length) return null;
-          const lo = p.bars ? 0 : Math.min(...vals, ...bases) - 4;
-          const hi = p.bars ? 100 : Math.max(...vals, ...bases) + 4;
-          const y = (v: number) => y0 + rowH - ((v - lo) / (hi - lo)) * rowH;
-          const cur = [...nights].reverse().find((d) => p.value(d) != null);
-          const curV = cur ? (p.value(cur) as number) : null;
-          const basePts = nights
-            .map((d, i) => [i, p.base(d)] as const)
-            .filter((e): e is readonly [number, number] => e[1] != null)
-            .map(([i, v]) => [x(i), y(v)] as [number, number]);
-          const valPts = nights
-            .map((d, i) => [i, p.value(d)] as const)
-            .filter((e): e is readonly [number, number] => e[1] != null)
-            .map(([i, v]) => [x(i), y(v)] as [number, number]);
-          const bw = Math.max(2, iw / n - 3);
-          const lastBase = basePts[basePts.length - 1];
-          return (
-            <g key={p.key}>
-              <text x={ml} y={y0 - 7} {...AX} letterSpacing={0.5}>
-                {p.label}
+        <text x={ml} y={top - 7} {...AX} letterSpacing={0.5}>
+          HRV · MS
+        </text>
+        {basePts.length > 1 && (
+          <path d={line(basePts)} fill="none" stroke="rgba(var(--ink-rgb) / 0.22)" />
+        )}
+        <path
+          d={line(valPts)}
+          fill="none"
+          stroke="var(--ink)"
+          strokeWidth={2}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        {nights.map((d, i) =>
+          d.hrv == null || !/low/i.test(d.hrvStatus ?? '') ? null : (
+            <g key={d.date}>
+              <circle
+                cx={x(i)}
+                cy={y(d.hrv)}
+                r={4}
+                fill="var(--accent)"
+                stroke="var(--bg)"
+                strokeWidth={2}
+              />
+              <text x={x(i) + 8} y={y(d.hrv) + 4} {...AX}>
+                {d.hrv}
               </text>
-              {p.bars ? (
-                nights.map((d, i) =>
-                  d.sleep == null ? null : (
-                    <path
-                      key={d.date}
-                      d={colTop(
-                        x(i) - bw / 2,
-                        y(d.sleep),
-                        bw,
-                        y(0) - y(d.sleep),
-                        Math.min(3, bw / 2),
-                      )}
-                      fill={p.flag(d) ? 'var(--accent)' : 'rgba(var(--ink-rgb) / 0.28)'}
-                    />
-                  ),
-                )
-              ) : (
-                <>
-                  {basePts.length > 1 && (
-                    <path d={line(basePts)} fill="none" stroke="rgba(var(--ink-rgb) / 0.22)" />
-                  )}
-                  {basePts.length === 1 && null}
-                  <path
-                    d={line(valPts)}
-                    fill="none"
-                    stroke="var(--ink)"
-                    strokeWidth={2}
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                  />
-                  {nights.map((d, i) => {
-                    const v = p.value(d);
-                    if (v == null || !p.flag(d)) return null;
-                    return (
-                      <g key={d.date}>
-                        <circle
-                          cx={x(i)}
-                          cy={y(v)}
-                          r={4}
-                          fill="var(--accent)"
-                          stroke="var(--bg)"
-                          strokeWidth={2}
-                        />
-                        <text x={x(i) + 8} y={y(v) + 4} {...AX}>
-                          {v}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </>
-              )}
-              {p.bars && p.base(nights[0]) != null && (
-                <line
-                  x1={ml}
-                  x2={ml + iw}
-                  y1={y(p.base(nights[0]) as number)}
-                  y2={y(p.base(nights[0]) as number)}
-                  stroke="rgba(var(--ink-rgb) / 0.4)"
-                />
-              )}
-              {curV != null && (
-                <text x={ml + iw + 10} y={y(curV) + 4} fill="var(--ink)" fontSize={13}>
-                  {curV}
-                </text>
-              )}
-              {lastBase && !p.bars && curV != null && (
-                <text
-                  x={ml + iw + 10}
-                  y={
-                    lastBase[1] +
-                    (Math.abs(lastBase[1] - y(curV)) < 14 ? (lastBase[1] > y(curV) ? 16 : -10) : 4)
-                  }
-                  {...AX}
-                >
-                  base
-                </text>
-              )}
             </g>
-          );
-        })}
+          ),
+        )}
+        {current != null && (
+          <text x={ml + iw + 10} y={y(current) + 4} fill="var(--ink)" fontSize={13}>
+            {current}
+          </text>
+        )}
+        {lastBase && current != null && (
+          <text
+            x={ml + iw + 10}
+            y={
+              lastBase[1] +
+              (Math.abs(lastBase[1] - y(current)) < 14 ? (lastBase[1] > y(current) ? 16 : -10) : 4)
+            }
+            {...AX}
+          >
+            base
+          </text>
+        )}
         {ticks.map((i) => (
           <text
             key={i}

@@ -2,7 +2,7 @@
  * Training status loader (server only).
  *
  * Coros (via its hosted MCP server) is the source of truth for activities,
- * load, recovery, HRV, resting HR, sleep, fitness and laps. Resting HR is
+ * load, recovery, HRV, resting HR, fitness and laps. Resting HR is
  * the only heart rate fetched (the readiness cell shows it, nothing else
  * does); in-session HR is never fetched or kept. Strava supplies route
  * shapes, and stands in for the activity list if Coros is unavailable.
@@ -112,20 +112,12 @@ async function fetchCorosCore(today: string): Promise<CorosCore> {
     settle('recovery', coros.call('queryRecoveryStatus').then(P.parseRecovery)),
     settle('resting hr', coros.call('queryRestingHeartRate', { days: 28 }).then(P.parseRestingHr)),
   ]);
-  const [hrv, sleep] = await Promise.all([
-    settle(
-      'hrv',
-      coros
-        .call('querySleepHrv', { startDate: ymd(from28), endDate: ymd(today), days: 28 })
-        .then(P.parseSleepHrv),
-    ),
-    settle(
-      'sleep',
-      coros
-        .call('querySleepOverview', { startDate: ymd(from28), endDate: ymd(today) })
-        .then(P.parseSleepOverview),
-    ),
-  ]);
+  const hrv = await settle(
+    'hrv',
+    coros
+      .call('querySleepHrv', { startDate: ymd(from28), endDate: ymd(today), days: 28 })
+      .then(P.parseSleepHrv),
+  );
   return {
     asOf: new Date().toISOString(),
     records,
@@ -134,7 +126,6 @@ async function fetchCorosCore(today: string): Promise<CorosCore> {
     recovery,
     restingHr,
     hrv,
-    sleep,
   };
 }
 
@@ -250,7 +241,6 @@ async function fixtureSources(): Promise<Sources> {
     recovery: P.parseRecovery(await fx('recovery.txt')),
     restingHr: P.parseRestingHr(await fx('resting-hr.txt')),
     hrv: P.parseSleepHrv(await fx('sleep-hrv.txt')),
-    sleep: P.parseSleepOverview(await fx('sleep-overview.txt')),
     details: Object.fromEntries(
       Object.entries(details).map(([k, v]) => [k, P.parseActivityDetail(v)]),
     ),
@@ -278,7 +268,6 @@ export async function loadTrainingView(): Promise<TrainingView | null> {
     recovery: coros?.recovery ?? null,
     restingHr: coros?.restingHr ?? null,
     hrv: coros?.hrv ?? null,
-    sleep: coros?.sleep ?? null,
     details: coros?.details ?? {},
     session: coros?.session ?? null,
   });

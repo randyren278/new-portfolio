@@ -18,7 +18,6 @@ import type {
   CorosNightHrv,
   CorosRecord,
   CorosRecovery,
-  CorosSleep,
 } from './coros/parse';
 
 // ---------------------------------------------------------------- sources
@@ -44,7 +43,6 @@ export type Sources = {
   recovery: CorosRecovery | null;
   restingHr: { date: string; bpm: number }[] | null;
   hrv: CorosNightHrv[] | null;
-  sleep: CorosSleep[] | null;
   details: Record<string, CorosActivityDetail>;
   session: { labelId: string; laps: CorosLap[] } | null;
 };
@@ -91,7 +89,6 @@ export type Night = {
   hrv: number | null;
   baseline: number | null;
   hrvStatus: string | null;
-  sleep: number | null;
 };
 
 export type LapPart = 'warmup' | 'rep' | 'rest' | 'cooldown';
@@ -135,7 +132,6 @@ export type TrainingView = {
     fullRecoveryHours: number | null;
     hrv: Vital | null;
     rhr: Vital | null;
-    sleep: Vital | null;
   } | null;
   load: CorosLoadDay[] | null;
   week: { start: string; days: WeekDay[]; km: number; vsLastWeek: number };
@@ -631,7 +627,7 @@ export function deriveView(src: Sources): TrainingView {
 }
 
 function deriveNights(src: Sources, today: string): Night[] | null {
-  if (!src.hrv && !src.sleep) return null;
+  if (!src.hrv) return null;
   const from = shift(today, -20);
   const out: Night[] = [];
   for (let d = from; d <= today; d = shift(d, 1)) {
@@ -641,10 +637,9 @@ function deriveNights(src: Sources, today: string): Night[] | null {
       hrv: h?.hrv ?? null,
       baseline: h?.baseline ?? null,
       hrvStatus: h?.status ?? null,
-      sleep: src.sleep?.find((x) => x.date === d)?.score ?? null,
     });
   }
-  return out.some((n) => n.hrv != null || n.sleep != null) ? out : null;
+  return out.some((n) => n.hrv != null) ? out : null;
 }
 
 function deriveReadiness(src: Sources, today: string): TrainingView['readiness'] {
@@ -653,36 +648,29 @@ function deriveReadiness(src: Sources, today: string): TrainingView['readiness']
     xs?.filter((x) => x.date <= today).slice(-14) ?? [];
   const hrv = last(src.hrv);
   const rhr = last(src.restingHr);
-  const sleep = last(src.sleep);
   const lastHrv = hrv[hrv.length - 1];
   const lastRhr = rhr[rhr.length - 1];
-  const lastSleep = sleep[sleep.length - 1];
   return {
     pct: src.recovery.pct,
     level: src.recovery.level,
     fullRecoveryHours: src.recovery.fullRecoveryHours,
-    hrv: lastHrv
-      ? { value: lastHrv.hrv, baseline: lastHrv.baseline, series: hrv.map((x) => x.hrv) }
-      : null,
-    rhr: lastRhr
-      ? {
-          value: lastRhr.bpm,
-          // Baseline = median of the preceding nights, never the night itself.
-          baseline: median(
-            (src.restingHr ?? [])
-              .filter((x) => x.date < lastRhr.date && x.date >= shift(lastRhr.date, -21))
-              .map((x) => x.bpm),
-          ),
-          series: rhr.map((x) => x.bpm),
-        }
-      : null,
-    sleep: lastSleep
-      ? {
-          value: lastSleep.score,
-          baseline: median(sleep.slice(0, -1).map((x) => x.score)),
-          series: sleep.map((x) => x.score),
-        }
-      : null,
+    hrv:
+      lastHrv && lastHrv.date >= shift(today, -1)
+        ? { value: lastHrv.hrv, baseline: lastHrv.baseline, series: hrv.map((x) => x.hrv) }
+        : null,
+    rhr:
+      lastRhr && lastRhr.date >= shift(today, -1)
+        ? {
+            value: lastRhr.bpm,
+            // Baseline = median of the preceding nights, never the night itself.
+            baseline: median(
+              (src.restingHr ?? [])
+                .filter((x) => x.date < lastRhr.date && x.date >= shift(lastRhr.date, -21))
+                .map((x) => x.bpm),
+            ),
+            series: rhr.map((x) => x.bpm),
+          }
+        : null,
   };
 }
 
@@ -795,9 +783,7 @@ function deriveNotes(
     const prevKm = prev.reduce((t, a) => t + a.km, 0);
     const why = prevKm
       ? `the night after ${km1(prevKm)} km${prev.some((a) => isQuality(a.focus)) ? ' of hard running' : ''}`
-      : n.sleep != null
-        ? `on a sleep score of ${n.sleep}`
-        : 'overnight';
+      : 'overnight';
     const next = nights[i + 1];
     notes.push({
       when: fmtDow(n.date),
