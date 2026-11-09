@@ -229,9 +229,6 @@ export function BentoHome({
           >
             Shuffle photos <span aria-hidden="true">↻</span>
           </button>
-          <a className="bento-text-button photo-jump" href="#photos">
-            Photos <span aria-hidden="true">↓</span>
-          </a>
           <output className="puff-sr-only">{photos.message}</output>
         </header>
 

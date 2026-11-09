@@ -116,8 +116,7 @@ body {
   display: contents;
 }
 .photo-gallery-head,
-.photo-gallery-status,
-.photo-jump {
+.photo-gallery-status {
   display: none;
 }
 
@@ -129,7 +128,9 @@ body {
   transition: border-color 120ms ease;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  /* Let wrapped content resize its grid track. A zero minimum lets WebKit
+     reuse the old stretched height when the window narrows. */
+  min-height: auto;
   min-width: 0;
   position: relative;
   overflow: visible;
@@ -1139,16 +1140,6 @@ body {
   }
   .photo-shuffle-top {
     display: none;
-  }
-  .photo-jump {
-    display: inline-flex;
-    align-items: center;
-    color: var(--muted);
-    text-decoration: none;
-  }
-  .photo-jump:hover,
-  .photo-jump:focus-visible {
-    color: var(--ink);
   }
   .photo-gallery {
     display: grid;

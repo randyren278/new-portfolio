@@ -215,11 +215,9 @@ html.puff-theme body {
     grid-template-columns: 24px 112px 1fr;
     gap: 10px;
   }
-  .puff-bento .projects-list {
-    overflow: visible;
-  }
 }
-@media (min-width: 1280px) and (min-height: 720px) and (max-height: 800px) {
+/* The fluid bio also needs the compact rhythm just above 800px tall. */
+@media (min-width: 1280px) and (min-height: 720px) and (max-height: 880px) {
   .puff-bento {
     padding-block: 12px;
     gap: 10px;
