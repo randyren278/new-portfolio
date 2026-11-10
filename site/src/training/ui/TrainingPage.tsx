@@ -48,22 +48,10 @@ const focusName = (label: string) =>
 
 const signed = (v: number, digits = 1) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(digits)}`;
 
-function syncedLabel(view: TrainingView) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Vancouver',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(new Date(view.asOf));
-  const part = (type: string) => parts.find((p) => p.type === type)?.value;
-  const date = `${part('year')}-${part('month')}-${part('day')}`;
-  return `Updated · ${fmtDow(date)} · ${part('hour')}:${part('minute')} PT`;
-}
-
-export function TrainingPage({ view }: { view: TrainingView | null }) {
+export function TrainingPage({
+  view,
+  updatedLabel,
+}: { view: TrainingView | null; updatedLabel: string }) {
   useLiftCurtain();
   useTrainingRefresh();
   return (
@@ -81,7 +69,7 @@ export function TrainingPage({ view }: { view: TrainingView | null }) {
         {view ? <Cells view={view} /> : <Unavailable />}
         <footer className="bento-topbar">
           <span>randyren.org / training</span>
-          <span>{view ? syncedLabel(view) : 'Not synced'}</span>
+          <span>{updatedLabel}</span>
         </footer>
       </div>
     </TipLayer>
@@ -106,6 +94,7 @@ function Unavailable() {
 function Cells({ view }: { view: TrainingView }) {
   const dayTips = new Map(view.heat.days.map((d) => [d.date, d.tip]));
   const r = view.readiness;
+  const m = view.metrics;
   return (
     <main className="tr-grid">
       {view.outdoor?.route && <RunCell run={view.outdoor} route={view.outdoor.route} />}
@@ -132,7 +121,7 @@ function Cells({ view }: { view: TrainingView }) {
               )}
             </div>
             <div className="tr-vitals">
-              {r.hrv && (
+              {r.hrv ? (
                 <Vital
                   label="HRV"
                   value={r.hrv.value}
@@ -141,8 +130,10 @@ function Cells({ view }: { view: TrainingView }) {
                   series={r.hrv.series}
                   base={r.hrv.baseline}
                 />
+              ) : (
+                <ActivityMetric label="Time on feet" value={hm(60 * Math.round(m.sec7 / 60))} />
               )}
-              {r.rhr && (
+              {r.rhr ? (
                 <Vital
                   label="Resting HR"
                   value={r.rhr.value}
@@ -154,6 +145,12 @@ function Cells({ view }: { view: TrainingView }) {
                   }
                   series={r.rhr.series}
                   base={r.rhr.baseline}
+                />
+              ) : (
+                <ActivityMetric
+                  label="Avg. run length"
+                  value={m.runs7 ? km1(m.km7 / m.runs7) : '—'}
+                  unit={m.runs7 ? 'km' : ''}
                 />
               )}
             </div>
@@ -343,6 +340,21 @@ function FocusCell({ focus }: { focus: NonNullable<TrainingView['focus']> }) {
         ))}
       </div>
     </section>
+  );
+}
+
+function ActivityMetric({ label, value, unit }: { label: string; value: string; unit?: string }) {
+  return (
+    <div className="tr-vital tr-activity-metric">
+      <div>
+        <div className="tr-lab">{label}</div>
+        <span className="tr-base">Last 7 days</span>
+      </div>
+      <div className="tr-serif tr-num">
+        {value}
+        {unit && <span className="tr-unit">{unit}</span>}
+      </div>
+    </div>
   );
 }
 

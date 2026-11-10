@@ -200,6 +200,51 @@ test('consistent distance evidence wins when mile reps also land near whole minu
   );
 });
 
+test('seven-day run metrics include doubles and the full list for COROS and Strava', () => {
+  const records = Array.from({ length: 10 }, (_, i) => ({
+    labelId: String(i),
+    kind: i % 2 ? 'Indoor Run' : 'Outdoor Run',
+    sportType: i % 2 ? 101 : 100,
+    date: i === 0 ? '2026-10-04' : '2026-10-10',
+    start: Date.parse(`${i === 0 ? '2026-10-04' : '2026-10-10'}T12:00:00Z`) / 1000 + i,
+    durationSec: (i + 1) * 60,
+    km: i + 1,
+  }));
+  records.push(
+    { ...records[0], labelId: 'older', date: '2026-10-03', km: 50, durationSec: 9999 },
+    { ...records[0], labelId: 'future', date: '2026-10-11', km: 50, durationSec: 9999 },
+    { ...records[0], labelId: 'ride', kind: 'Cycling', sportType: 200, km: 50, durationSec: 9999 },
+  );
+  for (const source of ['coros', 'strava']) {
+    const strava = records.map((r) => ({
+      id: r.labelId,
+      date: r.date,
+      start: r.start,
+      sport: r.kind === 'Cycling' ? 'ride' : 'run',
+      indoor: r.kind === 'Indoor Run',
+      km: r.km,
+      sec: r.durationSec,
+      route: null,
+    }));
+    const view = D.deriveView(sources({ records: source === 'coros' ? records : null, strava }));
+    assert.equal(view.metrics.sec7, 3300, `${source}: only runs in the inclusive seven-day window`);
+    assert.equal(
+      view.metrics.runs7,
+      10,
+      `${source}: count runs, including doubles, rather than days`,
+    );
+    assert.equal(view.metrics.km7 / view.metrics.runs7, 5.5);
+    assert.equal(view.lines.length, 8, 'the display list is deliberately shorter than the input');
+  }
+});
+
+test('seven-day run metrics remain finite with no runs', () => {
+  const view = D.deriveView(sources({ records: [], strava: [] }));
+  assert.equal(view.metrics.sec7, 0);
+  assert.equal(view.metrics.runs7, 0);
+  assert.equal(view.metrics.km7, 0);
+});
+
 test('deriveView builds the full page from Coros', () => {
   const v = D.deriveView(sources());
   assert.equal(v.source, 'coros');
@@ -358,7 +403,11 @@ test('the status map is the latest outdoor run over 6 km with a public route', (
     run(5, '2026-10-07', { km: 12, route: null }),
     run(6, '2026-10-08', { indoor: true, km: 13, route: null }),
   ]);
-  assert.equal(v.outdoor.id, '2', 'skips the indoor run, the private route, the short run and the ride');
+  assert.equal(
+    v.outdoor.id,
+    '2',
+    'skips the indoor run, the private route, the short run and the ride',
+  );
   assert.equal(v.outdoor.route, 'M2,2');
   assert.equal(view([run(1, '2026-10-08', { km: 4 })]).outdoor, null);
 });

@@ -44,10 +44,14 @@ const FALLBACK_PATH = `M 34 46
   C 38 64, 34 54, 34 46 Z`;
 
 export function StravaCell() {
-  // One request feeds the card and the plate; null while it loads.
+  // One shared summary feeds the card and the plate; null while it loads.
   const [summary, setSummary] = useState<TrainingSummary | null | 'error'>(null);
   const request = useRef<AbortController | null>(null);
+  const lastAttempt = useRef(0);
   const load = useCallback(() => {
+    if (document.visibilityState !== 'visible' || !navigator.onLine || request.current) return;
+    if (Date.now() - lastAttempt.current < 5000) return;
+    lastAttempt.current = Date.now();
     const controller = new AbortController();
     request.current = controller;
     const timer = setTimeout(() => controller.abort(), 8000);
@@ -67,20 +71,38 @@ export function StravaCell() {
   }, []);
   useEffect(() => {
     load();
+    // The first read can start a server-side source refresh. Pick up its
+    // result here, before the visitor opens the plate, just as /training does.
+    const timer = window.setInterval(load, 30_000);
+    window.addEventListener('focus', load);
+    window.addEventListener('pageshow', load);
+    window.addEventListener('online', load);
+    document.addEventListener('visibilitychange', load);
     return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', load);
+      window.removeEventListener('pageshow', load);
+      window.removeEventListener('online', load);
+      document.removeEventListener('visibilitychange', load);
       request.current?.abort();
       request.current = null;
+      lastAttempt.current = 0;
     };
   }, [load]);
   const run = summary && summary !== 'error' ? summary.run : null;
   const loading = summary === null;
   // The whole cell is the doorway to /training: one real button laid over
   // it, asking first (TrainingAsk) rather than navigating on a stray tap.
-  const [asking, setAsking] = useState(false);
+  // Freeze the invitation's data for this opening. Background refreshes can
+  // update the activity card without changing numbers under the reader's eyes.
+  const [invitation, setInvitation] = useState<TrainingSummary | 'loading' | 'error' | null>(null);
+  useEffect(() => {
+    if (invitation === 'loading' && summary !== null) setInvitation(summary);
+  }, [invitation, summary]);
   const opener = useRef<HTMLButtonElement>(null);
   const close = useCallback(() => {
-    setAsking(false);
-    opener.current?.focus();
+    setInvitation(null);
+    opener.current?.focus({ preventScroll: true });
   }, []);
 
   return (
@@ -137,24 +159,23 @@ export function StravaCell() {
         className="strava-open"
         type="button"
         aria-haspopup="dialog"
+        aria-busy={invitation === 'loading'}
         aria-label="Training status — see how Randy’s training is going"
-        onClick={() => {
-          setAsking(true);
-          // Read again unless a read is under way: this visit may have set
-          // off the refresh that brings in a new run, and the plate leads
-          // straight to /training.
-          if (!request.current) load();
-        }}
+        onClick={() => setInvitation(summary ?? 'loading')}
       >
         <span className="glass-pill strava-pill" aria-hidden="true">
-          Training status <span>→</span>
+          {invitation === 'loading' ? 'Loading training…' : 'Training status'} <span>→</span>
         </span>
       </button>
       <TrainingAsk
-        open={asking}
+        open={invitation !== null && invitation !== 'loading'}
         onClose={close}
-        numbers={summary}
-        stravaUrl={run?.stravaId ? `https://www.strava.com/activities/${run.stravaId}` : null}
+        numbers={invitation === 'loading' ? null : invitation}
+        stravaUrl={
+          invitation && typeof invitation === 'object' && invitation.run?.stravaId
+            ? `https://www.strava.com/activities/${invitation.run.stravaId}`
+            : null
+        }
       />
     </section>
   );

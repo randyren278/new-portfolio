@@ -5,6 +5,48 @@ const { test } = require('node:test');
 const vm = require('node:vm');
 const ts = require('typescript');
 
+test('a captured public view is used only in explicit fixture mode', async () => {
+  const source = readFileSync(path.join(__dirname, '../src/training/load.ts'), 'utf8');
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const module = { exports: {} };
+  const env = { TRAINING_FIXTURE: '1', TRAINING_FIXTURE_VIEW_FILE: '/captured-view.json' };
+  const captured = {
+    status: { word: 'Maintaining' },
+    readiness: { pct: 93 },
+    metrics: { km7: 94.91 },
+  };
+  let reads = 0;
+  vm.runInNewContext(compiled, {
+    module,
+    exports: module.exports,
+    process: { env },
+    console,
+    require(id) {
+      if (id === 'node:fs/promises')
+        return {
+          readFile: async (file) => {
+            assert.equal(file, '/captured-view.json');
+            reads++;
+            return JSON.stringify(captured);
+          },
+        };
+      if (id === './cache') return { cached: async () => null };
+      if (id.startsWith('node:')) return require(id);
+      return {};
+    },
+  });
+  assert.equal(JSON.stringify(await module.exports.loadTrainingView()), JSON.stringify(captured));
+  env.TRAINING_FIXTURE = '0';
+  assert.equal(await module.exports.loadTrainingView(), null);
+  assert.equal(reads, 1, 'the live loader ignores the preview file');
+});
+
 test('latest Base-labelled workout reaches the view through the real loader', async () => {
   const P = await import('../src/training/coros/parse.ts');
   const D = await import('../src/training/derive.ts');
@@ -79,7 +121,10 @@ test('latest Base-labelled workout reaches the view through the real loader', as
   assert.equal(view.session?.date, '2026-10-20');
   assert.equal(view.session?.title, '4 × 8:00');
   assert.equal(view.session?.focus, 'Base', 'preserve COROS focus separately from lap structure');
-  assert.ok(!calls.some((c) => c.tool === 'querySleepOverview'), 'sleep data is no longer requested');
+  assert.ok(
+    !calls.some((c) => c.tool === 'querySleepOverview'),
+    'sleep data is no longer requested',
+  );
   assert.equal(
     calls.filter((c) => c.tool === 'queryActivityLapData').length,
     1,

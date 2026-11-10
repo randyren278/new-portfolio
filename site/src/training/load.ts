@@ -251,7 +251,15 @@ async function fixtureSources(): Promise<Sources> {
 // ---------------------------------------------------------------- main
 
 export async function loadTrainingView(): Promise<TrainingView | null> {
-  if (process.env.TRAINING_FIXTURE === '1') return deriveView(await fixtureSources());
+  if (process.env.TRAINING_FIXTURE === '1') {
+    // A local review can use the public site's captured view without its credentials.
+    if (process.env.TRAINING_FIXTURE_VIEW_FILE) {
+      return JSON.parse(
+        await readFile(process.env.TRAINING_FIXTURE_VIEW_FILE, 'utf8'),
+      ) as TrainingView;
+    }
+    return deriveView(await fixtureSources());
+  }
   const today = todayLocal();
   const [coros, strava] = await Promise.all([
     settle('coros', corosCached()),

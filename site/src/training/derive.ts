@@ -125,7 +125,15 @@ export type TrainingView = {
     longTermChange: number | null; // fraction over 14 days
     essay: string;
   } | null;
-  metrics: { km7: number; km7prev: number; km28: number; streak: number; longest: number };
+  metrics: {
+    km7: number;
+    sec7: number;
+    runs7: number;
+    km7prev: number;
+    km28: number;
+    streak: number;
+    longest: number;
+  };
   readiness: {
     pct: number;
     level: string | null;
@@ -558,6 +566,8 @@ export function deriveView(src: Sources): TrainingView {
   const focus = deriveFocus(src, runs, today);
 
   const km7 = sumRunKm(shift(today, -6), today);
+  const recentRuns = runs.filter((a) => a.date >= shift(today, -6) && a.date <= today);
+  const sec7 = recentRuns.reduce((s, a) => s + a.sec, 0);
   const km7prev = sumRunKm(shift(today, -13), shift(today, -7));
   const km28 = sumRunKm(shift(today, -27), today);
 
@@ -598,7 +608,7 @@ export function deriveView(src: Sources): TrainingView {
     today,
     source: src.records ? 'coros' : 'strava',
     status,
-    metrics: { km7, km7prev, km28, streak, longest },
+    metrics: { km7, sec7, runs7: recentRuns.length, km7prev, km28, streak, longest },
     readiness,
     load: src.load?.length ? src.load : null,
     week: { start: wkStart, days, km: weekKm, vsLastWeek: weekKm - lastWeekSame },

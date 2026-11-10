@@ -320,6 +320,13 @@
 .tr-vital:first-child {
   border-top: 0;
 }
+.tr-activity-metric {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.tr-activity-metric .tr-serif {
+  font-size: clamp(24px, 2.1vw, 30px);
+  white-space: nowrap;
+}
 /* A phone has no room beside the ring: it sits above the vitals. */
 @media (max-width: 720px) {
   .tr-ready-body {

@@ -14,6 +14,13 @@ import { createPortal } from 'react-dom';
 import { PuffArt } from './PuffEntrance';
 import type { TrainingSummary } from './cells/StravaCell';
 
+function loadPreviewFonts() {
+  return Promise.all([
+    document.fonts.load('26px "Instrument Serif"'),
+    document.fonts.load('italic 30px "Instrument Serif"'),
+  ]);
+}
+
 // The numbers come from the cell's request, made when the home page mounts,
 // not when the plate opens: a cold summary costs a function start and a
 // Postgres read, and fetched on click that wait showed as "…" every time.
@@ -30,24 +37,45 @@ export function TrainingAsk({
 }) {
   const router = useRouter();
   const [shown, setShown] = useState(false);
+  const [fallbackFonts, setFallbackFonts] = useState(false);
   const plate = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    if (open) router.prefetch('/training');
-  }, [open, router]);
+    router.prefetch('/training');
+    void loadPreviewFonts().catch(() => {});
+  }, [router]);
 
   useEffect(() => {
     if (!open) {
       setShown(false);
+      setFallbackFonts(false);
       return;
     }
-    const raf = requestAnimationFrame(() => setShown(true));
+    let cancelled = false;
+    let revealed = false;
+    let raf = 0;
+    const reveal = (fallback: boolean) => {
+      if (cancelled || revealed) return;
+      revealed = true;
+      clearTimeout(fontDeadline);
+      raf = requestAnimationFrame(() => {
+        setFallbackFonts(fallback);
+        setShown(true);
+      });
+    };
+    // The heading and numbers must use their final fonts before the plate
+    // appears: a fallback-font swap can resize and re-centre it.
+    const fontDeadline = window.setTimeout(() => reveal(true), 250);
+    loadPreviewFonts().then(
+      () => reveal(false),
+      () => reveal(true),
+    );
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     // Focus the plate itself, not its primary button: Safari treats a
     // scripted focus on a button as keyboard focus and draws the ring, so the
     // plate opened with "View training log" already highlighted.
-    plate.current?.focus();
+    plate.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -67,6 +95,8 @@ export function TrainingAsk({
     };
     document.addEventListener('keydown', onKey);
     return () => {
+      cancelled = true;
+      clearTimeout(fontDeadline);
       cancelAnimationFrame(raf);
       document.body.style.overflow = overflow;
       document.removeEventListener('keydown', onKey);
@@ -96,7 +126,7 @@ export function TrainingAsk({
 
   const s = numbers && numbers !== 'error' ? numbers : null;
   return createPortal(
-    <div className={`training-ask${shown ? ' open' : ''}`}>
+    <div className={`training-ask${shown ? ' open' : ''}${fallbackFonts ? ' font-fallback' : ''}`}>
       <div
         className="training-ask-overlay"
         onClick={onClose}
