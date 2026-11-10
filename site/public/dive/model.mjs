@@ -1,7 +1,10 @@
+import { normalizeAnswer, answerKey, pluralForms } from './answer-matching.mjs';
+export { normalizeAnswer, answerKey } from './answer-matching.mjs';
 import {
   QUESTIONS,
   BASE_QUESTIONS,
   AUDITED_QUESTIONS,
+  VERSION_THREE_QUESTIONS,
   PLAYABLE_QUESTIONS,
   LEGACY_QUESTIONS,
   CATEGORIES,
@@ -18,6 +21,7 @@ const EPOCH = Date.UTC(2026, 0, 1);
 const questionById = new Map(QUESTIONS.map((question) => [question.id, question]));
 const baseQuestionById = new Map(BASE_QUESTIONS.map((question) => [question.id, question]));
 const auditedQuestionById = new Map(AUDITED_QUESTIONS.map((question) => [question.id, question]));
+const versionThreeById = new Map(VERSION_THREE_QUESTIONS.map((question) => [question.id, question]));
 const categoryIds = new Set(CATEGORIES.map((category) => category.id));
 const plain = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const integer = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
@@ -113,95 +117,12 @@ export function sameDailyPuzzle(left, right) {
     left.dateKey === right.dateKey && (left.poolVersion ?? 1) === (right.poolVersion ?? 1));
 }
 
-export function normalizeAnswer(input) {
-  return String(input ?? '')
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[’']/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .replace(/^(?:a|an|the) /, '')
-    .replace(/\s+/g, ' ');
-}
-
 function singular(text) {
   if (text.length < 5 || /(?:ss|us|is)$/.test(text)) return text;
   if (text.endsWith('ies') && text.length > 5) return `${text.slice(0, -3)}y`;
   if (/(?:ches|shes|xes|zes)$/.test(text)) return text.slice(0, -2);
   if (text.endsWith('s')) return text.slice(0, -1);
   return text;
-}
-
-const IRREGULAR_PLURALS = {
-  mouse: 'mice',
-  goose: 'geese',
-  tooth: 'teeth',
-  foot: 'feet',
-  child: 'children',
-  person: 'people',
-  man: 'men',
-  woman: 'women',
-  ox: 'oxen',
-  die: 'dice',
-  knife: 'knives',
-  leaf: 'leaves',
-  wolf: 'wolves',
-  calf: 'calves',
-  loaf: 'loaves',
-  shelf: 'shelves',
-  scarf: 'scarves',
-  hoof: 'hooves',
-  half: 'halves',
-  life: 'lives',
-  wife: 'wives',
-  self: 'selves',
-  axis: 'axes',
-  analysis: 'analyses',
-  crisis: 'crises',
-  thesis: 'theses',
-  diagnosis: 'diagnoses',
-  index: 'indices',
-  matrix: 'matrices',
-  vertex: 'vertices',
-  phenomenon: 'phenomena',
-  criterion: 'criteria',
-  bookshelf: 'bookshelves',
-  dormouse: 'dormice',
-  fireman: 'firemen',
-  policeman: 'policemen',
-  policewoman: 'policewomen',
-  chairman: 'chairmen',
-  craftsman: 'craftsmen',
-  potato: 'potatoes',
-  tomato: 'tomatoes',
-  hero: 'heroes',
-  echo: 'echoes',
-  domino: 'dominoes',
-  torpedo: 'torpedoes',
-  volcano: 'volcanoes',
-  buffalo: 'buffaloes',
-  mosquito: 'mosquitoes',
-  quiz: 'quizzes',
-  bacterium: 'bacteria',
-  medium: 'media',
-  cactus: 'cacti',
-  fungus: 'fungi',
-  octopus: 'octopi',
-};
-
-function pluralForms(text) {
-  const split = text.lastIndexOf(' ') + 1;
-  const prefix = text.slice(0, split);
-  const word = text.slice(split);
-  const irregular = IRREGULAR_PLURALS[word];
-  const regular = /[^aeiou]y$/.test(word)
-    ? `${word.slice(0, -1)}ies`
-    : /(?:s|x|z|ch|sh)$/.test(word)
-      ? `${word}es`
-      : `${word}s`;
-  return [regular, ...(irregular ? [irregular] : [])].map((form) => prefix + form);
 }
 
 function oneTypo(left, right) {
@@ -229,21 +150,6 @@ function oneTypo(left, right) {
     }
   }
   return true;
-}
-
-export function answerKey(question, value) {
-  // The original normalizer remains available for recorded version-one answers.
-  let text = value;
-  if (question?.matchingVersion === 2)
-    text = text.replace(
-      /[æœøłđðþß]/giu,
-      (letter) =>
-        ({ æ: 'ae', œ: 'oe', ø: 'o', ł: 'l', đ: 'd', ð: 'd', þ: 'th', ß: 'ss' })[
-          letter.toLowerCase()
-        ],
-    );
-  if (question?.preciseMatching) text = text.replaceAll('♀', ' female').replaceAll('♂', ' male');
-  return normalizeAnswer(text);
 }
 
 export function evaluateAnswer(question, input) {
@@ -314,7 +220,8 @@ export function recordAnswer(
     throw new RangeError('Unknown answer bank version');
   const current = run.questions[run.round];
   const question = bankVersion === 1 ? baseQuestionById.get(current?.id)
-    : bankVersion === 2 ? auditedQuestionById.get(current?.id) : current;
+    : bankVersion === 2 ? auditedQuestionById.get(current?.id)
+    : bankVersion === 3 ? versionThreeById.get(current?.id) : current;
   const entered = safeText(input).trim();
   if (!question) throw new RangeError('No current question');
   const result = timedOut
@@ -413,6 +320,7 @@ function validateRun(value, requireComplete = false) {
     if (!integer(bankVersion, 1, ANSWER_BANK_VERSION)) return null;
     if (bankVersion === 1 && !baseQuestionById.has(questions[i].id)) return null;
     if (bankVersion === 2 && !auditedQuestionById.has(questions[i].id)) return null;
+    if (bankVersion === 3 && !versionThreeById.has(questions[i].id)) return null;
     run = recordAnswer(run, answer.input, {
       timedOut: answer.kind === 'timeout',
       bankVersion,

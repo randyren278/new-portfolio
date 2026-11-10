@@ -2,29 +2,29 @@ export const RARITY_BANDS = Object.freeze(
   [
     {
       id: 'plankton',
-      label: 'Plankton',
+      label: 'Common',
       min: 1,
       max: 19,
       color: '#a5bad5',
-      message: 'A familiar catch. There’s a whole ocean beneath it.',
+      message: 'An everyday answer. A good starting point, with rarer catches below.',
       notes: [330, 440],
     },
     {
       id: 'tooclever',
-      label: 'Too Clever',
+      label: 'Familiar',
       min: 20,
       max: 34,
       color: '#ffb264',
-      message: 'A clever turn. There’s still deeper water.',
+      message: 'A familiar choice, a little beyond the first thing that comes to mind.',
       notes: [440, 370, 494],
     },
     {
       id: 'schooler',
-      label: 'Schooler',
+      label: 'Uncommon',
       min: 35,
       max: 54,
       color: '#69e6f2',
-      message: 'A good catch, travelling with the current.',
+      message: 'A less obvious answer. There’s some depth to this catch.',
       notes: [392, 523, 659],
     },
     {
@@ -47,11 +47,11 @@ export const RARITY_BANDS = Object.freeze(
     },
     {
       id: 'krillion',
-      label: 'One in a Krillion',
+      label: 'Exceptional',
       min: 95,
       max: 100,
       color: '#ffda83',
-      message: 'A tiny treasure from the bottom of the ocean.',
+      message: 'An exceptional find on this prompt’s hand-ranked scale.',
       notes: [659, 831, 988, 1318],
     },
   ].map((band, rank) => Object.freeze({ ...band, rank })),
@@ -86,6 +86,27 @@ export function rarityIcon(id) {
   return `<svg class="rarity-icon" viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">${shapes[id] ?? shapes.miss}</svg>`;
 }
 
-export function rarityLadder(current) {
-  return `<div class="rarity-ladder" aria-hidden="true">${RARITY_BANDS.map((band) => `<span class="rarity-step ${band.rank === current.rank ? 'current' : ''} ${band.rank < current.rank ? 'reached' : ''}" style="--step-color:${band.color}" title="${band.label}">${rarityIcon(band.id)}</span>`).join('')}</div>`;
+export function rarityJourney(current = null) {
+  return `<div class="journey-scale" role="img" aria-label="Rarity scale: ${RARITY_BANDS.map(band => `${band.label}, ${band.min} to ${band.max} points`).join('; ')}" style="--journey-rank:${current?.rank ?? 0}">${RARITY_BANDS.map((band) => `<div class="journey-tier ${current && band.rank === current.rank ? 'current' : ''} ${current && band.rank < current.rank ? 'reached' : ''}" data-rank="${band.rank}" style="--step-color:${band.color}"><span class="tier-symbol">${rarityIcon(band.id)}</span><span class="tier-label">${band.label}</span><small>${band.min}–${band.max}</small></div>`).join('')}<div class="journey-cursor" aria-hidden="true"><span class="journey-bait">↓</span></div></div>`;
+}
+
+export function ratingExamples(question) {
+  const sorted = question.answers.filter(answer => answer.scoreBasis !== 'conservative')
+    .sort((a, b) => a.score - b.score || a.name.localeCompare(b.name));
+  const examples = [];
+  const ranges = [
+    { label: 'Common', min: 1, max: 34, preferredMax: 19 },
+    { label: 'Uncommon', min: 35, max: 54 },
+    { label: 'Rare', min: 55, max: 100, preferredMax: 74 },
+  ];
+  for (const range of ranges) {
+    const entries = sorted.filter(answer => answer.score >= range.min && answer.score <= range.max);
+    if (!entries.length) continue;
+    const preferred = range.preferredMax
+      ? entries.filter(answer => answer.score <= range.preferredMax) : entries;
+    const choices = preferred.length ? preferred : entries;
+    const answer = choices[Math.floor((choices.length - 1) / 2)];
+    examples.push({ ...answer, label: range.label, tier: rarityFor(answer.score) });
+  }
+  return examples;
 }

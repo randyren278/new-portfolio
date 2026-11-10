@@ -14,7 +14,7 @@
     "db:seed": "node --env-file=.env.local scripts/db-seed.mjs",
     "test:puff": "node --test scripts/puff-up.test.mjs",
     "test:dive": "node --test scripts/dive*.test.mjs",
-    "verify:dive": "node scripts/verify-dive.mjs",
+    "verify:dive": "node scripts/verify-rillion-quality.mjs",
     "test:puff:bot": "node scripts/puff-bot.mjs 40 1250"
   },
   "dependencies": {

@@ -14,7 +14,7 @@ import {
 } from './model.mjs';
 import { CATEGORIES, PLAYABLE_QUESTIONS } from './questions.mjs';
 import { mountOcean } from './scene.mjs';
-import { RARITY_BANDS, rarityFor, diveRarityFor, rarityIcon, rarityLadder } from './rarity.mjs';
+import { RARITY_BANDS, rarityFor, diveRarityFor, rarityIcon, rarityJourney, ratingExamples } from './rarity.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const escape = (value) =>
@@ -47,6 +47,7 @@ let selected = { mode: 'daily', dateKey: dayKey(), category: 'all' };
 let wasBest = false;
 let followToday = true;
 let audio;
+let revealInFlight = false;
 const scene = mountOcean($('#ocean'));
 const screen = $('#screen');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -61,13 +62,13 @@ addEventListener(
 addEventListener(
   'keydown',
   (event) => {
-    if (event.key === 'Tab' || event.key.startsWith('Arrow'))
+    if (event.key === 'Tab')
       document.documentElement.dataset.input = 'keyboard';
   },
   true,
 );
 function revealScreen() {
-  if (!reducedMotion.matches)
+  if (!reducedMotion.matches && screen.dataset.state !== 'journey')
     screen.animate(
       [
         { opacity: 0, transform: 'translateY(5px)' },
@@ -115,23 +116,29 @@ function updateSound() {
   $('#sound').setAttribute('aria-pressed', String(progress.sound));
   $('#sound').setAttribute('aria-label', progress.sound ? 'Turn sound off' : 'Turn sound on');
 }
-function updateMetrics() {
-  const score = run?.score ?? 0;
-  $('#score').textContent = number(score);
+function updateMetrics({ score = run?.score ?? 0, depth = score * 10, moveScene = true } = {}) {
+  const displayed = Math.round(score);
+  $('#score').textContent = number(displayed);
   $('#best').textContent = number(progress.best);
-  $('#scene-depth').textContent = number(score * 10);
-  $('#depth-marker').style.top = `${(score / 700) * 100}%`;
+  const displayedDepth = Math.round(depth);
+  $('#scene-depth').textContent = number(displayedDepth);
+  const near = Math.min(6500, Math.floor(displayedDepth / 500) * 500);
+  for (const [id, value] of [['depth-near-top', near], ['depth-near-mid', near + 250], ['depth-near-bottom', near + 500]]) {
+    const label = $(`#${id}`);
+    if (label) label.textContent = `${number(value)}m`;
+  }
+  $('#depth-marker').style.top = `${((displayedDepth - near) / 500) * 100}%`;
   $('#zone').textContent =
-    score >= 600
+    displayedDepth >= 6000
       ? 'THE HADAL ZONE · KEEP WONDERING'
-      : score >= 400
+      : displayedDepth >= 4000
         ? 'THE ABYSS · A QUIET KIND OF WONDER'
-        : score >= 200
+        : displayedDepth >= 2000
           ? 'MIDNIGHT WATER · FOLLOW THE LIGHT'
-          : score > 0
+          : displayedDepth >= 200
             ? 'THE TWILIGHT ZONE · DOWN WE GO'
             : 'A LITTLE OUT OF OUR DEPTH';
-  scene.setDepth(score * 10);
+  if (moveScene) scene.setDepth(displayedDepth);
   const key = run?.dateKey ?? selected.dateKey;
   $('#dive-label').textContent =
     (run?.mode ?? selected.mode) === 'daily'
@@ -169,6 +176,7 @@ function dailyProgress(key) {
 }
 function showHome(options = selected) {
   stopClock();
+  cancelReveal();
   selected = options;
   followToday = selected.mode === 'daily' && selected.dateKey === dayKey();
   run = null;
@@ -234,6 +242,7 @@ function dots() {
 }
 function renderRound() {
   stopClock();
+  cancelReveal();
   updateMetrics();
   if (run.complete) return showResult(run);
   if (feedback) return renderFeedback();
@@ -296,69 +305,117 @@ function submitAnswer(timedOut, skipped = false) {
   });
   feedback = true;
   deadline = 0;
-  const earned = run.answers.at(-1);
-  playTone(earned.valid, rarityFor(earned.score)?.notes);
   if (run.complete) {
     wasBest = run.score > progress.best;
     progress = finishRun(progress, run);
     persist();
   } else saveActive();
-  renderFeedback();
+  renderFeedback({ animate: true });
 }
-function renderFeedback() {
+function cancelReveal() {
+  revealInFlight = false;
+  scene.cancelJourney();
+  screen.setAttribute('aria-busy', 'false');
+}
+function answerComparison(question) {
+  const examples = ratingExamples(question);
+  return `<details class="answer-comparison"><summary>Why this rating?</summary><p class="rating-note">Examples from this prompt’s hand-ranked scale:</p>${examples.map(entry => `<div class="comparison-row"><span class="comparison-label">${entry.tier.label}</span><span class="comparison-answer">${escape(entry.name)}</span><span class="comparison-score">${entry.score} pts</span></div>`).join('')}<p class="rating-note">Editorial ratings, not player percentages. Some valid answers are still missing from the bank.</p></details>`;
+}
+function provisionalRating(answer, question) {
+  return answer.bankVersion >= 4 && question.answers.some(entry =>
+    entry.name === answer.canonical && entry.scoreBasis === 'conservative');
+}
+function renderFeedback({ animate = false } = {}) {
   stopClock();
-  updateMetrics();
+  cancelReveal();
   const answer = run.answers.at(-1);
   const question = run.questions[run.round - 1];
-  const rare = [...question.answers].sort((a, b) => b.score - a.score).slice(0, 3);
   const tier = rarityFor(answer.score);
-  if (tier) scene.celebrate(tier.rank, tier.color);
-  else scene.setMood('miss');
+  const before = run.score - answer.score;
+  updateMetrics({ depth: (animate ? before : run.score) * 10, moveScene: false });
+  scene.setDepth((animate ? before : run.score) * 10, { immediate: true });
+  if (!animate) scene.setMood(tier ? 'idle' : 'miss');
   screen.dataset.rarity = tier?.id ?? 'miss';
   screen.style.setProperty('--rarity-color', tier?.color ?? '#a5bad5');
-  screen.dataset.state = 'feedback';
+  screen.dataset.state = animate ? 'journey' : 'feedback';
+  screen.setAttribute('aria-busy', 'false');
   const label =
     tier?.label ?? (answer.kind === 'timeout' ? 'THE CLOCK CAUGHT US' : 'Nothing landed');
-  const message =
-    tier?.message ??
+  const message = provisionalRating(answer, question)
+    ? 'Accepted. This answer hasn’t been individually ranked yet, so it receives a provisional 45 points.'
+    : tier?.message ??
     (answer.kind === 'timeout'
       ? 'Time ran out. A fresh current is next.'
       : 'An empty line. There’s more ocean ahead.');
   screen.innerHTML = `<div class="round-top"><span>${String(run.round).padStart(2, '0')} / 07</span>${dots()}</div>
-    <div class="rarity-reveal" role="status"><div class="rarity-heading"><span class="rarity-emblem">${rarityIcon(tier?.id ?? 'miss')}</span><div><p class="feedback-title">${label}</p>${tier ? `<span class="rarity-level">RARITY ${tier.rank + 1} / 6</span>` : ''}</div></div>
+    <div class="rarity-reveal"><div class="rarity-heading"><span class="rarity-emblem">${rarityIcon(tier?.id ?? 'miss')}</span><div><p class="feedback-title">${label}</p>${tier ? `<span class="rarity-level">RARITY ${tier.rank + 1} / 6</span>` : ''}</div></div>
     <h2 class="result-answer">${answer.valid ? escape(answer.canonical) : 'A quiet moment.'}</h2>
-    <p class="rarity-verdict">${message}</p><p class="result-score">+${answer.score}<small> PTS · ${number(answer.score * 10)}m</small></p></div>
-    ${tier ? rarityLadder(tier) : ''}
-    <button class="primary" id="next" type="button">${run.complete ? 'Surface' : 'Deeper'} <span aria-hidden="true">${run.complete ? '↑' : '↓'}</span></button>
-    <details class="rare-answers"><summary>Other possibilities</summary><p class="examples">${rare.map((entry) => `${escape(entry.name)} <span>${entry.score}</span>`).join(' · ')}</p></details>`;
+    <p class="rarity-verdict">${message}</p><p class="result-score"><span id="earned-points">+${answer.score}</span><small> PTS · <span id="earned-depth">${number(answer.score * 10)}</span>m</small></p></div>
+    ${tier ? rarityJourney(animate ? null : tier) : ''}
+    <button class="primary" id="next" type="button" ${animate ? 'disabled' : ''}>${run.complete ? 'Dive summary' : 'Next prompt'} <span aria-hidden="true">→</span></button>
+    ${answerComparison(question)}<p class="sr-only" id="journey-status" role="status">${label}. ${answer.score} points.</p>`;
   revealScreen();
   $('#next').onclick = () => {
+    if (revealInFlight) return;
     if (run.complete) return showResult(run);
     feedback = false;
     deadline = Date.now() + DAY_SECONDS * 1000;
     saveActive();
     renderRound();
   };
-  $('#next').focus({ preventScroll: true });
+  focusScreen();
+  if (!animate) return;
+  revealInFlight = true;
+  const currentRun = run;
+  playTone(answer.valid, tier?.notes);
+  scene.descend(run.score * 10, {
+    rank: tier?.rank ?? -1,
+    color: tier?.color ?? '#a5bad5',
+    onUpdate(frame) {
+      if (!revealInFlight || run !== currentRun) return;
+      updateMetrics({ depth: frame.depth, moveScene: false });
+      const scale = $('.journey-scale');
+      if (scale) {
+        scale.style.setProperty('--journey-rank', frame.rarityProgress);
+        for (const row of scale.querySelectorAll('.journey-tier')) {
+          const rank = Number(row.dataset.rank);
+          row.classList.toggle('reached', rank < frame.rarityProgress);
+          row.classList.toggle('current', rank === Math.round(frame.rarityProgress));
+        }
+      }
+    },
+    onComplete() {
+      if (!revealInFlight || run !== currentRun) return;
+      revealInFlight = false;
+      screen.dataset.state = 'feedback';
+      updateMetrics({ moveScene: false });
+      $('#journey-status').textContent = `${label}. ${answer.score} points. ${number(run.score * 10)} metres deep.`;
+      $('#next').disabled = false;
+    },
+  });
 }
 function showResult(finished) {
   stopClock();
+  cancelReveal();
+  screen.setAttribute('aria-busy', 'false');
   run = finished;
   selected = { mode: run.mode, dateKey: run.dateKey, category: run.category };
   feedback = false;
   setPlaying(false);
   const grade = diveRarityFor(run.score);
-  scene.celebrate(grade.rank, grade.color);
   screen.dataset.rarity = grade.id;
   screen.style.setProperty('--rarity-color', grade.color);
-  updateMetrics();
+  updateMetrics({ moveScene: false });
+  scene.setDepth(run.score * 10, { immediate: true });
+  scene.celebrate(grade.rank, grade.color);
   const daily = run.mode === 'daily';
   screen.dataset.state = 'result';
   screen.innerHTML = `<div class="dive-grade">${rarityIcon(grade.id)}<span>${grade.label}</span></div><p class="eyebrow">DIVE COMPLETE${wasBest ? ' · NEW BEST' : ''}</p><h2 class="final-depth">${number(run.score * 10)}<small>m</small></h2>
     <p class="result-summary">${run.score} points · ${run.answers.filter((answer) => answer.valid).length} of 7 landed</p>
     <button class="primary" type="button" id="again">${daily ? 'Into open water' : 'Dive again'} <span aria-hidden="true">∞</span></button>
     <div class="result-links"><button class="text-button" type="button" id="share">Copy result ↗</button><button class="text-button" type="button" id="return">Surface ↑</button></div>
-    <details><summary>Your answers</summary><ol class="answer-log">${run.answers.map((answer, i) => `<li><span>${i + 1}</span><span>${escape(answer.canonical ?? (answer.input || '—'))}<small>${escape(answer.prompt)}</small></span><span>${answer.score}</span></li>`).join('')}</ol></details><span class="sr-only" id="copy-status" role="status"></span>`;
+    <p class="rating-note">Your dive grade reflects the total across seven answers. Individual answers use the six-band rarity scale.</p>
+    <details><summary>Your answers & ratings</summary><ol class="answer-log">${run.answers.map((answer, i) => `<li><span>${i + 1}</span><span>${escape(answer.canonical ?? (answer.input || '—'))}<small>${escape(answer.prompt)}</small><small>${rarityFor(answer.score)?.label ?? 'Nothing landed'}${provisionalRating(answer, run.questions[i]) ? ' · provisional' : ''}</small></span><span>${answer.score}</span></li>`).join('')}</ol></details><span class="sr-only" id="copy-status" role="status"></span>`;
   revealScreen();
   $('#again').onclick = () => {
     wasBest = false;
@@ -512,8 +569,8 @@ addEventListener('storage', (event) => {
       feedback = Boolean(active.feedback);
       deadline = active.deadline;
       renderRound();
-    } else updateMetrics();
-  } else updateMetrics();
+    } else if (!revealInFlight) updateMetrics();
+  } else if (!revealInFlight) updateMetrics();
 });
 updateSound();
 persist();

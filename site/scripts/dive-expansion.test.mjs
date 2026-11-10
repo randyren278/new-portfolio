@@ -21,11 +21,12 @@ test('expansion adds 300 distinct prompts and at least 7000 accepted answer entr
   for (const q of extra) {
     assert.ok(q.answers.length >= 8, `${q.id} has a useful answer bank`);
     assert.ok(q.prompt.length <= 125, `${q.id} prompt stays concise`);
-    assert.equal(
-      new Set(q.answers.map((a) => rarityFor(a.score).id)).size,
-      6,
-      `${q.id} can earn all six rarity rewards`,
-    );
+    const bands = new Set(q.answers.map((a) => rarityFor(a.score).id));
+    if (q.scoringVersion) {
+      assert.ok(bands.has('plankton'), `${q.id} has familiar entry points`);
+      assert.ok(bands.has('rare'), `${q.id} has reviewed rare choices`);
+      assert.ok(bands.size >= 3, `${q.id} offers differentiated rewards`);
+    } else assert.equal(bands.size, 6, `${q.id} retains historical rarity coverage`);
     for (const answer of q.answers) {
       for (const text of [answer.name, ...(answer.aliases ?? [])]) {
         assert.ok(text.trim() && text.length <= 80, `${q.id}: usable input length`);

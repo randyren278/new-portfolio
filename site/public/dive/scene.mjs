@@ -1,8 +1,13 @@
 import { renderPuff } from '/puff-up/game/puff-motion.js';
+import { createDiveJourney, oceanZone, rodTip } from './journey.mjs';
 
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 const lerp = (a, b, t) => a + (b - a) * t;
 const easeOut = (t) => 1 - (1 - t) ** 3;
+const smooth = (value) => {
+  const t = clamp(value, 0, 1);
+  return t * t * (3 - 2 * t);
+};
 
 function sprite(width, height, draw) {
   const canvas = document.createElement('canvas');
@@ -74,9 +79,10 @@ const glow = sprite(32, 32, (ctx) => {
 });
 const waters = [
   ['#0c7c92', '#0a506f', '#082b49'],
-  ['#0b5c7b', '#093d65', '#0a254b'],
-  ['#113f6c', '#15325f', '#11203f'],
-  ['#12325e', '#17254e', '#141b39'],
+  ['#0a455d', '#0a2f49', '#081e34'],
+  ['#071525', '#091529', '#0b1830'],
+  ['#080e1c', '#10142a', '#12152c'],
+  ['#080c16', '#111225', '#18152b'],
 ].map((colors) =>
   sprite(2, 256, (ctx) => {
     const g = ctx.createLinearGradient(0, 0, 0, 256);
@@ -89,10 +95,18 @@ const waters = [
 /** Sprites retain their pixel artwork; their positions move at display cadence. */
 export function mountOcean(canvas, { reducedMotion = false } = {}) {
   const ctx = canvas.getContext('2d', { alpha: false });
-  if (!ctx) return { setDepth() {}, setMood() {}, celebrate() {}, dispose() {} };
+  if (!ctx) return {
+    setDepth() {}, setMood() {}, celebrate() {}, cancelJourney() {}, dispose() {},
+    descend(to, { rank = 0, onUpdate, onComplete } = {}) {
+      onUpdate?.(createDiveJourney({ to, rank, reducedMotion: true }).sample(0));
+      onComplete?.();
+    },
+  };
   for (let i = 0; i < 24; i++) {
     puffFrame('turn', i);
     puffFrame('hello', i);
+    puffFrame('fall', i);
+    puffFrame('soft-land', i);
   }
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   let quiet = reducedMotion || motion.matches;
@@ -109,6 +123,8 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
     from = 0,
     moveAt = 0,
     duration = 620;
+  let journey = null,
+    journeyFrame = null;
   let mood = 'idle',
     moodAt = 0;
   let rarityRank = 0,
@@ -128,45 +144,33 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
     return (portrait ? 65 : 86) / 56;
   }
 
-  function drawBoat(x, surface, time) {
-    if (!boatArtwork) return;
+  function drawBoat(surface, time) {
+    const rig = rodTip({ width, height, portrait, surface, time });
+    if (!boatArtwork || surface < -rig.h * 2) return rig;
     const pixel = pixelSize();
-    const desired = portrait ? (height < 600 ? 120 : 168) : clamp(width * 0.17, 190, 270);
-    const columns = Math.round(desired / pixel);
-    const rows = Math.round((columns * 701) / 1075);
+    const columns = Math.round(rig.w / pixel);
+    const rows = Math.round(rig.h / pixel);
     if (!boatFrames.has(columns)) {
-      boatFrames.set(
-        columns,
-        sprite(columns, rows, (image) => {
-          image.imageSmoothingEnabled = false;
-          image.drawImage(boatArtwork, 257, 134, 1075, 701, 0, 0, columns, rows);
-        }),
-      );
+      boatFrames.set(columns, sprite(columns, rows, (image) => {
+        image.imageSmoothingEnabled = false;
+        image.drawImage(boatArtwork, 257, 134, 1075, 701, 0, 0, columns, rows);
+      }));
     }
-    const art = boatFrames.get(columns);
-    const w = art.width * pixel;
-    const h = art.height * pixel;
-    const bob = Math.sin(time * 1.8) * 3;
-    const angle = Math.sin(time * 1.35) * 0.022;
-    const tip = { x: w * 0.58, y: -h * 0.94 };
     ctx.save();
-    ctx.translate(x, surface + bob);
-    ctx.rotate(angle);
+    ctx.translate(rig.boatX, surface + rig.bob);
+    ctx.rotate(rig.angle);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(art, -w * 0.5, -h * 0.87, w, h);
+    ctx.drawImage(boatFrames.get(columns), -rig.w * 0.5, -rig.h * 0.87, rig.w, rig.h);
     ctx.beginPath();
-    ctx.moveTo(w * 0.28, -h * 0.24);
-    ctx.lineTo(w * 0.37, -h * 0.65);
-    ctx.lineTo(w * 0.46, -h * 0.91);
-    ctx.lineTo(tip.x, tip.y);
+    ctx.moveTo(rig.w * 0.28, -rig.h * 0.24);
+    ctx.lineTo(rig.w * 0.37, -rig.h * 0.65);
+    ctx.lineTo(rig.w * 0.46, -rig.h * 0.91);
+    ctx.lineTo(rig.w * 0.58, -rig.h * 0.94);
     ctx.strokeStyle = '#dbc295';
     ctx.lineWidth = 1.8;
     ctx.stroke();
     ctx.restore();
-    return [
-      x + tip.x * Math.cos(angle) - tip.y * Math.sin(angle),
-      surface + bob + tip.x * Math.sin(angle) + tip.y * Math.cos(angle),
-    ];
+    return rig;
   }
 
   function render() {
@@ -176,19 +180,25 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
     const camera = p * height * (portrait ? 1.25 : 1.32);
     const compact = portrait && height < 600;
     const surface = height * (portrait ? (compact ? 0.19 : 0.24) : 0.25) - camera;
-    const diverX = width * (portrait ? 0.57 : 0.72) + Math.sin(t * 1.1) * 5;
+    const action = journeyFrame;
+    const traveling = action?.phase === 'descent';
+    const speed = traveling ? action.velocity : 0;
+    const preparing = action?.phase === 'anticipation' ? Math.sin(action.phaseProgress * Math.PI) : 0;
+    const settling = action?.phase === 'settle' ? Math.sin(action.phaseProgress * Math.PI) : 0;
+    const diverX = width * (portrait ? 0.57 : 0.72) + Math.sin(t * 1.1) * (traveling ? 1 : 4) + speed * 9;
     const diverY =
       height * (portrait ? (compact ? 0.23 : 0.33) : 0.53) +
       Math.sin(t * 1.8) * 5 +
-      p * height * (compact ? 0.025 : 0.055);
+      p * height * (compact ? 0.025 : 0.055) - preparing * 7 + speed * 15 + settling * 5;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#081a30';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.imageSmoothingEnabled = true;
     const top = Math.max(0, surface);
-    const zone = Math.min(2, Math.floor(p * 3));
-    const blend = p * 3 - zone;
+    const zonePosition = clamp(depth / 1650, 0, 3.99999);
+    const zone = Math.floor(zonePosition);
+    const blend = smooth(zonePosition - zone);
     ctx.drawImage(waters[zone], 0, top, width, height - top);
     ctx.globalAlpha = blend;
     ctx.drawImage(waters[zone + 1], 0, top, width, height - top);
@@ -210,8 +220,9 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
       ctx.globalAlpha = 1;
     }
 
-    if (p < 0.65) {
-      ctx.globalAlpha = 0.055 * (1 - p);
+    const sunlight = 1 - smooth((depth - 200) / 1200);
+    if (sunlight > 0) {
+      ctx.globalAlpha = 0.055 * sunlight;
       ctx.fillStyle = '#b7fff6';
       for (let i = 0; i < 5; i++) {
         const x = width * (i * 0.24 - 0.08) + Math.sin(t * 0.3 + i) * 14;
@@ -247,6 +258,8 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
 
     // Three layers swim at distinct speeds; no integer-position snapping.
     for (let school = 0; school < 9; school++) {
+      const abundance = 1 - smooth((depth - 350 - school * 90) / 1250);
+      if (abundance < 0.01) continue;
       const direction = school % 2 ? 1 : -1;
       const speed = 20 + (school % 4) * 8;
       const groupX = ((school * 211 + t * speed * direction + width * 20) % (width + 200)) - 100;
@@ -260,7 +273,7 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
         ctx.translate(x, y);
         ctx.scale(direction, 1);
         ctx.imageSmoothingEnabled = false;
-        ctx.globalAlpha = school % 3 === 0 ? 0.9 : 0.6;
+        ctx.globalAlpha = (school % 3 === 0 ? 0.78 : 0.55) * abundance;
         ctx.drawImage(
           fishFrames[school % 4][Math.floor(t * 7 + j) % 2],
           -size / 2,
@@ -273,15 +286,16 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
     }
     ctx.globalAlpha = 1;
 
-    for (let i = 0; i < 30; i++) {
+    const deepLife = smooth((depth - 1700) / 1800);
+    for (let i = 0; i < 24; i++) {
       const y =
         height - ((i * 113 + t * (14 + (i % 6) * 3) + camera * 0.3) % Math.max(80, height - top));
       const x = (i * 179 + Math.sin(t * 0.8 + i) * 9) % width;
       if (i % 4 === 0) {
-        ctx.globalAlpha = 0.28 + p * 0.2;
+        ctx.globalAlpha = 0.08 + deepLife * 0.2;
         ctx.drawImage(glow, x - 12, y - 12, 24, 24);
       } else {
-        ctx.strokeStyle = '#b6f5ef55';
+        ctx.strokeStyle = depth > 2000 ? '#9cb7db33' : '#b6f5ef55';
         ctx.lineWidth = 0.8;
         ctx.beginPath();
         ctx.arc(x, y, 1.5 + (i % 3), 0, Math.PI * 2);
@@ -290,11 +304,12 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
     }
     ctx.globalAlpha = 1;
 
-    if (p > 0.3) {
+    const jellyLight = smooth((depth - 1400) / 1000) * (1 - smooth((depth - 4800) / 1200));
+    if (jellyLight > 0) {
       for (let i = 0; i < 3; i++) {
         const x = width * (0.18 + i * 0.32) + Math.sin(t * 0.4 + i) * 15;
         const y = height * (0.24 + i * 0.2) + Math.sin(t * 0.9 + i) * 12;
-        ctx.globalAlpha = 0.22;
+        ctx.globalAlpha = 0.2 * jellyLight;
         ctx.fillStyle = i % 2 ? '#bdabff' : '#77f1f3';
         ctx.beginPath();
         ctx.moveTo(x - 12, y);
@@ -318,66 +333,162 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
         ctx.globalAlpha = 1;
       }
     }
-    const floor = height * (2.17 - p * 1.32);
-    if (floor < height + 90) {
-      ctx.fillStyle = '#0a1834';
-      ctx.beginPath();
-      ctx.moveTo(0, height);
-      for (let x = 0; x <= width + 20; x += 25) ctx.lineTo(x, floor + Math.sin(x * 0.008) * 18);
-      ctx.lineTo(width, height);
-      ctx.closePath();
-      ctx.fill();
-      for (let i = 0; i < 16; i++) {
-        const x = (i * 137 + 40) % width;
-        const y = floor + 16;
-        ctx.strokeStyle = i % 3 === 0 ? '#a67ca766' : '#3e9c9a77';
-        ctx.lineWidth = i % 2 ? 3 : 2;
+    const midnight = smooth((depth - 1000) / 1600) * (1 - smooth((depth - 4400) / 1400));
+    if (midnight > 0) {
+      for (let i = 0; i < 3; i++) {
+        const x = ((width * (0.25 + i * 0.37) + t * (i % 2 ? -4 : 5) + width * 3) % (width + 140)) - 70;
+        const y = height * (0.19 + i * 0.22) + Math.sin(t * 0.3 + i) * 12 - camera * 0.04;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(i % 2 ? -1 : 1, 1);
+        ctx.globalAlpha = midnight * 0.45;
+        ctx.fillStyle = '#020914';
         ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.bezierCurveTo(
-          x - 8,
-          y - 15,
-          x + Math.sin(t * 0.7 + i) * 9,
-          y - 35,
-          x - 3,
-          y - 45 - (i % 4) * 13,
-        );
-        ctx.stroke();
+        ctx.moveTo(-42, 0);
+        ctx.bezierCurveTo(-27, -15, 19, -16, 39, 0);
+        ctx.bezierCurveTo(18, 13, -23, 15, -42, 0);
+        ctx.lineTo(-58, -12);
+        ctx.lineTo(-55, 12);
+        ctx.fill();
+        ctx.globalAlpha = midnight * 0.6;
+        ctx.fillStyle = '#7ad5d6';
+        ctx.fillRect(24, -3, 2, 2);
+        ctx.restore();
       }
     }
 
+    const abyss = smooth((depth - 3200) / 1400);
+    if (abyss > 0) {
+      for (let side = 0; side < 2; side++) {
+        ctx.save();
+        ctx.translate(side ? width : 0, 0);
+        ctx.scale(side ? -1 : 1, 1);
+        ctx.globalAlpha = abyss;
+        ctx.fillStyle = side ? '#080e1c' : '#071020';
+        ctx.beginPath();
+        ctx.moveTo(0, -20);
+        for (let i = 0; i <= 16; i++) {
+          const y = i * height / 14 - (camera * 0.08 % (height / 14));
+          const x = width * (0.035 + 0.035 * Math.sin(i * 2.4 + side) + 0.035 * (depth / 7000));
+          ctx.lineTo(x, y);
+          ctx.lineTo(x + width * 0.025, y + height / 35);
+        }
+        ctx.lineTo(0, height + 20);
+        ctx.closePath();
+        ctx.fill();
+        for (let i = 0; i < 12; i++) {
+          const y = (i * 127 - camera * 0.12 + height * 10) % height;
+          const x = width * (0.025 + (i % 3) * 0.013);
+          ctx.globalAlpha = abyss * (0.25 + 0.1 * Math.sin(t * 0.7 + i));
+          ctx.fillStyle = i % 2 ? '#9b89bd' : '#64bcc2';
+          ctx.fillRect(x, y, 2, 3);
+        }
+        ctx.restore();
+      }
+    }
+    const trench = smooth((depth - 5500) / 1200);
+    if (trench > 0) {
+      const floor = height * (1.2 - trench * 0.29);
+      ctx.fillStyle = '#080d19';
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+      for (let x = 0; x <= width + 20; x += 20)
+        ctx.lineTo(x, floor + Math.sin(x * 0.025) * 8 + Math.cos(x * 0.061) * 4);
+      ctx.lineTo(width, height);
+      ctx.closePath();
+      ctx.fill();
+      for (let i = 0; i < 11; i++) {
+        const x = (i * 137 + 40) % width;
+        const y = floor + 4;
+        ctx.strokeStyle = i % 3 ? '#68729577' : '#ad8eb888';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 1, y - 8 - (i % 3) * 3);
+        ctx.stroke();
+        ctx.fillStyle = '#b9bcdf88';
+        ctx.fillRect(x - 2, y - 10 - (i % 3) * 3, 5, 2);
+      }
+    }
+    const landmarks = [
+      [200, 'sunlight begins to fade'],
+      [1000, 'the last light from above'],
+      [2000, 'midnight water'],
+      [4000, 'the abyss opens below'],
+      [6000, 'the trench begins'],
+    ];
+    ctx.font = `${portrait ? 9 : 11}px monospace`;
+    ctx.textAlign = portrait ? 'center' : 'right';
+    const nearestLandmark = landmarks.reduce((nearest, item) =>
+      Math.abs(item[0] - depth) < Math.abs(nearest[0] - depth) ? item : nearest);
+    for (const [metres, label] of landmarks) {
+      if (portrait && metres !== nearestLandmark[0]) continue;
+      const x = width * (portrait ? 0.5 : 0.96);
+      const y = portrait ? height * 0.63 : height * 0.36 + (metres - depth) * height * 0.0007;
+      if (y < height * 0.12 || y > height * 0.85) continue;
+      ctx.globalAlpha = 0.35 * (1 - Math.min(1, Math.abs(metres - depth) / 950));
+      ctx.fillStyle = '#bdd4e5';
+      ctx.fillText(label, x, y);
+      ctx.fillRect(x - (portrait ? 9 : 18), y + 6, 18, 1);
+    }
+    ctx.globalAlpha = 1;
+
     const success = mood === 'good' || mood === 'complete';
     const elapsed = t - moodAt;
-    const animation = success && elapsed < 1.7 ? 'hello' : 'turn';
-    const index = Math.floor(((animation === 'hello' ? elapsed : t) * 1000) / 75) % 24;
+    const animation = traveling ? 'fall' : action?.phase === 'settle' ? 'soft-land' : success && elapsed < 1.7 ? 'hello' : 'turn';
+    const animationTime = action?.phase === 'settle' ? action.phaseProgress * 600 : animation === 'hello' ? elapsed * 1000 : t * 1000;
+    const index = Math.floor(animationTime / 75) % 24;
     const puff = puffFrame(animation, Math.max(0, index));
     const w = 56 * pixelSize();
+    const angle = -speed * 0.24 + preparing * 0.08 - settling * 0.05;
     const pixelAnchor = puffAnchors.get(puff);
+    const ax = -w / 2 + pixelAnchor.x * w / 112;
+    const ay = -w * 0.43 + pixelAnchor.y * w / 112;
     const anchor = {
-      x: diverX - w / 2 + (pixelAnchor.x * w) / 112,
-      y: diverY - w * 0.43 + (pixelAnchor.y * w) / 112,
+      x: diverX + ax * Math.cos(angle) - ay * Math.sin(angle),
+      y: diverY + ax * Math.sin(angle) + ay * Math.cos(angle),
     };
-    const hook = surface > -150 ? drawBoat(width * (portrait ? 0.48 : 0.69), surface, t) : null;
-    const origin = hook ?? [anchor.x + 8, -10];
-    ctx.strokeStyle = '#c8f3ee99';
+    const origin = drawBoat(surface, t);
+    const lineBow = 7 * (1 - speed) + Math.sin(t * 0.8) * 2 - preparing * 8;
+    ctx.strokeStyle = '#c8e9e399';
     ctx.lineWidth = 0.9;
     ctx.beginPath();
-    ctx.moveTo(origin[0], origin[1]);
+    ctx.moveTo(origin.x, origin.y);
     ctx.quadraticCurveTo(
-      lerp(origin[0], anchor.x, 0.5) + Math.sin(t * 0.8) * 3,
-      lerp(origin[1], anchor.y, 0.55),
+      lerp(origin.x, anchor.x, 0.5) + lineBow,
+      lerp(origin.y, anchor.y, 0.55),
       anchor.x,
       anchor.y,
     );
     ctx.stroke();
+    if (traveling) {
+      for (let i = 0; i < 10; i++) {
+        const u = ((t * 1.7 + i * 0.11) % 1);
+        const x = diverX + Math.sin(i * 2.3) * (5 + u * 15) - u * 10;
+        const y = diverY - 16 - u * (50 + speed * 55);
+        ctx.globalAlpha = speed * (1 - u) * 0.5;
+        ctx.strokeStyle = '#c7eff1';
+        ctx.beginPath();
+        ctx.arc(x, y, 1 + u * (i % 3 + 1), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+    ctx.save();
+    ctx.translate(diverX, diverY);
+    ctx.rotate(angle);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(puff, diverX - w / 2, diverY - w * 0.43, w, (w * 48) / 56);
-    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(puff, -w / 2, -w * 0.43, w, (w * 48) / 56);
+    ctx.restore();
     ctx.strokeStyle = '#ffe1a2';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(anchor.x, anchor.y, 1.4, 0, Math.PI * 2);
+    ctx.arc(anchor.x, anchor.y, 1.5, 0, Math.PI * 2);
     ctx.stroke();
+    canvas.dataset.depth = depth.toFixed(2);
+    canvas.dataset.zone = oceanZone(depth);
+    canvas.dataset.journeyPhase = action?.phase ?? 'idle';
+    canvas.dataset.lineOrigin = `${origin.x.toFixed(2)},${origin.y.toFixed(2)}`;
     if (!quiet && success && elapsed < 0.75) {
       const phase = elapsed / 0.75;
       ctx.globalAlpha = 1 - phase;
@@ -437,7 +548,10 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
     const dt = lastTime ? Math.min(0.05, (timestamp - lastTime) / 1000) : 0;
     lastTime = timestamp;
     clock += dt;
-    if (depth !== target) {
+    if (journey) {
+      journey.elapsed += dt * 1000;
+      advanceJourney(journey);
+    } else if (depth !== target) {
       const progress = clamp((timestamp - moveAt) / duration, 0, 1);
       depth = lerp(from, target, easeOut(progress));
       if (progress === 1) depth = target;
@@ -473,7 +587,8 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
     if (quiet) {
       cancelAnimationFrame(frame);
       frame = 0;
-      depth = target;
+      if (journey) advanceJourney(journey, true);
+      else depth = target;
       render();
     } else {
       lastTime = 0;
@@ -486,19 +601,55 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
   document.addEventListener('visibilitychange', visibility);
   resize();
   start();
+  function cancelJourney() {
+    journey = null;
+    journeyFrame = null;
+    from = target = depth;
+    moveAt = performance.now();
+  }
+  function advanceJourney(active, finish = false) {
+    const next = active.plan.sample(finish ? active.plan.duration : active.elapsed);
+    const previous = journeyFrame?.phase;
+    journeyFrame = next;
+    depth = next.depth;
+    if (next.phase === 'settle' && previous !== 'settle' && active.plan.rank >= 0) {
+      mood = 'good';
+      moodAt = clock;
+    }
+    active.onUpdate?.(next);
+    if (journey !== active || next.phase !== 'landed') return;
+    journey = null;
+    depth = target = active.plan.to;
+    active.onComplete?.();
+  }
   return {
-    setDepth(value) {
+    setDepth(value, { immediate = false } = {}) {
       const next = clamp(Number(value) || 0, 0, 7000);
-      if (next === target) return;
+      cancelJourney();
       from = depth;
       target = next;
       moveAt = performance.now();
       duration = next === 0 ? 420 : 620;
-      if (quiet) {
+      if (quiet || immediate) {
         depth = next;
         render();
       } else start();
     },
+    descend(value, { rank = 0, color = '#ffd18b', onUpdate, onComplete } = {}) {
+      if (disposed) return;
+      cancelJourney();
+      rarityRank = clamp(rank, 0, 5);
+      rarityColor = color;
+      mood = rank >= 0 ? 'thinking' : 'miss';
+      const plan = createDiveJourney({ from: depth, to: value, rank, reducedMotion: quiet });
+      target = plan.to;
+      const active = { plan, elapsed: 0, onUpdate, onComplete };
+      journey = active;
+      advanceJourney(active);
+      render();
+      start();
+    },
+    cancelJourney,
     celebrate(rank, color) {
       rarityRank = clamp(rank, 0, 5);
       rarityColor = color;
@@ -514,6 +665,7 @@ export function mountOcean(canvas, { reducedMotion = false } = {}) {
     },
     dispose() {
       disposed = true;
+      cancelJourney();
       cancelAnimationFrame(frame);
       observer.disconnect();
       motion.removeEventListener('change', preference);

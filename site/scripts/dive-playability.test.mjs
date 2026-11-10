@@ -218,7 +218,7 @@ test('a malformed new-question record cannot discard other saved games or best s
   let raw;
   saveProgress({ setItem: (_, value) => { raw = value; } }, progress);
   const index = run.questions.findIndex(q => newIds.has(q.id));
-  for (const invalidVersion of [undefined, 1, 2, null, 4]) {
+  for (const invalidVersion of [undefined, 1, 2, null, ANSWER_BANK_VERSION + 1]) {
     const malformed = JSON.parse(raw);
     if (invalidVersion === undefined) delete malformed.history[0].answers[index].bankVersion;
     else malformed.history[0].answers[index].bankVersion = invalidVersion;
